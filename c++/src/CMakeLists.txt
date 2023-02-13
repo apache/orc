@@ -184,7 +184,11 @@ set(SOURCE_FILES
   Timezone.cc
   TypeImpl.cc
   Vector.cc
-  Writer.cc)
+  Writer.cc
+  CpuInfoUtil.cc
+  BpackingDefault.cc
+  BpackingAvx512.cc
+  Bpacking.cc)
 
 if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)

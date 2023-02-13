@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include <inttypes.h>
-
 #include <cstdlib>
 
 #include "MemoryOutputStream.hh"
@@ -36,7 +34,7 @@ namespace orc {
 
   const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
 
-  class RleVectorTest : public TestWithParam<bool> {
+  class RleV2BitUnpackAvx512Test : public TestWithParam<bool> {
     virtual void SetUp();
 
    protected:
@@ -71,7 +69,7 @@ namespace orc {
     delete[] decodedData;
   }
 
-  void RleVectorTest::SetUp() {
+  void RleV2BitUnpackAvx512Test::SetUp() {
     alignBitpacking = GetParam();
   }
 
@@ -108,14 +106,13 @@ namespace orc {
     int32_t lpad = offset * BARWIDTH / total;
     int32_t rpad = BARWIDTH - lpad;
 
-    printf("\r%s:%3d%% [%.*s%*s] [%" PRId64 "/%" PRId64 "]", testName, val, lpad, BARSTR, rpad, "",
-           offset, total);
+    printf("\r%s:%3d%% [%.*s%*s] [%ld /%ld]", testName, val, lpad, BARSTR, rpad, "", offset, total);
     fflush(stdout);
   }
 
-  std::unique_ptr<RleEncoder> RleVectorTest::getEncoder(RleVersion version,
-                                                        MemoryOutputStream& memStream,
-                                                        bool isSigned) {
+  std::unique_ptr<RleEncoder> RleV2BitUnpackAvx512Test::getEncoder(RleVersion version,
+                                                                   MemoryOutputStream& memStream,
+                                                                   bool isSigned) {
     MemoryPool* pool = getDefaultPool();
 
     return createRleEncoder(std::unique_ptr<BufferedOutputStream>(new BufferedOutputStream(
@@ -123,9 +120,9 @@ namespace orc {
                             isSigned, version, *pool, alignBitpacking);
   }
 
-  void RleVectorTest::runTest(RleVersion version, uint64_t numValues, int64_t start, int64_t delta,
-                              bool random, bool isSigned, uint8_t bitWidth, uint64_t blockSize,
-                              uint64_t numNulls) {
+  void RleV2BitUnpackAvx512Test::runTest(RleVersion version, uint64_t numValues, int64_t start,
+                                         int64_t delta, bool random, bool isSigned,
+                                         uint8_t bitWidth, uint64_t blockSize, uint64_t numNulls) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(version, memStream, isSigned);
@@ -142,7 +139,7 @@ namespace orc {
   }
 
 #if defined(ORC_HAVE_RUNTIME_AVX512)
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_1bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_1bit) {
     uint8_t bitWidth = 1;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -159,7 +156,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_2bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_2bit) {
     uint8_t bitWidth = 2;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -176,7 +173,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_3bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_3bit) {
     uint8_t bitWidth = 3;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -193,7 +190,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_4bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_4bit) {
     uint8_t bitWidth = 4;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -210,7 +207,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_5bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_5bit) {
     uint8_t bitWidth = 5;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -227,7 +224,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_6bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_6bit) {
     uint8_t bitWidth = 6;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -244,7 +241,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_7bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_7bit) {
     uint8_t bitWidth = 7;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -261,7 +258,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_9bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_9bit) {
     uint8_t bitWidth = 9;
 
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
@@ -279,7 +276,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_10bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_10bit) {
     uint8_t bitWidth = 10;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -296,7 +293,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_11bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_11bit) {
     uint8_t bitWidth = 11;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -313,7 +310,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_12bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_12bit) {
     uint8_t bitWidth = 12;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -330,7 +327,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_13bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_13bit) {
     uint8_t bitWidth = 13;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -347,7 +344,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_14bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_14bit) {
     uint8_t bitWidth = 14;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -364,7 +361,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_15bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_15bit) {
     uint8_t bitWidth = 15;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -381,7 +378,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_16bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_16bit) {
     uint8_t bitWidth = 16;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -398,7 +395,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_17bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_17bit) {
     uint8_t bitWidth = 17;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -415,7 +412,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_18bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_18bit) {
     uint8_t bitWidth = 18;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -432,7 +429,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_19bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_19bit) {
     uint8_t bitWidth = 19;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -449,7 +446,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_20bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_20bit) {
     uint8_t bitWidth = 20;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -466,7 +463,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_21bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_21bit) {
     uint8_t bitWidth = 21;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -483,7 +480,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_22bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_22bit) {
     uint8_t bitWidth = 22;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -500,7 +497,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_23bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_23bit) {
     uint8_t bitWidth = 23;
     runTest(RleVersion_2, 3277, 0, 0, true, false, bitWidth, 108);
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
@@ -518,7 +515,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_24bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_24bit) {
     uint8_t bitWidth = 24;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -535,7 +532,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_26bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_26bit) {
     uint8_t bitWidth = 26;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -552,7 +549,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_28bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_28bit) {
     uint8_t bitWidth = 28;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -569,7 +566,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_30bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_30bit) {
     uint8_t bitWidth = 30;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -586,7 +583,7 @@ namespace orc {
     printf("\n");
   }
 
-  TEST_P(RleVectorTest, RleV2_basic_vector_decode_32bit) {
+  TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_32bit) {
     uint8_t bitWidth = 32;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
@@ -603,6 +600,6 @@ namespace orc {
     printf("\n");
   }
 
-  INSTANTIATE_TEST_SUITE_P(OrcTest, RleVectorTest, Values(true, false));
+  INSTANTIATE_TEST_SUITE_P(OrcTest, RleV2BitUnpackAvx512Test, Values(true, false));
 #endif
 }  // namespace orc
