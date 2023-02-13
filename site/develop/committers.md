@@ -50,6 +50,7 @@ Stephen Walkauskas      | swalkaus     | Committer
 Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
 William Hyun            | william      | PMC Chair
+Xin Zhang               | xinzhang     | Committer
 Xiening Dai             | xndai        | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
