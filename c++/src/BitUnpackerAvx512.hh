@@ -19,9 +19,9 @@
 #ifndef VECTOR_DECODER_HH
 #define VECTOR_DECODER_HH
 
-#include <string.h>
 // Mingw-w64 defines strcasecmp in string.h
 #if defined(_WIN32) && !defined(strcasecmp)
+#include <string.h>
 #define strcasecmp stricmp
 #else
 #include <strings.h>

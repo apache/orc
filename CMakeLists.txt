@@ -1,14 +1,14 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#Licensed under the Apache License, Version 2.0(the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#http:  // www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 
 cmake_minimum_required (VERSION 3.12.0)
 if (POLICY CMP0048)
@@ -20,12 +20,13 @@ endif ()
 
 project(ORC C CXX)
 
-# Version number of package
+#Version number of package
 SET(CPACK_PACKAGE_VERSION_MAJOR "1")
 SET(CPACK_PACKAGE_VERSION_MINOR "9")
 SET(CPACK_PACKAGE_VERSION_PATCH "0-SNAPSHOT")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules")
+set(CMAKE_MODULE_PATH ${
+  CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules")
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
@@ -71,7 +72,7 @@ option(BUILD_CPP_AVX512
     "Enable build with AVX512 at compile time"
     ON)
 
-# Make sure that a build type is selected
+#Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
   set (CMAKE_BUILD_TYPE "RELWITHDEBINFO")
@@ -79,7 +80,7 @@ else ()
   message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 endif ()
 
-# Set the package format
+#Set the package format
 SET(CPACK_GENERATOR "TGZ")
 SET(CPACK_PACKAGE_VENDOR "Apache ORC")
 SET(CPACK_PACKAGE_CONTACT "Apache ORC <dev@orc.apache.org>")
@@ -103,15 +104,15 @@ if(NOT DEFINED ORC_RUNTIME_SIMD_LEVEL)
 endif()
 
 #
-# Compiler specific flags
+#Compiler specific flags
 #
-# This ensures that things like c++17 get passed correctly
+#This ensures that things like c++ 17 get passed correctly
 if(NOT DEFINED CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 elseif(${CMAKE_CXX_STANDARD} VERSION_LESS 17)
   message(FATAL_ERROR "Cannot set a CMAKE_CXX_STANDARD smaller than 17")
 endif()
-# We require a C++17 compliant compiler
+#We require a C++ 17 compliant compiler
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (NOT MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer")
@@ -194,9 +195,9 @@ if(NOT DEFINED ORC_CPU_FLAG)
   endif()
 endif()
 
-# Check architecture specific compiler flags
+#Check architecture specific compiler flags
 if(ORC_CPU_FLAG STREQUAL "x86")
-  # x86/amd64 compiler flags, msvc/gcc/clang
+#x86 / amd64 compiler flags, msvc / gcc / clang
   if(MSVC)
     set(ORC_SSE4_2_FLAG "")
     set(ORC_AVX2_FLAG "/arch:AVX2")
@@ -205,38 +206,37 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   else()
     set(ORC_SSE4_2_FLAG "-msse4.2")
     set(ORC_AVX2_FLAG "-march=haswell")
-    # skylake-avx512 consists of AVX512F,AVX512BW,AVX512VL,AVX512CD,AVX512DQ
+#skylake - avx512 consists of AVX512F, AVX512BW, AVX512VL, AVX512CD, AVX512DQ
     set(ORC_AVX512_FLAG "-march=native -mbmi2")
-    # Append the avx2/avx512 subset option also, fix issue ORC-9877 for homebrew-cpp
     set(ORC_AVX2_FLAG "${ORC_AVX2_FLAG} -mavx2")
     set(ORC_AVX512_FLAG
         "${ORC_AVX512_FLAG} -mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw -mavx512vbmi")
   endif()
   check_cxx_compiler_flag(${ORC_AVX512_FLAG} CXX_SUPPORTS_AVX512)
   if(MINGW)
-    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
+#https:  // gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
     message(STATUS "Disable AVX512 support on MINGW for now")
   else()
-    # Check for AVX512 support in the compiler.
+#Check for AVX512 support in the compiler.
     set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
     set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_AVX512_FLAG}")
     check_cxx_source_compiles("
-      #ifdef _MSC_VER
-      #include <intrin.h>
-      #else
-      #include <immintrin.h>
-      #endif
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <immintrin.h>
+#endif
 
       int main() {
-        __m512i mask = _mm512_set1_epi32(0x1);
-        char out[32];
-        _mm512_storeu_si512(out, mask);
-        return 0;
+  __m512i mask = _mm512_set1_epi32(0x1);
+  char out[32];
+  _mm512_storeu_si512(out, mask);
+  return 0;
       }"
       CXX_SUPPORTS_AVX512)
     set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
   endif()
-  # Runtime SIMD level it can get from compiler and ORC_RUNTIME_SIMD_LEVEL
+#Runtime SIMD level it can get from compiler and ORC_RUNTIME_SIMD_LEVEL
   if(CXX_SUPPORTS_SSE4_2 AND ORC_RUNTIME_SIMD_LEVEL MATCHES
                              "^(SSE4_2|AVX2|AVX512|MAX)$")
     set(ORC_HAVE_RUNTIME_SSE4_2 ON)
@@ -260,14 +260,14 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     set(ORC_SIMD_LEVEL "NONE")
   endif()
 elseif(ORC_CPU_FLAG STREQUAL "ppc")
-  # power compiler flags, gcc/clang only
+#power compiler flags, gcc / clang only
   set(ORC_ALTIVEC_FLAG "-maltivec")
   check_cxx_compiler_flag(${ORC_ALTIVEC_FLAG} CXX_SUPPORTS_ALTIVEC)
   if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
     set(ORC_SIMD_LEVEL "NONE")
   endif()
 elseif(ORC_CPU_FLAG STREQUAL "aarch64")
-  # Arm64 compiler flags, gcc/clang only
+#Arm64 compiler flags, gcc / clang only
   set(ORC_ARMV8_MARCH "armv8-a")
   check_cxx_compiler_flag("-march=${ORC_ARMV8_MARCH}+sve" CXX_SUPPORTS_SVE)
   if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
@@ -275,10 +275,10 @@ elseif(ORC_CPU_FLAG STREQUAL "aarch64")
   endif()
 endif()
 
-# Only enable additional instruction sets if they are supported
+#Only enable additional instruction sets if they are supported
 if(ORC_CPU_FLAG STREQUAL "x86")
   if(MINGW)
-    # Enable _xgetbv() intrinsic to query OS support for ZMM register saves
+#Enable _xgetbv() intrinsic to query OS support for ZMM register saves
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mxsave")
   endif()
   if(ORC_SIMD_LEVEL STREQUAL "AVX512")
@@ -335,15 +335,17 @@ if (BUILD_TOOLS)
 endif ()
 
 if (BUILD_CPP_TESTS)
-  # Add another target called test-out that prints the results on failure
+#Add another target called test - out that prints the results on failure
   if (CMAKE_CONFIGURATION_TYPES)
     add_custom_target (test-out
-      COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+      COMMAND ${
+  CMAKE_CTEST_COMMAND} --force-new-ctest-process
         --output-on-failure --build-config "$<CONFIGURATION>"
     )
   else ()
     add_custom_target (test-out
-      COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+      COMMAND ${
+  CMAKE_CTEST_COMMAND} --force-new-ctest-process
         --output-on-failure
     )
   endif ()
