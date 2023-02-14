@@ -21,8 +21,7 @@
 
 namespace orc {
 
-  UnpackDefault::UnpackDefault(RleDecoderV2* dec)
-      : decoder(dec) {
+  UnpackDefault::UnpackDefault(RleDecoderV2* dec) : decoder(dec) {
     // PASS
   }
 
@@ -44,7 +43,7 @@ namespace orc {
       uint64_t numGroups = (offset + len - curIdx) / 2;
       numGroups =
           std::min(numGroups, static_cast<uint64_t>(decoder->bufferEnd - decoder->bufferStart));
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       uint32_t localByte;
       for (uint64_t i = 0; i < numGroups; ++i) {
@@ -88,7 +87,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 2;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint16_t b0, b1;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint16_t>(*buffer);
@@ -99,8 +98,7 @@ namespace orc {
       decoder->bufferStart = (char*)buffer;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       data[curIdx++] = (b0 << 8) | b1;
@@ -114,7 +112,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 3;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint32_t b0, b1, b2;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint32_t>(*buffer);
@@ -126,8 +124,7 @@ namespace orc {
       decoder->bufferStart += bufferNum * 3;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b2 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
@@ -142,7 +139,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 4;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint32_t b0, b1, b2, b3;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint32_t>(*buffer);
@@ -155,8 +152,7 @@ namespace orc {
       decoder->bufferStart = (char*)buffer;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b2 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
@@ -172,7 +168,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 5;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint64_t b0, b1, b2, b3, b4;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint32_t>(*buffer);
@@ -187,8 +183,7 @@ namespace orc {
       decoder->bufferStart = (char*)buffer;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b2 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
@@ -205,7 +200,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 6;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint64_t b0, b1, b2, b3, b4, b5;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint32_t>(*buffer);
@@ -221,8 +216,7 @@ namespace orc {
       decoder->bufferStart = (char*)buffer;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b2 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
@@ -241,7 +235,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 7;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint64_t b0, b1, b2, b3, b4, b5, b6;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint32_t>(*buffer);
@@ -258,8 +252,7 @@ namespace orc {
       decoder->bufferStart = (char*)buffer;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b2 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
@@ -279,7 +272,7 @@ namespace orc {
       int64_t bufferNum = (decoder->bufferEnd - decoder->bufferStart) / 8;
       bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
       uint64_t b0, b1, b2, b3, b4, b5, b6, b7;
-      // Avoid updating 'decoder->bufferStart' inside the loop.
+      // Avoid updating 'bufferStart' inside the loop.
       const auto* buffer = reinterpret_cast<const unsigned char*>(decoder->bufferStart);
       for (int i = 0; i < bufferNum; ++i) {
         b0 = static_cast<uint32_t>(*buffer);
@@ -297,8 +290,7 @@ namespace orc {
       decoder->bufferStart = (char*)buffer;
       if (curIdx == offset + len) return;
 
-      // One of the following readByte() will update 'decoder->bufferStart' and
-      // 'decoder->bufferEnd'.
+      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
       b0 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b1 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
       b2 = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);

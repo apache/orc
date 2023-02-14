@@ -23,9 +23,7 @@
 namespace orc {
 
 #if defined(ORC_HAVE_RUNTIME_AVX512)
-  UnpackAvx512::UnpackAvx512(RleDecoderV2* dec)
-      : decoder(dec),
-        unpackDefault(UnpackDefault(dec)) {
+  UnpackAvx512::UnpackAvx512(RleDecoderV2* dec) : decoder(dec), unpackDefault(UnpackDefault(dec)) {
     // PASS
   }
 
@@ -33,7 +31,7 @@ namespace orc {
     // PASS
   }
 
-  void UnpackAvx512::unrolledUnpackVector1(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack1(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 1;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint32_t numElements = 0;
@@ -154,7 +152,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector2(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack2(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 2;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint32_t numElements = 0;
@@ -298,7 +296,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector3(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack3(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 3;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint32_t numElements = 0;
@@ -442,7 +440,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector4(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack4(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 4;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -574,7 +572,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector5(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack5(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 5;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -718,7 +716,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector6(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack6(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 6;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -862,7 +860,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector7(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack7(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 7;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -1006,7 +1004,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector9(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack9(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 9;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -1200,7 +1198,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector10(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack10(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 10;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -1332,7 +1330,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector11(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack11(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 11;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -1535,7 +1533,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector12(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack12(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 12;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -1667,7 +1665,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector13(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack13(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 13;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -1870,7 +1868,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector14(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack14(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 14;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -2014,7 +2012,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector15(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack15(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 15;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -2217,7 +2215,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector16(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack16(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 16;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = len;
@@ -2297,7 +2295,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector17(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack17(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 17;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -2491,7 +2489,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector18(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack18(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 18;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -2685,7 +2683,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector19(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack19(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 19;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -2879,7 +2877,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector20(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack20(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 20;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -3011,7 +3009,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector21(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack21(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 21;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -3205,7 +3203,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector22(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack22(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 22;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -3399,7 +3397,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector23(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack23(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 23;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -3594,7 +3592,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector24(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack24(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 24;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -3683,7 +3681,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector26(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack26(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 26;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -3877,7 +3875,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector28(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack28(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 28;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -4009,7 +4007,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector30(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack30(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 30;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;
@@ -4211,7 +4209,7 @@ namespace orc {
     }
   }
 
-  void UnpackAvx512::unrolledUnpackVector32(int64_t* data, uint64_t offset, uint64_t len) {
+  void UnpackAvx512::vectorUnpack32(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 32;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
     uint64_t numElements = 0;

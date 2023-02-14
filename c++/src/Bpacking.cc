@@ -70,88 +70,88 @@ namespace orc {
     if (cpu_info->IsSupported(CpuInfo::AVX512)) {
       switch (fbs) {
         case 1:
-          unpackAvx512.unrolledUnpackVector1(data, offset, len);
+          unpackAvx512.vectorUnpack1(data, offset, len);
           break;
         case 2:
-          unpackAvx512.unrolledUnpackVector2(data, offset, len);
+          unpackAvx512.vectorUnpack2(data, offset, len);
           break;
         case 3:
-          unpackAvx512.unrolledUnpackVector3(data, offset, len);
+          unpackAvx512.vectorUnpack3(data, offset, len);
           break;
         case 4:
-          unpackAvx512.unrolledUnpackVector4(data, offset, len);
+          unpackAvx512.vectorUnpack4(data, offset, len);
           break;
         case 5:
-          unpackAvx512.unrolledUnpackVector5(data, offset, len);
+          unpackAvx512.vectorUnpack5(data, offset, len);
           break;
         case 6:
-          unpackAvx512.unrolledUnpackVector6(data, offset, len);
+          unpackAvx512.vectorUnpack6(data, offset, len);
           break;
         case 7:
-          unpackAvx512.unrolledUnpackVector7(data, offset, len);
+          unpackAvx512.vectorUnpack7(data, offset, len);
           break;
         case 8:
           unpackDefault.unrolledUnpack8(data, offset, len);
           break;
         case 9:
-          unpackAvx512.unrolledUnpackVector9(data, offset, len);
+          unpackAvx512.vectorUnpack9(data, offset, len);
           break;
         case 10:
-          unpackAvx512.unrolledUnpackVector10(data, offset, len);
+          unpackAvx512.vectorUnpack10(data, offset, len);
           break;
         case 11:
-          unpackAvx512.unrolledUnpackVector11(data, offset, len);
+          unpackAvx512.vectorUnpack11(data, offset, len);
           break;
         case 12:
-          unpackAvx512.unrolledUnpackVector12(data, offset, len);
+          unpackAvx512.vectorUnpack12(data, offset, len);
           break;
         case 13:
-          unpackAvx512.unrolledUnpackVector13(data, offset, len);
+          unpackAvx512.vectorUnpack13(data, offset, len);
           break;
         case 14:
-          unpackAvx512.unrolledUnpackVector14(data, offset, len);
+          unpackAvx512.vectorUnpack14(data, offset, len);
           break;
         case 15:
-          unpackAvx512.unrolledUnpackVector15(data, offset, len);
+          unpackAvx512.vectorUnpack15(data, offset, len);
           break;
         case 16:
-          unpackAvx512.unrolledUnpackVector16(data, offset, len);
+          unpackAvx512.vectorUnpack16(data, offset, len);
           break;
         case 17:
-          unpackAvx512.unrolledUnpackVector17(data, offset, len);
+          unpackAvx512.vectorUnpack17(data, offset, len);
           break;
         case 18:
-          unpackAvx512.unrolledUnpackVector18(data, offset, len);
+          unpackAvx512.vectorUnpack18(data, offset, len);
           break;
         case 19:
-          unpackAvx512.unrolledUnpackVector19(data, offset, len);
+          unpackAvx512.vectorUnpack19(data, offset, len);
           break;
         case 20:
-          unpackAvx512.unrolledUnpackVector20(data, offset, len);
+          unpackAvx512.vectorUnpack20(data, offset, len);
           break;
         case 21:
-          unpackAvx512.unrolledUnpackVector21(data, offset, len);
+          unpackAvx512.vectorUnpack21(data, offset, len);
           break;
         case 22:
-          unpackAvx512.unrolledUnpackVector22(data, offset, len);
+          unpackAvx512.vectorUnpack22(data, offset, len);
           break;
         case 23:
-          unpackAvx512.unrolledUnpackVector23(data, offset, len);
+          unpackAvx512.vectorUnpack23(data, offset, len);
           break;
         case 24:
-          unpackAvx512.unrolledUnpackVector24(data, offset, len);
+          unpackAvx512.vectorUnpack24(data, offset, len);
           break;
         case 26:
-          unpackAvx512.unrolledUnpackVector26(data, offset, len);
+          unpackAvx512.vectorUnpack26(data, offset, len);
           break;
         case 28:
-          unpackAvx512.unrolledUnpackVector28(data, offset, len);
+          unpackAvx512.vectorUnpack28(data, offset, len);
           break;
         case 30:
-          unpackAvx512.unrolledUnpackVector30(data, offset, len);
+          unpackAvx512.vectorUnpack30(data, offset, len);
           break;
         case 32:
-          unpackAvx512.unrolledUnpackVector32(data, offset, len);
+          unpackAvx512.vectorUnpack32(data, offset, len);
           break;
         case 40:
           unpackDefault.unrolledUnpack40(data, offset, len);

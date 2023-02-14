@@ -17,8 +17,8 @@
  */
 
 #include "Adaptor.hh"
-#include "Compression.hh"
 #include "Bpacking.hh"
+#include "Compression.hh"
 #include "Dispatch.hh"
 #include "RLEV2Util.hh"
 #include "RLEv2.hh"

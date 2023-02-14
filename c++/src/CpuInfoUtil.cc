@@ -426,9 +426,6 @@ namespace orc {
     bool ArchParseUserSimdLevel(const std::string& simd_level, int64_t* hardware_flags) {
       enum {
         USER_SIMD_NONE,
-        USER_SIMD_SSE4_2,
-        USER_SIMD_AVX,
-        USER_SIMD_AVX2,
         USER_SIMD_AVX512,
         USER_SIMD_MAX,
       };
@@ -437,12 +434,6 @@ namespace orc {
       // Parse the level
       if (simd_level == "AVX512") {
         level = USER_SIMD_AVX512;
-      } else if (simd_level == "AVX2") {
-        level = USER_SIMD_AVX2;
-      } else if (simd_level == "AVX") {
-        level = USER_SIMD_AVX;
-      } else if (simd_level == "SSE4_2") {
-        level = USER_SIMD_SSE4_2;
       } else if (simd_level == "NONE") {
         level = USER_SIMD_NONE;
       } else {
@@ -453,20 +444,11 @@ namespace orc {
       if (level < USER_SIMD_AVX512) {
         *hardware_flags &= ~CpuInfo::AVX512;
       }
-      if (level < USER_SIMD_AVX2) {
-        *hardware_flags &= ~(CpuInfo::AVX2 | CpuInfo::BMI2);
-      }
-      if (level < USER_SIMD_AVX) {
-        *hardware_flags &= ~CpuInfo::AVX;
-      }
-      if (level < USER_SIMD_SSE4_2) {
-        *hardware_flags &= ~(CpuInfo::SSE4_2 | CpuInfo::BMI1);
-      }
       return true;
     }
 
     void ArchVerifyCpuRequirements(const CpuInfo* ci) {
-#if defined(ORC_HAVE_AVX512)
+#if defined(ORC_HAVE_RUNTIME_AVX512)
       if (!ci->IsDetected(CpuInfo::AVX512)) {
         throw ParseError("CPU does not support the Supplemental AVX512 instruction set");
       }
@@ -489,15 +471,7 @@ namespace orc {
       }
     }
 
-#else
-    //------------------------------ PPC, ... ------------------------------//
-    bool ArchParseUserSimdLevel(const std::string& simd_level, int64_t* hardware_flags) {
-      return true;
-    }
-
-    void ArchVerifyCpuRequirements(const CpuInfo* ci) {}
-
-#endif  // X86, ARM, PPC
+#endif  // X86, ARM
 
   }  // namespace
 
@@ -524,16 +498,6 @@ namespace orc {
         throw ParseError("Invalid value for ORC_USER_SIMD_LEVEL: " + userSimdLevel);
       }
     }
-
-    // void EnableFeature(int64_t flag, bool enable) {
-    //   if (!enable) {
-    //     hardware_flags &= ~flag;
-    //   } else {
-    //     // Can't turn something on that can't be supported
-    //     DCHECK_EQ((~original_hardware_flags) & flag, 0);
-    //     hardware_flags |= (flag & original_hardware_flags);
-    //   }
-    // }
   };
 
   CpuInfo::~CpuInfo() = default;
@@ -588,10 +552,6 @@ namespace orc {
   void CpuInfo::VerifyCpuRequirements() const {
     return ArchVerifyCpuRequirements(this);
   }
-
-  // void CpuInfo::EnableFeature(int64_t flag, bool enable) {
-  //   impl_->EnableFeature(flag, enable);
-  // }
 
 }  // namespace orc
 

@@ -202,18 +202,6 @@ namespace orc {
     int64_t readVslong();
     uint64_t readVulong();
     int readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
-    void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
-                          uint64_t& startBit);
-
-    void unrolledUnpack4(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack8(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack16(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack24(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack32(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack40(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack48(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack56(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack64(int64_t* data, uint64_t offset, uint64_t len);
 
     template <typename T>
     uint64_t nextShortRepeats(T* data, uint64_t offset, uint64_t numValues, const char* notNull);
@@ -228,10 +216,9 @@ namespace orc {
 
     const std::unique_ptr<SeekableInputStream> inputStream;
     const bool isSigned;
-
     unsigned char firstByte;
-    uint64_t runLength;  // Length of the current run
-    uint64_t runRead;    // Number of returned values of the current run
+    uint64_t runLength;                 // Length of the current run
+    uint64_t runRead;                   // Number of returned values of the current run
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
   };

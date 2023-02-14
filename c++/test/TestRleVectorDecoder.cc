@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include <inttypes.h>
-
 #include <cstdlib>
 
 #include "MemoryOutputStream.hh"
@@ -108,8 +106,7 @@ namespace orc {
     int32_t lpad = offset * BARWIDTH / total;
     int32_t rpad = BARWIDTH - lpad;
 
-    printf("\r%s:%3d%% [%.*s%*s] [%" PRId64 "/%" PRId64 "]", testName, val, lpad, BARSTR, rpad, "",
-           offset, total);
+    printf("\r%s:%3d%% [%.*s%*s] [%ld /%ld]", testName, val, lpad, BARSTR, rpad, "", offset, total);
     fflush(stdout);
   }
 
