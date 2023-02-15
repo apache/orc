@@ -27,6 +27,7 @@
 #endif
 
 #ifdef _WIN32
+#define NOMINMAX
 #include <Windows.h>
 #include <intrin.h>
 #endif
@@ -449,7 +450,7 @@ namespace orc {
 
     void ArchVerifyCpuRequirements(const CpuInfo* ci) {
 #if defined(ORC_HAVE_RUNTIME_AVX512)
-      if (!ci->IsDetected(CpuInfo::AVX512)) {
+      if (!ci->isDetected(CpuInfo::AVX512)) {
         throw ParseError("CPU does not support the Supplemental AVX512 instruction set");
       }
 #endif
@@ -466,7 +467,7 @@ namespace orc {
     }
 
     void ArchVerifyCpuRequirements(const CpuInfo* ci) {
-      if (!ci->IsDetected(CpuInfo::ASIMD)) {
+      if (!ci->isDetected(CpuInfo::ASIMD)) {
         throw ParseError("CPU does not support the Armv8 Neon instruction set");
       }
     }
@@ -504,7 +505,7 @@ namespace orc {
 
   CpuInfo::CpuInfo() : impl_(new Impl) {}
 
-  const CpuInfo* CpuInfo::GetInstance() {
+  const CpuInfo* CpuInfo::getInstance() {
     static CpuInfo cpu_info;
     return &cpu_info;
   }
@@ -525,7 +526,7 @@ namespace orc {
     return impl_->model_name;
   }
 
-  int64_t CpuInfo::CacheSize(CacheLevel level) const {
+  int64_t CpuInfo::cacheSize(CacheLevel level) const {
     constexpr int64_t kDefaultCacheSizes[] = {
         32 * 1024,    // Level 1: 32K
         256 * 1024,   // Level 2: 256K
@@ -541,15 +542,15 @@ namespace orc {
     return std::max(kDefaultCacheSizes[i], impl_->cache_sizes[i - 1]);
   }
 
-  bool CpuInfo::IsSupported(int64_t flags) const {
+  bool CpuInfo::isSupported(int64_t flags) const {
     return (impl_->hardware_flags & flags) == flags;
   }
 
-  bool CpuInfo::IsDetected(int64_t flags) const {
+  bool CpuInfo::isDetected(int64_t flags) const {
     return (impl_->original_hardware_flags & flags) == flags;
   }
 
-  void CpuInfo::VerifyCpuRequirements() const {
+  void CpuInfo::verifyCpuRequirements() const {
     return ArchVerifyCpuRequirements(this);
   }
 

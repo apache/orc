@@ -91,17 +91,6 @@ if (BUILD_POSITION_INDEPENDENT_LIB)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif ()
 
-if(NOT DEFINED ORC_SIMD_LEVEL)
-  set(ORC_SIMD_LEVEL
-      "DEFAULT"
-      CACHE STRING "Compile time SIMD optimization level")
-endif()
-if(NOT DEFINED ORC_RUNTIME_SIMD_LEVEL)
-  set(ORC_RUNTIME_SIMD_LEVEL
-      "MAX"
-      CACHE STRING "Max runtime SIMD optimization level")
-endif()
-
 #
 # Compiler specific flags
 #
@@ -172,102 +161,6 @@ elseif (MSVC)
   set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
 endif ()
 
-include(CheckCXXCompilerFlag)
-include(CheckCXXSourceCompiles)
-message(STATUS "System processor: ${CMAKE_SYSTEM_PROCESSOR}")
-
-if(NOT DEFINED ORC_CPU_FLAG)
-  if(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|X86|x86|i[3456]86|x64")
-    set(ORC_CPU_FLAG "x86")
-  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64")
-    set(ORC_CPU_FLAG "aarch64")
-  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm$|armv[4-7]")
-    set(ORC_CPU_FLAG "aarch32")
-  else()
-    message(FATAL_ERROR "Unknown system processor")
-  endif()
-endif()
-
-# Check architecture specific compiler flags
-if(ORC_CPU_FLAG STREQUAL "x86")
-  # x86/amd64 compiler flags, msvc/gcc/clang
-  if(MSVC)
-    set(ORC_AVX512_FLAG "/arch:AVX512")
-    set(CXX_SUPPORTS_SSE4_2 TRUE)
-  else()
-    # skylake-avx512 consists of AVX512F,AVX512BW,AVX512VL,AVX512CD,AVX512DQ
-    set(ORC_AVX512_FLAG "-march=native -mbmi2")
-    set(ORC_AVX512_FLAG
-        "${ORC_AVX512_FLAG} -mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw -mavx512vbmi")
-  endif()
-  check_cxx_compiler_flag(${ORC_AVX512_FLAG} CXX_SUPPORTS_AVX512)
-  if(MINGW)
-    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
-    message(STATUS "Disable AVX512 support on MINGW for now")
-  else()
-    # Check for AVX512 support in the compiler.
-    set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_AVX512_FLAG}")
-    check_cxx_source_compiles("
-      #ifdef _MSC_VER
-      #include <intrin.h>
-      #else
-      #include <immintrin.h>
-      #endif
-
-      int main() {
-        __m512i mask = _mm512_set1_epi32(0x1);
-        char out[32];
-        _mm512_storeu_si512(out, mask);
-        return 0;
-      }"
-      CXX_SUPPORTS_AVX512)
-    set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
-  endif()
-
-  message(STATUS "BUILD_ENABLE_AVX512=${BUILD_ENABLE_AVX512}")
-  message(STATUS "CXX_SUPPORTS_AVX512=${CXX_SUPPORTS_AVX512}")
-  message(STATUS "ORC_RUNTIME_SIMD_LEVEL=${ORC_RUNTIME_SIMD_LEVEL}")
-  # Runtime SIMD level it can get from compiler and ORC_RUNTIME_SIMD_LEVEL
-  if(BUILD_ENABLE_AVX512 AND CXX_SUPPORTS_AVX512 AND ORC_RUNTIME_SIMD_LEVEL MATCHES "^(AVX512|MAX)$")
-    message(STATUS "Enable the AVX512 vector decode of bit-packing")
-    set(ORC_HAVE_RUNTIME_AVX512 ON)
-    set(ORC_SIMD_LEVEL "AVX512")
-    add_definitions(-DORC_HAVE_RUNTIME_AVX512)
-  else ()
-    set(ORC_HAVE_RUNTIME_AVX512 OFF)
-    message(STATUS "Disable the AVX512 vector decode of bit-packing")
-  endif()
-  if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
-    set(ORC_SIMD_LEVEL "NONE")
-  endif()
-elseif(ORC_CPU_FLAG STREQUAL "aarch64")
-  # Arm64 compiler flags, gcc/clang only
-  set(ORC_ARMV8_MARCH "armv8-a")
-  check_cxx_compiler_flag("-march=${ORC_ARMV8_MARCH}+sve" CXX_SUPPORTS_SVE)
-  if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
-    set(ORC_SIMD_LEVEL "NEON")
-  endif()
-endif()
-message(STATUS "ORC_HAVE_RUNTIME_AVX512=${ORC_HAVE_RUNTIME_AVX512}")
-message(STATUS "ORC_SIMD_LEVEL=${ORC_SIMD_LEVEL}")
-
-# Only enable additional instruction sets if they are supported
-if(ORC_CPU_FLAG STREQUAL "x86")
-  if(MINGW)
-    # Enable _xgetbv() intrinsic to query OS support for ZMM register saves
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mxsave")
-  endif()
-  if(ORC_SIMD_LEVEL STREQUAL "AVX512")
-    if(NOT CXX_SUPPORTS_AVX512)
-      message(FATAL_ERROR "AVX512 required but compiler doesn't support it.")
-    endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ORC_AVX512_FLAG}")
-  elseif(NOT ORC_SIMD_LEVEL STREQUAL "NONE")
-    message(WARNING "ORC_SIMD_LEVEL=${ORC_SIMD_LEVEL} not supported by x86.")
-  endif()
-endif()
-
 if (BUILD_CPP_ENABLE_METRICS)
   message(STATUS "Enable the metrics collection")
   add_compile_definitions(ENABLE_METRICS=1)
@@ -280,6 +173,7 @@ enable_testing()
 
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
+INCLUDE(ConfigSimdLevel)
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
