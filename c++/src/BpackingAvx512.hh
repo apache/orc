@@ -19,6 +19,8 @@
 #ifndef ORC_BPACKINGAVX512_HH
 #define ORC_BPACKINGAVX512_HH
 
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -34,7 +36,6 @@ namespace orc {
 #define MAX_VECTOR_BUF_16BIT_LENGTH 32
 #define MAX_VECTOR_BUF_32BIT_LENGTH 16
 
-#if defined(ORC_HAVE_RUNTIME_AVX512)
   class UnpackAvx512 {
    public:
     UnpackAvx512(RleDecoderV2* dec);
@@ -82,8 +83,8 @@ namespace orc {
     // Used by vectorially 17~32 bit-unpacking data
     uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH + 1];
   };
-#endif
 
 }  // namespace orc
 
+#endif  // #if defined(ORC_HAVE_RUNTIME_AVX512)
 #endif

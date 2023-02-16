@@ -33,32 +33,32 @@ namespace orc {
     MAX
   };
 
-  /*
-    A facility for dynamic dispatch according to available DispatchLevel.
-
-    Typical use:
-
-      static void my_function_default(...);
-      static void my_function_avx512(...);
-
-      struct MyDynamicFunction {
-        using FunctionType = decltype(&my_function_default);
-
-        static std::vector<std::pair<DispatchLevel, FunctionType>> implementations() {
-          return {
-            { DispatchLevel::NONE, my_function_default }
-      #if defined(ARROW_HAVE_RUNTIME_AVX512)
-            , { DispatchLevel::AVX512, my_function_avx512 }
-      #endif
-          };
-        }
-      };
-
-      void my_function(...) {
-        static DynamicDispatch<MyDynamicFunction> dispatch;
-        return dispatch.func(...);
-      }
-  */
+  /**
+   * A facility for dynamic dispatch according to available DispatchLevel.
+   *
+   * Typical use:
+   *
+   *   static void my_function_default(...);
+   *   static void my_function_avx512(...);
+   *
+   *   struct MyDynamicFunction {
+   *     using FunctionType = decltype(&my_function_default);
+   *
+   *     static std::vector<std::pair<DispatchLevel, FunctionType>> implementations() {
+   *       return {
+   *         { DispatchLevel::NONE, my_function_default }
+   *   #if defined(ORC_HAVE_RUNTIME_AVX512)
+   *         , { DispatchLevel::AVX512, my_function_avx512 }
+   *   #endif
+   *       };
+   *     }
+   *   };
+   *
+   *   void my_function(...) {
+   *     static DynamicDispatch<MyDynamicFunction> dispatch;
+   *     return dispatch.func(...);
+   *   }
+   */
   template <typename DynamicFunction>
   class DynamicDispatch {
    protected:
@@ -92,13 +92,13 @@ namespace orc {
 
    private:
     bool IsSupported(DispatchLevel level) const {
-      static const auto cpu_info = orc::CpuInfo::GetInstance();
+      static const auto cpu_info = CpuInfo::getInstance();
 
       switch (level) {
         case DispatchLevel::NONE:
           return true;
         case DispatchLevel::AVX512:
-          return cpu_info->IsSupported(CpuInfo::AVX512);
+          return cpu_info->isSupported(CpuInfo::AVX512);
         default:
           return false;
       }

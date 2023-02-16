@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef VECTOR_DECODER_HH
-#define VECTOR_DECODER_HH
+#ifndef BIT_UNPACKER_AVX512_HH
+#define BIT_UNPACKER_AVX512_HH
+
+#if defined(ORC_HAVE_RUNTIME_AVX512)
 
 // Mingw-w64 defines strcasecmp in string.h
 #if defined(_WIN32) && !defined(strcasecmp)
@@ -27,7 +29,6 @@
 #include <strings.h>
 #endif
 
-#if defined(ORC_HAVE_RUNTIME_AVX512)
 #include <immintrin.h>
 #include <vector>
 
@@ -484,5 +485,6 @@ namespace orc {
     return result;
   }
 }  // namespace orc
-#endif
+
+#endif  // #if defined(ORC_HAVE_RUNTIME_AVX512)
 #endif

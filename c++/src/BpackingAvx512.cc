@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+
 #include "BpackingAvx512.hh"
 #include "BitUnpackerAvx512.hh"
 #include "Utils.hh"
 
 namespace orc {
-
-#if defined(ORC_HAVE_RUNTIME_AVX512)
   UnpackAvx512::UnpackAvx512(RleDecoderV2* dec) : decoder(dec), unpackDefault(UnpackDefault(dec)) {
     // PASS
   }
@@ -4312,6 +4312,7 @@ namespace orc {
       startBit = decoder->bitsLeft == 0 ? 0 : (8 - decoder->bitsLeft);
     }
   }
-#endif
 
 }  // namespace orc
+
+#endif  // #if defined(ORC_HAVE_RUNTIME_AVX512)

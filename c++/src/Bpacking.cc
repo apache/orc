@@ -17,7 +17,11 @@
  */
 
 #include "Bpacking.hh"
+#include "BpackingDefault.hh"
 #include "CpuInfoUtil.hh"
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+#include "BpackingAvx512.hh"
+#endif
 
 namespace orc {
   int readLongsDefault(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
@@ -65,8 +69,8 @@ namespace orc {
     UnpackAvx512 unpackAvx512(decoder);
     UnpackDefault unpackDefault(decoder);
     uint64_t startBit = 0;
-    static const auto cpu_info = orc::CpuInfo::GetInstance();
-    if (cpu_info->IsSupported(CpuInfo::AVX512)) {
+    static const auto cpu_info = CpuInfo::getInstance();
+    if (cpu_info->isSupported(CpuInfo::AVX512)) {
       switch (fbs) {
         case 1:
           unpackAvx512.vectorUnpack1(data, offset, len);

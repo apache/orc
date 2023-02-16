@@ -21,10 +21,7 @@
 
 #include <stdint.h>
 
-#include "BpackingDefault.hh"
-#if defined(ORC_HAVE_RUNTIME_AVX512)
-#include "BpackingAvx512.hh"
-#endif
+#include "RLEv2.hh"
 
 namespace orc {
   int readLongsDefault(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
