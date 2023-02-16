@@ -78,7 +78,7 @@ namespace orc {
       Implementation cur{DispatchLevel::NONE, {}};
 
       for (const auto& impl : implementations) {
-        if (impl.first >= cur.first && IsSupported(impl.first)) {
+        if (impl.first >= cur.first && levelSupported(impl.first)) {
           // Higher (or same) level than current
           cur = impl;
         }
@@ -91,13 +91,14 @@ namespace orc {
     }
 
    private:
-    bool IsSupported(DispatchLevel level) const {
+    bool levelSupported(DispatchLevel level) const {
       static const auto cpu_info = CpuInfo::getInstance();
 
       switch (level) {
         case DispatchLevel::NONE:
           return true;
         case DispatchLevel::AVX512:
+        case DispatchLevel::MAX:
           return cpu_info->isSupported(CpuInfo::AVX512);
         default:
           return false;

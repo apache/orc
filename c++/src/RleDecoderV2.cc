@@ -48,7 +48,7 @@ namespace orc {
     if (bufferPointer == nullptr) {
       *bufStart += len;
     } else {
-      *bufStart = (char*)bufferPointer;
+      *bufStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
       *bufEnd = *bufStart + bufferLength;
     }
   }
@@ -61,7 +61,7 @@ namespace orc {
       if (!inputStream->Next(&bufferPointer, &bufferLength)) {
         throw ParseError("bad read in RleDecoderV2::readByte");
       }
-      *bufStart = (char*)bufferPointer;
+      *bufStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
       *bufEnd = *bufStart + bufferLength;
     }
 
@@ -99,12 +99,11 @@ namespace orc {
     using FunctionType = decltype(&readLongsDefault);
 
     static std::vector<std::pair<DispatchLevel, FunctionType>> implementations() {
-      return {{DispatchLevel::NONE, readLongsDefault}
 #if defined(ORC_HAVE_RUNTIME_AVX512)
-              ,
-              {DispatchLevel::AVX512, readLongsAvx512}
+      return {{DispatchLevel::NONE, readLongsDefault}, {DispatchLevel::AVX512, readLongsAvx512}};
+#else
+      return {{DispatchLevel::NONE, readLongsDefault}};
 #endif
-      };
     }
   };
 
