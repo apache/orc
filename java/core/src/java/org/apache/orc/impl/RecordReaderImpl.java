@@ -1176,7 +1176,8 @@ public class RecordReaderImpl implements RecordReader {
             leafValues[pred] = exceptionAnswer[pred];
           } else {
             if (indexes[columnIx] == null) {
-              throw new AssertionError("Index is not populated for " + columnIx);
+              LOG.warn("Index is not populated for " + columnIx);
+              return READ_ALL_RGS;
             }
             OrcProto.RowIndexEntry entry = indexes[columnIx].getEntry(rowGroup);
             if (entry == null) {
@@ -1290,13 +1291,7 @@ public class RecordReaderImpl implements RecordReader {
   private void readStripe() throws IOException {
     StripeInformation stripe = beginReadStripe();
     planner.parseStripe(stripe, fileIncluded);
-    try {
-      includedRowGroups = pickRowGroups();
-    } catch (Throwable e) {
-      // We should not exit directly when pickRowGroup failed.
-      LOG.warn("Skip to pick up row groups for " + e.getMessage());
-    }
-
+    includedRowGroups = pickRowGroups();
     // move forward to the first unskipped row
     if (includedRowGroups != null) {
       while (rowInStripe < rowCountInStripe &&
