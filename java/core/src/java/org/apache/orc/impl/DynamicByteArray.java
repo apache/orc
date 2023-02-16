@@ -18,6 +18,9 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.io.Text;
+import org.apache.orc.OrcConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +33,9 @@ import java.util.Arrays;
  * chunks that are allocated when needed.
  */
 public final class DynamicByteArray {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DynamicByteArray.class);
+
   static final int DEFAULT_CHUNKSIZE = 32 * 1024;
   static final int DEFAULT_NUM_CHUNKS = 128;
 
@@ -59,10 +65,16 @@ public final class DynamicByteArray {
         int newSize = Math.max(chunkIndex + 1, 2 * data.length);
         data = Arrays.copyOf(data, newSize);
       }
-      for(int i=initializedChunks; i <= chunkIndex; ++i) {
+      for (int i = initializedChunks; i <= chunkIndex; ++i) {
         data[i] = new byte[chunkSize];
       }
       initializedChunks = chunkIndex + 1;
+    } else if (chunkIndex < 0) {
+      LOG.error("chunkIndex overflow:{}. You can adjust the relevant configuration: {},{}.",
+          chunkIndex,
+          OrcConf.DIRECT_ENCODING_COLUMNS.getAttribute(),
+          OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute()
+      );
     }
   }
 
