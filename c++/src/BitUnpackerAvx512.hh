@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef BIT_UNPACKER_AVX512_HH
-#define BIT_UNPACKER_AVX512_HH
+#ifndef ORC_BIT_UNPACKER_AVX512_HH
+#define ORC_BIT_UNPACKER_AVX512_HH
 
 #if defined(ORC_HAVE_RUNTIME_AVX512)
 
