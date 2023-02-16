@@ -1292,6 +1292,7 @@ public class RecordReaderImpl implements RecordReader {
     StripeInformation stripe = beginReadStripe();
     planner.parseStripe(stripe, fileIncluded);
     includedRowGroups = pickRowGroups();
+
     // move forward to the first unskipped row
     if (includedRowGroups != null) {
       while (rowInStripe < rowCountInStripe &&
