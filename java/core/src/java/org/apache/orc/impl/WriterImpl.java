@@ -183,17 +183,14 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
 
-    if (opts.getRowIndexStride() >= 0) {
+    // ORC-1362: if isBuildIndex=false, then rowIndexStride will be set to 0.
+    if (opts.getRowIndexStride() >= 0 && opts.isBuildIndex()) {
       this.rowIndexStride = opts.getRowIndexStride();
     } else {
       this.rowIndexStride = 0;
     }
 
-    if (!opts.isBuildIndex() && rowIndexStride > 0) {
-      throw new IllegalArgumentException("Please set rowIndexStride to zero " +
-          "if you want to disable row index. (current:" + rowIndexStride + ")");
-    }
-    this.buildIndex = opts.isBuildIndex() && (rowIndexStride > 0);
+    this.buildIndex = rowIndexStride > 0;
 
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
       throw new IllegalArgumentException("Row stride must be at least " +
