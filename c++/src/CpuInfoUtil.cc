@@ -43,6 +43,7 @@
 #include <optional>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "orc/Exceptions.hh"
 
@@ -222,8 +223,7 @@ namespace orc {
       // ENOENT is the official errno value for non-existing sysctl's,
       // but EINVAL and ENOTSUP have been seen in the wild.
       if (errno != ENOENT && errno != EINVAL && errno != ENOTSUP) {
-        auto st = IOErrorFromErrno(errno, "sysctlbyname failed for '", name, "'");
-        throw ParseError(st.ToString());
+    	throw ParseError("sysctlbyname failed for '" + name + "'");
       }
       return std::nullopt;
     }
@@ -277,6 +277,8 @@ namespace orc {
       }
 
       // TODO: vendor, model_name
+      vendor = Vendor::Unknown;
+      *model_name = "Unknown";
     }
 
 #else
@@ -505,10 +507,19 @@ namespace orc {
 
   CpuInfo::CpuInfo() : impl_(new Impl) {}
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#endif
+
   const CpuInfo* CpuInfo::getInstance() {
     static CpuInfo cpu_info;
     return &cpu_info;
   }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
   int64_t CpuInfo::hardwareFlags() const {
     return impl_->hardware_flags;
