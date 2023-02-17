@@ -19,8 +19,6 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcConf;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,8 +31,6 @@ import java.util.Arrays;
  * chunks that are allocated when needed.
  */
 public final class DynamicByteArray {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DynamicByteArray.class);
 
   static final int DEFAULT_CHUNKSIZE = 32 * 1024;
   static final int DEFAULT_NUM_CHUNKS = 128;
