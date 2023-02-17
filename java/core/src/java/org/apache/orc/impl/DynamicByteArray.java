@@ -70,11 +70,11 @@ public final class DynamicByteArray {
       }
       initializedChunks = chunkIndex + 1;
     } else if (chunkIndex < 0) {
-      LOG.error("chunkIndex overflow:{}. You can adjust the relevant configuration: {},{}.",
-          chunkIndex,
-          OrcConf.DIRECT_ENCODING_COLUMNS.getAttribute(),
-          OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute()
-      );
+      throw new RuntimeException(String.format("chunkIndex overflow:%d. " +
+        "You can set %s=columnName, or %s=0 to turn off dictionary encoding.",
+        chunkIndex,
+        OrcConf.DIRECT_ENCODING_COLUMNS.getAttribute(),
+        OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute()));
     }
   }
 
