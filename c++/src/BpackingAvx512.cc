@@ -96,7 +96,7 @@ namespace orc {
       if (numElements >= 64) {
         __m512i reverseMask1u = _mm512_load_si512(reverseMaskTable1u);
         while (numElements >= 64) {
-          uint64_t src_64 = *(uint64_t*)srcPtr;
+          uint64_t src_64 = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(srcPtr));
           // convert mask to 512-bit register. 0 --> 0x00, 1 --> 0xFF
           __m512i srcmm = _mm512_movm_epi8(src_64);
           // make 0x00 --> 0x00, 0xFF --> 0x01
