@@ -41,6 +41,7 @@
 #include <fstream>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -223,7 +224,9 @@ namespace orc {
       // ENOENT is the official errno value for non-existing sysctl's,
       // but EINVAL and ENOTSUP have been seen in the wild.
       if (errno != ENOENT && errno != EINVAL && errno != ENOTSUP) {
-    	throw ParseError("sysctlbyname failed for '" + name + "'");
+        std::ostringstream ss;
+        ss << "sysctlbyname failed for '" << name << "'";
+        throw ParseError(ss.str());
       }
       return std::nullopt;
     }
@@ -277,7 +280,7 @@ namespace orc {
       }
 
       // TODO: vendor, model_name
-      vendor = Vendor::Unknown;
+      *vendor = CpuInfo::Vendor::Unknown;
       *model_name = "Unknown";
     }
 
