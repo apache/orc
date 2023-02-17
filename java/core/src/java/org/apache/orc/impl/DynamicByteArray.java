@@ -31,7 +31,6 @@ import java.util.Arrays;
  * chunks that are allocated when needed.
  */
 public final class DynamicByteArray {
-
   static final int DEFAULT_CHUNKSIZE = 32 * 1024;
   static final int DEFAULT_NUM_CHUNKS = 128;
 
