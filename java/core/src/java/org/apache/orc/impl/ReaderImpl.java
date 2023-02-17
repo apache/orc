@@ -1043,7 +1043,7 @@ public class ReaderImpl implements Reader {
           InStream.createCodedInputStream(stream));
       return meta.getStripeStatsList();
     } catch (InvalidProtocolBufferException e) {
-      LOG.warn("Failed to parse stripe statistics; check ORC-1361 for more details.", e);
+      LOG.warn("Failed to parse stripe statistics", e);
       return Collections.emptyList();
     }
   }
