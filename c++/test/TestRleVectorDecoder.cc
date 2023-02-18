@@ -106,7 +106,12 @@ namespace orc {
     int32_t lpad = offset * BARWIDTH / total;
     int32_t rpad = BARWIDTH - lpad;
 
-    printf("\r%s:%3d%% [%.*s%*s] [%ld /%ld]", testName, val, lpad, BARSTR, rpad, "", offset, total);
+#ifdef __APPLE__
+    printf("\r%s:%3d%% [%.*s%*s] [%lld/%lld]", testName, val, lpad, BARSTR, rpad, "", offset,
+           total);
+#else
+    printf("\r%s:%3d%% [%.*s%*s] [%ld/%ld]", testName, val, lpad, BARSTR, rpad, "", offset, total);
+#endif
     fflush(stdout);
   }
 
