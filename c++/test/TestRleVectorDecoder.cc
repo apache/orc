@@ -33,6 +33,8 @@ namespace orc {
   using ::testing::Values;
 
   const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
+  const char finish = '#';
+  std::string flags("-\\|/");
 
   class RleV2BitUnpackAvx512Test : public TestWithParam<bool> {
     virtual void SetUp();
@@ -99,20 +101,26 @@ namespace orc {
     }
   }
 
-#define BARSTR "##################################################"
-#define BARWIDTH 50
-  void testProgress(const char* testName, int64_t offset, int64_t total) {
-    int32_t val = offset * 100 / total;
-    int32_t lpad = offset * BARWIDTH / total;
-    int32_t rpad = BARWIDTH - lpad;
+  void printBar(const char* testName, int64_t offset, int64_t total) {
+    int64_t n = offset * 50 / total;
+    std::string progress(50, '.');
+    for (int i = 0; i < n; i++) {
+      progress[i] = finish;
+    }
 
-#ifdef __APPLE__
-    printf("\r%s:%3d%% [%.*s%*s] [%lld/%lld]", testName, val, lpad, BARSTR, rpad, "", offset,
-           total);
-#else
-    printf("\r%s:%3d%% [%.*s%*s] [%ld/%ld]", testName, val, lpad, BARSTR, rpad, "", offset, total);
-#endif
-    fflush(stdout);
+    std::string f, p;
+    if (n == 50) {
+      f = "\e[1;32mOK\e[m";
+      p = "\e[1;32m100%\e[m";
+    } else {
+      f = flags[n % 4];
+      p = std::to_string(n) + '%';
+    }
+    std::cout << std::unitbuf << testName << ":" << '[' << f << ']' << '[' << progress << ']' << '['
+              << p << "]" << '\r';
+    if (n >= 50) {
+      std::cout << std::endl;
+    }
   }
 
   std::unique_ptr<RleEncoder> RleV2BitUnpackAvx512Test::getEncoder(RleVersion version,
@@ -148,7 +156,7 @@ namespace orc {
     uint8_t bitWidth = 1;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("1bit Test 1st Part", blockSize, 10000);
+      printBar("1bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -156,7 +164,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("1bit Test 2nd Part", blockSize, 10000);
+      printBar("1bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -165,7 +173,7 @@ namespace orc {
     uint8_t bitWidth = 2;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("2bit Test 1st Part", blockSize, 10000);
+      printBar("2bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -173,7 +181,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("2bit Test 2nd Part", blockSize, 10000);
+      printBar("2bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -182,7 +190,7 @@ namespace orc {
     uint8_t bitWidth = 3;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("3bit Test 1st Part", blockSize, 10000);
+      printBar("3bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -190,7 +198,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("3bit Test 2nd Part", blockSize, 10000);
+      printBar("3bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -199,7 +207,7 @@ namespace orc {
     uint8_t bitWidth = 4;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("4bit Test 1st Part", blockSize, 10000);
+      printBar("4bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -207,7 +215,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("4bit Test 2nd Part", blockSize, 10000);
+      printBar("4bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -216,7 +224,7 @@ namespace orc {
     uint8_t bitWidth = 5;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("5bit Test 1st Part", blockSize, 10000);
+      printBar("5bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -224,7 +232,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("5bit Test 2nd Part", blockSize, 10000);
+      printBar("5bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -233,7 +241,7 @@ namespace orc {
     uint8_t bitWidth = 6;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("6bit Test 1st Part", blockSize, 10000);
+      printBar("6bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -241,7 +249,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("6bit Test 2nd Part", blockSize, 10000);
+      printBar("6bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -250,7 +258,7 @@ namespace orc {
     uint8_t bitWidth = 7;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("7bit Test 1st Part", blockSize, 10000);
+      printBar("7bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -258,7 +266,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("7bit Test 2nd Part", blockSize, 10000);
+      printBar("7bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -268,7 +276,7 @@ namespace orc {
 
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("9bit Test 1st Part", blockSize, 10000);
+      printBar("9bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -276,7 +284,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("9bit Test 2nd Part", blockSize, 10000);
+      printBar("9bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -285,7 +293,7 @@ namespace orc {
     uint8_t bitWidth = 10;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("10bit Test 1st Part", blockSize, 10000);
+      printBar("10bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -293,7 +301,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("10bit Test 2nd Part", blockSize, 10000);
+      printBar("10bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -302,7 +310,7 @@ namespace orc {
     uint8_t bitWidth = 11;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("11bit Test 1st Part", blockSize, 10000);
+      printBar("11bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -310,7 +318,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("11bit Test 2nd Part", blockSize, 10000);
+      printBar("11bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -319,7 +327,7 @@ namespace orc {
     uint8_t bitWidth = 12;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("12bit Test 1st Part", blockSize, 10000);
+      printBar("12bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -327,7 +335,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("12bit Test 2nd Part", blockSize, 10000);
+      printBar("12bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -336,7 +344,7 @@ namespace orc {
     uint8_t bitWidth = 13;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("13bit Test 1st Part", blockSize, 10000);
+      printBar("13bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -344,7 +352,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("13bit Test 2nd Part", blockSize, 10000);
+      printBar("13bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -353,7 +361,7 @@ namespace orc {
     uint8_t bitWidth = 14;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("14bit Test 1st Part", blockSize, 10000);
+      printBar("14bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -361,7 +369,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("14bit Test 2nd Part", blockSize, 10000);
+      printBar("14bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -370,7 +378,7 @@ namespace orc {
     uint8_t bitWidth = 15;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("15bit Test 1st Part", blockSize, 10000);
+      printBar("15bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -378,7 +386,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("15bit Test 2nd Part", blockSize, 10000);
+      printBar("15bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -387,7 +395,7 @@ namespace orc {
     uint8_t bitWidth = 16;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("16bit Test 1st Part", blockSize, 10000);
+      printBar("16bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -395,7 +403,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("16bit Test 2nd Part", blockSize, 10000);
+      printBar("16bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -404,7 +412,7 @@ namespace orc {
     uint8_t bitWidth = 17;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("17bit Test 1st Part", blockSize, 10000);
+      printBar("17bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -412,7 +420,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("17bit Test 2nd Part", blockSize, 10000);
+      printBar("17bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -421,7 +429,7 @@ namespace orc {
     uint8_t bitWidth = 18;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("18bit Test 1st Part", blockSize, 10000);
+      printBar("18bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -429,7 +437,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("18bit Test 2nd Part", blockSize, 10000);
+      printBar("18bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -438,7 +446,7 @@ namespace orc {
     uint8_t bitWidth = 19;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("19bit Test 1st Part", blockSize, 10000);
+      printBar("19bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -446,7 +454,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("19bit Test 2nd Part", blockSize, 10000);
+      printBar("19bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -455,7 +463,7 @@ namespace orc {
     uint8_t bitWidth = 20;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("20bit Test 1st Part", blockSize, 10000);
+      printBar("20bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -463,7 +471,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("20bit Test 2nd Part", blockSize, 10000);
+      printBar("20bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -472,7 +480,7 @@ namespace orc {
     uint8_t bitWidth = 21;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("21bit Test 1st Part", blockSize, 10000);
+      printBar("21bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -480,7 +488,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("21bit Test 2nd Part", blockSize, 10000);
+      printBar("21bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -489,7 +497,7 @@ namespace orc {
     uint8_t bitWidth = 22;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("22bit Test 1st Part", blockSize, 10000);
+      printBar("22bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -497,7 +505,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("22bit Test 2nd Part", blockSize, 10000);
+      printBar("22bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -507,7 +515,7 @@ namespace orc {
     runTest(RleVersion_2, 3277, 0, 0, true, false, bitWidth, 108);
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("23bit Test 1st Part", blockSize, 10000);
+      printBar("23bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -515,7 +523,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("23bit Test 2nd Part", blockSize, 10000);
+      printBar("23bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -524,7 +532,7 @@ namespace orc {
     uint8_t bitWidth = 24;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("24bit Test 1st Part", blockSize, 10000);
+      printBar("24bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -532,7 +540,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("24bit Test 2nd Part", blockSize, 10000);
+      printBar("24bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -541,7 +549,7 @@ namespace orc {
     uint8_t bitWidth = 26;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("26bit Test 1st Part", blockSize, 10000);
+      printBar("26bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -549,7 +557,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("26bit Test 2nd Part", blockSize, 10000);
+      printBar("26bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -558,7 +566,7 @@ namespace orc {
     uint8_t bitWidth = 28;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("28bit Test 1st Part", blockSize, 10000);
+      printBar("28bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -566,7 +574,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("28bit Test 2nd Part", blockSize, 10000);
+      printBar("28bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -575,7 +583,7 @@ namespace orc {
     uint8_t bitWidth = 30;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("30bit Test 1st Part", blockSize, 10000);
+      printBar("30bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -583,7 +591,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("30bit Test 2nd Part", blockSize, 10000);
+      printBar("30bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
@@ -592,7 +600,7 @@ namespace orc {
     uint8_t bitWidth = 32;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
-      testProgress("32bit Test 1st Part", blockSize, 10000);
+      printBar("32bit Test 1st Part", blockSize, 10000);
     }
     printf("\n");
 
@@ -600,7 +608,7 @@ namespace orc {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      testProgress("32bit Test 2nd Part", blockSize, 10000);
+      printBar("32bit Test 2nd Part", blockSize, 10000);
     }
     printf("\n");
   }
