@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestDynamicArray {
 
@@ -90,5 +91,26 @@ public class TestDynamicArray {
   public void testEmptyIntArrayToString() {
     DynamicIntArray dia = new DynamicIntArray();
     assertEquals("{}", dia.toString());
+  }
+
+  @Test
+  public void testByteArrayOverflow() {
+    DynamicByteArray dba = new DynamicByteArray();
+
+    byte[] val = new byte[1024];
+    dba.add(val, 0, val.length);
+
+    byte[] bigVal = new byte[2048];
+    RuntimeException exception = assertThrows(
+      RuntimeException.class,
+      // Need to construct a large array, limited by the heap limit of UT, may cause OOM.
+      // The add method does not check whether byte[] and length are consistent,
+      // so it is a bit hacky.
+      () -> dba.add(bigVal, 0, Integer.MAX_VALUE - 16));
+
+    assertEquals("chunkIndex overflow:-65535. " +
+      "You can set orc.column.encoding.direct=columnName, " +
+      "or orc.dictionary.key.threshold=0 to turn off dictionary encoding.",
+      exception.getMessage());
   }
 }
