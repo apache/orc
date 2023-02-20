@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * The utility class for testing different implementation of dictionary.
  */
 public class StringDictTestingUtils {
+
   private StringDictTestingUtils() {
     // Avoid accidental instantiate
   }
