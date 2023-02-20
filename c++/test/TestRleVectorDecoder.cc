@@ -34,7 +34,7 @@ namespace orc {
 
   const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
   const char finish = '#';
-  std::string flags("-\\|/");
+  std::string flags = "-\\|/";
 
   class RleV2BitUnpackAvx512Test : public TestWithParam<bool> {
     virtual void SetUp();
@@ -102,23 +102,23 @@ namespace orc {
   }
 
   void printBar(const char* testName, int64_t offset, int64_t total) {
-    int64_t n = offset * 50 / total;
-    std::string progress(50, '.');
+    int64_t n = offset * 100 / total;
+    std::string progress(100, '.');
     for (int i = 0; i < n; i++) {
       progress[i] = finish;
     }
 
     std::string f, p;
-    if (n == 50) {
-      f = "\e[1;32mOK\e[m";
-      p = "\e[1;32m100%\e[m";
+    if (n == 100) {
+      f = "OK";
+      p = "100%";
     } else {
       f = flags[n % 4];
       p = std::to_string(n) + '%';
     }
     std::cout << std::unitbuf << testName << ":" << '[' << f << ']' << '[' << progress << ']' << '['
               << p << "]" << '\r';
-    if (n >= 50) {
+    if (n >= 100) {
       std::cout << std::endl;
     }
   }
@@ -158,15 +158,13 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("1bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
         runTest(RleVersion_2, dataSize, 0, 0, true, false, bitWidth, blockSize);
       }
-      printBar("1bit Test 1st Part", blockSize, 10000);
+      printBar("1bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_2bit) {
@@ -175,7 +173,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("2bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -183,7 +180,6 @@ namespace orc {
       }
       printBar("2bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_3bit) {
@@ -192,7 +188,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("3bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -200,7 +195,6 @@ namespace orc {
       }
       printBar("3bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_4bit) {
@@ -209,7 +203,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("4bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -217,7 +210,6 @@ namespace orc {
       }
       printBar("4bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_5bit) {
@@ -226,7 +218,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("5bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -234,7 +225,6 @@ namespace orc {
       }
       printBar("5bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_6bit) {
@@ -243,7 +233,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("6bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -251,7 +240,6 @@ namespace orc {
       }
       printBar("6bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_7bit) {
@@ -260,7 +248,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("7bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -268,7 +255,6 @@ namespace orc {
       }
       printBar("7bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_9bit) {
@@ -278,7 +264,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("9bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -286,7 +271,6 @@ namespace orc {
       }
       printBar("9bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_10bit) {
@@ -295,7 +279,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("10bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -303,7 +286,6 @@ namespace orc {
       }
       printBar("10bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_11bit) {
@@ -312,7 +294,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("11bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -320,7 +301,6 @@ namespace orc {
       }
       printBar("11bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_12bit) {
@@ -329,7 +309,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("12bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -337,7 +316,6 @@ namespace orc {
       }
       printBar("12bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_13bit) {
@@ -346,7 +324,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("13bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -354,7 +331,6 @@ namespace orc {
       }
       printBar("13bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_14bit) {
@@ -363,7 +339,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("14bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -371,7 +346,6 @@ namespace orc {
       }
       printBar("14bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_15bit) {
@@ -380,7 +354,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("15bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -388,7 +361,6 @@ namespace orc {
       }
       printBar("15bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_16bit) {
@@ -397,7 +369,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("16bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -405,7 +376,6 @@ namespace orc {
       }
       printBar("16bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_17bit) {
@@ -414,7 +384,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("17bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -422,7 +391,6 @@ namespace orc {
       }
       printBar("17bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_18bit) {
@@ -431,7 +399,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("18bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -439,7 +406,6 @@ namespace orc {
       }
       printBar("18bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_19bit) {
@@ -448,7 +414,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("19bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -456,7 +421,6 @@ namespace orc {
       }
       printBar("19bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_20bit) {
@@ -465,7 +429,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("20bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -473,7 +436,6 @@ namespace orc {
       }
       printBar("20bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_21bit) {
@@ -482,7 +444,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("21bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -490,7 +451,6 @@ namespace orc {
       }
       printBar("21bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_22bit) {
@@ -499,7 +459,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("22bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -507,7 +466,6 @@ namespace orc {
       }
       printBar("22bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_23bit) {
@@ -517,7 +475,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("23bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -525,7 +482,6 @@ namespace orc {
       }
       printBar("23bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_24bit) {
@@ -534,7 +490,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("24bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -542,7 +497,6 @@ namespace orc {
       }
       printBar("24bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_26bit) {
@@ -551,7 +505,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("26bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -559,7 +512,6 @@ namespace orc {
       }
       printBar("26bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_28bit) {
@@ -568,7 +520,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("28bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -576,7 +527,6 @@ namespace orc {
       }
       printBar("28bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_30bit) {
@@ -585,7 +535,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("30bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -593,7 +542,6 @@ namespace orc {
       }
       printBar("30bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_32bit) {
@@ -602,7 +550,6 @@ namespace orc {
       runTest(RleVersion_2, 10240, 0, 0, true, false, bitWidth, blockSize);
       printBar("32bit Test 1st Part", blockSize, 10000);
     }
-    printf("\n");
 
     for (uint64_t blockSize = 1000; blockSize <= 10000; blockSize += 1000) {
       for (uint64_t dataSize = 1000; dataSize <= 70000; dataSize += 1000) {
@@ -610,7 +557,6 @@ namespace orc {
       }
       printBar("32bit Test 2nd Part", blockSize, 10000);
     }
-    printf("\n");
   }
 
   INSTANTIATE_TEST_SUITE_P(OrcTest, RleV2BitUnpackAvx512Test, Values(true, false));
