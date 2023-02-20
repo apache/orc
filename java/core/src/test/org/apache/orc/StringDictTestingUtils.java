@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
 /**
  * The utility class for testing different implementation of dictionary.
  */
