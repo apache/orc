@@ -534,9 +534,9 @@ public class TestReaderImpl {
     // We use ORC files in two languages to test, the previous Java version could not work
     // well when orc.row.index.stride > 0 and orc.create.index=false, now it can skip these row groups.
     Path[] paths = new Path[] {
-        // Writen by C++ API with schema struct<x:int,y:string> stripeSize=0
+        // Writen by C++ API with schema struct<x:int,y:string> orc.row.index.stride=0
         new Path(workDir, "TestOrcFile.testSargSkipPickupGroupWithoutIndexCPlusPlus.orc"),
-        // Writen by old Java API with schema struct<x:int,y:string> stripeSize=1000 orc.create.index=false
+        // Writen by old Java API with schema struct<x:int,y:string> orc.row.index.stride=1000,orc.create.index=false
         new Path(workDir, "TestOrcFile.testSargSkipPickupGroupWithoutIndexJava.orc"),
     };
     for (Path path: paths) {
