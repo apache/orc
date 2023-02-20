@@ -532,7 +532,7 @@ public class TestReaderImpl {
   public void testSargSkipPickupGroupWithoutIndex() throws IOException {
     Configuration conf = new Configuration();
     // We use ORC files in two languages to test, the previous Java version could not work
-    // well when stripeSize > 0 and orc.create.index=false, now it can skip these row groups.
+    // well when orc.row.index.stride > 0 and orc.create.index=false, now it can skip these row groups.
     Path[] paths = new Path[] {
         // Writen by C++ API with schema struct<x:int,y:string> stripeSize=0
         new Path(workDir, "TestOrcFile.testSargSkipPickupGroupWithoutIndexCPlusPlus.orc"),
