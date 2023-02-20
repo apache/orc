@@ -527,4 +527,41 @@ public class TestReaderImpl {
       }
     }
   }
+
+  @Test
+  public void testSargSkipPickupGroupWithoutIndex() throws IOException {
+    Configuration conf = new Configuration();
+    // We use ORC files in two languages to test, the previous Java version could not work
+    // well when orc.row.index.stride > 0 and orc.create.index=false, now it can skip these row groups.
+    Path[] paths = new Path[] {
+        // Writen by C++ API with schema struct<x:int,y:string> orc.row.index.stride=0
+        new Path(workDir, "TestOrcFile.testSargSkipPickupGroupWithoutIndexCPlusPlus.orc"),
+        // Writen by old Java API with schema struct<x:int,y:string> orc.row.index.stride=1000,orc.create.index=false
+        new Path(workDir, "TestOrcFile.testSargSkipPickupGroupWithoutIndexJava.orc"),
+    };
+    for (Path path: paths) {
+      FileSystem fs = path.getFileSystem(conf);
+      try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
+          OrcFile.readerOptions(conf).filesystem(fs))) {
+
+        SearchArgument sarg = SearchArgumentFactory.newBuilder()
+            .startNot()
+            .lessThan("x", PredicateLeaf.Type.LONG, 100L)
+            .end().build();
+
+        try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{"x"}))) {
+          TypeDescription schema = reader.getSchema();
+          assertEquals("struct<x:int,y:string>", schema.toString());
+          VectorizedRowBatch batch = schema.createRowBatchV2();
+          assertTrue(rows.nextBatch(batch), "No rows read out!");
+          assertEquals(1024, batch.size);
+          LongColumnVector col1 = (LongColumnVector) batch.cols[0];
+          for (int i = 0; i < batch.size; ++i) {
+            assertEquals(i, col1.vector[i]);
+          }
+          assertTrue(rows.nextBatch(batch));
+        }
+      }
+    }
+  }
 }
