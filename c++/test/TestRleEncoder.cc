@@ -36,7 +36,7 @@ namespace orc {
   const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
 
   class RleTest : public TestWithParam<bool> {
-    virtual void SetUp();
+    void SetUp() override;
 
    protected:
     bool alignBitpacking;

@@ -60,11 +60,11 @@ namespace orc {
     MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t());
     MOCK_CONST_METHOD0(isDecimalAsLong, bool());
 
-    MemoryPool& getMemoryPool() const {
+    MemoryPool& getMemoryPool() const override {
       return *getDefaultPool();
     }
 
-    ReaderMetrics* getReaderMetrics() const {
+    ReaderMetrics* getReaderMetrics() const override {
       return getDefaultReaderMetrics();
     }
 
@@ -92,7 +92,7 @@ namespace orc {
   }
 
   class TestColumnReaderEncoded : public TestWithParam<bool> {
-    virtual void SetUp();
+    void SetUp() override;
 
    protected:
     bool encoded;

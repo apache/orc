@@ -32,7 +32,7 @@ namespace orc {
 
   class TypeAttributes : public ::testing::Test {
    public:
-    ~TypeAttributes();
+    ~TypeAttributes() override;
 
    protected:
     static void SetUpTestCase() {

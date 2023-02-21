@@ -78,7 +78,7 @@ namespace orc {
     // You can implement all the usual fixture class members here.
     // To access the test parameter, call GetParam() from class
     // TestWithParam<T>.
-    virtual void SetUp();
+    void SetUp() override;
 
    protected:
     FileVersion fileVersion;
