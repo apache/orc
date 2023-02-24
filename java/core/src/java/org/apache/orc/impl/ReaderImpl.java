@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -55,6 +56,7 @@ import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -1035,11 +1037,15 @@ public class ReaderImpl implements Reader {
       long offset,
       int length,
       InStream.StreamOptions options) throws IOException {
-    InStream stream = InStream.create("stripe stats", tailBuffer, offset,
-        length, options);
-    OrcProto.Metadata meta = OrcProto.Metadata.parseFrom(
-        InStream.createCodedInputStream(stream));
-    return meta.getStripeStatsList();
+    try (InStream stream = InStream.create("stripe stats", tailBuffer, offset,
+        length, options)) {
+      OrcProto.Metadata meta = OrcProto.Metadata.parseFrom(
+          InStream.createCodedInputStream(stream));
+      return meta.getStripeStatsList();
+    } catch (InvalidProtocolBufferException e) {
+      LOG.warn("Failed to parse stripe statistics", e);
+      return Collections.emptyList();
+    }
   }
 
   private List<StripeStatistics> convertFromProto(List<OrcProto.StripeStatistics> list) {
