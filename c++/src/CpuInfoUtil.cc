@@ -60,6 +60,10 @@
 #define CPUINFO_ARCH_PPC
 #endif
 
+#ifndef ORC_HAVE_RUNTIME_AVX512
+#define UNUSED(x) (void)(x)
+#endif
+
 namespace orc {
 
   namespace {
@@ -458,6 +462,8 @@ namespace orc {
       if (!ci->isDetected(CpuInfo::AVX512)) {
         throw ParseError("CPU does not support the Supplemental AVX512 instruction set");
       }
+#else
+      UNUSED(ci);
 #endif
     }
 
