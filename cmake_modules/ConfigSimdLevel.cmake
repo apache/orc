@@ -35,7 +35,8 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   if(MSVC)
     set(ORC_AVX512_FLAG "/arch:AVX512")
   else()
-    # skylake-avx512 consists of AVX512F,AVX512BW,AVX512VL,AVX512CD,AVX512DQ
+    # "arch=native" selects the CPU to generate code for at compilation time by determining the processor type of the compiling machine.
+    # Using -march=native enables all instruction subsets supported by the local machine.
     set(ORC_AVX512_FLAG "-march=native -mtune=native")
   endif()
   check_cxx_compiler_flag(${ORC_AVX512_FLAG} CXX_SUPPORTS_AVX512)
