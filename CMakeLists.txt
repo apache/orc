@@ -173,7 +173,9 @@ enable_testing()
 
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
-INCLUDE(ConfigSimdLevel)
+if (BUILD_ENABLE_AVX512 AND NOT APPLE)
+  INCLUDE(ConfigSimdLevel)
+endif ()
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
