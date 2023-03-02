@@ -18,8 +18,3 @@ java/bench/data
 
 !java/**/resources/*.orc
 !examples/**/*.orc
-
-
-
-
-
