@@ -24,6 +24,7 @@
 #include "wrap/orc-proto-wrapper.hh"
 
 #ifdef __clang__
+DIAGNOSTIC_IGNORE("-Winconsistent-missing-override")
 DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
 #endif
 

@@ -64,6 +64,13 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
   endif()
 
+  if(BUILD_ENABLE_AVX512 AND CXX_SUPPORTS_AVX512 AND NOT MSVC)
+    execute_process(COMMAND grep flags /proc/cpuinfo
+                    COMMAND head -1
+                    OUTPUT_VARIABLE flags_ver)
+    message(STATUS "CPU ${flags_ver}")
+  endif()
+
   message(STATUS "BUILD_ENABLE_AVX512: ${BUILD_ENABLE_AVX512}")
   # Runtime SIMD level it can get from compiler
   if(BUILD_ENABLE_AVX512 AND CXX_SUPPORTS_AVX512)
