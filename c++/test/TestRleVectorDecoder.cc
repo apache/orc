@@ -24,12 +24,11 @@
 #include "wrap/orc-proto-wrapper.hh"
 
 #ifdef __clang__
-DIAGNOSTIC_IGNORE("-Winconsistent-missing-override")
 DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
 #endif
 
 namespace orc {
-
+#if defined(ORC_HAVE_RUNTIME_AVX512)
   using ::testing::TestWithParam;
   using ::testing::Values;
 
@@ -152,7 +151,6 @@ namespace orc {
     delete[] notNull;
   }
 
-#if defined(ORC_HAVE_RUNTIME_AVX512)
   TEST_P(RleV2BitUnpackAvx512Test, RleV2_basic_vector_decode_1bit) {
     uint8_t bitWidth = 1;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {

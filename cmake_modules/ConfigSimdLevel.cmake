@@ -39,7 +39,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     # Using -march=native enables all instruction subsets supported by the local machine.
     set(ORC_AVX512_FLAG "-march=native -mtune=native")
   endif()
-  check_cxx_compiler_flag(${ORC_AVX512_FLAG} CXX_SUPPORTS_AVX512)
+
   if(MINGW)
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
     message(STATUS "Disable AVX512 support on MINGW for now")
@@ -47,7 +47,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     # Check for AVX512 support in the compiler.
     set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
     set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_AVX512_FLAG}")
-    check_cxx_source_compiles("
+    CHECK_CXX_SOURCE_COMPILES("
       #ifdef _MSC_VER
       #include <intrin.h>
       #else
