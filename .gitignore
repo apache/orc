@@ -13,3 +13,13 @@ dependency-reduced-pom.xml
 .java-version
 java/bench/data
 .swp
+*.crc
+*.orc
+
+!java/**/resources/*.orc
+!examples/**/*.orc
+
+
+
+
+
