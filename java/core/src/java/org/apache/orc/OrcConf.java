@@ -154,7 +154,7 @@ public enum OrcConf {
       "The kryo and base64 encoded SearchArgument for predicate pushdown."),
   KRYO_SARG_BUFFER("orc.kryo.sarg.buffer", null, 8192,
       "The kryo buffer size for SearchArgument for predicate pushdown."),
-  SARG_COLUMNS("orc.sarg.column.names", "org.sarg.column.names", null,
+  SARG_COLUMNS("orc.sarg.column.names", "orc.sarg.column.names", null,
       "The list of column names for the SearchArgument."),
   FORCE_POSITIONAL_EVOLUTION("orc.force.positional.evolution",
       "orc.force.positional.evolution", false,
@@ -176,7 +176,7 @@ public enum OrcConf {
       "orc.schema.evolution.case.sensitive", true,
       "A boolean flag to determine if the comparision of field names " +
       "in schema evolution is case sensitive .\n"),
-  ALLOW_SARG_TO_FILTER("orc.sarg.to.filter", "org.sarg.to.filter", false,
+  ALLOW_SARG_TO_FILTER("orc.sarg.to.filter", "orc.sarg.to.filter", false,
                        "A boolean flag to determine if a SArg is allowed to become a filter"),
   READER_USE_SELECTED("orc.filter.use.selected", "orc.filter.use.selected", false,
                         "A boolean flag to determine if the selected vector is supported by\n"
