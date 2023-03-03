@@ -38,10 +38,11 @@ namespace orc {
   }
 
   SargsApplier::SargsApplier(const Type& type, const SearchArgument* searchArgument,
-                             uint64_t rowIndexStride, WriterVersion writerVersion,
-                             ReaderMetrics* metrics)
+                             const SchemaEvolution* schemaEvolution, uint64_t rowIndexStride,
+                             WriterVersion writerVersion, ReaderMetrics* metrics)
       : mType(type),
         mSearchArgument(searchArgument),
+        mSchemaEvolution(schemaEvolution),
         mRowIndexStride(rowIndexStride),
         mWriterVersion(writerVersion),
         mHasEvaluatedFileStats(false),
@@ -87,6 +88,9 @@ namespace orc {
         auto rowIndexIter = rowIndexes.find(columnIdx);
         if (columnIdx == INVALID_COLUMN_ID || rowIndexIter == rowIndexes.cend()) {
           // this column does not exist in current file
+          leafValues[pred] = TruthValue::YES_NO_NULL;
+        } else if (mSchemaEvolution && !mSchemaEvolution->isSafePPDConversion(columnIdx)) {
+          // cannot evaluate predicate when ppd is not safe
           leafValues[pred] = TruthValue::YES_NO_NULL;
         } else {
           // get column statistics

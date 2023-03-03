@@ -58,6 +58,15 @@ namespace orc {
    private:
     InvalidArgument& operator=(const InvalidArgument&);
   };
+
+  class SchemaEvolutionError : public std::logic_error {
+   public:
+    explicit SchemaEvolutionError(const std::string& what_arg);
+    explicit SchemaEvolutionError(const char* what_arg);
+    virtual ~SchemaEvolutionError() noexcept override;
+    SchemaEvolutionError(const SchemaEvolutionError&);
+    SchemaEvolutionError& operator=(const SchemaEvolutionError&) = delete;
+  };
 }  // namespace orc
 
 #endif

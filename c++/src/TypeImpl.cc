@@ -818,4 +818,18 @@ namespace orc {
     return std::make_pair(parseCategory(category, input, pos, nextPos), endPos);
   }
 
+  std::optional<const Type*> TypeImpl::getTypeByColumnId(uint64_t colIdx) const {
+    if (getColumnId() == colIdx) {
+      return this;
+    }
+
+    for (uint64_t i = 0; i != getSubtypeCount(); ++i) {
+      const Type* ret = getSubtype(i)->getTypeByColumnId(colIdx).value();
+      if (ret != nullptr) {
+        return ret;
+      }
+    }
+    return std::nullopt;
+  }
+
 }  // namespace orc

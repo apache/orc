@@ -92,7 +92,8 @@ namespace orc {
 
     // evaluate row group index
     ReaderMetrics metrics;
-    SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+    SchemaEvolution se(nullptr, type.get());
+    SargsApplier applier(*type, sarg.get(), &se, 1000, WriterVersion_ORC_135, &metrics);
     EXPECT_TRUE(applier.pickRowGroups(4000, rowIndexes, {}));
     const auto& nextSkippedRows = applier.getNextSkippedRows();
     EXPECT_EQ(4, nextSkippedRows.size());
@@ -121,7 +122,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 10L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+      SargsApplier applier(*type, sarg.get(), nullptr, 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
@@ -135,7 +136,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+      SargsApplier applier(*type, sarg.get(), nullptr, 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
@@ -149,7 +150,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 10L);
       *footer.add_statistics() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+      SargsApplier applier(*type, sarg.get(), nullptr, 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
@@ -163,7 +164,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 30L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+      SargsApplier applier(*type, sarg.get(), nullptr, 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
@@ -177,7 +178,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+      SargsApplier applier(*type, sarg.get(), nullptr, 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
