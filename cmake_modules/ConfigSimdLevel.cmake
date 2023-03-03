@@ -37,6 +37,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   else()
     # "arch=native" selects the CPU to generate code for at compilation time by determining the processor type of the compiling machine.
     # Using -march=native enables all instruction subsets supported by the local machine.
+    # Using -mtune=native produces code optimized for the local machine under the constraints of the selected instruction set.
     set(ORC_AVX512_FLAG "-march=native -mtune=native")
   endif()
 
