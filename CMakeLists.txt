@@ -69,7 +69,7 @@ option(BUILD_CPP_ENABLE_METRICS
 
 option(BUILD_ENABLE_AVX512
     "Enable build with AVX512 at compile time"
-    ON)
+    OFF)
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
