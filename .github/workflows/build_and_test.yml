@@ -91,6 +91,50 @@ jobs:
         cmake --build . --config Debug
         ctest -C Debug --output-on-failure
 
+  simdUbuntu:
+    name: "SIMD programming using C++ intrinsic functions on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-20.04
+          - ubuntu-22.04
+        cxx:
+          - clang++
+    env:
+      ORC_USER_SIMD_LEVEL: avx512
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: "Test"
+      run: |
+        mkdir -p ~/.m2
+        mkdir build
+        cd build
+        cmake -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON ..
+        make package test-out
+
+  simdWindows:
+    name: "SIMD programming using C++ intrinsic functions on Windows"
+    runs-on: windows-2019
+    env:
+      ORC_USER_SIMD_LEVEL: avx512
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: x64
+    - name: "Test"
+      run: |
+        mkdir build
+        cd build
+        cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Rlease -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
+        cmake --build . --config Debug
+        ctest -C Debug --output-on-failure
+
   doc:
     name: "Javadoc generation"
     runs-on: ubuntu-20.04
