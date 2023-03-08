@@ -88,7 +88,7 @@ namespace orc {
 
     std::string toString() const override;
 
-    std::optional<const Type*> getTypeByColumnId(uint64_t colIdx) const override;
+    const Type* getTypeByColumnId(uint64_t colIdx) const override;
     Type* addStructField(const std::string& fieldName, std::unique_ptr<Type> fieldType) override;
     Type* addUnionChild(std::unique_ptr<Type> fieldType) override;
 

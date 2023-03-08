@@ -149,7 +149,7 @@ namespace orc {
       if (subType) {
         // null subType means that this is a sub column of map/list type
         // and it does not exist in the file. simply skip it.
-        buildConversion(subType, fileType->getTypeByColumnId(subType->getColumnId()).value());
+        buildConversion(subType, fileType->getTypeByColumnId(subType->getColumnId()));
       }
     }
   }
