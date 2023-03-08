@@ -94,7 +94,7 @@ namespace orc {
       }
 
       if (numElements >= 64) {
-        __m512i reverseMask1u = _mm512_load_si512(reverseMaskTable1u);
+        __m512i reverseMask1u = _mm512_loadu_si512(reverseMaskTable1u);
         while (numElements >= 64) {
           uint64_t src_64 = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(srcPtr));
           // convert mask to 512-bit register. 0 --> 0x00, 1 --> 0xFF
@@ -362,15 +362,15 @@ namespace orc {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable3u);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable3u);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable3u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable3u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable3u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable3u_1);
 
         __m512i shiftMaskPtr[2];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable3u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable3u_1);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable3u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable3u_1);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -638,15 +638,15 @@ namespace orc {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable5u);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable5u);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable5u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable5u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable5u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable5u_1);
 
         __m512i shiftMaskPtr[2];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable5u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable5u_1);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable5u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable5u_1);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -782,15 +782,15 @@ namespace orc {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable6u);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable6u);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable6u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable6u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable6u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable6u_1);
 
         __m512i shiftMaskPtr[2];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable6u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable6u_1);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable6u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable6u_1);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -926,15 +926,15 @@ namespace orc {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable7u);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable7u);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable7u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable7u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable7u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable7u_1);
 
         __m512i shiftMaskPtr[2];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable7u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable7u_1);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable7u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable7u_1);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1069,22 +1069,22 @@ namespace orc {
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask16u = _mm512_loadu_si512(reverseMaskTable16u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable9u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable9u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable9u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable9u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable9u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable9u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable9u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable9u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable9u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable9u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable9u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable9u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable9u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable9u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1264,9 +1264,9 @@ namespace orc {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable10u_0);
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable10u);
-        __m512i shiftMask = _mm512_load_si512(shiftTable10u);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable10u_0);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable10u);
+        __m512i shiftMask = _mm512_loadu_si512(shiftTable10u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm;
@@ -1395,25 +1395,25 @@ namespace orc {
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverse_mask_16u = _mm512_loadu_si512(reverseMaskTable16u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable11u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable11u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable11u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable11u_1);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable11u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable11u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable11u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable11u_1);
 
         __m512i shiftMaskPtr[4];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable11u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable11u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable11u_2);
-        shiftMaskPtr[3] = _mm512_load_si512(shiftTable11u_3);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable11u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable11u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable11u_2);
+        shiftMaskPtr[3] = _mm512_loadu_si512(shiftTable11u_3);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable11u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable11u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1599,9 +1599,9 @@ namespace orc {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable12u_0);
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable12u);
-        __m512i shiftMask = _mm512_load_si512(shiftTable12u);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable12u_0);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable12u);
+        __m512i shiftMask = _mm512_loadu_si512(shiftTable12u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm;
@@ -1730,25 +1730,25 @@ namespace orc {
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverse_mask_16u = _mm512_loadu_si512(reverseMaskTable16u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable13u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable13u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable13u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable13u_1);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable13u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable13u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable13u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable13u_1);
 
         __m512i shiftMaskPtr[4];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable13u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable13u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable13u_2);
-        shiftMaskPtr[3] = _mm512_load_si512(shiftTable13u_3);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable13u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable13u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable13u_2);
+        shiftMaskPtr[3] = _mm512_loadu_si512(shiftTable13u_3);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable13u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable13u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1935,14 +1935,14 @@ namespace orc {
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable14u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable14u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable14u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable14u_1);
 
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable14u);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable14u);
 
         __m512i shiftMaskPtr[2];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable14u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable14u_1);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable14u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable14u_1);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2077,25 +2077,25 @@ namespace orc {
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask16u = _mm512_loadu_si512(reverseMaskTable16u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable15u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable15u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable15u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable15u_1);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable15u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable15u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable15u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable15u_1);
 
         __m512i shiftMaskPtr[4];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable15u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable15u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable15u_2);
-        shiftMaskPtr[3] = _mm512_load_si512(shiftTable15u_3);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable15u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable15u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable15u_2);
+        shiftMaskPtr[3] = _mm512_loadu_si512(shiftTable15u_3);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable15u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable15u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -2245,7 +2245,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
-        __m512i reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i reverse_mask_16u = _mm512_loadu_si512(reverseMaskTable16u);
         while (numElements >= 32) {
           __m512i srcmm = _mm512_loadu_si512(srcPtr);
           srcmm = _mm512_shuffle_epi8(srcmm, reverse_mask_16u);
@@ -2360,22 +2360,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable17u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable17u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable17u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable17u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable17u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable17u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable17u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable17u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable17u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable17u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable17u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable17u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable17u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable17u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2554,22 +2554,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable18u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable18u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable18u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable18u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable18u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable18u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable18u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable18u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable18u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable18u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable18u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable18u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable18u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable18u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2748,22 +2748,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable19u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable19u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable19u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable19u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable19u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable19u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable19u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable19u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable19u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable19u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable19u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable19u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable19u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable19u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2943,9 +2943,9 @@ namespace orc {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable20u_0);
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable20u);
-        __m512i shiftMask = _mm512_load_si512(shiftTable20u);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable20u_0);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable20u);
+        __m512i shiftMask = _mm512_loadu_si512(shiftTable20u);
 
         while (numElements >= 16u) {
           __m512i srcmm, zmm;
@@ -3074,22 +3074,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable21u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable21u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable21u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable21u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable21u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable21u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable21u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable21u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable21u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable21u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable21u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable21u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable21u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable21u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3268,22 +3268,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable22u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable22u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable22u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable22u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable22u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable22u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable22u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable22u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable22u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable22u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable22u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable22u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable22u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable22u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3463,22 +3463,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable23u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable23u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable23u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable23u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable23u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable23u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable23u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable23u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable23u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable23u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable23u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable23u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable23u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable23u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3624,8 +3624,8 @@ namespace orc {
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
 
-        __m512i shuffleIdx = _mm512_load_si512(shuffleIdxTable24u_0);
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable24u);
+        __m512i shuffleIdx = _mm512_loadu_si512(shuffleIdxTable24u_0);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable24u);
 
         while (numElements >= 16) {
           __m512i srcmm, zmm;
@@ -3746,22 +3746,22 @@ namespace orc {
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable26u_0);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable26u_0);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable26u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable26u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable26u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable26u_1);
 
         __m512i shiftMaskPtr[3];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable26u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable26u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable26u_2);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable26u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable26u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable26u_2);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable26u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable26u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3941,9 +3941,9 @@ namespace orc {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable28u_0);
-        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable28u);
-        __m512i shiftMask = _mm512_load_si512(shiftTable28u);
+        __m512i shuffleIdxPtr = _mm512_loadu_si512(shuffleIdxTable28u_0);
+        __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable28u);
+        __m512i shiftMask = _mm512_loadu_si512(shiftTable28u);
 
         while (numElements >= 16) {
           __m512i srcmm, zmm;
@@ -4072,25 +4072,25 @@ namespace orc {
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         __m512i maskmm = _mm512_set1_epi8(0x0F);
 
         __m512i shuffleIdxPtr[2];
-        shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable30u_0);
-        shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable30u_1);
+        shuffleIdxPtr[0] = _mm512_loadu_si512(shuffleIdxTable30u_0);
+        shuffleIdxPtr[1] = _mm512_loadu_si512(shuffleIdxTable30u_1);
 
         __m512i permutexIdxPtr[2];
-        permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable30u_0);
-        permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable30u_1);
+        permutexIdxPtr[0] = _mm512_loadu_si512(permutexIdxTable30u_0);
+        permutexIdxPtr[1] = _mm512_loadu_si512(permutexIdxTable30u_1);
 
         __m512i shiftMaskPtr[4];
-        shiftMaskPtr[0] = _mm512_load_si512(shiftTable30u_0);
-        shiftMaskPtr[1] = _mm512_load_si512(shiftTable30u_1);
-        shiftMaskPtr[2] = _mm512_load_si512(shiftTable30u_2);
-        shiftMaskPtr[3] = _mm512_load_si512(shiftTable30u_3);
+        shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable30u_0);
+        shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable30u_1);
+        shiftMaskPtr[2] = _mm512_loadu_si512(shiftTable30u_2);
+        shiftMaskPtr[3] = _mm512_loadu_si512(shiftTable30u_3);
 
-        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable30u);
+        __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable30u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -4239,7 +4239,7 @@ namespace orc {
       }
 
       if (numElements >= 16) {
-        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
         while (numElements >= 16) {
           __m512i srcmm = _mm512_loadu_si512(srcPtr);
           srcmm = _mm512_shuffle_epi8(srcmm, reverseMask32u);
