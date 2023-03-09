@@ -2292,13 +2292,13 @@ public class TreeReaderFactory {
           int dictionaryBufferSize = dictionaryOffsets[dictionaryOffsets.length - 1];
           dictionaryBuffer = new byte[dictionaryBufferSize];
           int pos = 0;
-          //check if dictionary size is smaller than available stream size
+          // check if dictionary size is smaller than available stream size
           // to avoid ArrayIndexOutOfBoundsException
           int readSize = Math.min(in.available(), dictionaryBufferSize);
           byte[] chunkBytes = new byte[readSize];
           while (pos < dictionaryBufferSize) {
             int currentLength = in.read(chunkBytes, 0, readSize);
-            //check if dictionary size is smaller than available stream size
+            // check if dictionary size is smaller than available stream size
             // to avoid ArrayIndexOutOfBoundsException
             currentLength = Math.min(currentLength, dictionaryBufferSize - pos);
             System.arraycopy(chunkBytes, 0, dictionaryBuffer, pos, currentLength);
