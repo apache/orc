@@ -42,7 +42,7 @@ public abstract class InStream extends InputStream {
 
   protected final Object name;
   protected final long offset;
-  protected final long length;
+  protected long length;
   protected DiskRangeList bytes;
   // position in the stream (0..length)
   protected long position;
@@ -87,6 +87,26 @@ public abstract class InStream extends InputStream {
     setCurrent(input, true);
   }
 
+  /**
+   * Reset the input to a new set of data with a different length.
+   *
+   * in some cases, after resetting an UncompressedStream, its actual length is longer than its initial length.
+   * Prior to ORC-516, InStream.UncompressedStream class had the 'length' field and the length was modifiable in
+   * the reset() method. It was used in SettableUncompressedStream class in setBuffers() method.
+   * SettableUncompressedStream was passing 'diskRangeInfo.getTotalLength()' as the length to the reset() method.
+   * SettableUncompressedStream had been removed from ORC code base, but it is required for Apache Hive and
+   * Apache Hive manages its own copy of SettableUncompressedStream since upgrading its Apache ORC version to 1.6.7.
+   * ORC-516 was the root cause of the regression reported in HIVE-27128 - EOFException when reading DATA stream.
+   * This wrapper method allows to resolve HIVE-27128.
+   *
+   * @param input the input data
+   * @param length new length of the stream
+   */
+  protected void reset(DiskRangeList input, long length) {
+    this.length = length;
+    reset(input);
+  }
+
   public abstract void changeIv(Consumer<byte[]> modifier);
 
   static int getRangeNumber(DiskRangeList list, DiskRangeList current) {
@@ -122,7 +142,7 @@ public abstract class InStream extends InputStream {
                               long offset,
                               long length) {
       super(name, offset, length);
-      reset(input);
+      reset(input, length);
     }
 
     @Override
