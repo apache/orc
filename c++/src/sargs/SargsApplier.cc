@@ -38,8 +38,8 @@ namespace orc {
   }
 
   SargsApplier::SargsApplier(const Type& type, const SearchArgument* searchArgument,
-                             const SchemaEvolution* schemaEvolution, uint64_t rowIndexStride,
-                             WriterVersion writerVersion, ReaderMetrics* metrics)
+                             uint64_t rowIndexStride, WriterVersion writerVersion,
+                             ReaderMetrics* metrics, const SchemaEvolution* schemaEvolution)
       : mType(type),
         mSearchArgument(searchArgument),
         mSchemaEvolution(schemaEvolution),

@@ -35,9 +35,9 @@ namespace orc {
 
   class SargsApplier {
    public:
-    SargsApplier(const Type& type, const SearchArgument* searchArgument,
-                 const SchemaEvolution* schemaEvolution, uint64_t rowIndexStride,
-                 WriterVersion writerVersion, ReaderMetrics* metrics);
+    SargsApplier(const Type& type, const SearchArgument* searchArgument, uint64_t rowIndexStride,
+                 WriterVersion writerVersion, ReaderMetrics* metrics,
+                 const SchemaEvolution* schemaEvolution = nullptr);
 
     /**
      * Evaluate search argument on file statistics

@@ -304,7 +304,7 @@ namespace orc {
     if (opts.getSearchArgument() && footer->rowindexstride() > 0) {
       sargs = opts.getSearchArgument();
       sargsApplier.reset(
-          new SargsApplier(*contents->schema, sargs.get(), nullptr, footer->rowindexstride(),
+          new SargsApplier(*contents->schema, sargs.get(), footer->rowindexstride(),
                            getWriterVersionImpl(_contents.get()), contents->readerMetrics));
     }
 
