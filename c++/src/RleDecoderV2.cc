@@ -29,30 +29,6 @@
 
 namespace orc {
 
-  void RleDecoderV2::resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
-                                      uint32_t backupByteLen) {
-    uint64_t remainingLen = *bufEnd - *bufStart;
-    int bufferLength = 0;
-    const void* bufferPointer = nullptr;
-
-    if (backupByteLen != 0) {
-      inputStream->BackUp(backupByteLen);
-    }
-
-    if (len >= remainingLen && resetBuf == true) {
-      if (!inputStream->Next(&bufferPointer, &bufferLength)) {
-        throw ParseError("bad read in RleDecoderV2::resetBufferStart");
-      }
-    }
-
-    if (bufferPointer == nullptr) {
-      *bufStart += len;
-    } else {
-      *bufStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
-      *bufEnd = *bufStart + bufferLength;
-    }
-  }
-
   unsigned char RleDecoderV2::readByte(char** bufStart, char** bufEnd) {
     SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
     if (*bufStart == *bufEnd) {

@@ -167,8 +167,13 @@ namespace orc {
     void next(int16_t* data, uint64_t numValues, const char* notNull) override;
 
     unsigned char readByte(char** bufStart, char** bufEnd);
-    void resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
-                          uint32_t backupLen);
+
+    /**
+     * Most hotspot of this function locates in saving stack, so inline this function to have
+     * performance gain.
+     */
+    inline void resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
+                                 uint32_t backupLen);
 
     char* bufferStart;
     char* bufferEnd;
@@ -222,6 +227,30 @@ namespace orc {
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
   };
+
+  void RleDecoderV2::resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
+                                      uint32_t backupByteLen) {
+    uint64_t remainingLen = *bufEnd - *bufStart;
+    int bufferLength = 0;
+    const void* bufferPointer = nullptr;
+
+    if (backupByteLen != 0) {
+      inputStream->BackUp(backupByteLen);
+    }
+
+    if (len >= remainingLen && resetBuf == true) {
+      if (!inputStream->Next(&bufferPointer, &bufferLength)) {
+        throw ParseError("bad read in RleDecoderV2::resetBufferStart");
+      }
+    }
+
+    if (bufferPointer == nullptr) {
+      *bufStart += len;
+    } else {
+      *bufStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
+      *bufEnd = *bufStart + bufferLength;
+    }
+  }
 }  // namespace orc
 
 #endif  // ORC_RLEV2_HH
