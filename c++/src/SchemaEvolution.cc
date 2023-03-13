@@ -1,9 +1,6 @@
 #include "SchemaEvolution.hh"
 #include "orc/Exceptions.hh"
 
-#include <unordered_map>
-#include <unordered_set>
-
 namespace orc {
 
   SchemaEvolution::SchemaEvolution(const std::shared_ptr<Type>& _readType, const Type* fileType)

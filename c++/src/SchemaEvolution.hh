@@ -1,9 +1,10 @@
 #ifndef ORC_SCHEMA_EVOLUTION_HH
 #define ORC_SCHEMA_EVOLUTION_HH
 
+#include "orc/Type.hh"
+
 #include <unordered_map>
 #include <unordered_set>
-#include "orc/Type.hh"
 
 namespace orc {
 
