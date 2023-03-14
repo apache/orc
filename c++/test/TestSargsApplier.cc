@@ -92,7 +92,8 @@ namespace orc {
 
     // evaluate row group index
     ReaderMetrics metrics;
-    SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+    SchemaEvolution se(nullptr, type.get());
+    SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics, &se);
     EXPECT_TRUE(applier.pickRowGroups(4000, rowIndexes, {}));
     const auto& nextSkippedRows = applier.getNextSkippedRows();
     EXPECT_EQ(4, nextSkippedRows.size());

@@ -179,6 +179,7 @@ set(SOURCE_FILES
   RleDecoderV2.cc
   RleEncoderV2.cc
   RLE.cc
+  SchemaEvolution.cc
   Statistics.cc
   StripeStream.cc
   Timezone.cc
