@@ -173,6 +173,12 @@ enable_testing()
 
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
+message(STATUS "BUILD_ENABLE_AVX512: ${BUILD_ENABLE_AVX512}")
+#
+# macOS doesn't fully support AVX512, it has a different way dealing with AVX512 than Windows and Linux.
+#
+# Here can find the description:
+# https://github.com/apple/darwin-xnu/blob/0a798f6738bc1db01281fc08ae024145e84df927/osfmk/i386/fpu.c#L176
 if (BUILD_ENABLE_AVX512 AND NOT APPLE)
   INCLUDE(ConfigSimdLevel)
 endif ()

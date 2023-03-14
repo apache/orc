@@ -19,7 +19,7 @@
 #ifndef ORC_BPACKING_HH
 #define ORC_BPACKING_HH
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "RLEv2.hh"
 
