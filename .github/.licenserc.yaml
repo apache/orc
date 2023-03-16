@@ -7,16 +7,20 @@ header:
     - '**'
 
   paths-ignore:
-    - '.github'
     - '**/*.md'
-    - 'LICENSE'
-    - 'NOTICE'
-    - 'dev'
-    - 'docker'
-    - 'examples'
-    - 'java'
-    - 'site'
+    - '**/.gitignore'
+    - '**/Doxyfile'
+    - '.github/**'
+    - 'dev/**'
+    - 'docker/**'
+    - 'examples/**'
+    - 'java/**'
+    - 'site/**'
     - 'c++/libs/**'
     - 'c++/test/test-orc.suppress'
+    - 'LICENSE'
+    - 'NOTICE'
+    - '.clang-format'
+    - '.asf.yaml'
 
   comment: on-failure
