@@ -16,6 +16,13 @@
  * limitations under the License.
  */
 
+/**
+ * @file CpuInfoUtil.hh code borrowing from
+ * https://github.com/apache/arrow/blob/main/cpp/src/arrow/util/cpu_info.h
+ * @file CpuInfoUtil.cc code borrowing from
+ * https://github.com/apache/arrow/blob/main/cpp/src/arrow/util/cpu_info.cc
+ */
+
 #ifndef ORC_CPUINFOUTIL_HH
 #define ORC_CPUINFOUTIL_HH
 
@@ -50,9 +57,6 @@ namespace orc {
     static constexpr int64_t AVX512 = AVX512F | AVX512CD | AVX512VL | AVX512DQ | AVX512BW;
     static constexpr int64_t BMI1 = (1LL << 11);
     static constexpr int64_t BMI2 = (1LL << 12);
-
-    // Arm features
-    static constexpr int64_t ASIMD = (1LL << 32);
 
     // Cache enums for L1 (data), L2 and L3
     enum class CacheLevel { L1 = 0, L2, L3, Last = L3 };

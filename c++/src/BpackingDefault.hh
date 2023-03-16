@@ -19,8 +19,8 @@
 #ifndef ORC_BPACKINGDEFAULT_HH
 #define ORC_BPACKINGDEFAULT_HH
 
-#include <stdint.h>
 #include <stdlib.h>
+#include <cstdint>
 
 #include "Bpacking.hh"
 #include "RLEv2.hh"

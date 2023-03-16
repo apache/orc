@@ -19,8 +19,8 @@
 #ifndef ORC_BPACKINGAVX512_HH
 #define ORC_BPACKINGAVX512_HH
 
-#include <stdint.h>
 #include <stdlib.h>
+#include <cstdint>
 
 #include "BpackingDefault.hh"
 #include "Dispatch.hh"
