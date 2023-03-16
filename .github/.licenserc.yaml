@@ -1,0 +1,26 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Apache Software Foundation
+
+  paths:
+    - '**'
+
+  paths-ignore:
+    - '**/*.md'
+    - '**/.gitignore'
+    - '**/Doxyfile'
+    - '.github/**'
+    - 'dev/**'
+    - 'docker/**'
+    - 'examples/**'
+    - 'java/**'
+    - 'site/**'
+    - 'c++/libs/**'
+    - 'c++/test/test-orc.suppress'
+    - 'LICENSE'
+    - 'NOTICE'
+    - '.clang-format'
+    - '.asf.yaml'
+
+  comment: on-failure
