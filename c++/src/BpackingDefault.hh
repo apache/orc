@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "Bpacking.hh"
 #include "RLEv2.hh"
 #include "io/InputStream.hh"
 #include "io/OutputStream.hh"
@@ -47,6 +48,11 @@ namespace orc {
 
    private:
     RleDecoderV2* decoder;
+  };
+
+  class BitUnpackDefault : public BitUnpack {
+   public:
+    static int readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
   };
 
 }  // namespace orc

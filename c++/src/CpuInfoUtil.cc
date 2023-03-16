@@ -283,7 +283,6 @@ namespace orc {
         }
       }
 
-      // TODO: vendor, model_name
       *vendor = CpuInfo::Vendor::Unknown;
       *model_name = "Unknown";
     }
