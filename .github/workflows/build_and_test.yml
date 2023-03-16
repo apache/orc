@@ -106,3 +106,16 @@ jobs:
         cd java
         mvn install -DskipTests
         mvn javadoc:javadoc
+
+  license-check:
+    name: "License Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Check license header
+        uses: apache/skywalking-eyes@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config: .github/.licenserc.yaml
