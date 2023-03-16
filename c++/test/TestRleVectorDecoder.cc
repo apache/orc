@@ -28,7 +28,6 @@ DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
 #endif
 
 namespace orc {
-#if defined(ORC_HAVE_RUNTIME_AVX512)
   using ::testing::TestWithParam;
   using ::testing::Values;
 
@@ -559,5 +558,4 @@ namespace orc {
   }
 
   INSTANTIATE_TEST_SUITE_P(OrcTest, RleV2BitUnpackAvx512Test, Values(true, false));
-#endif
 }  // namespace orc

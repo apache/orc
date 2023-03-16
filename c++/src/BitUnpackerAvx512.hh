@@ -19,8 +19,6 @@
 #ifndef ORC_BIT_UNPACKER_AVX512_HH
 #define ORC_BIT_UNPACKER_AVX512_HH
 
-#if defined(ORC_HAVE_RUNTIME_AVX512)
-
 // Mingw-w64 defines strcasecmp in string.h
 #if defined(_WIN32) && !defined(strcasecmp)
 #include <string.h>
@@ -30,6 +28,7 @@
 #endif
 
 #include <immintrin.h>
+#include <cstdint>
 #include <vector>
 
 namespace orc {
@@ -486,5 +485,4 @@ namespace orc {
   }
 }  // namespace orc
 
-#endif  // #if defined(ORC_HAVE_RUNTIME_AVX512)
 #endif

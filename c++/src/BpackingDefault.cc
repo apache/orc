@@ -326,4 +326,43 @@ namespace orc {
     }
   }
 
+  int BitUnpackDefault::readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset,
+                                  uint64_t len, uint64_t fbs) {
+    UnpackDefault unpackDefault(decoder);
+    switch (fbs) {
+      case 4:
+        unpackDefault.unrolledUnpack4(data, offset, len);
+        break;
+      case 8:
+        unpackDefault.unrolledUnpack8(data, offset, len);
+        break;
+      case 16:
+        unpackDefault.unrolledUnpack16(data, offset, len);
+        break;
+      case 24:
+        unpackDefault.unrolledUnpack24(data, offset, len);
+        break;
+      case 32:
+        unpackDefault.unrolledUnpack32(data, offset, len);
+        break;
+      case 40:
+        unpackDefault.unrolledUnpack40(data, offset, len);
+        break;
+      case 48:
+        unpackDefault.unrolledUnpack48(data, offset, len);
+        break;
+      case 56:
+        unpackDefault.unrolledUnpack56(data, offset, len);
+        break;
+      case 64:
+        unpackDefault.unrolledUnpack64(data, offset, len);
+        break;
+      default:
+        // Fallback to the default implementation for deprecated bit size.
+        unpackDefault.plainUnpackLongs(data, offset, len, fbs);
+        break;
+    }
+    return 0;
+  }
+
 }  // namespace orc

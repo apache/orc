@@ -186,14 +186,18 @@ set(SOURCE_FILES
   Vector.cc
   Writer.cc
   CpuInfoUtil.cc
-  BpackingDefault.cc
-  BpackingAvx512.cc
-  Bpacking.cc)
+  BpackingDefault.cc)
 
 if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)
   add_definitions(-DBUILD_LIBHDFSPP)
 endif(BUILD_LIBHDFSPP)
+
+if(BUILD_ENABLE_AVX512)
+  set(SOURCE_FILES
+    ${SOURCE_FILES}
+    BpackingAvx512.cc)
+endif(BUILD_ENABLE_AVX512)
 
 add_library (orc STATIC ${SOURCE_FILES})
 

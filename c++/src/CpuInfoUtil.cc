@@ -35,13 +35,9 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
-#include <cctype>
-#include <cerrno>
 #include <cstdint>
 #include <fstream>
-#include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -49,15 +45,9 @@
 #include "orc/Exceptions.hh"
 
 #undef CPUINFO_ARCH_X86
-#undef CPUINFO_ARCH_ARM
-#undef CPUINFO_ARCH_PPC
 
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
 #define CPUINFO_ARCH_X86
-#elif defined(_M_ARM64) || defined(__aarch64__) || defined(__arm64__)
-#define CPUINFO_ARCH_ARM
-#elif defined(__PPC64__) || defined(__PPC64LE__) || defined(__ppc64__) || defined(__powerpc64__)
-#define CPUINFO_ARCH_PPC
 #endif
 
 #ifndef ORC_HAVE_RUNTIME_AVX512
@@ -208,13 +198,6 @@ namespace orc {
         }
       }
     }
-#elif defined(CPUINFO_ARCH_ARM)
-    // Windows on Arm
-    void OsRetrieveCpuInfo(int64_t* hardware_flags, CpuInfo::Vendor* vendor,
-                           std::string* model_name) {
-      *hardware_flags |= CpuInfo::ASIMD;
-      // TODO: vendor, model_name
-    }
 #endif
 
 #elif defined(__APPLE__)
@@ -271,9 +254,6 @@ namespace orc {
         {"hw.optional.avx512dq", CpuInfo::AVX512DQ},
         {"hw.optional.avx512bw", CpuInfo::AVX512BW},
         {"hw.optional.avx512vl", CpuInfo::AVX512VL},
-#elif defined(CPUINFO_ARCH_ARM)
-        // ARM64 (note that this is exposed under Rosetta as well)
-        {"hw.optional.neon", CpuInfo::ASIMD},
 #endif
       };
       for (const auto& feature : features) {
@@ -359,8 +339,6 @@ namespace orc {
         {"avx512bw", CpuInfo::AVX512BW},
         {"bmi1", CpuInfo::BMI1},
         {"bmi2", CpuInfo::BMI2},
-#elif defined(CPUINFO_ARCH_ARM)
-        {"asimd", CpuInfo::ASIMD},
 #endif
       };
       const int64_t num_flags = sizeof(flag_mappings) / sizeof(flag_mappings[0]);
@@ -402,7 +380,6 @@ namespace orc {
     }
 
     // Read from /proc/cpuinfo
-    // TODO: vendor, model_name for Arm
     void OsRetrieveCpuInfo(int64_t* hardware_flags, CpuInfo::Vendor* vendor,
                            std::string* model_name) {
       std::ifstream cpuinfo("/proc/cpuinfo", std::ios::in);
@@ -467,23 +444,7 @@ namespace orc {
 #endif
     }
 
-#elif defined(CPUINFO_ARCH_ARM)
-    //------------------------------ AARCH64 ------------------------------//
-    bool ArchParseUserSimdLevel(const std::string& simd_level, int64_t* hardware_flags) {
-      if (simd_level == "NONE") {
-        *hardware_flags &= ~CpuInfo::ASIMD;
-        return true;
-      }
-      return false;
-    }
-
-    void ArchVerifyCpuRequirements(const CpuInfo* ci) {
-      if (!ci->isDetected(CpuInfo::ASIMD)) {
-        throw ParseError("CPU does not support the Armv8 Neon instruction set");
-      }
-    }
-
-#endif  // X86, ARM
+#endif  // X86
 
   }  // namespace
 
@@ -577,5 +538,3 @@ namespace orc {
 }  // namespace orc
 
 #undef CPUINFO_ARCH_X86
-#undef CPUINFO_ARCH_ARM
-#undef CPUINFO_ARCH_PPC

@@ -17,15 +17,16 @@
  */
 
 #include "Adaptor.hh"
-#include "Bpacking.hh"
+// #include "Bpacking.hh"
+#include "BpackingDefault.hh"
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+#include "BpackingAvx512.hh"
+#endif
 #include "Compression.hh"
 #include "Dispatch.hh"
 #include "RLEV2Util.hh"
 #include "RLEv2.hh"
 #include "Utils.hh"
-#if defined(ORC_HAVE_RUNTIME_AVX512)
-#include "BpackingAvx512.hh"
-#endif
 
 namespace orc {
 
@@ -72,13 +73,14 @@ namespace orc {
   }
 
   struct UnpackDynamicFunction {
-    using FunctionType = decltype(&readLongsDefault);
+    using FunctionType = decltype(&BitUnpack::readLongs);
 
     static std::vector<std::pair<DispatchLevel, FunctionType>> implementations() {
 #if defined(ORC_HAVE_RUNTIME_AVX512)
-      return {{DispatchLevel::NONE, readLongsDefault}, {DispatchLevel::AVX512, readLongsAvx512}};
+      return {{DispatchLevel::NONE, BitUnpackDefault::readLongs},
+              {DispatchLevel::AVX512, BitUnpackAVX512::readLongs}};
 #else
-      return {{DispatchLevel::NONE, readLongsDefault}};
+      return {{DispatchLevel::NONE, BitUnpackDefault::readLongs}};
 #endif
     }
   };

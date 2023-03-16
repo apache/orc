@@ -19,19 +19,16 @@
 #ifndef ORC_BPACKING_HH
 #define ORC_BPACKING_HH
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "RLEv2.hh"
 
 namespace orc {
-  int readLongsDefault(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
-                       uint64_t fbs);
-
-#if defined(ORC_HAVE_RUNTIME_AVX512)
-  int readLongsAvx512(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
-                      uint64_t fbs);
-#endif
-
+  class BitUnpack {
+   public:
+    static int readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
+                  uint64_t fbs);
+  };
 }  // namespace orc
 
 #endif

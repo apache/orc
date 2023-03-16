@@ -19,10 +19,8 @@
 #ifndef ORC_BPACKINGAVX512_HH
 #define ORC_BPACKINGAVX512_HH
 
-#if defined(ORC_HAVE_RUNTIME_AVX512)
-
-#include <stdint.h>
 #include <stdlib.h>
+#include <cstdint>
 
 #include "BpackingDefault.hh"
 #include "Dispatch.hh"
@@ -84,7 +82,12 @@ namespace orc {
     uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH + 1];
   };
 
+  class BitUnpackAVX512 : public BitUnpack {
+   public:
+    static int readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
+                         uint64_t fbs);
+  };
+
 }  // namespace orc
 
-#endif  // #if defined(ORC_HAVE_RUNTIME_AVX512)
 #endif
