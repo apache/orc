@@ -326,8 +326,8 @@ namespace orc {
     }
   }
 
-  int BitUnpackDefault::readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
-                       uint64_t fbs) {
+  int BitUnpackDefault::readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset,
+                                  uint64_t len, uint64_t fbs) {
     UnpackDefault unpackDefault(decoder);
     switch (fbs) {
       case 4:
