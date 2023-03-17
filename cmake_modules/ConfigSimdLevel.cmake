@@ -63,7 +63,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
   endif()
 
-  if(CXX_SUPPORTS_AVX512 AND NOT MSVC)
+  if(CXX_SUPPORTS_AVX512)
     execute_process(COMMAND grep flags /proc/cpuinfo
                     COMMAND head -1
                     OUTPUT_VARIABLE flags_ver)
