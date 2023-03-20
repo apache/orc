@@ -75,7 +75,7 @@
     <mockito.version>4.11.0</mockito.version>
     <!-- Build Properties -->
     <project.build.outputTimestamp>2022-05-06T16:02:45Z</project.build.outputTimestamp>
-    <slf4j.version>2.0.6</slf4j.version>
+    <slf4j.version>2.0.7</slf4j.version>
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
