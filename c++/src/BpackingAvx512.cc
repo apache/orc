@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "BitUnpackerAvx512.hh"
 #include "BpackingAvx512.hh"
+#include "BitUnpackerAvx512.hh"
 #include "CpuInfoUtil.hh"
 
 namespace orc {
