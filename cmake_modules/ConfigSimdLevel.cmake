@@ -37,11 +37,13 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   # x86/amd64 compiler flags, msvc/gcc/clang
   if(MSVC)
     set(ORC_AVX512_FLAG "/arch:AVX512")
+    check_cxx_compiler_flag("/arch:AVX512" COMPILER_SUPPORT_AVX512)
   else()
     # "arch=native" selects the CPU to generate code for at compilation time by determining the processor type of the compiling machine.
     # Using -march=native enables all instruction subsets supported by the local machine.
     # Using -mtune=native produces code optimized for the local machine under the constraints of the selected instruction set.
     set(ORC_AVX512_FLAG "-march=native -mtune=native")
+    check_cxx_compiler_flag("-mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw" COMPILER_SUPPORT_AVX512)
   endif()
 
   if(MINGW)
@@ -60,8 +62,8 @@ if(ORC_CPU_FLAG STREQUAL "x86")
 
       int main() {
         __m512i mask = _mm512_set1_epi32(0x1);
-        char out[32];
-        _mm512_storeu_si512(out, mask);
+      	char out[32];
+      	_mm512_storeu_si512(out, mask);
         return 0;
       }"
       CXX_SUPPORTS_AVX512)
@@ -76,7 +78,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   endif()
 
   # Runtime SIMD level it can get from compiler
-  if(CXX_SUPPORTS_AVX512)
+  if(CXX_SUPPORTS_AVX512 AND COMPILER_SUPPORT_AVX512)
     message(STATUS "Enabled the AVX512 for RLE bit-unpacking")
     set(ORC_HAVE_RUNTIME_AVX512 ON)
     set(ORC_SIMD_LEVEL "AVX512")

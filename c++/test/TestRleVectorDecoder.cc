@@ -74,7 +74,7 @@ namespace orc {
     alignBitpacking = GetParam();
   }
 
-  void generateDataFolBits(uint64_t numValues, int64_t start, int64_t delta, bool random,
+  void generateDataForBits(uint64_t numValues, int64_t start, int64_t delta, bool random,
                            int64_t* data, uint8_t bitWidth, uint64_t numNulls = 0,
                            char* notNull = nullptr) {
     int64_t max = pow(2, bitWidth);
@@ -141,7 +141,7 @@ namespace orc {
 
     char* notNull = numNulls == 0 ? nullptr : new char[numValues];
     int64_t* data = new int64_t[numValues];
-    generateDataFolBits(numValues, start, delta, random, data, bitWidth, numNulls, notNull);
+    generateDataForBits(numValues, start, delta, random, data, bitWidth, numNulls, notNull);
     encoder->add(data, numValues, notNull);
     encoder->flush();
 

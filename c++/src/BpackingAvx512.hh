@@ -23,10 +23,6 @@
 #include <cstdint>
 
 #include "BpackingDefault.hh"
-#include "Dispatch.hh"
-#include "RLEv2.hh"
-#include "io/InputStream.hh"
-#include "io/OutputStream.hh"
 
 namespace orc {
 

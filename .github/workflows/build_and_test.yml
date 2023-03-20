@@ -102,7 +102,7 @@ jobs:
         cxx:
           - clang++
     env:
-      ORC_USER_SIMD_LEVEL: avx512
+      ORC_USER_SIMD_LEVEL: AVX512
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -118,7 +118,7 @@ jobs:
     name: "SIMD programming using C++ intrinsic functions on Windows"
     runs-on: windows-2019
     env:
-      ORC_USER_SIMD_LEVEL: avx512
+      ORC_USER_SIMD_LEVEL: AVX512
     steps:
     - name: Checkout
       uses: actions/checkout@v2

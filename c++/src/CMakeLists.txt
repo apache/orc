@@ -161,12 +161,14 @@ set(SOURCE_FILES
   Adaptor.cc
   BlockBuffer.cc
   BloomFilter.cc
+  BpackingDefault.cc
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc
   ColumnWriter.cc
   Common.cc
   Compression.cc
+  CpuInfoUtil.cc
   Exceptions.cc
   Int128.cc
   LzoDecompressor.cc
@@ -184,9 +186,7 @@ set(SOURCE_FILES
   Timezone.cc
   TypeImpl.cc
   Vector.cc
-  Writer.cc
-  CpuInfoUtil.cc
-  BpackingDefault.cc)
+  Writer.cc)
 
 if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)

@@ -17,7 +17,6 @@
  */
 
 #include "Adaptor.hh"
-// #include "Bpacking.hh"
 #include "BpackingDefault.hh"
 #if defined(ORC_HAVE_RUNTIME_AVX512)
 #include "BpackingAvx512.hh"

@@ -461,7 +461,7 @@ namespace orc {
       0x0405060700010203, 0x0C0D0E0F08090A0B, 0x1415161710111213, 0x1C1D1E1F18191A1B,
       0x2425262720212223, 0x2C2D2E2F28292A2B, 0x3435363730313233, 0x3C3D3E3F38393A3B};
 
-  uint32_t getAlign(uint32_t start_bit, uint32_t base, uint32_t bitsize) {
+  inline uint32_t getAlign(uint32_t start_bit, uint32_t base, uint32_t bitsize) {
     uint32_t remnant = bitsize - start_bit;
     uint32_t ret_value = 0xFFFFFFFF;
     for (uint32_t i = 0u; i < bitsize; ++i) {

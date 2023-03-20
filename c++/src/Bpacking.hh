@@ -21,8 +21,6 @@
 
 #include <cstdint>
 
-#include "RLEv2.hh"
-
 namespace orc {
   class BitUnpack {
    public:

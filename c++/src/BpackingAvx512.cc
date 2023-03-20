@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#include "BpackingAvx512.hh"
 #include "BitUnpackerAvx512.hh"
-#include "Utils.hh"
+#include "BpackingAvx512.hh"
+#include "CpuInfoUtil.hh"
 
 namespace orc {
   UnpackAvx512::UnpackAvx512(RleDecoderV2* dec) : decoder(dec), unpackDefault(UnpackDefault(dec)) {
