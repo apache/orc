@@ -1073,7 +1073,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -1094,7 +1094,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable9u);
 
-        while (numElements >= 64) {
+        while (numElements >= 2 * VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -1116,7 +1116,7 @@ namespace orc {
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
           dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
-        if (numElements >= 32) {
+        if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -1268,7 +1268,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -1277,7 +1277,7 @@ namespace orc {
         __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable10u);
         __m512i shiftMask = _mm512_loadu_si512(shiftTable10u);
 
-        while (numElements >= 32) {
+        while (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm;
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -1401,7 +1401,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -1425,7 +1425,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable11u);
 
-        while (numElements >= 64) {
+        while (numElements >= 2 * VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -1453,7 +1453,7 @@ namespace orc {
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
           dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
-        if (numElements >= 32) {
+        if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -1605,7 +1605,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -1614,7 +1614,7 @@ namespace orc {
         __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable12u);
         __m512i shiftMask = _mm512_loadu_si512(shiftTable12u);
 
-        while (numElements >= 32) {
+        while (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm;
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -1633,9 +1633,9 @@ namespace orc {
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(simdPtr, simdPtr + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -1738,7 +1738,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -1762,7 +1762,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable13u);
 
-        while (numElements >= 64) {
+        while (numElements >= 2 * VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -1790,7 +1790,7 @@ namespace orc {
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
           dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
-        if (numElements >= 32) {
+        if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -1942,7 +1942,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -1957,7 +1957,7 @@ namespace orc {
         shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable14u_0);
         shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable14u_1);
 
-        while (numElements >= 32) {
+        while (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -2087,7 +2087,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
@@ -2111,7 +2111,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable15u);
 
-        while (numElements >= 64) {
+        while (numElements >= 2 * VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -2139,7 +2139,7 @@ namespace orc {
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
           dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
-        if (numElements >= 32) {
+        if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -2258,10 +2258,10 @@ namespace orc {
         tailBitLen = 0;
       }
 
-      if (numElements >= 32) {
+      if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __m512i reverse_mask_16u = _mm512_loadu_si512(reverseMaskTable16u);
-        while (numElements >= 32) {
+        while (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
           __m512i srcmm = _mm512_loadu_si512(srcPtr);
           srcmm = _mm512_shuffle_epi8(srcmm, reverse_mask_16u);
           _mm512_storeu_si512(simdPtr, srcmm);
@@ -2372,7 +2372,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -2392,7 +2392,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable17u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1u);
@@ -2415,7 +2415,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -2566,7 +2566,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -2586,7 +2586,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable18u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -2609,7 +2609,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -2760,7 +2760,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -2780,7 +2780,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable19u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -2803,7 +2803,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -2938,7 +2938,7 @@ namespace orc {
         tailBitLen = 0;
       }
 
-      if (startBit > 0u) {
+      if (startBit > 0) {
         uint32_t align = getAlign(startBit, bitWidth, 32u);
         if (align > numElements) {
           align = numElements;
@@ -2954,7 +2954,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16u) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -2962,7 +2962,7 @@ namespace orc {
         __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable20u);
         __m512i shiftMask = _mm512_loadu_si512(shiftTable20u);
 
-        while (numElements >= 16u) {
+        while (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm;
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -3070,7 +3070,7 @@ namespace orc {
         tailBitLen = 0;
       }
 
-      if (startBit > 0u) {
+      if (startBit > 0) {
         uint32_t align = getAlign(startBit, bitWidth, 32);
         if (align > numElements) {
           align = numElements;
@@ -3086,7 +3086,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -3106,7 +3106,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable21u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -3129,7 +3129,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -3280,7 +3280,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -3300,7 +3300,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable22u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -3323,7 +3323,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -3475,7 +3475,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -3495,7 +3495,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable23u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -3518,7 +3518,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi16(readMask, srcPtr);
@@ -3636,13 +3636,13 @@ namespace orc {
         tailBitLen = 0;
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
 
         __m512i shuffleIdx = _mm512_loadu_si512(shuffleIdxTable24u_0);
         __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable24u);
 
-        while (numElements >= 16) {
+        while (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm;
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -3758,7 +3758,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -3778,7 +3778,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable26u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1);
@@ -3801,7 +3801,7 @@ namespace orc {
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -3952,7 +3952,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -3960,7 +3960,7 @@ namespace orc {
         __m512i permutexIdx = _mm512_loadu_si512(permutexIdxTable28u);
         __m512i shiftMask = _mm512_loadu_si512(shiftTable28u);
 
-        while (numElements >= 16) {
+        while (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm;
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -4084,7 +4084,7 @@ namespace orc {
         }
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
         __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -4107,7 +4107,7 @@ namespace orc {
 
         __m512i gatherIdxmm = _mm512_loadu_si512(gatherIdxTable30u);
 
-        while (numElements >= 32) {
+        while (numElements >= 2 * VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_i64gather_epi64(gatherIdxmm, srcPtr, 1u);
@@ -4135,7 +4135,7 @@ namespace orc {
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
           dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
-        if (numElements >= 16) {
+        if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi32(readMask, srcPtr);
@@ -4253,9 +4253,9 @@ namespace orc {
         tailBitLen = 0;
       }
 
-      if (numElements >= 16) {
+      if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __m512i reverseMask32u = _mm512_loadu_si512(reverseMaskTable32u);
-        while (numElements >= 16) {
+        while (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
           __m512i srcmm = _mm512_loadu_si512(srcPtr);
           srcmm = _mm512_shuffle_epi8(srcmm, reverseMask32u);
           _mm512_storeu_si512(vectorBuf, srcmm);
