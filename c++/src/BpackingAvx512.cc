@@ -19,6 +19,7 @@
 #include "BpackingAvx512.hh"
 #include "BitUnpackerAvx512.hh"
 #include "CpuInfoUtil.hh"
+#include "RLEv2.hh"
 
 namespace orc {
   UnpackAvx512::UnpackAvx512(RleDecoderV2* dec) : decoder(dec), unpackDefault(UnpackDefault(dec)) {
@@ -91,25 +92,27 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __m512i reverseMask1u = _mm512_loadu_si512(reverseMaskTable1u);
-        while (numElements >= 64) {
+
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           uint64_t src_64 = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(srcPtr));
           // convert mask to 512-bit register. 0 --> 0x00, 1 --> 0xFF
           __m512i srcmm = _mm512_movm_epi8(src_64);
           // make 0x00 --> 0x00, 0xFF --> 0x01
           srcmm = _mm512_abs_epi8(srcmm);
           srcmm = _mm512_shuffle_epi8(srcmm, reverseMask1u);
-          _mm512_storeu_si512(vectorBuf8, srcmm);
+          _mm512_storeu_si512(simdPtr, srcmm);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -212,10 +215,11 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __mmask64 readMask = ORC_VECTOR_MAX_16U;         // first 16 bytes (64 elements)
         __m512i parse_mask = _mm512_set1_epi16(0x0303);  // 2 times 1 then (8 - 2) times 0
-        while (numElements >= 64) {
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           __m512i srcmm3 = _mm512_maskz_loadu_epi8(readMask, srcPtr);
           __m512i srcmm0, srcmm1, srcmm2, tmpmm;
 
@@ -244,16 +248,16 @@ namespace orc {
 
           srcmm0 = _mm512_and_si512(srcmm0, parse_mask);
 
-          _mm512_storeu_si512(vectorBuf8, srcmm0);
+          _mm512_storeu_si512(simdPtr, srcmm0);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -356,7 +360,8 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -370,7 +375,7 @@ namespace orc {
         shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable3u_0);
         shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable3u_1);
 
-        while (numElements >= 64) {
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi8(readMask, srcPtr);
@@ -388,16 +393,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi8(zmm[0], 0xAAAAAAAAAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask);
 
-          _mm512_storeu_si512(vectorBuf8, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -500,10 +505,11 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __mmask64 readMask = ORC_VECTOR_MAX_32U;        // first 32 bytes (64 elements)
         __m512i parseMask = _mm512_set1_epi16(0x0F0F);  // 4 times 1 then (8 - 4) times 0
-        while (numElements >= 64) {
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           __m512i srcmm0, srcmm1, tmpmm;
 
           srcmm1 = _mm512_maskz_loadu_epi8(readMask, srcPtr);
@@ -520,16 +526,16 @@ namespace orc {
           // turn 4 bitWidth into 8 by zeroing 4 of each 8 bits.
           srcmm0 = _mm512_and_si512(srcmm0, parseMask);
 
-          _mm512_storeu_si512(vectorBuf8, srcmm0);
+          _mm512_storeu_si512(simdPtr, srcmm0);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -632,7 +638,8 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -646,7 +653,7 @@ namespace orc {
         shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable5u_0);
         shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable5u_1);
 
-        while (numElements >= 64) {
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi8(readMask, srcPtr);
@@ -664,16 +671,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi8(zmm[0], 0xAAAAAAAAAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask);
 
-          _mm512_storeu_si512(vectorBuf8, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -776,7 +783,8 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -790,7 +798,7 @@ namespace orc {
         shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable6u_0);
         shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable6u_1);
 
-        while (numElements >= 64) {
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi8(readMask, srcPtr);
@@ -808,16 +816,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi8(zmm[0], 0xAAAAAAAAAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask);
 
-          _mm512_storeu_si512(vectorBuf8, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -920,7 +928,8 @@ namespace orc {
         }
       }
 
-      if (numElements >= 64) {
+      if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
+        uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
         __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -934,7 +943,7 @@ namespace orc {
         shiftMaskPtr[0] = _mm512_loadu_si512(shiftTable7u_0);
         shiftMaskPtr[1] = _mm512_loadu_si512(shiftTable7u_1);
 
-        while (numElements >= 64) {
+        while (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
           __m512i srcmm, zmm[2];
 
           srcmm = _mm512_maskz_loadu_epi8(readMask, srcPtr);
@@ -952,16 +961,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi8(zmm[0], 0xAAAAAAAAAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask);
 
-          _mm512_storeu_si512(vectorBuf8, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 8 * bitWidth;
-          numElements -= 64;
-          std::copy(vectorBuf8, vectorBuf8 + 64, dstPtr);
-          dstPtr += 64;
+          numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_8BIT_MAX_NUM;
         }
       }
 
@@ -1065,6 +1074,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -1095,16 +1105,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi16(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
         if (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -1146,16 +1156,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask16u);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -1259,6 +1269,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -1278,16 +1289,16 @@ namespace orc {
           zmm = _mm512_srlv_epi16(zmm, shiftMask);
           zmm = _mm512_and_si512(zmm, parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm);
+          _mm512_storeu_si512(simdPtr, zmm);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -1391,6 +1402,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -1430,16 +1442,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi16(zmm[0], 0xAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
         if (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -1481,16 +1493,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverse_mask_16u);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -1594,6 +1606,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -1613,7 +1626,7 @@ namespace orc {
           zmm = _mm512_srlv_epi16(zmm, shiftMask);
           zmm = _mm512_and_si512(zmm, parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm);
+          _mm512_storeu_si512(simdPtr, zmm);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
@@ -1621,7 +1634,7 @@ namespace orc {
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
+          std::copy(simdPtr, simdPtr + 32, dstPtr);
           dstPtr += 32;
         }
       }
@@ -1726,6 +1739,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -1765,16 +1779,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi16(zmm[0], 0xAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
         if (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -1816,16 +1830,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverse_mask_16u);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -1929,6 +1943,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
@@ -1960,16 +1975,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi16(zmm[0], 0xAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -2073,6 +2088,7 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
         __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
         __m512i nibbleReversemm = _mm512_loadu_si512(nibbleReverseTable);
@@ -2112,16 +2128,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi16(zmm[0], 0xAAAAAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
         if (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2163,16 +2179,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask16u);
 
-          _mm512_storeu_si512(vectorBuf16, zmm[0]);
+          _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -2243,20 +2259,21 @@ namespace orc {
       }
 
       if (numElements >= 32) {
+        uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
         __m512i reverse_mask_16u = _mm512_loadu_si512(reverseMaskTable16u);
         while (numElements >= 32) {
           __m512i srcmm = _mm512_loadu_si512(srcPtr);
           srcmm = _mm512_shuffle_epi8(srcmm, reverse_mask_16u);
-          _mm512_storeu_si512(vectorBuf16, srcmm);
+          _mm512_storeu_si512(simdPtr, srcmm);
 
           srcPtr += 4 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 4 * bitWidth;
-          numElements -= 32;
-          std::copy(vectorBuf16, vectorBuf16 + 32, dstPtr);
-          dstPtr += 32;
+          numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
+          std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_16BIT_MAX_NUM;
         }
       }
 
@@ -2386,16 +2403,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -2437,16 +2454,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -2580,16 +2597,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -2631,16 +2648,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -2774,16 +2791,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -2825,16 +2842,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -2957,16 +2974,16 @@ namespace orc {
           zmm = _mm512_srlv_epi32(zmm, shiftMask);
           zmm = _mm512_and_si512(zmm, parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm);
+          _mm512_storeu_si512(vectorBuf, zmm);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -3100,16 +3117,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -3151,16 +3168,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -3294,16 +3311,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -3345,16 +3362,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -3489,16 +3506,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -3540,16 +3557,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -3633,16 +3650,16 @@ namespace orc {
           zmm = _mm512_permutexvar_epi32(permutexIdx, srcmm);
           zmm = _mm512_shuffle_epi8(zmm, shuffleIdx);
 
-          _mm512_storeu_si512(vectorBuf32, zmm);
+          _mm512_storeu_si512(vectorBuf, zmm);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -3772,16 +3789,16 @@ namespace orc {
           zmm[0] = _mm512_srlv_epi32(zmm[0], shiftMaskPtr[2]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
 
         if (numElements >= 16) {
@@ -3823,16 +3840,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -3955,16 +3972,16 @@ namespace orc {
           zmm = _mm512_srlv_epi32(zmm, shiftMask);
           zmm = _mm512_and_si512(zmm, parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm);
+          _mm512_storeu_si512(vectorBuf, zmm);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -4107,16 +4124,16 @@ namespace orc {
           zmm[0] = _mm512_mask_mov_epi32(zmm[0], 0xAAAA, zmm[1]);
           zmm[0] = _mm512_and_si512(zmm[0], parseMask0);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
         if (numElements >= 16) {
           __m512i srcmm, zmm[2];
@@ -4157,16 +4174,16 @@ namespace orc {
           zmm[0] = _mm512_or_si512(lowNibblemm, highNibblemm);
           zmm[0] = _mm512_shuffle_epi8(zmm[0], reverseMask32u);
 
-          _mm512_storeu_si512(vectorBuf32, zmm[0]);
+          _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 
@@ -4241,16 +4258,16 @@ namespace orc {
         while (numElements >= 16) {
           __m512i srcmm = _mm512_loadu_si512(srcPtr);
           srcmm = _mm512_shuffle_epi8(srcmm, reverseMask32u);
-          _mm512_storeu_si512(vectorBuf32, srcmm);
+          _mm512_storeu_si512(vectorBuf, srcmm);
 
           srcPtr += 2 * bitWidth;
           decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
                                     0);
           bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
           bufMoveByteLen -= 2 * bitWidth;
-          numElements -= 16;
-          std::copy(vectorBuf32, vectorBuf32 + 16, dstPtr);
-          dstPtr += 16;
+          numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
+          std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
+          dstPtr += VECTOR_UNPACK_32BIT_MAX_NUM;
         }
       }
 

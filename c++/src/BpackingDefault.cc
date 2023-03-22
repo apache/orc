@@ -17,6 +17,7 @@
  */
 
 #include "BpackingDefault.hh"
+#include "RLEv2.hh"
 #include "Utils.hh"
 
 namespace orc {

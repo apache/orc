@@ -19,16 +19,18 @@
 #ifndef ORC_BPACKINGAVX512_HH
 #define ORC_BPACKINGAVX512_HH
 
-#include <stdlib.h>
 #include <cstdint>
+#include <cstdlib>
 
 #include "BpackingDefault.hh"
 
 namespace orc {
 
-#define MAX_VECTOR_BUF_8BIT_LENGTH 64
-#define MAX_VECTOR_BUF_16BIT_LENGTH 32
-#define MAX_VECTOR_BUF_32BIT_LENGTH 16
+#define VECTOR_UNPACK_8BIT_MAX_NUM 64
+#define VECTOR_UNPACK_16BIT_MAX_NUM 32
+#define VECTOR_UNPACK_32BIT_MAX_NUM 16
+
+  class RleDecoderV2;
 
   class UnpackAvx512 {
    public:
@@ -70,12 +72,8 @@ namespace orc {
     RleDecoderV2* decoder;
     UnpackDefault unpackDefault;
 
-    // Used by vectorially 1~8 bit-unpacking data
-    uint8_t vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1];
-    // Used by vectorially 9~16 bit-unpacking data
-    uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH + 1];
-    // Used by vectorially 17~32 bit-unpacking data
-    uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH + 1];
+    // Used by vectorially bit-unpacking data
+    uint32_t vectorBuf[VECTOR_UNPACK_32BIT_MAX_NUM + 1];
   };
 
   class BitUnpackAVX512 : public BitUnpack {

@@ -17,10 +17,7 @@
  */
 
 /**
- * @file CpuInfoUtil.hh code borrowing from
- * https://github.com/apache/arrow/blob/main/cpp/src/arrow/util/cpu_info.h
- * @file CpuInfoUtil.cc code borrowing from
- * https://github.com/apache/arrow/blob/main/cpp/src/arrow/util/cpu_info.cc
+ * @file CpuInfoUtil.hh is from Apache Arrow as of 2023-03-21
  */
 
 #ifndef ORC_CPUINFOUTIL_HH

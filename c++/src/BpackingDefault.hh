@@ -19,14 +19,13 @@
 #ifndef ORC_BPACKINGDEFAULT_HH
 #define ORC_BPACKINGDEFAULT_HH
 
-#include <stdlib.h>
 #include <cstdint>
-
-#include "RLEv2.hh"
+#include <cstdlib>
 
 #include "Bpacking.hh"
 
 namespace orc {
+  class RleDecoderV2;
 
   class UnpackDefault {
    public:

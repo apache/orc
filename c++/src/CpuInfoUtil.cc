@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+/**
+ * @file CpuInfoUtil.cc is from Apache Arrow as of 2023-03-21
+ */
+
 #include "CpuInfoUtil.hh"
 
 #ifdef __APPLE__

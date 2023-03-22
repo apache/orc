@@ -22,6 +22,8 @@
 #include <cstdint>
 
 namespace orc {
+  class RleDecoderV2;
+
   class BitUnpack {
    public:
     static int readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
