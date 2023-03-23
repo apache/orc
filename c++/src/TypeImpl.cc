@@ -286,7 +286,9 @@ namespace orc {
                                                               MemoryPool& memoryPool, bool encoded,
                                                               bool useTightNumericVector) const {
     switch (static_cast<int64_t>(kind)) {
-      case BOOLEAN:
+      case BOOLEAN: {
+        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
+      }
       case BYTE: {
         if (useTightNumericVector) {
           return std::make_unique<ByteVectorBatch>(capacity, memoryPool);
