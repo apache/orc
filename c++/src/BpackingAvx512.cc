@@ -4328,8 +4328,8 @@ namespace orc {
     }
   }
 
-  int BitUnpackAVX512::readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset,
-                                 uint64_t len, uint64_t fbs) {
+  void BitUnpackAVX512::readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset,
+                                  uint64_t len, uint64_t fbs) {
     UnpackAvx512 unpackAvx512(decoder);
     UnpackDefault unpackDefault(decoder);
     uint64_t startBit = 0;
@@ -4472,7 +4472,5 @@ namespace orc {
           break;
       }
     }
-
-    return 0;
   }
 }  // namespace orc

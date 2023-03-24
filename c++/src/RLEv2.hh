@@ -206,7 +206,7 @@ namespace orc {
     int64_t readLongBE(uint64_t bsz);
     int64_t readVslong();
     uint64_t readVulong();
-    int readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
+    void readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
 
     template <typename T>
     uint64_t nextShortRepeats(T* data, uint64_t offset, uint64_t numValues, const char* notNull);

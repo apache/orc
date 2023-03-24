@@ -26,8 +26,8 @@ namespace orc {
 
   class BitUnpack {
    public:
-    static int readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
-                         uint64_t fbs);
+    static void readLongs(RleDecoderV2* decoder, int64_t* data, uint64_t offset, uint64_t len,
+                          uint64_t fbs);
   };
 }  // namespace orc
 

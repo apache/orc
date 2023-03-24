@@ -84,7 +84,7 @@ namespace orc {
     }
   };
 
-  int RleDecoderV2::readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs) {
+  void RleDecoderV2::readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs) {
     static DynamicDispatch<UnpackDynamicFunction> dispatch;
     return dispatch.func(this, data, offset, len, fbs);
   }
