@@ -1897,8 +1897,9 @@ namespace orc {
   TEST_P(WriterTest, testWriteFixedWidthNumericVectorBatch) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
-    std::unique_ptr<Type> type(Type::buildTypeFromString(
-        "struct<col1:double,col2:float,col3:int,col4:smallint,col5:tinyint,col6:bigint>"));
+    std::unique_ptr<Type> type(
+        Type::buildTypeFromString("struct<col1:double,col2:float,col3:int,col4:smallint,col5:"
+                                  "tinyint,col6:bigint,col7:boolean>"));
 
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
@@ -1921,6 +1922,7 @@ namespace orc {
     ShortVectorBatch* shortBatch = dynamic_cast<ShortVectorBatch*>(structBatch->fields[3]);
     ByteVectorBatch* byteBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[4]);
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[5]);
+    ByteVectorBatch* boolBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[6]);
     structBatch->resize(rowCount);
     doubleBatch->resize(rowCount);
     floatBatch->resize(rowCount);
@@ -1928,6 +1930,7 @@ namespace orc {
     shortBatch->resize(rowCount);
     byteBatch->resize(rowCount);
     longBatch->resize(rowCount);
+    boolBatch->resize(rowCount);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
       structBatch->notNull[i] = 1;
@@ -1937,6 +1940,7 @@ namespace orc {
       shortBatch->notNull[i] = 1;
       byteBatch->notNull[i] = 1;
       longBatch->notNull[i] = 1;
+      boolBatch->notNull[i] = 1;
 
       doubleBatch->data[i] = data[i];
       floatBatch->data[i] = static_cast<float>(data[i]);
@@ -1944,6 +1948,7 @@ namespace orc {
       shortBatch->data[i] = static_cast<int16_t>(i);
       byteBatch->data[i] = static_cast<int8_t>(i);
       longBatch->data[i] = static_cast<int64_t>(i);
+      boolBatch->data[i] = static_cast<bool>((i % 17) % 2);
     }
 
     structBatch->numElements = rowCount;
@@ -1953,6 +1958,7 @@ namespace orc {
     shortBatch->numElements = rowCount;
     byteBatch->numElements = rowCount;
     longBatch->numElements = rowCount;
+    boolBatch->numElements = rowCount;
 
     writer->add(*batch);
     writer->close();
@@ -1974,6 +1980,7 @@ namespace orc {
     shortBatch = dynamic_cast<ShortVectorBatch*>(structBatch->fields[3]);
     byteBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[4]);
     longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[5]);
+    boolBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[6]);
     for (uint64_t i = 0; i < rowCount; ++i) {
       EXPECT_TRUE(std::abs(data[i] - doubleBatch->data[i]) < 0.000001);
       EXPECT_TRUE(std::abs(static_cast<float>(data[i]) - static_cast<float>(floatBatch->data[i])) <
@@ -1982,6 +1989,7 @@ namespace orc {
       EXPECT_EQ(shortBatch->data[i], static_cast<int16_t>(i));
       EXPECT_EQ(byteBatch->data[i], static_cast<int8_t>(i));
       EXPECT_EQ(longBatch->data[i], static_cast<int64_t>(i));
+      EXPECT_EQ(boolBatch->data[i], static_cast<bool>((i % 17) % 2));
     }
     EXPECT_FALSE(rowReader->next(*batch));
   }
