@@ -21,7 +21,9 @@
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
 #include "ColumnReader.hh"
+#include "ConvertColumnReader.hh"
 #include "RLE.hh"
+#include "SchemaEvolution.hh"
 #include "orc/Exceptions.hh"
 
 #include <math.h>
@@ -1699,7 +1701,13 @@ namespace orc {
    * Create a reader for the given stripe.
    */
   std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe,
-                                            bool useTightNumericVector) {
+                                            bool useTightNumericVector, bool convertToReadType) {
+    if (convertToReadType && stripe.getSchemaEvolution()) {
+      if (stripe.getSchemaEvolution()->needConvert(type)) {
+        return buildConvertReader(type, stripe, useTightNumericVector);
+      }
+    }
+
     switch (static_cast<int64_t>(type.getKind())) {
       case SHORT: {
         if (useTightNumericVector) {

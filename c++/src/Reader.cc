@@ -255,7 +255,8 @@ namespace orc {
         footer(contents->footer.get()),
         firstRowOfStripe(*contents->pool, 0),
         enableEncodedBlock(opts.getEnableLazyDecoding()),
-        readerTimezone(getTimezoneByName(opts.getTimezoneName())) {
+        readerTimezone(getTimezoneByName(opts.getTimezoneName())),
+        schemaEvolution(opts.getReadType(), contents->schema.get()) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -1205,8 +1206,10 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock,
-                                            useTightNumericVector);
+    const Type& readType =
+        schemaEvolution.getReadType() ? *schemaEvolution.getReadType() : getSelectedType();
+    return readType.createRowBatch(capacity, *contents->pool, enableEncodedBlock,
+                                   useTightNumericVector);
   }
 
   void ensureOrcFooter(InputStream* stream, DataBuffer<char>* buffer, uint64_t postscriptLength) {

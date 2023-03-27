@@ -30,6 +30,8 @@
 
 namespace orc {
 
+  class SchemaEvolution;
+
   class StripeStreams {
    public:
     virtual ~StripeStreams();
@@ -101,6 +103,12 @@ namespace orc {
      * encoded in RLE.
      */
     virtual bool isDecimalAsLong() const = 0;
+
+    /**
+     * @return get schema evolution utility object
+     *
+     */
+    virtual const SchemaEvolution* getSchemaEvolution() const = 0;
   };
 
   /**
@@ -159,7 +167,8 @@ namespace orc {
    * Create a reader for the given stripe.
    */
   std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe,
-                                            bool useTightNumericVector = false);
+                                            bool useTightNumericVector = false,
+                                            bool convertToReadType = true);
 }  // namespace orc
 
 #endif

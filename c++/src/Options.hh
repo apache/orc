@@ -139,6 +139,7 @@ namespace orc {
     std::string readerTimezone;
     RowReaderOptions::IdReadIntentMap idReadIntentMap;
     bool useTightNumericVector;
+    std::shared_ptr<Type> readType;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -304,6 +305,15 @@ namespace orc {
 
   bool RowReaderOptions::getUseTightNumericVector() const {
     return privateBits->useTightNumericVector;
+  }
+
+  RowReaderOptions& RowReaderOptions::setReadType(std::shared_ptr<Type>& type) {
+    privateBits->readType = type;
+    return *this;
+  }
+
+  std::shared_ptr<Type>& RowReaderOptions::getReadType() const {
+    return privateBits->readType;
   }
 }  // namespace orc
 

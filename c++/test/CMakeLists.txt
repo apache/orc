@@ -26,6 +26,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
 add_executable (orc-test
   MemoryInputStream.cc
   MemoryOutputStream.cc
+  MockStripeStreams.cc
   TestAttributes.cc
   TestBlockBuffer.cc
   TestBufferedOutputStream.cc
@@ -36,6 +37,7 @@ add_executable (orc-test
   TestColumnReader.cc
   TestColumnStatistics.cc
   TestCompression.cc
+  TestConvertColumnReader.cc
   TestDecompression.cc
   TestDecimal.cc
   TestDictionaryEncoding.cc
@@ -50,6 +52,7 @@ add_executable (orc-test
   TestRLEV2Util.cc
   TestSargsApplier.cc
   TestSearchArgument.cc
+  TestSchemaEvolution.cc
   TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
   TestTimezone.cc

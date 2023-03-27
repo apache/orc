@@ -172,6 +172,9 @@ namespace orc {
     // desired timezone to return data of timestamp types.
     const Timezone& readerTimezone;
 
+    // match read and file types
+    SchemaEvolution schemaEvolution;
+
     // load stripe index if not done so
     void loadStripeIndex();
 
@@ -237,6 +240,10 @@ namespace orc {
     bool getThrowOnHive11DecimalOverflow() const;
     bool getIsDecimalAsLong() const;
     int32_t getForcedScaleOnHive11Decimal() const;
+
+    const SchemaEvolution& getSchemaEvolution() const {
+      return schemaEvolution;
+    }
   };
 
   class ReaderImpl : public Reader {

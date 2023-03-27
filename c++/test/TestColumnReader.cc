@@ -18,12 +18,9 @@
 
 #include "Adaptor.hh"
 #include "ColumnReader.hh"
+#include "MockStripeStreams.hh"
 #include "OrcTest.hh"
 #include "orc/Exceptions.hh"
-
-#include "wrap/gmock.h"
-#include "wrap/gtest-wrapper.h"
-#include "wrap/orc-proto-wrapper.hh"
 
 #include <cmath>
 #include <iostream>
@@ -40,52 +37,6 @@ DIAGNOSTIC_IGNORE("-Wparentheses")
 namespace orc {
   using ::testing::TestWithParam;
   using ::testing::Values;
-
-  class MockStripeStreams : public StripeStreams {
-   public:
-    ~MockStripeStreams() override;
-
-    std::unique_ptr<SeekableInputStream> getStream(uint64_t columnId, proto::Stream_Kind kind,
-                                                   bool stream) const override;
-
-    MOCK_CONST_METHOD0(getSelectedColumns,
-
-                       const std::vector<bool>()
-
-    );
-    MOCK_CONST_METHOD1(getEncoding, proto::ColumnEncoding(uint64_t));
-    MOCK_CONST_METHOD3(getStreamProxy, SeekableInputStream*(uint64_t, proto::Stream_Kind, bool));
-    MOCK_CONST_METHOD0(getErrorStream, std::ostream*());
-    MOCK_CONST_METHOD0(getThrowOnHive11DecimalOverflow, bool());
-    MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t());
-    MOCK_CONST_METHOD0(isDecimalAsLong, bool());
-
-    MemoryPool& getMemoryPool() const override {
-      return *getDefaultPool();
-    }
-
-    ReaderMetrics* getReaderMetrics() const override {
-      return getDefaultReaderMetrics();
-    }
-
-    const Timezone& getWriterTimezone() const override {
-      return getTimezoneByName("America/Los_Angeles");
-    }
-
-    const Timezone& getReaderTimezone() const override {
-      return getTimezoneByName("GMT");
-    }
-  };
-
-  MockStripeStreams::~MockStripeStreams() {
-    // PASS
-  }
-
-  std::unique_ptr<SeekableInputStream> MockStripeStreams::getStream(uint64_t columnId,
-                                                                    proto::Stream_Kind kind,
-                                                                    bool shouldStream) const {
-    return std::unique_ptr<SeekableInputStream>(getStreamProxy(columnId, kind, shouldStream));
-  }
 
   bool isNotNull(tm* timeptr) {
     return timeptr != nullptr;
