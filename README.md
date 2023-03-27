@@ -93,3 +93,15 @@ To build only the C++ library:
 % make test-out
 
 ```
+
+To build the C++ library with AVX512 enabling:
+```shell
+ENV parameter ORC_USER_SIMD_LEVEL is to switch "AVX512" and "NONE" at the running time.
+export ORC_USER_SIMD_LEVEL=AVX512
+% mkdir build
+% cd build
+% cmake .. -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
+% make package
+% make test-out
+
+```
