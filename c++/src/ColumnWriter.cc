@@ -657,8 +657,9 @@ namespace orc {
   };
 
   template <typename BatchType>
-  BooleanColumnWriter<BatchType>::BooleanColumnWriter(const Type& type, const StreamsFactory& factory,
-                                           const WriterOptions& options)
+  BooleanColumnWriter<BatchType>::BooleanColumnWriter(const Type& type,
+                                                      const StreamsFactory& factory,
+                                                      const WriterOptions& options)
       : ColumnWriter(type, factory, options) {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
@@ -670,11 +671,13 @@ namespace orc {
   }
 
   template <typename BatchType>
-  void BooleanColumnWriter<BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
-                                const char* incomingMask) {
+  void BooleanColumnWriter<BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                           uint64_t numValues, const char* incomingMask) {
     BatchType* byteBatch = dynamic_cast<BatchType*>(&rowBatch);
     if (byteBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to BooleanVectorBatch");
+      std::stringstream ss;
+      ss << "Failed to cast to " << typeid(BatchType).name();
+      throw InvalidArgument(ss.str());
     }
     BooleanColumnStatisticsImpl* boolStats =
         dynamic_cast<BooleanColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -728,7 +731,8 @@ namespace orc {
   }
 
   template <typename BatchType>
-  void BooleanColumnWriter<BatchType>::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
+  void BooleanColumnWriter<BatchType>::getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);

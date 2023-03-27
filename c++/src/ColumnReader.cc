@@ -171,10 +171,12 @@ namespace orc {
   }
 
   template <typename BatchType>
-  void BooleanColumnReader<BatchType>::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
+  void BooleanColumnReader<BatchType>::next(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                                            char* notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
-    // Since the byte rle places the output in a char*
-    // we cheat here and use the other type and then expand it in a second pass.
+    // Since the byte rle places the output in a char* and BatchType here may be
+    // LongVectorBatch with long*. We cheat here in that case and use the long*
+    // and then expand it in a second pass..
     auto* ptr = dynamic_cast<BatchType&>(rowBatch).data.data();
     rle->next(reinterpret_cast<char*>(ptr), numValues,
               rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);

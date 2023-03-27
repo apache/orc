@@ -1897,8 +1897,9 @@ namespace orc {
   TEST_P(WriterTest, testWriteFixedWidthNumericVectorBatch) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
-    std::unique_ptr<Type> type(Type::buildTypeFromString(
-        "struct<col1:double,col2:float,col3:int,col4:smallint,col5:tinyint,col6:bigint,col7:boolean>"));
+    std::unique_ptr<Type> type(
+        Type::buildTypeFromString("struct<col1:double,col2:float,col3:int,col4:smallint,col5:"
+                                  "tinyint,col6:bigint,col7:boolean>"));
 
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
