@@ -74,8 +74,16 @@ jobs:
         cat /home/runner/work/orc/orc/build/java/rat.txt
 
   windows:
-    name: "Build on Windows"
+    name: "Build and ${{ matrix.simd }} Test on Windows"
     runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        simd:
+          - General
+          - AVX512
+    env:
+      ORC_USER_SIMD_LEVEL: AVX512
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -87,7 +95,11 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+        if [ "${{ matrix.simd }}" = "General" ]; then
+          cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+        else
+          cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
+        fi
         cmake --build . --config Debug
         ctest -C Debug --output-on-failure
 
@@ -113,26 +125,6 @@ jobs:
         cd build
         cmake -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON ..
         make package test-out
-
-  simdWindows:
-    name: "SIMD programming using C++ intrinsic functions on Windows"
-    runs-on: windows-2019
-    env:
-      ORC_USER_SIMD_LEVEL: AVX512
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
-      with:
-        msbuild-architecture: x64
-    - name: "Test"
-      run: |
-        mkdir build
-        cd build
-        cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
-        cmake --build . --config Debug
-        ctest -C Debug --output-on-failure
 
   doc:
     name: "Javadoc generation"

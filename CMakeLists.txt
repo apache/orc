@@ -178,7 +178,7 @@ message(STATUS "BUILD_ENABLE_AVX512: ${BUILD_ENABLE_AVX512}")
 # macOS doesn't fully support AVX512, it has a different way dealing with AVX512 than Windows and Linux.
 #
 # Here can find the description:
-# https://github.com/apple/darwin-xnu/blob/0a798f6738bc1db01281fc08ae024145e84df927/osfmk/i386/fpu.c#L176
+# https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/osfmk/i386/fpu.c#L174
 if (BUILD_ENABLE_AVX512 AND NOT APPLE)
   INCLUDE(ConfigSimdLevel)
 endif ()
