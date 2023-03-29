@@ -96,9 +96,6 @@ To build only the C++ library:
 
 To build the C++ library with AVX512 enabled:
 ```shell
-Cmake option BUILD_ENABLE_AVX512 can be set to "ON" or (default value)"OFF" at the compile time. At compile time, it defines the SIMD level(AVX512) to be compiled into the binaries.
-Environment variable ORC_USER_SIMD_LEVEL can be set to "AVX512" or (default value)"NONE" at the run time. At run time, it defines the SIMD level to dispatch the code which can apply SIMD optimization. 
-Note that if ORC_USER_SIMD_LEVEL is set to "NONE" at run time, AVX512 will not take effect at run time even if BUILD_ENABLE_AVX512 is set to "ON" at compile time.
 export ORC_USER_SIMD_LEVEL=AVX512
 % mkdir build
 % cd build
@@ -106,3 +103,8 @@ export ORC_USER_SIMD_LEVEL=AVX512
 % make package
 % make test-out
 ```
+Cmake option BUILD_ENABLE_AVX512 can be set to "ON" or (default value)"OFF" at the compile time. At compile time, it defines the SIMD level(AVX512) to be compiled into the binaries.
+
+Environment variable ORC_USER_SIMD_LEVEL can be set to "AVX512" or (default value)"NONE" at the run time. At run time, it defines the SIMD level to dispatch the code which can apply SIMD optimization.
+
+Note that if ORC_USER_SIMD_LEVEL is set to "NONE" at run time, AVX512 will not take effect at run time even if BUILD_ENABLE_AVX512 is set to "ON" at compile time.
