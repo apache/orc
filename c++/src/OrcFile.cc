@@ -175,6 +175,12 @@ namespace orc {
         closed = true;
       }
     }
+
+    void flush() override {
+      if (!closed) {
+        ::fsync(file);
+      }
+    }
   };
 
   FileOutputStream::~FileOutputStream() {

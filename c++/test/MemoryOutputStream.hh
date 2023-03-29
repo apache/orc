@@ -56,6 +56,8 @@ namespace orc {
 
     void close() override {}
 
+    void flush() override {}
+
     void reset() {
       length = 0;
     }
