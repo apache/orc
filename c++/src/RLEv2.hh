@@ -228,8 +228,8 @@ namespace orc {
     DataBuffer<int64_t> literals;       // Values of the current run
   };
 
-  void RleDecoderV2::resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
-                                      uint32_t backupByteLen) {
+  inline void RleDecoderV2::resetBufferStart(char** bufStart, char** bufEnd, uint64_t len,
+                                             bool resetBuf, uint32_t backupByteLen) {
     uint64_t remainingLen = *bufEnd - *bufStart;
     int bufferLength = 0;
     const void* bufferPointer = nullptr;

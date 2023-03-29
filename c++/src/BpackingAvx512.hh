@@ -29,6 +29,9 @@ namespace orc {
 #define VECTOR_UNPACK_8BIT_MAX_NUM 64
 #define VECTOR_UNPACK_16BIT_MAX_NUM 32
 #define VECTOR_UNPACK_32BIT_MAX_NUM 16
+#define UNPACK_8Bit_MAX_SIZE 8
+#define UNPACK_16Bit_MAX_SIZE 16
+#define UNPACK_32Bit_MAX_SIZE 32
 
   class RleDecoderV2;
 
@@ -67,6 +70,17 @@ namespace orc {
 
     void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
                           uint64_t& startBit);
+
+    inline void alignHeaderBoundary(uint64_t& startBit, uint64_t& bufMoveByteLen,
+                                    uint64_t& bufRestByteLen, uint64_t& len, uint32_t& bitWidth,
+                                    uint64_t& tailBitLen, uint32_t& backupByteLen,
+                                    uint64_t& numElements, bool& resetBuf, const uint8_t*& srcPtr,
+                                    int64_t*& dstPtr, uint32_t bitMaxSize);
+
+    inline void alignTailerBoundary(uint64_t& startBit, uint64_t& bufMoveByteLen,
+                                    uint64_t& bufRestByteLen, uint64_t& len, uint32_t& bitWidth,
+                                    uint32_t& backupByteLen, uint64_t& numElements, bool& resetBuf,
+                                    const uint8_t*& srcPtr, int64_t*& dstPtr);
 
    private:
     RleDecoderV2* decoder;

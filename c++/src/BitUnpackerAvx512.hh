@@ -461,17 +461,17 @@ namespace orc {
       0x0405060700010203, 0x0C0D0E0F08090A0B, 0x1415161710111213, 0x1C1D1E1F18191A1B,
       0x2425262720212223, 0x2C2D2E2F28292A2B, 0x3435363730313233, 0x3C3D3E3F38393A3B};
 
-  inline uint32_t getAlign(uint32_t start_bit, uint32_t base, uint32_t bitsize) {
-    uint32_t remnant = bitsize - start_bit;
-    uint32_t ret_value = 0xFFFFFFFF;
-    for (uint32_t i = 0u; i < bitsize; ++i) {
-      uint32_t test_value = (i * base) % bitsize;
-      if (test_value == remnant) {
-        ret_value = i;
+  inline uint32_t getAlign(uint32_t startBit, uint32_t base, uint32_t bitSize) {
+    uint32_t remnant = bitSize - startBit;
+    uint32_t retValue = 0xFFFFFFFF;
+    for (uint32_t i = 0u; i < bitSize; ++i) {
+      uint32_t testValue = (i * base) % bitSize;
+      if (testValue == remnant) {
+        retValue = i;
         break;
       }
     }
-    return ret_value;
+    return retValue;
   }
 
   inline uint64_t moveLen(uint64_t x, uint64_t y) {

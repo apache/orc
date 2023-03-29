@@ -30,10 +30,106 @@ namespace orc {
     // PASS
   }
 
+  inline void UnpackAvx512::alignHeaderBoundary(uint64_t& startBit, uint64_t& bufMoveByteLen,
+                                                uint64_t& bufRestByteLen, uint64_t& len,
+                                                uint32_t& bitWidth, uint64_t& tailBitLen,
+                                                uint32_t& backupByteLen, uint64_t& numElements,
+                                                bool& resetBuf, const uint8_t*& srcPtr,
+                                                int64_t*& dstPtr, uint32_t bitMaxSize) {
+    if (startBit != 0) {
+      bufMoveByteLen +=
+          moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+    } else {
+      bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
+    }
+
+    if (bufMoveByteLen <= bufRestByteLen) {
+      numElements = len;
+      resetBuf = false;
+      len -= numElements;
+    } else {
+      if (startBit != 0) {
+        numElements =
+            (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+        len -= numElements;
+        tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit,
+                          bitWidth);
+        resetBuf = true;
+      } else {
+        numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
+        len -= numElements;
+        tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
+        resetBuf = true;
+      }
+    }
+
+    if (tailBitLen != 0) {
+      backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
+      tailBitLen = 0;
+    }
+
+    if (startBit > 0) {
+      uint32_t align = getAlign(startBit, bitWidth, bitMaxSize);
+      if (align > numElements) {
+        align = numElements;
+      }
+      if (align != 0) {
+        bufMoveByteLen -=
+            moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
+        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+        dstPtr += align;
+        numElements -= align;
+      }
+    }
+  }
+
+  inline void UnpackAvx512::alignTailerBoundary(uint64_t& startBit, uint64_t& bufMoveByteLen,
+                                                uint64_t& bufRestByteLen, uint64_t& len,
+                                                uint32_t& bitWidth, uint32_t& backupByteLen,
+                                                uint64_t& numElements, bool& resetBuf,
+                                                const uint8_t*& srcPtr, int64_t*& dstPtr) {
+    if (numElements > 0) {
+      if (startBit != 0) {
+        bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                  ORC_VECTOR_BYTE_WIDTH);
+      } else {
+        bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
+      }
+      plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
+      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      dstPtr += numElements;
+      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    }
+
+    if (bufMoveByteLen <= bufRestByteLen) {
+      decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
+                                resetBuf, backupByteLen);
+      return;
+    }
+
+    if (backupByteLen != 0) {
+      decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
+                                resetBuf, backupByteLen);
+      plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
+      dstPtr++;
+      backupByteLen = 0;
+      len--;
+    } else {
+      decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
+                                resetBuf, backupByteLen);
+    }
+
+    bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    bufMoveByteLen = 0;
+    srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+  }
+
   void UnpackAvx512::vectorUnpack1(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 1;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-    uint32_t numElements = 0;
+    uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
     uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
@@ -43,54 +139,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -116,47 +167,15 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
   void UnpackAvx512::vectorUnpack2(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 2;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-    uint32_t numElements = 0;
+    uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
     uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
@@ -166,54 +185,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -261,47 +235,15 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
   void UnpackAvx512::vectorUnpack3(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 3;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-    uint32_t numElements = 0;
+    uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
     uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
@@ -311,54 +253,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -406,40 +303,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -456,54 +321,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -539,40 +359,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -589,54 +377,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -684,40 +427,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -734,54 +445,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -829,40 +495,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -879,54 +513,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 8);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_8Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_8BIT_MAX_NUM) {
         uint8_t* simdPtr = reinterpret_cast<uint8_t*>(vectorBuf);
@@ -974,40 +563,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -1024,54 +581,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -1169,40 +681,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -1219,54 +699,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -1302,40 +737,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -1352,54 +755,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -1506,40 +864,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -1556,54 +882,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -1639,40 +920,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -1689,54 +938,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -1843,40 +1047,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -1893,54 +1065,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -1988,40 +1115,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -2038,54 +1133,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 16);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_16Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_16BIT_MAX_NUM) {
         uint16_t* simdPtr = reinterpret_cast<uint16_t*>(vectorBuf);
@@ -2192,40 +1242,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -2323,54 +1341,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
@@ -2467,40 +1440,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -2517,54 +1458,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
@@ -2661,40 +1557,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -2711,54 +1575,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
@@ -2855,40 +1674,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -2905,54 +1692,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32u);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
@@ -2987,40 +1729,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -3037,54 +1747,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
@@ -3181,40 +1846,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -3231,54 +1864,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
@@ -3375,40 +1963,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -3426,54 +1982,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
@@ -3570,40 +2081,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -3709,54 +2188,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
@@ -3853,40 +2287,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -3903,54 +2305,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
@@ -3985,40 +2342,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
@@ -4035,54 +2360,9 @@ namespace orc {
     uint32_t backupByteLen = 0;
 
     while (len > 0) {
-      if (startBit != 0) {
-        bufMoveByteLen +=
-            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        numElements = len;
-        resetBuf = false;
-        len -= numElements;
-      } else {
-        if (startBit != 0) {
-          numElements =
-              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
-              bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(
-              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
-          resetBuf = true;
-        } else {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
-          len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
-          resetBuf = true;
-        }
-      }
-
-      if (tailBitLen != 0) {
-        backupByteLen = tailBitLen / ORC_VECTOR_BYTE_WIDTH;
-        tailBitLen = 0;
-      }
-
-      if (startBit > 0) {
-        uint32_t align = getAlign(startBit, bitWidth, 32);
-        if (align > numElements) {
-          align = numElements;
-        }
-        if (align != 0) {
-          bufMoveByteLen -=
-              (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
-          plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-          dstPtr += align;
-          numElements -= align;
-        }
-      }
+      alignHeaderBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, tailBitLen,
+                          backupByteLen, numElements, resetBuf, srcPtr, dstPtr,
+                          UNPACK_32Bit_MAX_SIZE);
 
       if (numElements >= VECTOR_UNPACK_32BIT_MAX_NUM) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
@@ -4187,40 +2467,8 @@ namespace orc {
         }
       }
 
-      if (numElements > 0) {
-        if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
-                                    ORC_VECTOR_BYTE_WIDTH);
-        } else {
-          bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
-        }
-        plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      }
-
-      if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
-        return;
-      }
-
-      if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
-        dstPtr++;
-        backupByteLen = 0;
-        len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-      }
-
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
-      bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      alignTailerBoundary(startBit, bufMoveByteLen, bufRestByteLen, len, bitWidth, backupByteLen,
+                          numElements, resetBuf, srcPtr, dstPtr);
     }
   }
 
