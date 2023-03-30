@@ -33,6 +33,7 @@
 #define S_IWUSR _S_IWRITE
 #define stat _stat64
 #define fstat _fstat64
+#define fsync _commit
 #else
 #include <unistd.h>
 #define O_BINARY 0
