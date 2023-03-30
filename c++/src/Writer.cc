@@ -307,7 +307,6 @@ namespace orc {
     static const char* magicId;
     static const WriterId writerId;
     bool useTightNumericVector;
-    long numStripes;
     long stripesAtLastFlush;
     long lastFlushOffset;
 
@@ -345,7 +344,7 @@ namespace orc {
     columnWriter = buildWriter(type, *streamsFactory, options);
     stripeRows = totalRows = indexRows = 0;
     currentOffset = 0;
-    numStripes = stripesAtLastFlush = lastFlushOffset = 0;
+    stripesAtLastFlush = lastFlushOffset = 0;
 
     useTightNumericVector = opts.getUseTightNumericVector();
 
@@ -410,10 +409,10 @@ namespace orc {
     if (stripeRows > 0) {
       writeStripe();
     }
-    if (stripesAtLastFlush != numStripes) {
+    if (stripesAtLastFlush != fileFooter.stripes_size()) {
       writeMetadata();
       writeFileFooter();
-      stripesAtLastFlush = numStripes;
+      stripesAtLastFlush = fileFooter.stripes_size();
       writePostscript();
       outStream->flush();
       lastFlushOffset = outStream->getLength();
@@ -548,8 +547,6 @@ namespace orc {
     totalRows += stripeRows;
 
     columnWriter->reset();
-
-    numStripes += 1;
 
     initStripe();
   }
