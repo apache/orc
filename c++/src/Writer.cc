@@ -421,7 +421,7 @@ namespace orc {
       // init stripe now that we adjusted the currentOffset
       initStripe();
     }
-    return stripesAtLastFlush;
+    return lastFlushOffset;
   }
 
   void WriterImpl::addUserMetadata(const std::string& name, const std::string& value) {
