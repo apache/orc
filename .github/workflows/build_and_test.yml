@@ -92,10 +92,11 @@ jobs:
       with:
         msbuild-architecture: x64
     - name: "Test"
+      shell: bash
       run: |
         mkdir build
         cd build
-        if ([[ "${{ matrix.simd }}" = "General" ]]); then
+        if [ "${{ matrix.simd }}" = "General" ]; then
           cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
         else
           cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
