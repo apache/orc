@@ -307,15 +307,21 @@ namespace orc {
         }
       }
       case LONG:
-      case DATE:
-        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
+      case DATE: {
+        auto result = std::make_unique<LongVectorBatch>(capacity, memoryPool);
+        result->isTight = useTightNumericVector || kind == LONG || kind == DATE;
+        return result;
+      }
 
       case FLOAT:
         if (useTightNumericVector) {
           return std::make_unique<FloatVectorBatch>(capacity, memoryPool);
         }
-      case DOUBLE:
-        return std::make_unique<DoubleVectorBatch>(capacity, memoryPool);
+      case DOUBLE: {
+        auto result = std::make_unique<DoubleVectorBatch>(capacity, memoryPool);
+        result->isTight = useTightNumericVector || kind == DOUBLE;
+        return result;
+      }
 
       case STRING:
       case BINARY:

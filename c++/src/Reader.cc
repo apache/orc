@@ -265,6 +265,7 @@ namespace orc {
     rowsInCurrentStripe = 0;
     numRowGroupsInStripeRange = 0;
     useTightNumericVector = opts.getUseTightNumericVector();
+    throwOnSchemaEvolutionOverflow = opts.getThrowOnSchemaEvolutionOverflow();
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
@@ -515,6 +516,13 @@ namespace orc {
 
   int32_t RowReaderImpl::getForcedScaleOnHive11Decimal() const {
     return forcedScaleOnHive11Decimal;
+  }
+
+  void RowReaderImpl::getReadColumns(const Type* readType, std::set<uint64_t>& readColumns) const {
+    readColumns.insert(readType->getColumnId());
+    for (uint64_t i = 0; i < readType->getSubtypeCount(); ++i) {
+      getReadColumns(readType->getSubtype(i), readColumns);
+    }
   }
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -1092,7 +1100,8 @@ namespace orc {
       StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo, currentStripeFooter,
                                       currentStripeInfo.offset(), *contents->stream, writerTimezone,
                                       readerTimezone);
-      reader = buildReader(*contents->schema, stripeStreams, useTightNumericVector);
+      reader = buildReader(*contents->schema, stripeStreams, useTightNumericVector,
+                           throwOnSchemaEvolutionOverflow, /*convertToReadType=*/true);
 
       if (sargsApplier) {
         // move to the 1st selected row group when PPD is enabled.
@@ -1206,6 +1215,28 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
+    if (schemaEvolution.getReadType() && selectedSchema.get() == nullptr) {
+      auto fileSchema = &getSelectedType();
+      auto readType = schemaEvolution.getReadType();
+      std::set<uint64_t> readColumns;
+      getReadColumns(readType, readColumns);
+      for (size_t i = 0; i < selectedColumns.size(); ++i) {
+        if (selectedColumns[i] && readColumns.find(i) == readColumns.end()) {
+          std::ostringstream ss;
+          ss << "The selected column " << fileSchema->getTypeByColumnId(i)->toString()
+             << "is not found in read type" << readType->toString();
+          throw SchemaEvolutionError(ss.str());
+        }
+      }
+      for (const auto readColumn : readColumns) {
+        if (!selectedColumns[readColumn]) {
+          std::ostringstream ss;
+          ss << "The selected schema " << fileSchema->toString() << " doesn't contain read type "
+             << readType->getTypeByColumnId(readColumn)->toString();
+          throw SchemaEvolutionError(ss.str());
+        }
+      }
+    }
     const Type& readType =
         schemaEvolution.getReadType() ? *schemaEvolution.getReadType() : getSelectedType();
     return readType.createRowBatch(capacity, *contents->pool, enableEncodedBlock,

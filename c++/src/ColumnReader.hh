@@ -106,7 +106,6 @@ namespace orc {
 
     /**
      * @return get schema evolution utility object
-     *
      */
     virtual const SchemaEvolution* getSchemaEvolution() const = 0;
   };
@@ -168,6 +167,7 @@ namespace orc {
    */
   std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe,
                                             bool useTightNumericVector = false,
+                                            bool throwOnSchemaEvolutionOverflow = false,
                                             bool convertToReadType = true);
 }  // namespace orc
 

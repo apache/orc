@@ -26,11 +26,10 @@ namespace orc {
 
   class ConvertColumnReader : public ColumnReader {
    public:
-    ConvertColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe);
+    ConvertColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                        bool throwOnOverflow);
 
-    // override next() to implement convert logic, and inherit nextEncoded(),
-    // nextLazy() and nextLazyEncoded() from ColumnReader. override them only
-    // required.
+    // override next() to implement convert logic
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -42,10 +41,11 @@ namespace orc {
     const Type& readType;
     std::unique_ptr<ColumnReader> reader;
     std::unique_ptr<ColumnVectorBatch> data;
+    const bool throwOnOverflow;
   };
 
   std::unique_ptr<ColumnReader> buildConvertReader(const Type& fileType, StripeStreams& stripe,
-                                                   bool useTightNumericVector);
+                                                   bool throwOnOverflow);
 
 }  // namespace orc
 

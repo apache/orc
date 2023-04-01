@@ -340,12 +340,22 @@ namespace orc {
     /**
      * Set read type for schema evolution
      */
-    RowReaderOptions& setReadType(std::shared_ptr<Type>& type);
+    RowReaderOptions& setReadType(std::shared_ptr<Type> type);
 
     /**
      * Get read type for schema evolution
      */
     std::shared_ptr<Type>& getReadType() const;
+
+    /**
+     * Set should reader throw a exception on conversion between different data types overflow
+     */
+    RowReaderOptions& throwOnSchemaEvolutionOverflow(bool shouldThrow);
+
+    /**
+     * Get should reader throw a exception on conversion between different data types overflow
+     */
+    bool getThrowOnSchemaEvolutionOverflow() const;
   };
 
   class RowReader;

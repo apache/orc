@@ -24,13 +24,20 @@ namespace orc {
   using BooleanVectorBatch = ByteVectorBatch;
 
   ConvertColumnReader::ConvertColumnReader(const Type& _readType, const Type& fileType,
-                                           StripeStreams& stripe)
-      : ColumnReader(_readType, stripe), readType(_readType) {
-    reader = buildReader(fileType, stripe, true, false);
-    data = fileType.createRowBatch(0, memoryPool, false, true);
+                                           StripeStreams& stripe, bool _throwOnOverflow)
+      : ColumnReader(_readType, stripe), readType(_readType), throwOnOverflow(_throwOnOverflow) {
+    reader = buildReader(fileType, stripe, /*useTightNumericVector=*/true,
+                         /*throwOnOverflow=*/false, /*convertToReadType*/ false);
+    data =
+        fileType.createRowBatch(0, memoryPool, /*encoded=*/false, /*useTightNumericVector=*/true);
   }
 
   void ConvertColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
+    if (!rowBatch.isTight) {
+      throw SchemaEvolutionError(
+          "SchemaEvolution only support tight vector, please create ColumnVectorBatch with option "
+          "useTightNumericVector");
+    }
     reader->next(*data, numValues, notNull);
     rowBatch.resize(data->capacity);
     rowBatch.numElements = data->numElements;
@@ -57,16 +64,24 @@ namespace orc {
     return ((MIN_LONG_AS_DOUBLE - value < 1.0) && (value < MAX_LONG_AS_DOUBLE_PLUS_ONE));
   }
 
-  static inline void setNull(ColumnVectorBatch& dstBatch, uint64_t idx) {
-    dstBatch.notNull.data()[idx] = 0;
-    dstBatch.hasNulls = true;
+  template <typename FileType, typename ReadType>
+  static inline void handleOverflow(ColumnVectorBatch& dstBatch, uint64_t idx, bool shouldThrow) {
+    if (!shouldThrow) {
+      dstBatch.notNull.data()[idx] = 0;
+      dstBatch.hasNulls = true;
+    } else {
+      std::ostringstream ss;
+      ss << "Overflow when convert from " << typeid(FileType).name() << " to "
+         << typeid(ReadType).name();
+      throw SchemaEvolutionError(ss.str());
+    }
   }
 
   // return false if overflow
   template <typename ReadType>
   static bool downCastToInteger(ReadType& dstValue, int64_t inputLong) {
     dstValue = static_cast<ReadType>(inputLong);
-    if (std::is_same<ReadType, int64_t>::value) {
+    if constexpr (std::is_same<ReadType, int64_t>::value) {
       return true;
     }
     if (static_cast<int64_t>(dstValue) != inputLong) {
@@ -75,10 +90,11 @@ namespace orc {
     return true;
   }
 
-  // set null if overflow
+  // set null or throw exception if overflow
   template <typename ReadType, typename FileType>
   static inline void convertNumericElement(const FileType& srcValue, ReadType& destValue,
-                                           ColumnVectorBatch& destBatch, uint64_t idx) {
+                                           ColumnVectorBatch& destBatch, uint64_t idx,
+                                           bool shouldThrow) {
     constexpr bool isFileTypeFloatingPoint(std::is_floating_point<FileType>::value);
     constexpr bool isReadTypeFloatingPoint(std::is_floating_point<ReadType>::value);
     int64_t longValue = static_cast<int64_t>(srcValue);
@@ -88,7 +104,7 @@ namespace orc {
       } else {
         if (!canFitInLong(static_cast<double>(srcValue)) ||
             !downCastToInteger(destValue, longValue)) {
-          setNull(destBatch, idx);
+          handleOverflow<FileType, ReadType>(destBatch, idx, shouldThrow);
           return;
         }
       }
@@ -96,11 +112,11 @@ namespace orc {
       if (isReadTypeFloatingPoint) {
         destValue = static_cast<ReadType>(srcValue);
         if (destValue != destValue) {  // check is NaN
-          setNull(destBatch, idx);
+          handleOverflow<FileType, ReadType>(destBatch, idx, shouldThrow);
         }
       } else {
         if (!downCastToInteger(destValue, static_cast<int64_t>(srcValue))) {
-          setNull(destBatch, idx);
+          handleOverflow<FileType, ReadType>(destBatch, idx, shouldThrow);
         }
       }
     }
@@ -111,8 +127,9 @@ namespace orc {
   template <typename FileTypeBatch, typename ReadTypeBatch, typename ReadType>
   class NumericConvertColumnReader : public ConvertColumnReader {
    public:
-    NumericConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe)
-        : ConvertColumnReader(_readType, fileType, stripe) {}
+    NumericConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
+                               bool _throwOnOverflow)
+        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -121,12 +138,14 @@ namespace orc {
       if (rowBatch.hasNulls) {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (rowBatch.notNull[i]) {
-            convertNumericElement<ReadType>(srcBatch.data[i], dstBatch.data[i], rowBatch, i);
+            convertNumericElement<ReadType>(srcBatch.data[i], dstBatch.data[i], rowBatch, i,
+                                            throwOnOverflow);
           }
         }
       } else {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
-          convertNumericElement<ReadType>(srcBatch.data[i], dstBatch.data[i], rowBatch, i);
+          convertNumericElement<ReadType>(srcBatch.data[i], dstBatch.data[i], rowBatch, i,
+                                          throwOnOverflow);
         }
       }
     }
@@ -137,8 +156,9 @@ namespace orc {
   class NumericConvertColumnReader<FileTypeBatch, BooleanVectorBatch, bool>
       : public ConvertColumnReader {
    public:
-    NumericConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe)
-        : ConvertColumnReader(_readType, fileType, stripe) {}
+    NumericConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
+                               bool _throwOnOverflow)
+        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -209,7 +229,7 @@ namespace orc {
 
 #define CASE_CREATE_READER(TYPE, CONVERT) \
   case TYPE:                              \
-    return std::make_unique<CONVERT##ColumnReader>(_readType, fileType, stripe);
+    return std::make_unique<CONVERT##ColumnReader>(_readType, fileType, stripe, throwOnOverflow);
 
 #define CASE_EXCEPTION                                                                 \
   default:                                                                             \
@@ -217,10 +237,7 @@ namespace orc {
                                _readType.toString());
 
   std::unique_ptr<ColumnReader> buildConvertReader(const Type& fileType, StripeStreams& stripe,
-                                                   bool _useTightNumericVector) {
-    if (!_useTightNumericVector) {
-      throw SchemaEvolutionError("Schema Evolution only support tight numeric vector");
-    }
+                                                   bool throwOnOverflow) {
     const auto& _readType = *stripe.getSchemaEvolution()->getReadType(fileType);
 
     switch (fileType.getKind()) {

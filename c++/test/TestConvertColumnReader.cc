@@ -60,8 +60,8 @@ namespace orc {
     for (size_t i = 0; i < TEST_CASES; i++) {
       c0.data[i] = i % 2 || i % 3 ? true : false;
       c1.data[i] = static_cast<int>((TEST_CASES / 2 - i) * TEST_CASES);
-      c2.data[i] = (TEST_CASES - i) / (TEST_CASES / 2);
-      c3.data[i] = (TEST_CASES - i) / (TEST_CASES / 2);
+      c2.data[i] = 1.0 * (TEST_CASES - i) / (TEST_CASES / 2);
+      c3.data[i] = 1.0f * (TEST_CASES - i) / (TEST_CASES / 2);
     }
 
     writer->add(*batch);
@@ -89,6 +89,11 @@ namespace orc {
                 i > TEST_CASES / 2 ? 0 : static_cast<int64_t>((TEST_CASES - i) / (TEST_CASES / 2)));
       EXPECT_TRUE(readC3.data[i] == true || i > TEST_CASES / 2);
     }
+
+    rowReaderOpts.setUseTightNumericVector(false);
+    rowReader = reader->createRowReader(rowReaderOpts);
+    readBatch = rowReader->createRowBatch(TEST_CASES);
+    EXPECT_THROW(rowReader->next(*readBatch), SchemaEvolutionError);
   }
 
   TEST(ConvertColumnReader, betweenNumricOverflows) {
@@ -135,5 +140,10 @@ namespace orc {
     EXPECT_TRUE(readC0.notNull[1]);
     EXPECT_TRUE(readC1.notNull[1]);
     EXPECT_TRUE(readC2.notNull[1]);
+
+    rowReaderOpts.throwOnSchemaEvolutionOverflow(true);
+    rowReader = reader->createRowReader(rowReaderOpts);
+    readBatch = rowReader->createRowBatch(2);
+    EXPECT_THROW(rowReader->next(*readBatch), SchemaEvolutionError);
   }
 }  // namespace orc

@@ -140,6 +140,7 @@ namespace orc {
     RowReaderOptions::IdReadIntentMap idReadIntentMap;
     bool useTightNumericVector;
     std::shared_ptr<Type> readType;
+    bool throwOnSchemaEvolutionOverflow;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -150,6 +151,7 @@ namespace orc {
       enableLazyDecoding = false;
       readerTimezone = "GMT";
       useTightNumericVector = false;
+      throwOnSchemaEvolutionOverflow = false;
     }
   };
 
@@ -258,6 +260,15 @@ namespace orc {
     return privateBits->throwOnHive11DecimalOverflow;
   }
 
+  RowReaderOptions& RowReaderOptions::throwOnSchemaEvolutionOverflow(bool shouldThrow) {
+    privateBits->throwOnSchemaEvolutionOverflow = shouldThrow;
+    return *this;
+  }
+
+  bool RowReaderOptions::getThrowOnSchemaEvolutionOverflow() const {
+    return privateBits->throwOnSchemaEvolutionOverflow;
+  }
+
   RowReaderOptions& RowReaderOptions::forcedScaleOnHive11Decimal(int32_t forcedScale) {
     privateBits->forcedScaleOnHive11Decimal = forcedScale;
     return *this;
@@ -307,8 +318,8 @@ namespace orc {
     return privateBits->useTightNumericVector;
   }
 
-  RowReaderOptions& RowReaderOptions::setReadType(std::shared_ptr<Type>& type) {
-    privateBits->readType = type;
+  RowReaderOptions& RowReaderOptions::setReadType(std::shared_ptr<Type> type) {
+    privateBits->readType = std::move(type);
     return *this;
   }
 
