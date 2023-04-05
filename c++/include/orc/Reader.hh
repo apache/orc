@@ -348,12 +348,12 @@ namespace orc {
     std::shared_ptr<Type>& getReadType() const;
 
     /**
-     * Set should reader throw a exception on conversion between different data types overflow
+     * Set whether reader throws or returns null when value overflows for schema evolution.
      */
     RowReaderOptions& throwOnSchemaEvolutionOverflow(bool shouldThrow);
 
     /**
-     * Get should reader throw a exception on conversion between different data types overflow
+     * Whether reader throws or returns null when value overflows for schema evolution.
      */
     bool getThrowOnSchemaEvolutionOverflow() const;
   };

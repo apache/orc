@@ -1715,16 +1715,10 @@ namespace orc {
                                             bool useTightNumericVector,
                                             bool throwOnSchemaEvolutionOverflow,
                                             bool convertToReadType) {
-    if (convertToReadType && stripe.getSchemaEvolution()) {
-      if (stripe.getSchemaEvolution()->needConvert(type)) {
-        if (!useTightNumericVector) {
-          throw SchemaEvolutionError(
-              "SchemaEvolution only support tight vector, please create ColumnVectorBatch with "
-              "option "
-              "useTightNumericVector");
-        }
-        return buildConvertReader(type, stripe, throwOnSchemaEvolutionOverflow);
-      }
+    if (convertToReadType && stripe.getSchemaEvolution() &&
+        stripe.getSchemaEvolution()->needConvert(type)) {
+      return buildConvertReader(type, stripe, useTightNumericVector,
+                                throwOnSchemaEvolutionOverflow);
     }
 
     switch (static_cast<int64_t>(type.getKind())) {

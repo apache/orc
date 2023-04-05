@@ -53,10 +53,6 @@ namespace orc {
     // whether the vector batch is encoded
     bool isEncoded;
 
-    // whether the vector is not a numeric vector
-    // or it's created with the option useTightNumericVector
-    bool isTight = true;
-
     // custom memory pool
     MemoryPool& memoryPool;
 

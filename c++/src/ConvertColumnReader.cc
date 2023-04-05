@@ -33,11 +33,6 @@ namespace orc {
   }
 
   void ConvertColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
-    if (!rowBatch.isTight) {
-      throw SchemaEvolutionError(
-          "SchemaEvolution only support tight vector, please create ColumnVectorBatch with option "
-          "useTightNumericVector");
-    }
     reader->next(*data, numValues, notNull);
     rowBatch.resize(data->capacity);
     rowBatch.numElements = data->numElements;
@@ -105,7 +100,6 @@ namespace orc {
         if (!canFitInLong(static_cast<double>(srcValue)) ||
             !downCastToInteger(destValue, longValue)) {
           handleOverflow<FileType, ReadType>(destBatch, idx, shouldThrow);
-          return;
         }
       }
     } else {
@@ -237,7 +231,13 @@ namespace orc {
                                _readType.toString());
 
   std::unique_ptr<ColumnReader> buildConvertReader(const Type& fileType, StripeStreams& stripe,
+                                                   bool useTightNumericVector,
                                                    bool throwOnOverflow) {
+    if (!useTightNumericVector) {
+      throw SchemaEvolutionError(
+          "SchemaEvolution only support tight vector, please create ColumnVectorBatch with "
+          "option useTightNumericVector");
+    }
     const auto& _readType = *stripe.getSchemaEvolution()->getReadType(fileType);
 
     switch (fileType.getKind()) {

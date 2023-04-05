@@ -45,6 +45,7 @@ namespace orc {
   };
 
   std::unique_ptr<ColumnReader> buildConvertReader(const Type& fileType, StripeStreams& stripe,
+                                                   bool useTightNumericVector,
                                                    bool throwOnOverflow);
 
 }  // namespace orc

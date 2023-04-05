@@ -245,8 +245,6 @@ namespace orc {
     const SchemaEvolution& getSchemaEvolution() const {
       return schemaEvolution;
     }
-
-    void getReadColumns(const Type* readType, std::set<uint64_t>& readColumns) const;
   };
 
   class ReaderImpl : public Reader {

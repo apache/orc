@@ -518,13 +518,6 @@ namespace orc {
     return forcedScaleOnHive11Decimal;
   }
 
-  void RowReaderImpl::getReadColumns(const Type* readType, std::set<uint64_t>& readColumns) const {
-    readColumns.insert(readType->getColumnId());
-    for (uint64_t i = 0; i < readType->getSubtypeCount(); ++i) {
-      getReadColumns(readType->getSubtype(i), readColumns);
-    }
-  }
-
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
                                       const FileContents& contents) {
     uint64_t stripeFooterStart = info.offset() + info.indexlength() + info.datalength();
@@ -1214,27 +1207,27 @@ namespace orc {
     return rowsInCurrentStripe;
   }
 
+  static void getColumnIds(const Type* type, std::set<uint64_t>& columnIds) {
+    columnIds.insert(type->getColumnId());
+    for (uint64_t i = 0; i < type->getSubtypeCount(); ++i) {
+      getColumnIds(type->getSubtype(i), columnIds);
+    }
+  }
+
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
+    // If the read type is specified, then check that the selected schema matches the read type
+    // on the first call to createRowBatch.
     if (schemaEvolution.getReadType() && selectedSchema.get() == nullptr) {
       auto fileSchema = &getSelectedType();
       auto readType = schemaEvolution.getReadType();
-      std::set<uint64_t> readColumns;
-      getReadColumns(readType, readColumns);
-      for (size_t i = 0; i < selectedColumns.size(); ++i) {
-        if (selectedColumns[i] && readColumns.find(i) == readColumns.end()) {
-          std::ostringstream ss;
-          ss << "The selected column " << fileSchema->getTypeByColumnId(i)->toString()
-             << "is not found in read type" << readType->toString();
-          throw SchemaEvolutionError(ss.str());
-        }
-      }
-      for (const auto readColumn : readColumns) {
-        if (!selectedColumns[readColumn]) {
-          std::ostringstream ss;
-          ss << "The selected schema " << fileSchema->toString() << " doesn't contain read type "
-             << readType->getTypeByColumnId(readColumn)->toString();
-          throw SchemaEvolutionError(ss.str());
-        }
+      std::set<uint64_t> readColumns, fileColumns;
+      getColumnIds(readType, readColumns);
+      getColumnIds(fileSchema, fileColumns);
+      if (readColumns != fileColumns) {
+        std::ostringstream ss;
+        ss << "The selected schema " << fileSchema->toString() << " doesn't match read type "
+           << readType->toString();
+        throw SchemaEvolutionError(ss.str());
       }
     }
     const Type& readType =
