@@ -189,4 +189,30 @@ public class TestWriterImpl {
     w.close();
     w.close();
   }
+
+  @Test
+  public void testEmptyFieldName() throws Exception {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    VectorizedRowBatch b = schema.createRowBatch();
+    LongColumnVector f1 = (LongColumnVector) b.cols[0];
+    TypeDescription schema = TypeDescription.fromString("struct<``:int>");
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    long value = 0;
+    long rowCount = 1024;
+    while (value < rowCount) {
+      f1.vector[b.size] = Long.MIN_VALUE + value;
+      value += 1;
+      b.size += 1;
+      if (b.size == b.getMaxSize()) {
+        w.addRowBatch(b);
+        b.reset();
+      }
+    }
+    assertEquals(0, w.getStripes().size());
+    w.close();
+    assertEquals(1, w.getStripes().size());
+    assertEquals(rowCount, w.getNumberOfRows());
+    Reader r = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+    assertEquals(r.getStripes(), w.getStripes());
+  }
 }

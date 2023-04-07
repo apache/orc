@@ -523,4 +523,9 @@ public class TestTypeDescription {
     // Should not throw NPE
     TypeDescription.fromString("int").hashCode();
   }
+
+  @Test
+  public void testEmptyFieldName() {
+    TypeDescription.fromString("struct<``:string>");
+  }
 }

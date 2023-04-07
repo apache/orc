@@ -110,8 +110,6 @@ public class ParserUtils {
       if (!closed) {
         source.position = start;
         throw new IllegalArgumentException("Unmatched quote at " + source);
-      } else if (buffer.length() == 0) {
-        throw new IllegalArgumentException("Empty quoted field name at " + source);
       }
       return buffer.toString();
     } else {
