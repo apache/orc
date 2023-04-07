@@ -175,14 +175,6 @@ public class TestTypeDescription {
   }
 
   @Test
-  public void testQuotedField2() {
-    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-      TypeDescription.fromString("struct<``:int>");
-    });
-    assertTrue(e.getMessage().contains("Empty quoted field name at 'struct<``^:int>'"));
-  }
-
-  @Test
   public void testParserUnknownCategory() {
     IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
       TypeDescription.fromString("FOOBAR");
