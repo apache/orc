@@ -85,6 +85,19 @@ namespace orc {
     return true;
   }
 
+  template <typename DestBatchRefType>
+  static inline DestBatchRefType SafeCastBatchTo(ColumnVectorBatch& batch, const Type& readType) {
+    try {
+      return dynamic_cast<DestBatchRefType>(batch);
+    } catch (const std::bad_cast& e) {
+      std::ostringstream ss;
+      ss << "Bad cast when convert from ColumnVectorBatch to "
+         << typeid(typename std::remove_reference<DestBatchRefType>::type).name()
+         << " Column ID: " << readType.getColumnId() << " Type: " << readType.toString();
+      throw InvalidArgument(ss.str());
+    }
+  }
+
   // set null or throw exception if overflow
   template <typename ReadType, typename FileType>
   static inline void convertNumericElement(const FileType& srcValue, ReadType& destValue,
@@ -128,7 +141,7 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
       const auto& srcBatch = dynamic_cast<const FileTypeBatch&>(*data);
-      auto& dstBatch = dynamic_cast<ReadTypeBatch&>(rowBatch);
+      auto& dstBatch = SafeCastBatchTo<ReadTypeBatch&>(rowBatch, readType);
       if (rowBatch.hasNulls) {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (rowBatch.notNull[i]) {
@@ -157,7 +170,7 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
       const auto& srcBatch = dynamic_cast<const FileTypeBatch&>(*data);
-      auto& dstBatch = dynamic_cast<BooleanVectorBatch&>(rowBatch);
+      auto& dstBatch = SafeCastBatchTo<BooleanVectorBatch&>(rowBatch, readType);
       if (rowBatch.hasNulls) {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (rowBatch.notNull[i]) {
