@@ -85,17 +85,18 @@ namespace orc {
     return true;
   }
 
-  template <typename DestBatchRefType>
-  static inline DestBatchRefType SafeCastBatchTo(ColumnVectorBatch& batch, const Type& readType) {
-    try {
-      return dynamic_cast<DestBatchRefType>(batch);
-    } catch (const std::bad_cast& e) {
+  template <typename DestBatchPtrType>
+  static inline DestBatchPtrType SafeCastBatchTo(ColumnVectorBatch* batch) {
+    auto result = dynamic_cast<DestBatchPtrType>(batch);
+    if (result == nullptr) {
       std::ostringstream ss;
       ss << "Bad cast when convert from ColumnVectorBatch to "
-         << typeid(typename std::remove_reference<DestBatchRefType>::type).name()
-         << " Column ID: " << readType.getColumnId() << " Type: " << readType.toString();
+         << typeid(typename std::remove_const<
+                       typename std::remove_pointer<DestBatchPtrType>::type>::type)
+                .name();
       throw InvalidArgument(ss.str());
     }
+    return result;
   }
 
   // set null or throw exception if overflow
@@ -140,8 +141,8 @@ namespace orc {
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
-      const auto& srcBatch = dynamic_cast<const FileTypeBatch&>(*data);
-      auto& dstBatch = SafeCastBatchTo<ReadTypeBatch&>(rowBatch, readType);
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      auto& dstBatch = *SafeCastBatchTo<ReadTypeBatch*>(&rowBatch);
       if (rowBatch.hasNulls) {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (rowBatch.notNull[i]) {
@@ -169,8 +170,8 @@ namespace orc {
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
-      const auto& srcBatch = dynamic_cast<const FileTypeBatch&>(*data);
-      auto& dstBatch = SafeCastBatchTo<BooleanVectorBatch&>(rowBatch, readType);
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      auto& dstBatch = *SafeCastBatchTo<BooleanVectorBatch*>(&rowBatch);
       if (rowBatch.hasNulls) {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (rowBatch.notNull[i]) {
