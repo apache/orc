@@ -878,7 +878,7 @@
       <plugin>
         <groupId>org.cyclonedx</groupId>
         <artifactId>cyclonedx-maven-plugin</artifactId>
-        <version>2.7.4</version>
+        <version>2.7.6</version>
         <executions>
           <execution>
             <goals>
