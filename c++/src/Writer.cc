@@ -412,8 +412,8 @@ namespace orc {
     if (stripesAtLastFlush != fileFooter.stripes_size()) {
       writeMetadata();
       writeFileFooter();
-      stripesAtLastFlush = fileFooter.stripes_size();
       writePostscript();
+      stripesAtLastFlush = fileFooter.stripes_size();
       outStream->flush();
       lastFlushOffset = outStream->getLength();
       currentOffset = lastFlushOffset;
