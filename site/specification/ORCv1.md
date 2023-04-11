@@ -1016,7 +1016,7 @@ DIRECT    | PRESENT     | Yes      | Boolean RLE
 DIRECT_V2 | PRESENT     | Yes      | Boolean RLE
           | DATA        | No       | Signed Integer RLE v2
 
-> Note that the order of the Stream is not fixed. It also applies to other Column type.
+> Note that the order of the Stream is not fixed. It also applies to other Column types.
 
 ## Float and Double Columns
 
