@@ -474,13 +474,9 @@ namespace orc {
     return retValue;
   }
 
-  inline uint64_t moveLen(uint64_t x, uint64_t y) {
-    uint64_t result = 0;
-    if (x % y == 0) {
-      result = x / y;
-    } else {
-      result = x / y + 1;
-    }
+  inline uint64_t moveByteLen(uint64_t numBits) {
+    uint64_t result = numBits / ORC_VECTOR_BYTE_WIDTH;
+    if (numBits % ORC_VECTOR_BYTE_WIDTH != 0) ++result;
     return result;
   }
 }  // namespace orc
