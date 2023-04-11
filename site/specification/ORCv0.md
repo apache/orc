@@ -501,11 +501,11 @@ uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
 following subsections.
 
-Note that the order of the streams is **not fixed**. In the example
+Note that the order of these streams is **not fixed**. In the example
 of the integer column mentioned above, the order of the PRESENT stream
-and the DATA stream cannot be assumed. Instead, we need to determine the
-type of stream based on the Stream Kind, rather than relying on the order
-of the streams.
+and the DATA stream cannot be determined in advance. Instead, we need
+to determine the type of stream based on the Stream Kind, rather than
+relying on the order of the streams.
 
 ## Stripe Footer
 
