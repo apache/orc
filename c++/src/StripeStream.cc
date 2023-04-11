@@ -130,7 +130,7 @@ namespace orc {
   }
 
   const SchemaEvolution* StripeStreamsImpl::getSchemaEvolution() const {
-    return &reader.getSchemaEvolution();
+    return reader.getSchemaEvolution();
   }
 
   void StripeInformationImpl::ensureStripeFooterLoaded() const {

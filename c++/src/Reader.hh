@@ -242,8 +242,8 @@ namespace orc {
     bool getIsDecimalAsLong() const;
     int32_t getForcedScaleOnHive11Decimal() const;
 
-    const SchemaEvolution& getSchemaEvolution() const {
-      return schemaEvolution;
+    const SchemaEvolution* getSchemaEvolution() const {
+      return &schemaEvolution;
     }
   };
 

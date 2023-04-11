@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include <iostream>
-
 #include "SchemaEvolution.hh"
 #include "orc/Exceptions.hh"
 
