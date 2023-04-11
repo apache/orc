@@ -309,7 +309,7 @@ namespace orc {
      * truncated to the returned offset, it would be a valid ORC file.
      * @return the offset that would be a valid end location for an ORC file
      */
-    virtual long writeIntermediateFooter() = 0;
+    virtual int64_t writeIntermediateFooter() = 0;
   };
 }  // namespace orc
 
