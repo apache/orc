@@ -2017,6 +2017,7 @@ namespace orc {
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
 
+    std::vector<int64_t> offsets;
     for (uint64_t j = 0; j < 10; ++j) {
       for (uint64_t i = 0; i < 65535; ++i) {
         longBatch->data[i] = static_cast<int64_t>(i);
@@ -2026,29 +2027,32 @@ namespace orc {
 
       writer->add(*batch);
       // force writing a stripe
-      writer->writeIntermediateFooter();
+      int64_t offset = writer->writeIntermediateFooter();
+      offsets.push_back(offset);
     }
 
     writer->close();
 
-    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
-    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
-    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ(10, reader->getNumberOfStripes());
-    EXPECT_EQ(655350, reader->getNumberOfRows());
+    for (uint64_t o = 0; o < 10; ++o) {
+      auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+      std::unique_ptr<Reader> reader = createReaderWithTailLocation(pool, std::move(inStream), offsets[o]);
+      std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+      EXPECT_EQ(o+1, reader->getNumberOfStripes());
+      EXPECT_EQ(65535*(o+1), reader->getNumberOfRows());
 
-    batch = rowReader->createRowBatch(65535);
-    for (uint64_t j = 0; j < 10; ++j) {
-      EXPECT_TRUE(rowReader->next(*batch));
-      EXPECT_EQ(65535, batch->numElements);
+      batch = rowReader->createRowBatch(65535);
+      for (uint64_t j = 0; j < o+1; ++j) {
+        EXPECT_TRUE(rowReader->next(*batch));
+        EXPECT_EQ(65535, batch->numElements);
 
-      for (uint64_t i = 0; i < 65535; ++i) {
-        structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-        longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
-        EXPECT_EQ(i, longBatch->data[i]);
+        for (uint64_t i = 0; i < 65535; ++i) {
+          structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+          longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
+          EXPECT_EQ(i, longBatch->data[i]);
+        }
       }
+      EXPECT_FALSE(rowReader->next(*batch));
     }
-    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   TEST_P(WriterTest, writeIntFileFlushNoClose) {
@@ -2066,7 +2070,7 @@ namespace orc {
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
 
-    std::vector<long> offsets;
+    std::vector<int64_t> offsets;
     for (uint64_t j = 0; j < 10; ++j) {
       for (uint64_t i = 0; i < 65535; ++i) {
         longBatch->data[i] = static_cast<int64_t>(i);
@@ -2077,7 +2081,7 @@ namespace orc {
       writer->add(*batch);
       if (j < 8) {
         // force writing a stripe
-        long offset = writer->writeIntermediateFooter();
+        int64_t offset = writer->writeIntermediateFooter();
         offsets.push_back(offset);
       }
     }
