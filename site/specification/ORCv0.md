@@ -581,6 +581,8 @@ Encoding  | Stream Kind | Optional | Contents
 DIRECT    | PRESENT     | Yes      | Boolean RLE
           | DATA        | No       | Signed Integer RLE v1
 
+> Note that the order of the Stream is not fixed. It applies to other Column type also.
+
 ## Float and Double Columns
 
 Floating point types are stored using IEEE 754 floating point bit
