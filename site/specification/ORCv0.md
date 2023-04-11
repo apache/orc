@@ -587,7 +587,7 @@ Encoding  | Stream Kind | Optional | Contents
 DIRECT    | PRESENT     | Yes      | Boolean RLE
           | DATA        | No       | Signed Integer RLE v1
 
-> Note that the order of the Stream is not fixed. It applies to other Column type also.
+> Note that the order of the Stream is not fixed. It also applies to other Column type.
 
 ## Float and Double Columns
 
