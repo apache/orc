@@ -102,7 +102,9 @@ namespace orc {
     /**
      * Flush any pending data to the disk.
      */
-    virtual void flush() = 0;
+    virtual void flush() {
+      throw NotImplementedYet("Not supported");
+    }
   };
 
   /**
