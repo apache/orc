@@ -501,6 +501,12 @@ uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
 following subsections.
 
+Note that the order of the streams is **not fixed**. In the example
+of the integer column mentioned above, the order of the PRESENT stream
+and the DATA stream cannot be assumed. Instead, we need to determine the
+type of stream based on the Stream Kind, rather than relying on the order
+of the streams.
+
 ## Stripe Footer
 
 The stripe footer contains the encoding of each column and the
