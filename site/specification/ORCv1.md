@@ -884,7 +884,7 @@ non-null values. If all of a column's values in a stripe are non-null,
 the PRESENT stream is omitted from the stripe. For binary data, ORC
 uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
-following subsections. 
+following subsections.
 
 Note that the order of the streams is **not fixed**. In the example
 of the integer column mentioned above, the order of the PRESENT stream
