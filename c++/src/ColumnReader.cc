@@ -100,13 +100,16 @@ namespace orc {
           return;
         }
       }
+      rowBatch.hasNulls = false;
     } else if (incomingMask) {
       // If we don't have a notNull stream, copy the incomingMask
       rowBatch.hasNulls = true;
       memcpy(rowBatch.notNull.data(), incomingMask, numValues);
       return;
+    } else {
+      rowBatch.hasNulls = false;
+      memset(rowBatch.notNull.data(), 1, numValues);
     }
-    rowBatch.hasNulls = false;
   }
 
   void ColumnReader::seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) {
@@ -133,6 +136,7 @@ namespace orc {
     }
   }
 
+  template <typename BatchType>
   class BooleanColumnReader : public ColumnReader {
    private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
@@ -148,7 +152,8 @@ namespace orc {
     void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
-  BooleanColumnReader::BooleanColumnReader(const Type& type, StripeStreams& stripe)
+  template <typename BatchType>
+  BooleanColumnReader<BatchType>::BooleanColumnReader(const Type& type, StripeStreams& stripe)
       : ColumnReader(type, stripe) {
     std::unique_ptr<SeekableInputStream> stream =
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
@@ -156,27 +161,33 @@ namespace orc {
     rle = createBooleanRleDecoder(std::move(stream), metrics);
   }
 
-  BooleanColumnReader::~BooleanColumnReader() {
+  template <typename BatchType>
+  BooleanColumnReader<BatchType>::~BooleanColumnReader() {
     // PASS
   }
 
-  uint64_t BooleanColumnReader::skip(uint64_t numValues) {
+  template <typename BatchType>
+  uint64_t BooleanColumnReader<BatchType>::skip(uint64_t numValues) {
     numValues = ColumnReader::skip(numValues);
     rle->skip(numValues);
     return numValues;
   }
 
-  void BooleanColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
+  template <typename BatchType>
+  void BooleanColumnReader<BatchType>::next(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                                            char* notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
-    // Since the byte rle places the output in a char* instead of long*,
-    // we cheat here and use the long* and then expand it in a second pass.
-    int64_t* ptr = dynamic_cast<LongVectorBatch&>(rowBatch).data.data();
+    // Since the byte rle places the output in a char* and BatchType here may be
+    // LongVectorBatch with long*. We cheat here in that case and use the long*
+    // and then expand it in a second pass..
+    auto* ptr = dynamic_cast<BatchType&>(rowBatch).data.data();
     rle->next(reinterpret_cast<char*>(ptr), numValues,
               rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
     expandBytesToIntegers(ptr, numValues);
   }
 
-  void BooleanColumnReader::seekToRowGroup(
+  template <typename BatchType>
+  void BooleanColumnReader<BatchType>::seekToRowGroup(
       std::unordered_map<uint64_t, PositionProvider>& positions) {
     ColumnReader::seekToRowGroup(positions);
     rle->seek(positions.at(columnId));
@@ -1721,8 +1732,13 @@ namespace orc {
             throw NotImplementedYet("buildReader unhandled string encoding");
         }
 
-      case BOOLEAN:
-        return std::make_unique<BooleanColumnReader>(type, stripe);
+      case BOOLEAN: {
+        if (useTightNumericVector) {
+          return std::make_unique<BooleanColumnReader<ByteVectorBatch>>(type, stripe);
+        } else {
+          return std::make_unique<BooleanColumnReader<LongVectorBatch>>(type, stripe);
+        }
+      }
 
       case BYTE:
         if (useTightNumericVector) {
