@@ -30,7 +30,7 @@ namespace orc {
     // PASS
   }
 
-  inline void UnpackAvx512::alignHeaderBoundary(const uint32_t bitWidth, uint32_t bitMaxSize,
+  inline void UnpackAvx512::alignHeaderBoundary(const uint32_t bitWidth, const uint32_t bitMaxSize,
                                                 uint64_t& startBit, uint64_t& bufMoveByteLen,
                                                 uint64_t& bufRestByteLen,
                                                 uint64_t& remainingNumElements,

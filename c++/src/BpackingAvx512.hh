@@ -71,7 +71,7 @@ namespace orc {
     void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
                           uint64_t& startBit);
 
-    inline void alignHeaderBoundary(const uint32_t bitWidth, uint32_t bitMaxSize,
+    inline void alignHeaderBoundary(const uint32_t bitWidth, const uint32_t bitMaxSize,
                                     uint64_t& startBit, uint64_t& bufMoveByteLen,
                                     uint64_t& bufRestByteLen, uint64_t& remainingNumElements,
                                     uint64_t& tailBitLen, uint32_t& backupByteLen,
