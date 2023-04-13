@@ -100,13 +100,16 @@ namespace orc {
           return;
         }
       }
+      rowBatch.hasNulls = false;
     } else if (incomingMask) {
       // If we don't have a notNull stream, copy the incomingMask
       rowBatch.hasNulls = true;
       memcpy(rowBatch.notNull.data(), incomingMask, numValues);
       return;
+    } else {
+      memset(rowBatch.notNull.data(), 1, numValues);
+      rowBatch.hasNulls = false;
     }
-    rowBatch.hasNulls = false;
   }
 
   void ColumnReader::seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) {
