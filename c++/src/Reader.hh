@@ -26,6 +26,7 @@
 
 #include "ColumnReader.hh"
 #include "RLE.hh"
+#include "SchemaEvolution.hh"
 #include "TypeImpl.hh"
 #include "sargs/SargsApplier.hh"
 

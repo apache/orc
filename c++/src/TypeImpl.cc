@@ -286,7 +286,11 @@ namespace orc {
                                                               MemoryPool& memoryPool, bool encoded,
                                                               bool useTightNumericVector) const {
     switch (static_cast<int64_t>(kind)) {
-      case BOOLEAN:
+      case BOOLEAN: {
+        if (useTightNumericVector) {
+          return std::make_unique<ByteVectorBatch>(capacity, memoryPool);
+        }
+      }
       case BYTE: {
         if (useTightNumericVector) {
           return std::make_unique<ByteVectorBatch>(capacity, memoryPool);
@@ -816,6 +820,20 @@ namespace orc {
 
     std::string category = input.substr(start, pos - start);
     return std::make_pair(parseCategory(category, input, pos, nextPos), endPos);
+  }
+
+  const Type* TypeImpl::getTypeByColumnId(uint64_t colIdx) const {
+    if (getColumnId() == colIdx) {
+      return this;
+    }
+
+    for (uint64_t i = 0; i != getSubtypeCount(); ++i) {
+      const Type* ret = getSubtype(i)->getTypeByColumnId(colIdx);
+      if (ret != nullptr) {
+        return ret;
+      }
+    }
+    return nullptr;
   }
 
 }  // namespace orc

@@ -14,6 +14,11 @@ on:
     branches:
     - main
 
+# Cancel previous PR build and test
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.number || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
@@ -124,3 +129,17 @@ jobs:
       with:
         clang-format-version: '13'
         check-path: ${{ matrix.path }}
+
+  license-check:
+    name: "License Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Check license header
+        uses: apache/skywalking-eyes@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config: .github/.licenserc.yaml
+

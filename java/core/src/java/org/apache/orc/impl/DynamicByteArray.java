@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.io.Text;
+import org.apache.orc.OrcConf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,14 +53,22 @@ public final class DynamicByteArray {
 
   /**
    * Ensure that the given index is valid.
+   * Throws an exception if chunkIndex is negative.
    */
   private void grow(int chunkIndex) {
+    if (chunkIndex < 0) {
+      throw new RuntimeException(String.format("chunkIndex overflow:%d. " +
+        "You can set %s=columnName, or %s=0 to turn off dictionary encoding.",
+        chunkIndex,
+        OrcConf.DIRECT_ENCODING_COLUMNS.getAttribute(),
+        OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute()));
+    }
     if (chunkIndex >= initializedChunks) {
       if (chunkIndex >= data.length) {
         int newSize = Math.max(chunkIndex + 1, 2 * data.length);
         data = Arrays.copyOf(data, newSize);
       }
-      for(int i=initializedChunks; i <= chunkIndex; ++i) {
+      for (int i = initializedChunks; i <= chunkIndex; ++i) {
         data[i] = new byte[chunkSize];
       }
       initializedChunks = chunkIndex + 1;

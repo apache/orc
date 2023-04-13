@@ -95,22 +95,22 @@ namespace orc {
       // PASS
     }
 
-    virtual ~IntegerVectorBatch() = default;
+    ~IntegerVectorBatch() override = default;
 
-    inline std::string toString() const;
+    inline std::string toString() const override;
 
-    void resize(uint64_t cap) {
+    void resize(uint64_t cap) override {
       if (capacity < cap) {
         ColumnVectorBatch::resize(cap);
         data.resize(cap);
       }
     }
 
-    void clear() {
+    void clear() override {
       numElements = 0;
     }
 
-    uint64_t getMemoryUsage() {
+    uint64_t getMemoryUsage() override {
       return ColumnVectorBatch::getMemoryUsage() +
              static_cast<uint64_t>(data.capacity() * sizeof(ValueType));
     }
@@ -158,22 +158,22 @@ namespace orc {
       // PASS
     }
 
-    virtual ~FloatingVectorBatch() = default;
+    ~FloatingVectorBatch() override = default;
 
-    inline std::string toString() const;
+    inline std::string toString() const override;
 
-    void resize(uint64_t cap) {
+    void resize(uint64_t cap) override {
       if (capacity < cap) {
         ColumnVectorBatch::resize(cap);
         data.resize(cap);
       }
     }
 
-    void clear() {
+    void clear() override {
       numElements = 0;
     }
 
-    uint64_t getMemoryUsage() {
+    uint64_t getMemoryUsage() override {
       return ColumnVectorBatch::getMemoryUsage() +
              static_cast<uint64_t>(data.capacity() * sizeof(FloatType));
     }
@@ -200,11 +200,11 @@ namespace orc {
 
   struct StringVectorBatch : public ColumnVectorBatch {
     StringVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~StringVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
+    ~StringVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
 
     // pointers to the start of each string
     DataBuffer<char*> data;
@@ -240,9 +240,9 @@ namespace orc {
    */
   struct EncodedStringVectorBatch : public StringVectorBatch {
     EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~EncodedStringVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
+    ~EncodedStringVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
     std::shared_ptr<StringDictionary> dictionary;
 
     // index for dictionary entry
@@ -251,24 +251,24 @@ namespace orc {
 
   struct StructVectorBatch : public ColumnVectorBatch {
     StructVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~StructVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
-    bool hasVariableLength();
+    ~StructVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
+    bool hasVariableLength() override;
 
     std::vector<ColumnVectorBatch*> fields;
   };
 
   struct ListVectorBatch : public ColumnVectorBatch {
     ListVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~ListVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
-    bool hasVariableLength();
+    ~ListVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
+    bool hasVariableLength() override;
 
     /**
      * The offset of the first element of each list.
@@ -282,12 +282,12 @@ namespace orc {
 
   struct MapVectorBatch : public ColumnVectorBatch {
     MapVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~MapVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
-    bool hasVariableLength();
+    ~MapVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
+    bool hasVariableLength() override;
 
     /**
      * The offset of the first element of each map.
@@ -303,12 +303,12 @@ namespace orc {
 
   struct UnionVectorBatch : public ColumnVectorBatch {
     UnionVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~UnionVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
-    bool hasVariableLength();
+    ~UnionVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
+    bool hasVariableLength() override;
 
     /**
      * For each value, which element of children has the value.
@@ -336,11 +336,11 @@ namespace orc {
 
   struct Decimal64VectorBatch : public ColumnVectorBatch {
     Decimal64VectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~Decimal64VectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
+    ~Decimal64VectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
 
     // total number of digits
     int32_t precision;
@@ -362,11 +362,11 @@ namespace orc {
 
   struct Decimal128VectorBatch : public ColumnVectorBatch {
     Decimal128VectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~Decimal128VectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
+    ~Decimal128VectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
 
     // total number of digits
     int32_t precision;
@@ -394,11 +394,11 @@ namespace orc {
    */
   struct TimestampVectorBatch : public ColumnVectorBatch {
     TimestampVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~TimestampVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
+    ~TimestampVectorBatch() override;
+    std::string toString() const override;
+    void resize(uint64_t capacity) override;
+    void clear() override;
+    uint64_t getMemoryUsage() override;
 
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
     // Note that we always assume data is in GMT timezone; therefore it is

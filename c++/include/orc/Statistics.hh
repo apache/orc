@@ -58,7 +58,7 @@ namespace orc {
    */
   class BinaryColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~BinaryColumnStatistics();
+    ~BinaryColumnStatistics() override;
 
     /**
      * Check whether column has total length.
@@ -74,7 +74,7 @@ namespace orc {
    */
   class BooleanColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~BooleanColumnStatistics();
+    ~BooleanColumnStatistics() override;
 
     /**
      * Check whether column has true/false count.
@@ -91,7 +91,7 @@ namespace orc {
    */
   class DateColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~DateColumnStatistics();
+    ~DateColumnStatistics() override;
 
     /**
      * Check whether column has minimum.
@@ -123,7 +123,7 @@ namespace orc {
    */
   class DecimalColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~DecimalColumnStatistics();
+    ~DecimalColumnStatistics() override;
 
     /**
      * Check whether column has minimum.
@@ -167,7 +167,7 @@ namespace orc {
    */
   class DoubleColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~DoubleColumnStatistics();
+    ~DoubleColumnStatistics() override;
 
     /**
      * Check whether column has minimum.
@@ -214,7 +214,7 @@ namespace orc {
    */
   class IntegerColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~IntegerColumnStatistics();
+    ~IntegerColumnStatistics() override;
 
     /**
      * Check whether column has minimum.
@@ -260,7 +260,7 @@ namespace orc {
    */
   class StringColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~StringColumnStatistics();
+    ~StringColumnStatistics() override;
 
     /**
      * Check whether column has minimum.
@@ -304,7 +304,7 @@ namespace orc {
    */
   class TimestampColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~TimestampColumnStatistics();
+    ~TimestampColumnStatistics() override;
 
     /**
      * Check whether minimum timestamp exists.
@@ -390,7 +390,7 @@ namespace orc {
    */
   class CollectionColumnStatistics : public ColumnStatistics {
    public:
-    virtual ~CollectionColumnStatistics();
+    ~CollectionColumnStatistics() override;
 
     /**
      * check whether column has minimum number of children
@@ -455,7 +455,7 @@ namespace orc {
 
   class StripeStatistics : public Statistics {
    public:
-    virtual ~StripeStatistics();
+    ~StripeStatistics() override;
 
     /**
      * Get the statistics of a given RowIndex entry in a given column.

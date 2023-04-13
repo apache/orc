@@ -78,7 +78,7 @@ namespace orc {
 
   class FileParam : public testing::TestWithParam<OrcFileDescription> {
    public:
-    virtual ~FileParam();
+    ~FileParam() override;
 
     std::string getFilename() {
       return findExample(GetParam().filename);
@@ -3260,7 +3260,7 @@ namespace orc {
 
   class MockInputStream : public InputStream {
    public:
-    ~MockInputStream();
+    ~MockInputStream() override;
     MOCK_CONST_METHOD0(getLength, uint64_t());
     MOCK_CONST_METHOD0(getName, const std::string&());
     MOCK_METHOD3(read, void(void*, uint64_t, uint64_t));

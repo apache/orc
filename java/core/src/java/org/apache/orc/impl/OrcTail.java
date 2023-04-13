@@ -135,7 +135,8 @@ public final class OrcTail {
   }
 
   public int getCompressionBufferSize() {
-    return (int) fileTail.getPostscript().getCompressionBlockSize();
+    OrcProto.PostScript postScript = fileTail.getPostscript();
+    return ReaderImpl.getCompressionBlockSize(postScript);
   }
 
   public int getMetadataSize() {

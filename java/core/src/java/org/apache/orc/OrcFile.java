@@ -564,6 +564,21 @@ public class OrcFile {
      */
     public WriterOptions rowIndexStride(int value) {
       rowIndexStrideValue = value;
+      if (rowIndexStrideValue <= 0) {
+        buildIndex = false;
+      }
+      return this;
+    }
+
+    /**
+     * Sets whether build the index. The default value is true. If the value is
+     * set to false, rowIndexStrideValue will be set to zero.
+     */
+    public WriterOptions buildIndex(boolean value) {
+      buildIndex = value;
+      if (!buildIndex) {
+        rowIndexStrideValue = 0;
+      }
       return this;
     }
 

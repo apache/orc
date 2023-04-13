@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -55,6 +56,7 @@ import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -64,6 +66,7 @@ public class ReaderImpl implements Reader {
   private static final Logger LOG = LoggerFactory.getLogger(ReaderImpl.class);
 
   private static final int DIRECTORY_SIZE_GUESS = 16 * 1024;
+  public static final int DEFAULT_COMPRESSION_BLOCK_SIZE = 256 * 1024;
 
   private final long maxLength;
   protected final Path path;
@@ -715,6 +718,18 @@ public class ReaderImpl implements Reader {
   }
 
   /**
+   * Read compression block size from the postscript if it is set; otherwise,
+   * use the same 256k default the C++ implementation uses.
+   */
+  public static int getCompressionBlockSize(OrcProto.PostScript postScript) {
+    if (postScript.hasCompressionBlockSize()) {
+      return (int) postScript.getCompressionBlockSize();
+    } else {
+      return DEFAULT_COMPRESSION_BLOCK_SIZE;
+    }
+  }
+
+  /**
    * @deprecated Use {@link ReaderImpl#extractFileTail(FileSystem, Path, long)} instead.
    * This is for backward compatibility.
    */
@@ -741,7 +756,7 @@ public class ReaderImpl implements Reader {
     try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)){
       if (codec != null) {
         compression.withCodec(codec)
-            .withBufferSize((int) ps.getCompressionBlockSize());
+            .withBufferSize(getCompressionBlockSize(ps));
       }
 
       OrcProto.Footer footer =
@@ -823,7 +838,7 @@ public class ReaderImpl implements Reader {
       try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)) {
         if (codec != null) {
           compression.withCodec(codec)
-              .withBufferSize((int) ps.getCompressionBlockSize());
+              .withBufferSize(getCompressionBlockSize(ps));
         }
         OrcProto.Footer footer =
             OrcProto.Footer.parseFrom(
@@ -1022,11 +1037,15 @@ public class ReaderImpl implements Reader {
       long offset,
       int length,
       InStream.StreamOptions options) throws IOException {
-    InStream stream = InStream.create("stripe stats", tailBuffer, offset,
-        length, options);
-    OrcProto.Metadata meta = OrcProto.Metadata.parseFrom(
-        InStream.createCodedInputStream(stream));
-    return meta.getStripeStatsList();
+    try (InStream stream = InStream.create("stripe stats", tailBuffer, offset,
+        length, options)) {
+      OrcProto.Metadata meta = OrcProto.Metadata.parseFrom(
+          InStream.createCodedInputStream(stream));
+      return meta.getStripeStatsList();
+    } catch (InvalidProtocolBufferException e) {
+      LOG.warn("Failed to parse stripe statistics", e);
+      return Collections.emptyList();
+    }
   }
 
   private List<StripeStatistics> convertFromProto(List<OrcProto.StripeStatistics> list) {

@@ -32,13 +32,13 @@ import org.apache.orc.Writer;
 import org.apache.orc.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestWriterImpl {
 
@@ -94,11 +94,10 @@ public class TestWriterImpl {
     w.close();
   }
 
-  @Disabled("ORC-1343: Disable ENABLE_INDEXES tests until reader supports it properly")
   @Test
   public void testNoIndexIfEnableIndexIsFalse() throws Exception {
     conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
-    conf.set(OrcConf.ROW_INDEX_STRIDE.getAttribute(), "1000");
+    conf.set(OrcConf.ROW_INDEX_STRIDE.getAttribute(), "0");
     conf.setBoolean(OrcConf.ENABLE_INDEXES.getAttribute(), false);
     VectorizedRowBatch b = schema.createRowBatch();
     LongColumnVector f1 = (LongColumnVector) b.cols[0];
@@ -119,6 +118,19 @@ public class TestWriterImpl {
     for (StripeInformation information: w.getStripes()) {
       assertEquals(0, information.getIndexLength());
     }
+  }
+
+  @Test
+  public void testEnableDisableIndex() {
+    conf.set(OrcConf.ROW_INDEX_STRIDE.getAttribute(), "10000");
+    OrcFile.WriterOptions writerOptions = OrcFile.writerOptions(conf);
+    writerOptions.buildIndex(false);
+    assertEquals(writerOptions.getRowIndexStride(), 0);
+
+    conf.set(OrcConf.ENABLE_INDEXES.getAttribute(), "true");
+    OrcFile.WriterOptions writerOptions2 = OrcFile.writerOptions(conf);
+    writerOptions2.rowIndexStride(0);
+    assertFalse(writerOptions2.isBuildIndex());
   }
 
   @Test
