@@ -37,12 +37,11 @@ namespace orc {
                                                 uint64_t& tailBitLen, uint32_t& backupByteLen,
                                                 uint64_t& numElements, bool& resetBuf,
                                                 const uint8_t*& srcPtr, int64_t*& dstPtr) {
+    uint64_t numBits = remainingNumElements * bitWidth;
     if (startBit != 0) {
-      bufMoveByteLen +=
-          moveByteLen(remainingNumElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH);
-    } else {
-      bufMoveByteLen += moveByteLen(remainingNumElements * bitWidth);
+      numBits += startBit - ORC_VECTOR_BYTE_WIDTH;
     }
+    bufMoveByteLen += moveByteLen(numBits);
 
     if (bufMoveByteLen <= bufRestByteLen) {
       numElements = remainingNumElements;
@@ -103,16 +102,13 @@ namespace orc {
       return;
     }
 
+    decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
+                              resetBuf, backupByteLen);
     if (backupByteLen != 0) {
-      decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                resetBuf, backupByteLen);
       plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
       dstPtr++;
       backupByteLen = 0;
       remainingNumElements--;
-    } else {
-      decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                resetBuf, backupByteLen);
     }
 
     bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
@@ -1292,7 +1288,7 @@ namespace orc {
       if (backupByteLen != 0) {
         decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
                                   resetBuf, backupByteLen);
-        ;
+
         unpackDefault.unrolledUnpack16(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;

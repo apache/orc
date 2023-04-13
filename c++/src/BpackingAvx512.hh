@@ -88,7 +88,7 @@ namespace orc {
     RleDecoderV2* decoder;
     UnpackDefault unpackDefault;
 
-    // Used by vectorially bit-unpacking data
+    // Used by vectorized bit-unpacking data
     uint32_t vectorBuf[VECTOR_UNPACK_32BIT_MAX_NUM + 1];
   };
 

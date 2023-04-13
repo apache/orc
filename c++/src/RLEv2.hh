@@ -238,7 +238,7 @@ namespace orc {
       inputStream->BackUp(backupByteLen);
     }
 
-    if (len >= remainingLen && resetBuf == true) {
+    if (len >= remainingLen && resetBuf) {
       if (!inputStream->Next(&bufferPointer, &bufferLength)) {
         throw ParseError("bad read in RleDecoderV2::resetBufferStart");
       }
