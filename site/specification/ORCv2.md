@@ -905,10 +905,15 @@ uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
 following subsections.
 
-Note that the order of these streams is **not fixed**. In the example
-of the integer column mentioned above, the order of the PRESENT stream
-and the DATA stream cannot be determined in advance. Instead, we need
-to determine the type of stream based on the Stream Kind, rather than
+There are a few points to note about the order of streams:
+
+* For a specific column type, the order of streams is **not fixed**.
+* Index and data streams cannot be **interleaved**.
+* The order of streams from different columns is **not fixed** as well.
+
+In the example of the integer column mentioned above, the order of the
+PRESENT stream and the DATA stream cannot be determined in advance.
+We need to infer the type of stream via the Stream Kind rather than
 relying on the order of the streams.
 
 The layout of each stripe looks like:
