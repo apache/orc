@@ -255,7 +255,8 @@ namespace orc {
         footer(contents->footer.get()),
         firstRowOfStripe(*contents->pool, 0),
         enableEncodedBlock(opts.getEnableLazyDecoding()),
-        readerTimezone(getTimezoneByName(opts.getTimezoneName())) {
+        readerTimezone(getTimezoneByName(opts.getTimezoneName())),
+        schemaEvolution(opts.getReadType(), contents->schema.get()) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -264,6 +265,7 @@ namespace orc {
     rowsInCurrentStripe = 0;
     numRowGroupsInStripeRange = 0;
     useTightNumericVector = opts.getUseTightNumericVector();
+    throwOnSchemaEvolutionOverflow = opts.getThrowOnSchemaEvolutionOverflow();
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
@@ -1091,7 +1093,8 @@ namespace orc {
       StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo, currentStripeFooter,
                                       currentStripeInfo.offset(), *contents->stream, writerTimezone,
                                       readerTimezone);
-      reader = buildReader(*contents->schema, stripeStreams, useTightNumericVector);
+      reader = buildReader(*contents->schema, stripeStreams, useTightNumericVector,
+                           throwOnSchemaEvolutionOverflow, /*convertToReadType=*/true);
 
       if (sargsApplier) {
         // move to the 1st selected row group when PPD is enabled.
@@ -1204,9 +1207,33 @@ namespace orc {
     return rowsInCurrentStripe;
   }
 
+  static void getColumnIds(const Type* type, std::set<uint64_t>& columnIds) {
+    columnIds.insert(type->getColumnId());
+    for (uint64_t i = 0; i < type->getSubtypeCount(); ++i) {
+      getColumnIds(type->getSubtype(i), columnIds);
+    }
+  }
+
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock,
-                                            useTightNumericVector);
+    // If the read type is specified, then check that the selected schema matches the read type
+    // on the first call to createRowBatch.
+    if (schemaEvolution.getReadType() && selectedSchema.get() == nullptr) {
+      auto fileSchema = &getSelectedType();
+      auto readType = schemaEvolution.getReadType();
+      std::set<uint64_t> readColumns, fileColumns;
+      getColumnIds(readType, readColumns);
+      getColumnIds(fileSchema, fileColumns);
+      if (readColumns != fileColumns) {
+        std::ostringstream ss;
+        ss << "The selected schema " << fileSchema->toString() << " doesn't match read type "
+           << readType->toString();
+        throw SchemaEvolutionError(ss.str());
+      }
+    }
+    const Type& readType =
+        schemaEvolution.getReadType() ? *schemaEvolution.getReadType() : getSelectedType();
+    return readType.createRowBatch(capacity, *contents->pool, enableEncodedBlock,
+                                   useTightNumericVector);
   }
 
   void ensureOrcFooter(InputStream* stream, DataBuffer<char>* buffer, uint64_t postscriptLength) {
