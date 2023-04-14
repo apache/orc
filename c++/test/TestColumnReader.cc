@@ -4274,8 +4274,7 @@ namespace orc {
       // set getEncoding
       proto::ColumnEncoding directEncoding;
       directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-      EXPECT_CALL(streams, getEncoding(testing::_))
-          .WillRepeatedly(testing::Return(directEncoding));
+      EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
 
       // set getStream
       EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
