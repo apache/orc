@@ -29,19 +29,19 @@
 
 namespace orc {
 
-  unsigned char RleDecoderV2::readByte(char** bufStart, char** bufEnd) {
+  unsigned char RleDecoderV2::readByte() {
     SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
-    if (*bufStart == *bufEnd) {
+    if (bufferStart == bufferEnd) {
       int bufferLength;
       const void* bufferPointer;
       if (!inputStream->Next(&bufferPointer, &bufferLength)) {
         throw ParseError("bad read in RleDecoderV2::readByte");
       }
-      *bufStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
-      *bufEnd = *bufStart + bufferLength;
+      bufferStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
+      bufferEnd = bufferStart + bufferLength;
     }
 
-    unsigned char result = static_cast<unsigned char>(*(*bufStart)++);
+    unsigned char result = static_cast<unsigned char>(*bufferStart++);
     return result;
   }
 
@@ -50,7 +50,7 @@ namespace orc {
     uint64_t n = bsz;
     while (n > 0) {
       n--;
-      val = readByte(&bufferStart, &bufferEnd);
+      val = readByte();
       ret |= (val << (n * 8));
     }
     return ret;
@@ -64,7 +64,7 @@ namespace orc {
     uint64_t ret = 0, b;
     uint64_t offset = 0;
     do {
-      b = readByte(&bufferStart, &bufferEnd);
+      b = readByte();
       ret |= (0x7f & b) << offset;
       offset += 7;
     } while (b >= 0x80);
@@ -92,15 +92,15 @@ namespace orc {
   RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input, bool _isSigned,
                              MemoryPool& pool, ReaderMetrics* _metrics)
       : RleDecoder(_metrics),
-        bufferStart(nullptr),
-        bufferEnd(bufferStart),
-        bitsLeft(0),
-        curByte(0),
         inputStream(std::move(input)),
         isSigned(_isSigned),
         firstByte(0),
+	bufferStart(nullptr),
+        bufferEnd(bufferStart),
         runLength(0),
         runRead(0),
+	bitsLeft(0),
+        curByte(0),
         unpackedPatch(pool, 0),
         literals(pool, MAX_LITERAL_SIZE) {
     // PASS
@@ -144,7 +144,7 @@ namespace orc {
 
       if (runRead == runLength) {
         resetRun();
-        firstByte = readByte(&bufferStart, &bufferEnd);
+        firstByte = readByte();
       }
 
       uint64_t offset = nRead, length = numValues - nRead;
@@ -231,7 +231,7 @@ namespace orc {
 
       // extract the run length
       runLength = static_cast<uint64_t>(firstByte & 0x01) << 8;
-      runLength |= readByte(&bufferStart, &bufferEnd);
+      runLength |= readByte();
       // runs are one off
       runLength += 1;
       runRead = 0;
@@ -280,13 +280,13 @@ namespace orc {
 
       // extract the run length
       runLength = static_cast<uint64_t>(firstByte & 0x01) << 8;
-      runLength |= readByte(&bufferStart, &bufferEnd);
+      runLength |= readByte();
       // runs are one off
       runLength += 1;
       runRead = 0;
 
       // extract the number of bytes occupied by base
-      uint64_t thirdByte = readByte(&bufferStart, &bufferEnd);
+      uint64_t thirdByte = readByte();
       uint64_t byteSize = (thirdByte >> 5) & 0x07;
       // base width is one off
       byteSize += 1;
@@ -296,7 +296,7 @@ namespace orc {
       uint32_t patchBitSize = decodeBitWidth(pwo);
 
       // read fourth byte and extract patch gap width
-      uint64_t fourthByte = readByte(&bufferStart, &bufferEnd);
+      uint64_t fourthByte = readByte();
       uint32_t pgw = (fourthByte >> 5) & 0x07;
       // patch gap width is one off
       pgw += 1;
@@ -384,7 +384,7 @@ namespace orc {
 
       // extract the run length
       runLength = static_cast<uint64_t>(firstByte & 0x01) << 8;
-      runLength |= readByte(&bufferStart, &bufferEnd);
+      runLength |= readByte();
       ++runLength;  // account for first value
       runRead = 0;
 

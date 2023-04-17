@@ -166,19 +166,49 @@ namespace orc {
 
     void next(int16_t* data, uint64_t numValues, const char* notNull) override;
 
-    unsigned char readByte(char** bufStart, char** bufEnd);
+    unsigned char readByte();
+
+    void setBufStart(char* start) {
+      bufferStart = start;
+    }
+
+    char* getBufStart() {
+      return bufferStart;
+    }
+
+    void setBufEnd(char* end) {
+      bufferEnd = end;
+    }
+
+    char* getBufEnd() {
+      return bufferEnd;
+    }
+
+    uint64_t bufLength() {
+      return bufferEnd - bufferStart;
+    }
+
+    void setBitsLeft(uint32_t bits) {
+      bitsLeft = bits;
+    }
+
+    void setCurByte(uint32_t byte) {
+      curByte = byte;
+    }
+
+    uint32_t getBitsLeft() {
+      return bitsLeft;
+    }
+
+    uint32_t getCurByte() {
+      return curByte;
+    }
 
     /**
      * Most hotspot of this function locates in saving stack, so inline this function to have
      * performance gain.
      */
-    inline void resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
-                                 uint32_t backupLen);
-
-    char* bufferStart;
-    char* bufferEnd;
-    uint32_t bitsLeft;  // Used by readLongs when bitSize < 8
-    uint32_t curByte;   // Used by anything that uses readLongs
+    inline void resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupLen);
 
    private:
     /**
@@ -222,15 +252,19 @@ namespace orc {
     const std::unique_ptr<SeekableInputStream> inputStream;
     const bool isSigned;
     unsigned char firstByte;
+    char* bufferStart;
+    char* bufferEnd;
     uint64_t runLength;                 // Length of the current run
     uint64_t runRead;                   // Number of returned values of the current run
+    uint32_t bitsLeft;  		// Used by readLongs when bitSize < 8
+    uint32_t curByte;   		// Used by anything that uses readLongs
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
   };
 
-  inline void RleDecoderV2::resetBufferStart(char** bufStart, char** bufEnd, uint64_t len,
-                                             bool resetBuf, uint32_t backupByteLen) {
-    uint64_t remainingLen = *bufEnd - *bufStart;
+  inline void RleDecoderV2::resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupByteLen) {
+    char* bufStart = getBufStart();
+    uint64_t remainingLen = bufLength();
     int bufferLength = 0;
     const void* bufferPointer = nullptr;
 
@@ -245,10 +279,10 @@ namespace orc {
     }
 
     if (bufferPointer == nullptr) {
-      *bufStart += len;
+      setBufStart(bufStart + len);
     } else {
-      *bufStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
-      *bufEnd = *bufStart + bufferLength;
+      setBufStart(const_cast<char*>(static_cast<const char*>(bufferPointer)));
+      setBufEnd(const_cast<char*>(static_cast<const char*>(bufferPointer)) + bufferLength);
     }
   }
 }  // namespace orc

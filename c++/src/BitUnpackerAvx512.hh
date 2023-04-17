@@ -59,14 +59,14 @@ namespace orc {
       3u, 2u, 3u, 2u, 4u, 3u, 5u, 4u, 6u, 5u, 0u, 0u, 1u, 0u, 2u, 1u, 3u, 2u, 3u, 2u, 4u, 3u,
       5u, 4u, 6u, 5u, 0u, 0u, 1u, 0u, 2u, 1u, 3u, 2u, 3u, 2u, 4u, 3u, 5u, 4u, 6u, 5u};
   static const uint16_t shiftTable3u_0[32] = {13u, 7u,  9u,  11u, 13u, 7u,  9u,  11u, 13u, 7u,  9u,
-                                        11u, 13u, 7u,  9u,  11u, 13u, 7u,  9u,  11u, 13u, 7u,
-                                        9u,  11u, 13u, 7u,  9u,  11u, 13u, 7u,  9u,  11u};
+                                              11u, 13u, 7u,  9u,  11u, 13u, 7u,  9u,  11u, 13u, 7u,
+                                              9u,  11u, 13u, 7u,  9u,  11u, 13u, 7u,  9u,  11u};
   static const uint16_t shiftTable3u_1[32] = {6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u,
-                                        0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u,
-                                        2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
-  static const uint16_t permutexIdxTable3u[32] = {0u,  1u,  2u,  0x0, 0x0, 0x0, 0x0, 0x0, 3u,  4u,  5u,
-                                            0x0, 0x0, 0x0, 0x0, 0x0, 6u,  7u,  8u,  0x0, 0x0, 0x0,
-                                            0x0, 0x0, 9u,  10u, 11u, 0x0, 0x0, 0x0, 0x0, 0x0};
+                                              0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u,
+                                              2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
+  static const uint16_t permutexIdxTable3u[32] = {
+      0u, 1u, 2u, 0x0, 0x0, 0x0, 0x0, 0x0, 3u, 4u,  5u,  0x0, 0x0, 0x0, 0x0, 0x0,
+      6u, 7u, 8u, 0x0, 0x0, 0x0, 0x0, 0x0, 9u, 10u, 11u, 0x0, 0x0, 0x0, 0x0, 0x0};
 
   // ------------------------------------ 5u -----------------------------------------
   static const uint8_t shuffleIdxTable5u_0[64] = {
@@ -78,14 +78,14 @@ namespace orc {
       5u, 4u, 6u,  5u, 7u, 6u, 8u, 7u, 10u, 9u, 1u, 0u, 2u, 1u, 3u,  2u, 5u, 4u, 6u,  5u, 7u, 6u,
       8u, 7u, 10u, 9u, 1u, 0u, 2u, 1u, 3u,  2u, 5u, 4u, 6u, 5u, 7u,  6u, 8u, 7u, 10u, 9u};
   static const uint16_t shiftTable5u_0[32] = {11u, 9u,  7u,  5u, 11u, 9u,  7u,  5u, 11u, 9u,  7u,
-                                        5u,  11u, 9u,  7u, 5u,  11u, 9u,  7u, 5u,  11u, 9u,
-                                        7u,  5u,  11u, 9u, 7u,  5u,  11u, 9u, 7u,  5u};
+                                              5u,  11u, 9u,  7u, 5u,  11u, 9u,  7u, 5u,  11u, 9u,
+                                              7u,  5u,  11u, 9u, 7u,  5u,  11u, 9u, 7u,  5u};
   static const uint16_t shiftTable5u_1[32] = {2u, 4u, 6u, 0u, 2u, 4u, 6u, 0u, 2u, 4u, 6u,
-                                        0u, 2u, 4u, 6u, 0u, 2u, 4u, 6u, 0u, 2u, 4u,
-                                        6u, 0u, 2u, 4u, 6u, 0u, 2u, 4u, 6u, 0u};
-  static const uint16_t permutexIdxTable5u[32] = {0u,  1u,  2u,  3u,  4u,  0x0, 0x0, 0x0, 5u,  6u,  7u,
-                                            8u,  9u,  0x0, 0x0, 0x0, 10u, 11u, 12u, 13u, 14u, 0x0,
-                                            0x0, 0x0, 15u, 16u, 17u, 18u, 19u, 0x0, 0x0, 0x0};
+                                              0u, 2u, 4u, 6u, 0u, 2u, 4u, 6u, 0u, 2u, 4u,
+                                              6u, 0u, 2u, 4u, 6u, 0u, 2u, 4u, 6u, 0u};
+  static const uint16_t permutexIdxTable5u[32] = {
+      0u,  1u,  2u,  3u,  4u,  0x0, 0x0, 0x0, 5u,  6u,  7u,  8u,  9u,  0x0, 0x0, 0x0,
+      10u, 11u, 12u, 13u, 14u, 0x0, 0x0, 0x0, 15u, 16u, 17u, 18u, 19u, 0x0, 0x0, 0x0};
 
   // ------------------------------------ 6u -----------------------------------------
   static const uint8_t shuffleIdxTable6u_0[64] = {
@@ -99,13 +99,13 @@ namespace orc {
       1u, 0u, 3u, 2u, 4u, 3u, 6u, 5u, 7u, 6u, 9u, 8u, 10u, 9u, 12u, 11u,
       1u, 0u, 3u, 2u, 4u, 3u, 6u, 5u, 7u, 6u, 9u, 8u, 10u, 9u, 12u, 11u};
   static const uint16_t shiftTable6u_0[32] = {10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u,
-                                        6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,
-                                        10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u};
+                                              6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,
+                                              10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u,  10u, 6u};
   static const uint16_t shiftTable6u_1[32] = {4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u,
-                                        0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u,
-                                        4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u};
+                                              0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u,
+                                              4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u};
   static const uint32_t permutexIdxTable6u[16] = {0u, 1u, 2u, 0x0, 3u, 4u,  5u,  0x0,
-                                            6u, 7u, 8u, 0x0, 9u, 10u, 11u, 0x0};
+                                                  6u, 7u, 8u, 0x0, 9u, 10u, 11u, 0x0};
 
   // ------------------------------------ 7u -----------------------------------------
   static const uint8_t shuffleIdxTable7u_0[64] = {
@@ -119,34 +119,34 @@ namespace orc {
       1u, 0u, 3u, 2u, 5u, 4u, 7u, 6u, 8u, 7u, 10u, 9u, 12u, 11u, 14u, 13u,
       1u, 0u, 3u, 2u, 5u, 4u, 7u, 6u, 8u, 7u, 10u, 9u, 12u, 11u, 14u, 13u};
   static const uint16_t shiftTable7u_0[32] = {9u, 3u, 5u, 7u, 9u, 3u, 5u, 7u, 9u, 3u, 5u,
-                                        7u, 9u, 3u, 5u, 7u, 9u, 3u, 5u, 7u, 9u, 3u,
-                                        5u, 7u, 9u, 3u, 5u, 7u, 9u, 3u, 5u, 7u};
+                                              7u, 9u, 3u, 5u, 7u, 9u, 3u, 5u, 7u, 9u, 3u,
+                                              5u, 7u, 9u, 3u, 5u, 7u, 9u, 3u, 5u, 7u};
   static const uint16_t shiftTable7u_1[32] = {6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u,
-                                        0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u,
-                                        2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
-  static const uint16_t permutexIdxTable7u[32] = {0u,  1u,  2u,  3u,  4u,  5u,  6u,  0x0, 7u,  8u,  9u,
-                                            10u, 11u, 12u, 13u, 0x0, 14u, 15u, 16u, 17u, 18u, 19u,
-                                            20u, 0x0, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 0x0};
+                                              0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u,
+                                              2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
+  static const uint16_t permutexIdxTable7u[32] = {
+      0u,  1u,  2u,  3u,  4u,  5u,  6u,  0x0, 7u,  8u,  9u,  10u, 11u, 12u, 13u, 0x0,
+      14u, 15u, 16u, 17u, 18u, 19u, 20u, 0x0, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 0x0};
 
   // ------------------------------------ 9u -----------------------------------------
-  static const uint16_t permutexIdxTable9u_0[32] = {0u,  1u,  1u,  2u,  2u,  3u,  3u,  4u,  4u,  5u,  5u,
-                                              6u,  6u,  7u,  7u,  8u,  9u,  10u, 10u, 11u, 11u, 12u,
-                                              12u, 13u, 13u, 14u, 14u, 15u, 15u, 16u, 16u, 17u};
-  static const uint16_t permutexIdxTable9u_1[32] = {0u,  1u,  1u,  2u,  2u,  3u,  3u,  4u,  5u,  6u,  6u,
-                                              7u,  7u,  8u,  8u,  9u,  9u,  10u, 10u, 11u, 11u, 12u,
-                                              12u, 13u, 14u, 15u, 15u, 16u, 16u, 17u, 17u, 18u};
+  static const uint16_t permutexIdxTable9u_0[32] = {
+      0u, 1u,  1u,  2u,  2u,  3u,  3u,  4u,  4u,  5u,  5u,  6u,  6u,  7u,  7u,  8u,
+      9u, 10u, 10u, 11u, 11u, 12u, 12u, 13u, 13u, 14u, 14u, 15u, 15u, 16u, 16u, 17u};
+  static const uint16_t permutexIdxTable9u_1[32] = {
+      0u, 1u,  1u,  2u,  2u,  3u,  3u,  4u,  5u,  6u,  6u,  7u,  7u,  8u,  8u,  9u,
+      9u, 10u, 10u, 11u, 11u, 12u, 12u, 13u, 14u, 15u, 15u, 16u, 16u, 17u, 17u, 18u};
   static const uint32_t shiftTable9u_0[16] = {0u, 2u, 4u, 6u, 8u, 10u, 12u, 14u,
-                                        0u, 2u, 4u, 6u, 8u, 10u, 12u, 14u};
+                                              0u, 2u, 4u, 6u, 8u, 10u, 12u, 14u};
   static const uint32_t shiftTable9u_1[16] = {7u, 5u, 3u, 1u, 15u, 13u, 11u, 9u,
-                                        7u, 5u, 3u, 1u, 15u, 13u, 11u, 9u};
+                                              7u, 5u, 3u, 1u, 15u, 13u, 11u, 9u};
 
   static const uint8_t shuffleIdxTable9u_0[64] = {
       1u, 0u, 2u, 1u, 3u, 2u, 4u, 3u, 5u, 4u, 6u, 5u, 7u, 6u, 8u, 7u, 1u, 0u, 2u, 1u, 3u, 2u,
       4u, 3u, 5u, 4u, 6u, 5u, 7u, 6u, 8u, 7u, 1u, 0u, 2u, 1u, 3u, 2u, 4u, 3u, 5u, 4u, 6u, 5u,
       7u, 6u, 8u, 7u, 1u, 0u, 2u, 1u, 3u, 2u, 4u, 3u, 5u, 4u, 6u, 5u, 7u, 6u, 8u, 7u};
   static const uint16_t shiftTable9u_2[32] = {7u, 6u, 5u, 4u, 3u, 2u, 1u, 0u, 7u, 6u, 5u,
-                                        4u, 3u, 2u, 1u, 0u, 7u, 6u, 5u, 4u, 3u, 2u,
-                                        1u, 0u, 7u, 6u, 5u, 4u, 3u, 2u, 1u, 0u};
+                                              4u, 3u, 2u, 1u, 0u, 7u, 6u, 5u, 4u, 3u, 2u,
+                                              1u, 0u, 7u, 6u, 5u, 4u, 3u, 2u, 1u, 0u};
   static const uint64_t gatherIdxTable9u[8] = {0u, 8u, 9u, 17u, 18u, 26u, 27u, 35u};
 
   // ------------------------------------ 10u -----------------------------------------
@@ -155,11 +155,11 @@ namespace orc {
       4u, 3u, 6u, 5u, 7u, 6u, 8u, 7u, 9u, 8u, 1u, 0u, 2u, 1u, 3u, 2u, 4u, 3u, 6u, 5u, 7u, 6u,
       8u, 7u, 9u, 8u, 1u, 0u, 2u, 1u, 3u, 2u, 4u, 3u, 6u, 5u, 7u, 6u, 8u, 7u, 9u, 8u};
   static const uint16_t shiftTable10u[32] = {6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u,
-                                       0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u,
-                                       2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
-  static const uint16_t permutexIdxTable10u[32] = {0u,  1u,  2u,  3u,  4u,  0x0, 0x0, 0x0, 5u,  6u,  7u,
-                                             8u,  9u,  0x0, 0x0, 0x0, 10u, 11u, 12u, 13u, 14u, 0x0,
-                                             0x0, 0x0, 15u, 16u, 17u, 18u, 19u, 0x0, 0x0, 0x0};
+                                             0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u,
+                                             2u, 0u, 6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
+  static const uint16_t permutexIdxTable10u[32] = {
+      0u,  1u,  2u,  3u,  4u,  0x0, 0x0, 0x0, 5u,  6u,  7u,  8u,  9u,  0x0, 0x0, 0x0,
+      10u, 11u, 12u, 13u, 14u, 0x0, 0x0, 0x0, 15u, 16u, 17u, 18u, 19u, 0x0, 0x0, 0x0};
 
   // ------------------------------------ 11u -----------------------------------------
   static const uint16_t permutexIdxTable11u_0[32] = {
@@ -169,9 +169,9 @@ namespace orc {
       0u,  1u,  2u,  3u,  3u,  4u,  4u,  5u,  6u,  7u,  7u,  8u,  8u,  9u,  10u, 11u,
       11u, 12u, 13u, 14u, 14u, 15u, 15u, 16u, 17u, 18u, 18u, 19u, 19u, 20u, 21u, 22u};
   static const uint32_t shiftTable11u_0[16] = {0u, 6u, 12u, 2u, 8u, 14u, 4u, 10u,
-                                         0u, 6u, 12u, 2u, 8u, 14u, 4u, 10u};
+                                               0u, 6u, 12u, 2u, 8u, 14u, 4u, 10u};
   static const uint32_t shiftTable11u_1[16] = {5u, 15u, 9u, 3u, 13u, 7u, 1u, 11u,
-                                         5u, 15u, 9u, 3u, 13u, 7u, 1u, 11u};
+                                               5u, 15u, 9u, 3u, 13u, 7u, 1u, 11u};
 
   static const uint8_t shuffleIdxTable11u_0[64] = {
       3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 8u, 7u, 6u, 5u, 11u, 10u, 9u, 8u,
@@ -184,9 +184,9 @@ namespace orc {
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 0u, 8u, 7u, 6u, 0u, 11u, 10u, 9u, 0u,
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 0u, 8u, 7u, 6u, 0u, 11u, 10u, 9u, 0u};
   static const uint32_t shiftTable11u_2[16] = {21u, 15u, 17u, 19u, 21u, 15u, 17u, 19u,
-                                         21u, 15u, 17u, 19u, 21u, 15u, 17u, 19u};
+                                               21u, 15u, 17u, 19u, 21u, 15u, 17u, 19u};
   static const uint32_t shiftTable11u_3[16] = {6u, 4u, 10u, 8u, 6u, 4u, 10u, 8u,
-                                         6u, 4u, 10u, 8u, 6u, 4u, 10u, 8u};
+                                               6u, 4u, 10u, 8u, 6u, 4u, 10u, 8u};
   static const uint64_t gatherIdxTable11u[8] = {0u, 8u, 11u, 19u, 22u, 30u, 33u, 41u};
 
   // ------------------------------------ 12u -----------------------------------------
@@ -196,10 +196,10 @@ namespace orc {
       1u, 0u, 2u, 1u, 4u, 3u, 5u, 4u, 7u, 6u, 8u, 7u, 10u, 9u, 11u, 10u,
       1u, 0u, 2u, 1u, 4u, 3u, 5u, 4u, 7u, 6u, 8u, 7u, 10u, 9u, 11u, 10u};
   static const uint16_t shiftTable12u[32] = {4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u,
-                                       0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u,
-                                       4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u};
+                                             0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u,
+                                             4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u};
   static const uint32_t permutexIdxTable12u[16] = {0u, 1u, 2u, 0x0, 3u, 4u,  5u,  0x0,
-                                             6u, 7u, 8u, 0x0, 9u, 10u, 11u, 0x0};
+                                                   6u, 7u, 8u, 0x0, 9u, 10u, 11u, 0x0};
 
   // ------------------------------------ 13u -----------------------------------------
   static const uint16_t permutexIdxTable13u_0[32] = {
@@ -209,9 +209,9 @@ namespace orc {
       0u,  1u,  2u,  3u,  4u,  5u,  5u,  6u,  7u,  8u,  8u,  9u,  10u, 11u, 12u, 13u,
       13u, 14u, 15u, 16u, 17u, 18u, 18u, 19u, 20u, 21u, 21u, 22u, 23u, 24u, 25u, 26u};
   static const uint32_t shiftTable13u_0[16] = {0u, 10u, 4u, 14u, 8u, 2u, 12u, 6u,
-                                         0u, 10u, 4u, 14u, 8u, 2u, 12u, 6u};
+                                               0u, 10u, 4u, 14u, 8u, 2u, 12u, 6u};
   static const uint32_t shiftTable13u_1[16] = {3u, 9u, 15u, 5u, 11u, 1u, 7u, 13u,
-                                         3u, 9u, 15u, 5u, 11u, 1u, 7u, 13u};
+                                               3u, 9u, 15u, 5u, 11u, 1u, 7u, 13u};
 
   static const uint8_t shuffleIdxTable13u_0[64] = {
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 9u, 8u, 7u, 6u, 12u, 11u, 10u, 9u,
@@ -224,9 +224,9 @@ namespace orc {
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 0u, 10u, 9u, 8u, 0u, 13u, 12u, 11u, 0u,
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 0u, 10u, 9u, 8u, 0u, 13u, 12u, 11u, 0u};
   static const uint32_t shiftTable13u_2[16] = {19u, 17u, 15u, 13u, 19u, 17u, 15u, 13u,
-                                         19u, 17u, 15u, 13u, 19u, 17u, 15u, 13u};
+                                               19u, 17u, 15u, 13u, 19u, 17u, 15u, 13u};
   static const uint32_t shiftTable13u_3[16] = {10u, 12u, 6u, 8u, 10u, 12u, 6u, 8u,
-                                         10u, 12u, 6u, 8u, 10u, 12u, 6u, 8u};
+                                               10u, 12u, 6u, 8u, 10u, 12u, 6u, 8u};
   static const uint64_t gatherIdxTable13u[8] = {0u, 8u, 13u, 21u, 26u, 34u, 39u, 47u};
 
   // ------------------------------------ 14u -----------------------------------------
@@ -241,12 +241,12 @@ namespace orc {
       3u, 2u, 1u, 0u, 7u, 6u, 5u, 0u, 10u, 9u, 8u, 0u, 14u, 13u, 12u, 0u,
       3u, 2u, 1u, 0u, 7u, 6u, 5u, 0u, 10u, 9u, 8u, 0u, 14u, 13u, 12u, 0u};
   static const uint32_t shiftTable14u_0[16] = {18u, 14u, 18u, 14u, 18u, 14u, 18u, 14u,
-                                         18u, 14u, 18u, 14u, 18u, 14u, 18u, 14u};
+                                               18u, 14u, 18u, 14u, 18u, 14u, 18u, 14u};
   static const uint32_t shiftTable14u_1[16] = {12u, 8u, 12u, 8u, 12u, 8u, 12u, 8u,
-                                         12u, 8u, 12u, 8u, 12u, 8u, 12u, 8u};
-  static const uint16_t permutexIdxTable14u[32] = {0u,  1u,  2u,  3u,  4u,  5u,  6u,  0x0, 7u,  8u,  9u,
-                                             10u, 11u, 12u, 13u, 0x0, 14u, 15u, 16u, 17u, 18u, 19u,
-                                             20u, 0x0, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 0x0};
+                                               12u, 8u, 12u, 8u, 12u, 8u, 12u, 8u};
+  static const uint16_t permutexIdxTable14u[32] = {
+      0u,  1u,  2u,  3u,  4u,  5u,  6u,  0x0, 7u,  8u,  9u,  10u, 11u, 12u, 13u, 0x0,
+      14u, 15u, 16u, 17u, 18u, 19u, 20u, 0x0, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 0x0};
 
   // ------------------------------------ 15u -----------------------------------------
   static const uint16_t permutexIdxTable15u_0[32] = {
@@ -256,9 +256,9 @@ namespace orc {
       0u,  1u,  2u,  3u,  4u,  5u,  6u,  7u,  8u,  9u,  10u, 11u, 12u, 13u, 14u, 15u,
       15u, 16u, 17u, 18u, 19u, 20u, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 28u, 29u, 30u};
   static const uint32_t shiftTable15u_0[16] = {0u, 14u, 12u, 10u, 8u, 6u, 4u, 2u,
-                                         0u, 14u, 12u, 10u, 8u, 6u, 4u, 2u};
+                                               0u, 14u, 12u, 10u, 8u, 6u, 4u, 2u};
   static const uint32_t shiftTable15u_1[16] = {1u, 3u, 5u, 7u, 9u, 11u, 13u, 15u,
-                                         1u, 3u, 5u, 7u, 9u, 11u, 13u, 15u};
+                                               1u, 3u, 5u, 7u, 9u, 11u, 13u, 15u};
 
   static const uint8_t shuffleIdxTable15u_0[64] = {
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 10u, 9u, 8u, 7u, 14u, 13u, 12u, 11u,
@@ -271,16 +271,16 @@ namespace orc {
       3u, 2u, 1u, 0u, 7u, 6u, 5u, 0u, 11u, 10u, 9u, 0u, 15u, 14u, 13u, 0u,
       3u, 2u, 1u, 0u, 7u, 6u, 5u, 0u, 11u, 10u, 9u, 0u, 15u, 14u, 13u, 0u};
   static const uint32_t shiftTable15u_2[16] = {17u, 11u, 13u, 15u, 17u, 11u, 13u, 15u,
-                                         17u, 11u, 13u, 15u, 17u, 11u, 13u, 15u};
+                                               17u, 11u, 13u, 15u, 17u, 11u, 13u, 15u};
   static const uint32_t shiftTable15u_3[16] = {14u, 12u, 10u, 8u, 14u, 12u, 10u, 8u,
-                                         14u, 12u, 10u, 8u, 14u, 12u, 10u, 8u};
+                                               14u, 12u, 10u, 8u, 14u, 12u, 10u, 8u};
   static const uint64_t gatherIdxTable15u[8] = {0u, 8u, 15u, 23u, 30u, 38u, 45u, 53u};
 
   // ------------------------------------ 17u -----------------------------------------
   static const uint32_t permutexIdxTable17u_0[16] = {0u, 1u, 1u, 2u, 2u, 3u, 3u, 4u,
-                                               4u, 5u, 5u, 6u, 6u, 7u, 7u, 8u};
+                                                     4u, 5u, 5u, 6u, 6u, 7u, 7u, 8u};
   static const uint32_t permutexIdxTable17u_1[16] = {0u, 1u, 1u, 2u, 2u, 3u, 3u, 4u,
-                                               4u, 5u, 5u, 6u, 6u, 7u, 7u, 8u};
+                                                     4u, 5u, 5u, 6u, 6u, 7u, 7u, 8u};
   static const uint64_t shiftTable17u_0[8] = {0u, 2u, 4u, 6u, 8u, 10u, 12u, 14u};
   static const uint64_t shiftTable17u_1[8] = {15u, 13u, 11u, 9u, 7u, 5u, 3u, 1u};
 
@@ -289,14 +289,14 @@ namespace orc {
       3u, 2u, 7u, 6u, 5u, 4u, 9u, 8u, 7u, 6u, 3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 7u, 6u, 5u, 4u,
       9u, 8u, 7u, 6u, 3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 7u, 6u, 5u, 4u, 9u, 8u, 7u, 6u};
   static const uint32_t shiftTable17u_2[16] = {15u, 14u, 13u, 12u, 11u, 10u, 9u, 8u,
-                                         15u, 14u, 13u, 12u, 11u, 10u, 9u, 8u};
+                                               15u, 14u, 13u, 12u, 11u, 10u, 9u, 8u};
   static const uint64_t gatherIdxTable17u[8] = {0u, 8u, 8u, 16u, 17u, 25u, 25u, 33u};
 
   // ------------------------------------ 18u -----------------------------------------
   static const uint32_t permutexIdxTable18u_0[16] = {0u, 1u, 1u, 2u, 2u, 3u, 3u, 4u,
-                                               4u, 5u, 5u, 6u, 6u, 7u, 7u, 8u};
+                                                     4u, 5u, 5u, 6u, 6u, 7u, 7u, 8u};
   static const uint32_t permutexIdxTable18u_1[16] = {0u, 1u, 1u, 2u, 2u, 3u, 3u, 4u,
-                                               5u, 6u, 6u, 7u, 7u, 8u, 8u, 9u};
+                                                     5u, 6u, 6u, 7u, 7u, 8u, 8u, 9u};
   static const uint64_t shiftTable18u_0[8] = {0u, 4u, 8u, 12u, 16u, 20u, 24u, 28u};
   static const uint64_t shiftTable18u_1[8] = {14u, 10u, 6u, 2u, 30u, 26u, 22u, 18u};
 
@@ -305,14 +305,14 @@ namespace orc {
       3u, 2u, 7u, 6u, 5u, 4u, 9u, 8u, 7u, 6u, 3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 7u, 6u, 5u, 4u,
       9u, 8u, 7u, 6u, 3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 7u, 6u, 5u, 4u, 9u, 8u, 7u, 6u};
   static const uint32_t shiftTable18u_2[16] = {14u, 12u, 10u, 8u, 14u, 12u, 10u, 8u,
-                                         14u, 12u, 10u, 8u, 14u, 12u, 10u, 8u};
+                                               14u, 12u, 10u, 8u, 14u, 12u, 10u, 8u};
   static const uint64_t gatherIdxTable18u[8] = {0u, 8u, 9u, 17u, 18u, 26u, 27u, 35u};
 
   // ------------------------------------ 19u -----------------------------------------
   static const uint32_t permutexIdxTable19u_0[16] = {0u, 1u, 1u, 2u, 2u, 3u, 3u, 4u,
-                                               4u, 5u, 5u, 6u, 7u, 8u, 8u, 9u};
+                                                     4u, 5u, 5u, 6u, 7u, 8u, 8u, 9u};
   static const uint32_t permutexIdxTable19u_1[16] = {0u, 1u, 1u, 2u, 2u, 3u, 4u, 5u,
-                                               5u, 6u, 6u, 7u, 7u, 8u, 8u, 9u};
+                                                     5u, 6u, 6u, 7u, 7u, 8u, 8u, 9u};
   static const uint64_t shiftTable19u_0[8] = {0u, 6u, 12u, 18u, 24u, 30u, 4u, 10u};
   static const uint64_t shiftTable19u_1[8] = {13u, 7u, 1u, 27u, 21u, 15u, 9u, 3u};
 
@@ -321,7 +321,7 @@ namespace orc {
       3u,  2u, 8u, 7u, 6u, 5u, 10u, 9u, 8u, 7u, 3u, 2u, 1u,  0u, 5u, 4u, 3u,  2u, 7u, 6u, 5u, 4u,
       10u, 9u, 8u, 7u, 3u, 2u, 1u,  0u, 5u, 4u, 3u, 2u, 8u,  7u, 6u, 5u, 10u, 9u, 8u, 7u};
   static const uint32_t shiftTable19u_2[16] = {13u, 10u, 7u, 12u, 9u, 6u, 11u, 8u,
-                                         13u, 10u, 7u, 12u, 9u, 6u, 11u, 8u};
+                                               13u, 10u, 7u, 12u, 9u, 6u, 11u, 8u};
   static const uint64_t gatherIdxTable19u[8] = {0u, 8u, 9u, 17u, 19u, 27u, 28u, 36u};
 
   // ------------------------------------ 20u -----------------------------------------
@@ -330,16 +330,16 @@ namespace orc {
       3u,  2u, 8u, 7u, 6u, 5u, 10u, 9u, 8u, 7u, 3u, 2u, 1u,  0u, 5u, 4u, 3u,  2u, 8u, 7u, 6u, 5u,
       10u, 9u, 8u, 7u, 3u, 2u, 1u,  0u, 5u, 4u, 3u, 2u, 8u,  7u, 6u, 5u, 10u, 9u, 8u, 7u};
   static const uint32_t shiftTable20u[16] = {12u, 8u, 12u, 8u, 12u, 8u, 12u, 8u,
-                                       12u, 8u, 12u, 8u, 12u, 8u, 12u, 8u};
-  static const uint16_t permutexIdxTable20u[32] = {0u,  1u,  2u,  3u,  4u,  0x0, 0x0, 0x0, 5u,  6u,  7u,
-                                             8u,  9u,  0x0, 0x0, 0x0, 10u, 11u, 12u, 13u, 14u, 0x0,
-                                             0x0, 0x0, 15u, 16u, 17u, 18u, 19u, 0x0, 0x0, 0x0};
+                                             12u, 8u, 12u, 8u, 12u, 8u, 12u, 8u};
+  static const uint16_t permutexIdxTable20u[32] = {
+      0u,  1u,  2u,  3u,  4u,  0x0, 0x0, 0x0, 5u,  6u,  7u,  8u,  9u,  0x0, 0x0, 0x0,
+      10u, 11u, 12u, 13u, 14u, 0x0, 0x0, 0x0, 15u, 16u, 17u, 18u, 19u, 0x0, 0x0, 0x0};
 
   // ------------------------------------ 21u -----------------------------------------
   static const uint32_t permutexIdxTable21u_0[16] = {0u, 1u, 1u, 2u, 2u, 3u, 3u, 4u,
-                                               5u, 6u, 6u, 7u, 7u, 8u, 9u, 10u};
+                                                     5u, 6u, 6u, 7u, 7u, 8u, 9u, 10u};
   static const uint32_t permutexIdxTable21u_1[16] = {0u, 1u, 1u, 2u, 3u, 4u, 4u, 5u,
-                                               5u, 6u, 7u, 8u, 8u, 9u, 9u, 10u};
+                                                     5u, 6u, 7u, 8u, 8u, 9u, 9u, 10u};
   static const uint64_t shiftTable21u_0[8] = {0u, 10u, 20u, 30u, 8u, 18u, 28u, 6u};
   static const uint64_t shiftTable21u_1[8] = {11u, 1u, 23u, 13u, 3u, 25u, 15u, 5u};
 
@@ -348,14 +348,14 @@ namespace orc {
       4u,  3u, 8u, 7u, 6u, 5u, 11u, 10u, 9u, 8u, 3u, 2u, 1u,  0u, 5u, 4u, 3u,  2u,  8u, 7u, 6u, 5u,
       10u, 9u, 8u, 7u, 3u, 2u, 1u,  0u,  6u, 5u, 4u, 3u, 8u,  7u, 6u, 5u, 11u, 10u, 9u, 8u};
   static const uint32_t shiftTable21u_2[16] = {11u, 6u, 9u, 4u, 7u, 10u, 5u, 8u,
-                                         11u, 6u, 9u, 4u, 7u, 10u, 5u, 8u};
+                                               11u, 6u, 9u, 4u, 7u, 10u, 5u, 8u};
   static const uint64_t gatherIdxTable21u[8] = {0u, 8u, 10u, 18u, 21u, 29u, 31u, 39u};
 
   // ------------------------------------ 22u -----------------------------------------
   static const uint32_t permutexIdxTable22u_0[16] = {0u, 1u, 1u, 2u, 2u, 3u, 4u, 5u,
-                                               5u, 6u, 6u, 7u, 8u, 9u, 9u, 10u};
+                                                     5u, 6u, 6u, 7u, 8u, 9u, 9u, 10u};
   static const uint32_t permutexIdxTable22u_1[16] = {0u, 1u, 2u, 3u, 3u, 4u, 4u,  5u,
-                                               6u, 7u, 7u, 8u, 8u, 9u, 10u, 11u};
+                                                     6u, 7u, 7u, 8u, 8u, 9u, 10u, 11u};
   static const uint64_t shiftTable22u_0[8] = {0u, 12u, 24u, 4u, 16u, 28u, 8u, 20u};
   static const uint64_t shiftTable22u_1[8] = {10u, 30u, 18u, 6u, 26u, 14u, 2u, 22u};
 
@@ -365,14 +365,14 @@ namespace orc {
       3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 8u, 7u, 6u, 5u, 11u, 10u, 9u, 8u,
       3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 8u, 7u, 6u, 5u, 11u, 10u, 9u, 8u};
   static const uint32_t shiftTable22u_2[16] = {10u, 4u, 6u, 8u, 10u, 4u, 6u, 8u,
-                                         10u, 4u, 6u, 8u, 10u, 4u, 6u, 8u};
+                                               10u, 4u, 6u, 8u, 10u, 4u, 6u, 8u};
   static const uint64_t gatherIdxTable22u[8] = {0u, 8u, 11u, 19u, 22u, 30u, 33u, 41u};
 
   // ------------------------------------ 23u -----------------------------------------
   static const uint32_t permutexIdxTable23u_0[16] = {0u, 1u, 1u, 2u, 2u, 3u, 4u,  5u,
-                                               5u, 6u, 7u, 8u, 8u, 9u, 10u, 11u};
+                                                     5u, 6u, 7u, 8u, 8u, 9u, 10u, 11u};
   static const uint32_t permutexIdxTable23u_1[16] = {0u, 1u, 2u, 3u, 3u, 4u,  5u,  6u,
-                                               6u, 7u, 7u, 8u, 9u, 10u, 10u, 11u};
+                                                     6u, 7u, 7u, 8u, 9u, 10u, 10u, 11u};
   static const uint64_t shiftTable23u_0[8] = {0u, 14u, 28u, 10u, 24u, 6u, 20u, 2u};
   static const uint64_t shiftTable23u_1[8] = {9u, 27u, 13u, 31u, 17u, 3u, 21u, 7u};
 
@@ -382,7 +382,7 @@ namespace orc {
       3u, 2u, 1u, 0u, 5u, 4u, 3u, 2u, 8u, 7u, 6u, 5u, 11u, 10u, 9u,  8u,
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 9u, 8u, 7u, 6u, 12u, 11u, 10u, 9u};
   static const uint32_t shiftTable23u_2[16] = {9u, 2u, 3u, 4u, 5u, 6u, 7u, 8u,
-                                         9u, 2u, 3u, 4u, 5u, 6u, 7u, 8u};
+                                               9u, 2u, 3u, 4u, 5u, 6u, 7u, 8u};
   static const uint64_t gatherIdxTable23u[8] = {0u, 8u, 11u, 19u, 23u, 31u, 34u, 42u};
 
   // ------------------------------------ 24u -----------------------------------------
@@ -392,13 +392,13 @@ namespace orc {
       2u, 1u, 0u, 0xFF, 5u, 4u, 3u, 0xFF, 8u, 7u, 6u, 0xFF, 11u, 10u, 9u, 0xFF,
       2u, 1u, 0u, 0xFF, 5u, 4u, 3u, 0xFF, 8u, 7u, 6u, 0xFF, 11u, 10u, 9u, 0xFF};
   static const uint32_t permutexIdxTable24u[16] = {0u, 1u, 2u, 0x0, 3u, 4u,  5u,  0x0,
-                                             6u, 7u, 8u, 0x0, 9u, 10u, 11u, 0x0};
+                                                   6u, 7u, 8u, 0x0, 9u, 10u, 11u, 0x0};
 
   // ------------------------------------ 26u -----------------------------------------
   static const uint32_t permutexIdxTable26u_0[16] = {0u, 1u, 1u, 2u, 3u, 4u,  4u,  5u,
-                                               6u, 7u, 8u, 9u, 9u, 10u, 11u, 12u};
+                                                     6u, 7u, 8u, 9u, 9u, 10u, 11u, 12u};
   static const uint32_t permutexIdxTable26u_1[16] = {0u, 1u, 2u, 3u, 4u,  5u,  5u,  6u,
-                                               7u, 8u, 8u, 9u, 10u, 11u, 12u, 13u};
+                                                     7u, 8u, 8u, 9u, 10u, 11u, 12u, 13u};
   static const uint64_t shiftTable26u_0[8] = {0u, 20u, 8u, 28u, 16u, 4u, 24u, 12u};
   static const uint64_t shiftTable26u_1[8] = {6u, 18u, 30u, 10u, 22u, 2u, 14u, 26u};
 
@@ -408,7 +408,7 @@ namespace orc {
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 9u, 8u, 7u, 6u, 12u, 11u, 10u, 9u,
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 9u, 8u, 7u, 6u, 12u, 11u, 10u, 9u};
   static const uint32_t shiftTable26u_2[16] = {6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u,
-                                         6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
+                                               6u, 4u, 2u, 0u, 6u, 4u, 2u, 0u};
   static const uint64_t gatherIdxTable26u[8] = {0u, 8u, 13u, 21u, 26u, 34u, 39u, 47u};
 
   // ------------------------------------ 28u -----------------------------------------
@@ -418,16 +418,16 @@ namespace orc {
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 10u, 9u, 8u, 7u, 13u, 12u, 11u, 10u,
       3u, 2u, 1u, 0u, 6u, 5u, 4u, 3u, 10u, 9u, 8u, 7u, 13u, 12u, 11u, 10u};
   static const uint32_t shiftTable28u[16] = {4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u,
-                                       4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u};
-  static const uint16_t permutexIdxTable28u[32] = {0u,  1u,  2u,  3u,  4u,  5u,  6u,  0x0, 7u,  8u,  9u,
-                                             10u, 11u, 12u, 13u, 0x0, 14u, 15u, 16u, 17u, 18u, 19u,
-                                             20u, 0x0, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 0x0};
+                                             4u, 0u, 4u, 0u, 4u, 0u, 4u, 0u};
+  static const uint16_t permutexIdxTable28u[32] = {
+      0u,  1u,  2u,  3u,  4u,  5u,  6u,  0x0, 7u,  8u,  9u,  10u, 11u, 12u, 13u, 0x0,
+      14u, 15u, 16u, 17u, 18u, 19u, 20u, 0x0, 21u, 22u, 23u, 24u, 25u, 26u, 27u, 0x0};
 
   // ------------------------------------ 30u -----------------------------------------
   static const uint32_t permutexIdxTable30u_0[16] = {0u, 1u, 1u, 2u,  3u,  4u,  5u,  6u,
-                                               7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u};
+                                                     7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u};
   static const uint32_t permutexIdxTable30u_1[16] = {0u, 1u, 2u,  3u,  4u,  5u,  6u,  7u,
-                                               8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
+                                                     8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
   static const uint64_t shiftTable30u_0[8] = {0u, 28u, 24u, 20u, 16u, 12u, 8u, 4u};
   static const uint64_t shiftTable30u_1[8] = {2u, 6u, 10u, 14u, 18u, 22u, 26u, 30u};
 

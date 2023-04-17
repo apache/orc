@@ -70,8 +70,8 @@ namespace orc {
       if (align != 0) {
         bufMoveByteLen -= moveByteLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH);
         plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+        srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
+        bufRestByteLen = decoder->bufLength();
         dstPtr += align;
         numElements -= align;
       }
@@ -85,25 +85,23 @@ namespace orc {
                                                 bool& resetBuf, const uint8_t*& srcPtr,
                                                 int64_t*& dstPtr) {
     if (numElements > 0) {
+      uint64_t numBits = numElements * bitWidth;
       if (startBit != 0) {
-        bufMoveByteLen -= moveByteLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH);
-      } else {
-        bufMoveByteLen -= moveByteLen(numElements * bitWidth);
+        numBits += startBit - ORC_VECTOR_BYTE_WIDTH;
       }
+      bufMoveByteLen -= moveByteLen(numBits);
       plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
       dstPtr += numElements;
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+      bufRestByteLen = decoder->bufLength();
     }
 
     if (bufMoveByteLen <= bufRestByteLen) {
-      decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                resetBuf, backupByteLen);
+      decoder->resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
       return;
     }
 
-    decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                              resetBuf, backupByteLen);
+    decoder->resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
     if (backupByteLen != 0) {
       plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
       dstPtr++;
@@ -111,18 +109,18 @@ namespace orc {
       remainingNumElements--;
     }
 
-    bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    bufRestByteLen = decoder->bufLength();
     bufMoveByteLen = 0;
-    srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
   }
 
   void UnpackAvx512::vectorUnpack1(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 1;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -146,9 +144,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, srcmm);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -163,11 +160,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack2(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 2;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -213,9 +210,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, srcmm0);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -230,11 +226,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack3(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 3;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -280,9 +276,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -297,11 +292,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack4(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 4;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -335,9 +330,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, srcmm0);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -352,11 +346,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack5(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 5;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -402,9 +396,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -419,11 +412,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack6(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 6;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -469,9 +462,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -486,11 +478,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack7(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 7;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -536,9 +528,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 8 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 8 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(8 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 8 * bitWidth;
           numElements -= VECTOR_UNPACK_8BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_8BIT_MAX_NUM, dstPtr);
@@ -553,11 +544,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack9(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 9;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -602,9 +593,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -653,9 +643,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -670,11 +659,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack10(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 10;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -708,9 +697,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -725,11 +713,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack11(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 11;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -783,9 +771,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -834,9 +821,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -851,11 +837,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack12(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 12;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -889,9 +875,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -906,11 +891,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack13(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 13;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -964,9 +949,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -1015,9 +999,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -1032,11 +1015,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack14(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 14;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1082,9 +1065,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -1099,11 +1081,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack15(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 15;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1157,9 +1139,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -1208,9 +1189,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, zmm[0]);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -1225,10 +1205,10 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack16(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 16;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = len;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     int64_t* dstPtr = data + offset;
     bool resetBuf = false;
     uint64_t tailBitLen = 0;
@@ -1261,9 +1241,8 @@ namespace orc {
           _mm512_storeu_si512(simdPtr, srcmm);
 
           srcPtr += 4 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 4 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(4 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 4 * bitWidth;
           numElements -= VECTOR_UNPACK_16BIT_MAX_NUM;
           std::copy(simdPtr, simdPtr + VECTOR_UNPACK_16BIT_MAX_NUM, dstPtr);
@@ -1274,43 +1253,37 @@ namespace orc {
       if (numElements > 0) {
         bufMoveByteLen -= moveByteLen(numElements * bitWidth);
         unpackDefault.unrolledUnpack16(dstPtr, 0, numElements);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
         dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+        bufRestByteLen = decoder->bufLength();
       }
 
       if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
+        decoder->resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
       }
 
+      decoder->resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
       if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-
         unpackDefault.unrolledUnpack16(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;
         len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
       }
 
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+      bufRestByteLen = decoder->bufLength();
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     }
   }
 
   void UnpackAvx512::vectorUnpack17(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 17;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1354,9 +1327,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1405,9 +1377,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1422,11 +1393,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack18(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 18;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1470,9 +1441,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1521,9 +1491,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1538,11 +1507,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack19(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 19;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1586,9 +1555,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1637,9 +1605,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1654,11 +1621,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack20(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 20;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1691,9 +1658,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1708,11 +1674,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack21(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 21;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1756,9 +1722,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1807,9 +1772,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1824,11 +1788,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack22(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 22;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -1872,9 +1836,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1923,9 +1886,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -1940,11 +1902,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack23(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 23;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
 
     uint64_t startBit = 0;
@@ -1989,9 +1951,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2040,9 +2001,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2057,11 +2017,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack24(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 24;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t tailBitLen = 0;
     uint32_t backupByteLen = 0;
@@ -2101,9 +2061,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2114,43 +2073,37 @@ namespace orc {
       if (numElements > 0) {
         bufMoveByteLen -= moveByteLen(numElements * bitWidth);
         unpackDefault.unrolledUnpack24(dstPtr, 0, numElements);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
         dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+        bufRestByteLen = decoder->bufLength();
       }
 
       if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
+        decoder->resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
       }
 
+      decoder->resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
       if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        ;
         unpackDefault.unrolledUnpack24(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;
         len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
       }
 
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+      bufRestByteLen = decoder->bufLength();
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     }
   }
 
   void UnpackAvx512::vectorUnpack26(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 26;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -2194,9 +2147,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2245,9 +2197,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2262,11 +2213,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack28(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 28;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -2299,9 +2250,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2316,11 +2266,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack30(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 30;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t startBit = 0;
     uint64_t tailBitLen = 0;
@@ -2373,9 +2323,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2423,9 +2372,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, zmm[0]);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2440,11 +2388,11 @@ namespace orc {
 
   void UnpackAvx512::vectorUnpack32(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 32;
-    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
-    uint64_t bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+    uint64_t bufRestByteLen = decoder->bufLength();
     bool resetBuf = false;
     uint64_t tailBitLen = 0;
     uint32_t backupByteLen = 0;
@@ -2475,9 +2423,8 @@ namespace orc {
           _mm512_storeu_si512(vectorBuf, srcmm);
 
           srcPtr += 2 * bitWidth;
-          decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, 2 * bitWidth, false,
-                                    0);
-          bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+          decoder->resetBufferStart(2 * bitWidth, false, 0);
+          bufRestByteLen = decoder->bufLength();
           bufMoveByteLen -= 2 * bitWidth;
           numElements -= VECTOR_UNPACK_32BIT_MAX_NUM;
           std::copy(vectorBuf, vectorBuf + VECTOR_UNPACK_32BIT_MAX_NUM, dstPtr);
@@ -2488,33 +2435,27 @@ namespace orc {
       if (numElements > 0) {
         bufMoveByteLen -= moveByteLen(numElements * bitWidth);
         unpackDefault.unrolledUnpack32(dstPtr, 0, numElements);
-        srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
         dstPtr += numElements;
-        bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+        bufRestByteLen = decoder->bufLength();
       }
 
       if (bufMoveByteLen <= bufRestByteLen) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufMoveByteLen,
-                                  resetBuf, backupByteLen);
+        decoder->resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
       }
 
+      decoder->resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
       if (backupByteLen != 0) {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
-        ;
         unpackDefault.unrolledUnpack32(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;
         len--;
-      } else {
-        decoder->resetBufferStart(&decoder->bufferStart, &decoder->bufferEnd, bufRestByteLen,
-                                  resetBuf, backupByteLen);
       }
 
-      bufRestByteLen = decoder->bufferEnd - decoder->bufferStart;
+      bufRestByteLen = decoder->bufLength();
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t*>(decoder->bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(decoder->getBufStart());
     }
   }
 
@@ -2523,22 +2464,22 @@ namespace orc {
     for (uint64_t i = offset; i < (offset + len); i++) {
       uint64_t result = 0;
       uint64_t bitsLeftToRead = fbs;
-      while (bitsLeftToRead > decoder->bitsLeft) {
-        result <<= decoder->bitsLeft;
-        result |= decoder->curByte & ((1 << decoder->bitsLeft) - 1);
-        bitsLeftToRead -= decoder->bitsLeft;
-        decoder->curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
-        decoder->bitsLeft = 8;
+      while (bitsLeftToRead > decoder->getBitsLeft()) {
+        result <<= decoder->getBitsLeft();
+        result |= decoder->getCurByte() & ((1 << decoder->getBitsLeft()) - 1);
+        bitsLeftToRead -= decoder->getBitsLeft();
+	decoder->setCurByte(decoder->readByte());
+	decoder->setBitsLeft(8);
       }
 
       // handle the left over bits
       if (bitsLeftToRead > 0) {
         result <<= bitsLeftToRead;
-        decoder->bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
-        result |= (decoder->curByte >> decoder->bitsLeft) & ((1 << bitsLeftToRead) - 1);
+	decoder->setBitsLeft(decoder->getBitsLeft() - static_cast<uint32_t>(bitsLeftToRead)); 
+        result |= (decoder->getCurByte() >> decoder->getBitsLeft()) & ((1 << bitsLeftToRead) - 1);
       }
       data[i] = static_cast<int64_t>(result);
-      startBit = decoder->bitsLeft == 0 ? 0 : (8 - decoder->bitsLeft);
+      startBit = decoder->getBitsLeft() == 0 ? 0 : (8 - decoder->getBitsLeft());
     }
   }
 
