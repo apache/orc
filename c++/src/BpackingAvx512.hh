@@ -21,7 +21,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <map>
 
 #include "BpackingDefault.hh"
 
