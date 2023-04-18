@@ -67,7 +67,8 @@ namespace orc {
   }
 
   std::unique_ptr<Reader> createReaderWithTailLocation(MemoryPool* memoryPool,
-                                       std::unique_ptr<InputStream> stream, uint64_t tailLocation) {
+                                                       std::unique_ptr<InputStream> stream,
+                                                       uint64_t tailLocation) {
     ReaderOptions options;
     options.setMemoryPool(*memoryPool);
     options.setTailLocation(tailLocation);
@@ -2034,14 +2035,16 @@ namespace orc {
     writer->close();
 
     for (uint64_t o = 0; o < 10; ++o) {
-      auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
-      std::unique_ptr<Reader> reader = createReaderWithTailLocation(pool, std::move(inStream), offsets[o]);
+      auto inStream =
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+      std::unique_ptr<Reader> reader =
+          createReaderWithTailLocation(pool, std::move(inStream), offsets[o]);
       std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-      EXPECT_EQ(o+1, reader->getNumberOfStripes());
-      EXPECT_EQ(65535*(o+1), reader->getNumberOfRows());
+      EXPECT_EQ(o + 1, reader->getNumberOfStripes());
+      EXPECT_EQ(65535 * (o + 1), reader->getNumberOfRows());
 
       batch = rowReader->createRowBatch(65535);
-      for (uint64_t j = 0; j < o+1; ++j) {
+      for (uint64_t j = 0; j < o + 1; ++j) {
         EXPECT_TRUE(rowReader->next(*batch));
         EXPECT_EQ(65535, batch->numElements);
 
@@ -2090,10 +2093,11 @@ namespace orc {
     // writer->close();
 
     auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
-    std::unique_ptr<Reader> reader = createReaderWithTailLocation(pool, std::move(inStream), offsets.back());
+    std::unique_ptr<Reader> reader =
+        createReaderWithTailLocation(pool, std::move(inStream), offsets.back());
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(8, reader->getNumberOfStripes());
-    EXPECT_EQ(8*65535, reader->getNumberOfRows());
+    EXPECT_EQ(8 * 65535, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(65535);
     for (uint64_t j = 0; j < 8; ++j) {
