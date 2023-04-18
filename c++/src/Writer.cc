@@ -307,8 +307,8 @@ namespace orc {
     static const char* magicId;
     static const WriterId writerId;
     bool useTightNumericVector;
-    long stripesAtLastFlush;
-    long lastFlushOffset;
+    int32_t stripesAtLastFlush;
+    int64_t lastFlushOffset;
 
    public:
     WriterImpl(const Type& type, OutputStream* stream, const WriterOptions& options);
@@ -321,7 +321,7 @@ namespace orc {
 
     void addUserMetadata(const std::string& name, const std::string& value) override;
 
-    long writeIntermediateFooter() override;
+    int64_t writeIntermediateFooter() override;
 
    private:
     void init();
@@ -344,7 +344,8 @@ namespace orc {
     columnWriter = buildWriter(type, *streamsFactory, options);
     stripeRows = totalRows = indexRows = 0;
     currentOffset = 0;
-    stripesAtLastFlush = lastFlushOffset = 0;
+    stripesAtLastFlush = 0;
+    lastFlushOffset = 0;
 
     useTightNumericVector = opts.getUseTightNumericVector();
 
