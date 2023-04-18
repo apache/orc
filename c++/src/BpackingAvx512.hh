@@ -72,6 +72,26 @@ namespace orc {
     void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
                           uint64_t& startBit);
 
+    /**
+     * In the processing of AVX512 unpacking, AVX512 instructions can only process the memory align data.
+     * It means that if data input is not memory align (@param startBit != 0), we need to process the
+     * unaligned data. After that, it could be use AVX512 instructions to process these memory align data.
+     *
+     * @tparam hasBitOffset If currently processed data has offset bits in one Byte, 8X-bit width data will
+     * not have bits offset in one Byte, so it will be false. For other bits data, it will be true.
+     * @param bitWidth The unpacking data bit width
+     * @param bitMaxSize The unpacking data needs the Max bit size (8X)
+     * @param startBit The start bit position in one Byte
+     * @param bufMoveByteLen In the current buffer, it will be processed/moved Bytes length in the unpacking
+     * @param bufRestByteLen In the current buffer, there will be some rest Bytes length after unpacking
+     * @param remainingNumElements After unpacking, the remaining elements number need to be processed
+     * @param tailBitLen After unpacking, the tail bits length
+     * @param backupByteLen The backup Byte length after unpacking
+     * @param numElements Currently, the number of elements need to be processed
+     * @param resetBuf When the current buffer has already been processed, it need to be reset the buffer
+     * @param srcPtr the pointer of source data
+     * @param dstPtr the pointer of destinative data
+     */
     template <bool hasBitOffset>
     inline void alignHeaderBoundary(const uint32_t bitWidth, const uint32_t bitMaxSize,
                                     uint64_t& startBit, uint64_t& bufMoveByteLen,
@@ -80,6 +100,23 @@ namespace orc {
                                     uint64_t& numElements, bool& resetBuf, const uint8_t*& srcPtr,
                                     int64_t*& dstPtr);
 
+    /**
+     * After AVX512 unpacking processed, there could be some scattered data not be process,
+     * it needs to be processed by the default way.
+     *
+     * @tparam hasBitOffset If currently processed data has offset bits in one Byte, 8X-bit width data will
+     * not have bits offset in one Byte, so it will be false. For other bits data, it will be true.
+     * @param bitWidth The unpacking data bit width
+     * @param startBit The start bit position in one Byte
+     * @param bufMoveByteLen In the current buffer, it will be processed/moved Bytes length in the unpacking
+     * @param bufRestByteLen In the current buffer, there will be some rest Bytes length after unpacking
+     * @param remainingNumElements After unpacking, the remaining elements number need to be processed
+     * @param backupByteLen The backup Byte length after unpacking
+     * @param numElements Currently, the number of elements need to be processed
+     * @param resetBuf When the current buffer has already been processed, it need to be reset the buffer
+     * @param srcPtr the pointer of source data
+     * @param dstPtr the pointer of destinative data
+     */
     template <bool hasBitOffset>
     inline void alignTailerBoundary(const uint32_t bitWidth, const uint32_t specialBit,
                                     uint64_t& startBit, uint64_t& bufMoveByteLen,
