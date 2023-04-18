@@ -49,7 +49,7 @@ namespace orc {
     // WriterOption
     return createCompressor(options.getCompression(), outStream, options.getCompressionStrategy(),
                             // BufferedOutputStream initial capacity
-                            1 * 1024 * 1024, options.getCompressionBlockSize(),
+                            options.getOutputBufferCapacity(), options.getCompressionBlockSize(),
                             *options.getMemoryPool(), options.getWriterMetrics());
   }
 
@@ -635,6 +635,7 @@ namespace orc {
     byteRleEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  template <typename BatchType>
   class BooleanColumnWriter : public ColumnWriter {
    public:
     BooleanColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -655,8 +656,10 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> rleEncoder;
   };
 
-  BooleanColumnWriter::BooleanColumnWriter(const Type& type, const StreamsFactory& factory,
-                                           const WriterOptions& options)
+  template <typename BatchType>
+  BooleanColumnWriter<BatchType>::BooleanColumnWriter(const Type& type,
+                                                      const StreamsFactory& factory,
+                                                      const WriterOptions& options)
       : ColumnWriter(type, factory, options) {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
@@ -667,11 +670,14 @@ namespace orc {
     }
   }
 
-  void BooleanColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
-                                const char* incomingMask) {
-    LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
+  template <typename BatchType>
+  void BooleanColumnWriter<BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                           uint64_t numValues, const char* incomingMask) {
+    BatchType* byteBatch = dynamic_cast<BatchType*>(&rowBatch);
     if (byteBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to LongVectorBatch");
+      std::stringstream ss;
+      ss << "Failed to cast to " << typeid(BatchType).name();
+      throw InvalidArgument(ss.str());
     }
     BooleanColumnStatisticsImpl* boolStats =
         dynamic_cast<BooleanColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -681,7 +687,7 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    int64_t* data = byteBatch->data.data() + offset;
+    auto* data = byteBatch->data.data() + offset;
     const char* notNull = byteBatch->hasNulls ? byteBatch->notNull.data() + offset : nullptr;
 
     char* byteData = reinterpret_cast<char*>(data);
@@ -706,7 +712,8 @@ namespace orc {
     }
   }
 
-  void BooleanColumnWriter::flush(std::vector<proto::Stream>& streams) {
+  template <typename BatchType>
+  void BooleanColumnWriter<BatchType>::flush(std::vector<proto::Stream>& streams) {
     ColumnWriter::flush(streams);
 
     proto::Stream stream;
@@ -716,13 +723,16 @@ namespace orc {
     streams.push_back(stream);
   }
 
-  uint64_t BooleanColumnWriter::getEstimatedSize() const {
+  template <typename BatchType>
+  uint64_t BooleanColumnWriter<BatchType>::getEstimatedSize() const {
     uint64_t size = ColumnWriter::getEstimatedSize();
     size += rleEncoder->getBufferSize();
     return size;
   }
 
-  void BooleanColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
+  template <typename BatchType>
+  void BooleanColumnWriter<BatchType>::getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -732,7 +742,8 @@ namespace orc {
     encodings.push_back(encoding);
   }
 
-  void BooleanColumnWriter::recordPosition() const {
+  template <typename BatchType>
+  void BooleanColumnWriter<BatchType>::recordPosition() const {
     ColumnWriter::recordPosition();
     rleEncoder->recordPosition(rowIndexPosition.get());
   }
@@ -2824,8 +2835,13 @@ namespace orc {
           return std::make_unique<ByteColumnWriter<ByteVectorBatch>>(type, factory, options);
         }
         return std::make_unique<ByteColumnWriter<LongVectorBatch>>(type, factory, options);
-      case BOOLEAN:
-        return std::make_unique<BooleanColumnWriter>(type, factory, options);
+      case BOOLEAN: {
+        if (options.getUseTightNumericVector()) {
+          return std::make_unique<BooleanColumnWriter<ByteVectorBatch>>(type, factory, options);
+        } else {
+          return std::make_unique<BooleanColumnWriter<LongVectorBatch>>(type, factory, options);
+        }
+      }
       case DOUBLE:
         return std::make_unique<FloatingColumnWriter<double, DoubleVectorBatch>>(type, factory,
                                                                                  options, false);

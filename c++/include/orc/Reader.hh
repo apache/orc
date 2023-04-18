@@ -336,6 +336,26 @@ namespace orc {
      * @return if not set, the default is false
      */
     bool getUseTightNumericVector() const;
+
+    /**
+     * Set read type for schema evolution
+     */
+    RowReaderOptions& setReadType(std::shared_ptr<Type> type);
+
+    /**
+     * Get read type for schema evolution
+     */
+    std::shared_ptr<Type>& getReadType() const;
+
+    /**
+     * Set whether reader throws or returns null when value overflows for schema evolution.
+     */
+    RowReaderOptions& throwOnSchemaEvolutionOverflow(bool shouldThrow);
+
+    /**
+     * Whether reader throws or returns null when value overflows for schema evolution.
+     */
+    bool getThrowOnSchemaEvolutionOverflow() const;
   };
 
   class RowReader;

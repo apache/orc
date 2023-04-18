@@ -107,9 +107,9 @@ namespace orc {
 
   class TimezoneError : public std::runtime_error {
    public:
-    TimezoneError(const std::string& what);
-    TimezoneError(const TimezoneError&);
-    virtual ~TimezoneError() noexcept;
+    explicit TimezoneError(const std::string& what);
+    explicit TimezoneError(const TimezoneError&);
+    ~TimezoneError() noexcept override;
   };
 
   /**

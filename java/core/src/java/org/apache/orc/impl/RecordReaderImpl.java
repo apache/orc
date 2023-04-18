@@ -1176,7 +1176,8 @@ public class RecordReaderImpl implements RecordReader {
             leafValues[pred] = exceptionAnswer[pred];
           } else {
             if (indexes[columnIx] == null) {
-              throw new AssertionError("Index is not populated for " + columnIx);
+              LOG.warn("Index is not populated for " + columnIx);
+              return READ_ALL_RGS;
             }
             OrcProto.RowIndexEntry entry = indexes[columnIx].getEntry(rowGroup);
             if (entry == null) {

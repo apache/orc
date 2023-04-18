@@ -34,7 +34,7 @@ namespace orc {
 
   class TestDecompression : public ::testing::Test {
    public:
-    ~TestDecompression();
+    ~TestDecompression() override;
 
    protected:
     // Per-test-case set-up.

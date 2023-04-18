@@ -21,7 +21,9 @@
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
 #include "ColumnReader.hh"
+#include "ConvertColumnReader.hh"
 #include "RLE.hh"
+#include "SchemaEvolution.hh"
 #include "orc/Exceptions.hh"
 
 #include <math.h>
@@ -133,6 +135,7 @@ namespace orc {
     }
   }
 
+  template <typename BatchType>
   class BooleanColumnReader : public ColumnReader {
    private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
@@ -148,7 +151,8 @@ namespace orc {
     void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
-  BooleanColumnReader::BooleanColumnReader(const Type& type, StripeStreams& stripe)
+  template <typename BatchType>
+  BooleanColumnReader<BatchType>::BooleanColumnReader(const Type& type, StripeStreams& stripe)
       : ColumnReader(type, stripe) {
     std::unique_ptr<SeekableInputStream> stream =
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
@@ -156,27 +160,33 @@ namespace orc {
     rle = createBooleanRleDecoder(std::move(stream), metrics);
   }
 
-  BooleanColumnReader::~BooleanColumnReader() {
+  template <typename BatchType>
+  BooleanColumnReader<BatchType>::~BooleanColumnReader() {
     // PASS
   }
 
-  uint64_t BooleanColumnReader::skip(uint64_t numValues) {
+  template <typename BatchType>
+  uint64_t BooleanColumnReader<BatchType>::skip(uint64_t numValues) {
     numValues = ColumnReader::skip(numValues);
     rle->skip(numValues);
     return numValues;
   }
 
-  void BooleanColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
+  template <typename BatchType>
+  void BooleanColumnReader<BatchType>::next(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                                            char* notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
-    // Since the byte rle places the output in a char* instead of long*,
-    // we cheat here and use the long* and then expand it in a second pass.
-    int64_t* ptr = dynamic_cast<LongVectorBatch&>(rowBatch).data.data();
+    // Since the byte rle places the output in a char* and BatchType here may be
+    // LongVectorBatch with long*. We cheat here in that case and use the long*
+    // and then expand it in a second pass..
+    auto* ptr = dynamic_cast<BatchType&>(rowBatch).data.data();
     rle->next(reinterpret_cast<char*>(ptr), numValues,
               rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
     expandBytesToIntegers(ptr, numValues);
   }
 
-  void BooleanColumnReader::seekToRowGroup(
+  template <typename BatchType>
+  void BooleanColumnReader<BatchType>::seekToRowGroup(
       std::unordered_map<uint64_t, PositionProvider>& positions) {
     ColumnReader::seekToRowGroup(positions);
     rle->seek(positions.at(columnId));
@@ -820,7 +830,8 @@ namespace orc {
     std::vector<std::unique_ptr<ColumnReader>> children;
 
    public:
-    StructColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
+    StructColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false,
+                       bool throwOnSchemaEvolutionOverflow = false);
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -836,7 +847,8 @@ namespace orc {
   };
 
   StructColumnReader::StructColumnReader(const Type& type, StripeStreams& stripe,
-                                         bool useTightNumericVector)
+                                         bool useTightNumericVector,
+                                         bool throwOnSchemaEvolutionOverflow)
       : ColumnReader(type, stripe) {
     // count the number of selected sub-columns
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
@@ -845,7 +857,8 @@ namespace orc {
         for (unsigned int i = 0; i < type.getSubtypeCount(); ++i) {
           const Type& child = *type.getSubtype(i);
           if (selectedColumns[static_cast<uint64_t>(child.getColumnId())]) {
-            children.push_back(buildReader(child, stripe, useTightNumericVector));
+            children.push_back(
+                buildReader(child, stripe, useTightNumericVector, throwOnSchemaEvolutionOverflow));
           }
         }
         break;
@@ -905,7 +918,8 @@ namespace orc {
     std::unique_ptr<RleDecoder> rle;
 
    public:
-    ListColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
+    ListColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false,
+                     bool throwOnSchemaEvolutionOverflow = false);
     ~ListColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -922,7 +936,8 @@ namespace orc {
   };
 
   ListColumnReader::ListColumnReader(const Type& type, StripeStreams& stripe,
-                                     bool useTightNumericVector)
+                                     bool useTightNumericVector,
+                                     bool throwOnSchemaEvolutionOverflow)
       : ColumnReader(type, stripe) {
     // count the number of selected sub-columns
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
@@ -933,7 +948,7 @@ namespace orc {
     rle = createRleDecoder(std::move(stream), false, vers, memoryPool, metrics);
     const Type& childType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
-      child = buildReader(childType, stripe, useTightNumericVector);
+      child = buildReader(childType, stripe, useTightNumericVector, throwOnSchemaEvolutionOverflow);
     }
   }
 
@@ -1025,7 +1040,8 @@ namespace orc {
     std::unique_ptr<RleDecoder> rle;
 
    public:
-    MapColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
+    MapColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false,
+                    bool throwOnSchemaEvolutionOverflow = false);
     ~MapColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -1042,7 +1058,7 @@ namespace orc {
   };
 
   MapColumnReader::MapColumnReader(const Type& type, StripeStreams& stripe,
-                                   bool useTightNumericVector)
+                                   bool useTightNumericVector, bool throwOnSchemaEvolutionOverflow)
       : ColumnReader(type, stripe) {
     // Determine if the key and/or value columns are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
@@ -1053,11 +1069,13 @@ namespace orc {
     rle = createRleDecoder(std::move(stream), false, vers, memoryPool, metrics);
     const Type& keyType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(keyType.getColumnId())]) {
-      keyReader = buildReader(keyType, stripe, useTightNumericVector);
+      keyReader =
+          buildReader(keyType, stripe, useTightNumericVector, throwOnSchemaEvolutionOverflow);
     }
     const Type& elementType = *type.getSubtype(1);
     if (selectedColumns[static_cast<uint64_t>(elementType.getColumnId())]) {
-      elementReader = buildReader(elementType, stripe, useTightNumericVector);
+      elementReader =
+          buildReader(elementType, stripe, useTightNumericVector, throwOnSchemaEvolutionOverflow);
     }
   }
 
@@ -1167,7 +1185,8 @@ namespace orc {
     uint64_t numChildren;
 
    public:
-    UnionColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
+    UnionColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false,
+                      bool throwOnSchemaEvolutionOverflow = false);
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -1183,7 +1202,8 @@ namespace orc {
   };
 
   UnionColumnReader::UnionColumnReader(const Type& type, StripeStreams& stripe,
-                                       bool useTightNumericVector)
+                                       bool useTightNumericVector,
+                                       bool throwOnSchemaEvolutionOverflow)
       : ColumnReader(type, stripe) {
     numChildren = type.getSubtypeCount();
     childrenReader.resize(numChildren);
@@ -1198,7 +1218,8 @@ namespace orc {
     for (unsigned int i = 0; i < numChildren; ++i) {
       const Type& child = *type.getSubtype(i);
       if (selectedColumns[static_cast<size_t>(child.getColumnId())]) {
-        childrenReader[i] = buildReader(child, stripe, useTightNumericVector);
+        childrenReader[i] =
+            buildReader(child, stripe, useTightNumericVector, throwOnSchemaEvolutionOverflow);
       }
     }
   }
@@ -1691,7 +1712,15 @@ namespace orc {
    * Create a reader for the given stripe.
    */
   std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe,
-                                            bool useTightNumericVector) {
+                                            bool useTightNumericVector,
+                                            bool throwOnSchemaEvolutionOverflow,
+                                            bool convertToReadType) {
+    if (convertToReadType && stripe.getSchemaEvolution() &&
+        stripe.getSchemaEvolution()->needConvert(type)) {
+      return buildConvertReader(type, stripe, useTightNumericVector,
+                                throwOnSchemaEvolutionOverflow);
+    }
+
     switch (static_cast<int64_t>(type.getKind())) {
       case SHORT: {
         if (useTightNumericVector) {
@@ -1721,8 +1750,13 @@ namespace orc {
             throw NotImplementedYet("buildReader unhandled string encoding");
         }
 
-      case BOOLEAN:
-        return std::make_unique<BooleanColumnReader>(type, stripe);
+      case BOOLEAN: {
+        if (useTightNumericVector) {
+          return std::make_unique<BooleanColumnReader<ByteVectorBatch>>(type, stripe);
+        } else {
+          return std::make_unique<BooleanColumnReader<LongVectorBatch>>(type, stripe);
+        }
+      }
 
       case BYTE:
         if (useTightNumericVector) {
@@ -1731,16 +1765,20 @@ namespace orc {
         return std::make_unique<ByteColumnReader<LongVectorBatch>>(type, stripe);
 
       case LIST:
-        return std::make_unique<ListColumnReader>(type, stripe, useTightNumericVector);
+        return std::make_unique<ListColumnReader>(type, stripe, useTightNumericVector,
+                                                  throwOnSchemaEvolutionOverflow);
 
       case MAP:
-        return std::make_unique<MapColumnReader>(type, stripe, useTightNumericVector);
+        return std::make_unique<MapColumnReader>(type, stripe, useTightNumericVector,
+                                                 throwOnSchemaEvolutionOverflow);
 
       case UNION:
-        return std::make_unique<UnionColumnReader>(type, stripe, useTightNumericVector);
+        return std::make_unique<UnionColumnReader>(type, stripe, useTightNumericVector,
+                                                   throwOnSchemaEvolutionOverflow);
 
       case STRUCT:
-        return std::make_unique<StructColumnReader>(type, stripe, useTightNumericVector);
+        return std::make_unique<StructColumnReader>(type, stripe, useTightNumericVector,
+                                                    throwOnSchemaEvolutionOverflow);
 
       case FLOAT: {
         if (useTightNumericVector) {

@@ -67,4 +67,21 @@ namespace orc {
   InvalidArgument::~InvalidArgument() noexcept {
     // PASS
   }
+
+  SchemaEvolutionError::SchemaEvolutionError(const std::string& what_arg) : logic_error(what_arg) {
+    // PASS
+  }
+
+  SchemaEvolutionError::SchemaEvolutionError(const char* what_arg) : logic_error(what_arg) {
+    // PASS
+  }
+
+  SchemaEvolutionError::SchemaEvolutionError(const SchemaEvolutionError& error)
+      : logic_error(error) {
+    // PASS
+  }
+
+  SchemaEvolutionError::~SchemaEvolutionError() noexcept {
+    // PASS
+  }
 }  // namespace orc

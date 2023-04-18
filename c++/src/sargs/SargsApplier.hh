@@ -27,6 +27,8 @@
 
 #include "sargs/SearchArgument.hh"
 
+#include "SchemaEvolution.hh"
+
 #include <unordered_map>
 
 namespace orc {
@@ -34,7 +36,8 @@ namespace orc {
   class SargsApplier {
    public:
     SargsApplier(const Type& type, const SearchArgument* searchArgument, uint64_t rowIndexStride,
-                 WriterVersion writerVersion, ReaderMetrics* metrics);
+                 WriterVersion writerVersion, ReaderMetrics* metrics,
+                 const SchemaEvolution* schemaEvolution = nullptr);
 
     /**
      * Evaluate search argument on file statistics
@@ -124,6 +127,7 @@ namespace orc {
    private:
     const Type& mType;
     const SearchArgument* mSearchArgument;
+    const SchemaEvolution* mSchemaEvolution;
     uint64_t mRowIndexStride;
     WriterVersion mWriterVersion;
     // column ids for each predicate leaf in the search argument
