@@ -2027,7 +2027,7 @@ namespace orc {
 
       writer->add(*batch);
       // force writing a stripe
-      int64_t offset = writer->writeIntermediateFooter();
+      uint64_t offset = writer->writeIntermediateFooter();
       offsets.push_back(offset);
     }
 
@@ -2081,7 +2081,7 @@ namespace orc {
       writer->add(*batch);
       if (j < 8) {
         // force writing a stripe
-        int64_t offset = writer->writeIntermediateFooter();
+        uint64_t offset = writer->writeIntermediateFooter();
         offsets.push_back(offset);
       }
     }

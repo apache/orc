@@ -321,7 +321,7 @@ namespace orc {
 
     void addUserMetadata(const std::string& name, const std::string& value) override;
 
-    int64_t writeIntermediateFooter() override;
+    uint64_t writeIntermediateFooter() override;
 
    private:
     void init();
@@ -406,7 +406,7 @@ namespace orc {
     outStream->close();
   }
 
-  long WriterImpl::writeIntermediateFooter() {
+  uint64_t WriterImpl::writeIntermediateFooter() {
     if (stripeRows > 0) {
       writeStripe();
     }
