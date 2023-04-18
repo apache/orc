@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <map>
 
 #include "BpackingDefault.hh"
 
@@ -71,6 +72,7 @@ namespace orc {
     void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
                           uint64_t& startBit);
 
+    template <bool hasBitOffset>
     inline void alignHeaderBoundary(const uint32_t bitWidth, const uint32_t bitMaxSize,
                                     uint64_t& startBit, uint64_t& bufMoveByteLen,
                                     uint64_t& bufRestByteLen, uint64_t& remainingNumElements,
@@ -78,11 +80,12 @@ namespace orc {
                                     uint64_t& numElements, bool& resetBuf, const uint8_t*& srcPtr,
                                     int64_t*& dstPtr);
 
-    inline void alignTailerBoundary(const uint32_t bitWidth, uint64_t& startBit,
-                                    uint64_t& bufMoveByteLen, uint64_t& bufRestByteLen,
-                                    uint64_t& remainingNumElements, uint32_t& backupByteLen,
-                                    uint64_t& numElements, bool& resetBuf, const uint8_t*& srcPtr,
-                                    int64_t*& dstPtr);
+    template <bool hasBitOffset>
+    inline void alignTailerBoundary(const uint32_t bitWidth, const uint32_t specialBit,
+                                    uint64_t& startBit, uint64_t& bufMoveByteLen,
+                                    uint64_t& bufRestByteLen, uint64_t& remainingNumElements,
+                                    uint32_t& backupByteLen, uint64_t& numElements, bool& resetBuf,
+                                    const uint8_t*& srcPtr, int64_t*& dstPtr);
 
    private:
     RleDecoderV2* decoder;

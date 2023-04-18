@@ -168,6 +168,7 @@ set(SOURCE_FILES
   ColumnWriter.cc
   Common.cc
   Compression.cc
+  ConvertColumnReader.cc
   CpuInfoUtil.cc
   Exceptions.cc
   Int128.cc
