@@ -23,7 +23,7 @@ jobs:
           - centos7
           - debian10
           - debian11
-          - ubuntu18
+          - ubuntu20
           - fedora37
           - oraclelinux9
     steps:
