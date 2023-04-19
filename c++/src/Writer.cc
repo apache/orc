@@ -308,7 +308,7 @@ namespace orc {
     static const WriterId writerId;
     bool useTightNumericVector;
     int32_t stripesAtLastFlush;
-    int64_t lastFlushOffset;
+    uint64_t lastFlushOffset;
 
    public:
     WriterImpl(const Type& type, OutputStream* stream, const WriterOptions& options);
