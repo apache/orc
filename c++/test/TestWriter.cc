@@ -2018,7 +2018,7 @@ namespace orc {
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
 
-    std::vector<int64_t> offsets;
+    std::vector<uint64_t> offsets;
     for (uint64_t j = 0; j < 10; ++j) {
       for (uint64_t i = 0; i < 65535; ++i) {
         longBatch->data[i] = static_cast<int64_t>(i);
@@ -2073,7 +2073,7 @@ namespace orc {
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
 
-    std::vector<int64_t> offsets;
+    std::vector<uint64_t> offsets;
     for (uint64_t j = 0; j < 10; ++j) {
       for (uint64_t i = 0; i < 65535; ++i) {
         longBatch->data[i] = static_cast<int64_t>(i);
