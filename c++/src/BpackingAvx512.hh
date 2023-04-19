@@ -113,6 +113,8 @@ namespace orc {
      * data will not have bits offset in one Byte, so it will be false. For other bits data, it will
      * be true.
      * @param bitWidth The unpacking data bit width
+     * @param specialBit 8X bit width data is the specialBit, they have the different unpackDefault
+     * functions with others
      * @param startBit The start bit position in one Byte
      * @param bufMoveByteLen In the current buffer, it will be processed/moved Bytes length in the
      * unpacking
