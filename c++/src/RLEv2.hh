@@ -168,16 +168,16 @@ namespace orc {
 
     unsigned char readByte();
 
-    void setBufStart(char* start) {
-      bufferStart = start;
+    void setBufStart(const char* start) {
+      bufferStart = const_cast<char*>(start);
     }
 
     char* getBufStart() {
       return bufferStart;
     }
 
-    void setBufEnd(char* end) {
-      bufferEnd = end;
+    void setBufEnd(const char* end) {
+      bufferEnd = const_cast<char*>(end);
     }
 
     char* getBufEnd() {
@@ -188,11 +188,11 @@ namespace orc {
       return bufferEnd - bufferStart;
     }
 
-    void setBitsLeft(uint32_t bits) {
+    void setBitsLeft(const uint32_t bits) {
       bitsLeft = bits;
     }
 
-    void setCurByte(uint32_t byte) {
+    void setCurByte(const uint32_t byte) {
       curByte = byte;
     }
 
@@ -256,14 +256,13 @@ namespace orc {
     char* bufferEnd;
     uint64_t runLength;                 // Length of the current run
     uint64_t runRead;                   // Number of returned values of the current run
-    uint32_t bitsLeft;  		// Used by readLongs when bitSize < 8
-    uint32_t curByte;   		// Used by anything that uses readLongs
+    uint32_t bitsLeft;                  // Used by readLongs when bitSize < 8
+    uint32_t curByte;                   // Used by anything that uses readLongs
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
   };
 
   inline void RleDecoderV2::resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupByteLen) {
-    char* bufStart = getBufStart();
     uint64_t remainingLen = bufLength();
     int bufferLength = 0;
     const void* bufferPointer = nullptr;
@@ -279,10 +278,10 @@ namespace orc {
     }
 
     if (bufferPointer == nullptr) {
-      setBufStart(bufStart + len);
+      bufferStart += len;
     } else {
-      setBufStart(const_cast<char*>(static_cast<const char*>(bufferPointer)));
-      setBufEnd(const_cast<char*>(static_cast<const char*>(bufferPointer)) + bufferLength);
+      bufferStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
+      bufferEnd = bufferStart + bufferLength;
     }
   }
 }  // namespace orc
