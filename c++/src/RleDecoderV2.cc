@@ -95,11 +95,11 @@ namespace orc {
         inputStream(std::move(input)),
         isSigned(_isSigned),
         firstByte(0),
-	bufferStart(nullptr),
+        bufferStart(nullptr),
         bufferEnd(bufferStart),
         runLength(0),
         runRead(0),
-	bitsLeft(0),
+        bitsLeft(0),
         curByte(0),
         unpackedPatch(pool, 0),
         literals(pool, MAX_LITERAL_SIZE) {

@@ -35,15 +35,14 @@ namespace orc {
     while (curIdx < offset + len) {
       // Make sure bitsLeft is 0 before the loop. bitsLeft can only be 0, 4, or 8.
       while (decoder->getBitsLeft() > 0 && curIdx < offset + len) {
-	decoder->setBitsLeft(decoder->getBitsLeft() - 4);
+        decoder->setBitsLeft(decoder->getBitsLeft() - 4);
         data[curIdx++] = (decoder->getCurByte() >> decoder->getBitsLeft()) & 15;
       }
       if (curIdx == offset + len) return;
 
       // Exhaust the buffer
       uint64_t numGroups = (offset + len - curIdx) / 2;
-      numGroups =
-          std::min(numGroups, static_cast<uint64_t>(decoder->bufLength()));
+      numGroups = std::min(numGroups, static_cast<uint64_t>(decoder->bufLength()));
       // Avoid updating 'bufferStart' inside the loop.
       auto* buffer = reinterpret_cast<unsigned char*>(decoder->getBufStart());
       uint32_t localByte;
@@ -314,14 +313,14 @@ namespace orc {
         result <<= decoder->getBitsLeft();
         result |= decoder->getCurByte() & ((1 << decoder->getBitsLeft()) - 1);
         bitsLeftToRead -= decoder->getBitsLeft();
-	decoder->setCurByte(decoder->readByte());
-	decoder->setBitsLeft(8);
+        decoder->setCurByte(decoder->readByte());
+        decoder->setBitsLeft(8);
       }
 
       // handle the left over bits
       if (bitsLeftToRead > 0) {
         result <<= bitsLeftToRead;
-	decoder->setBitsLeft(decoder->getBitsLeft() - static_cast<uint32_t>(bitsLeftToRead));
+        decoder->setBitsLeft(decoder->getBitsLeft() - static_cast<uint32_t>(bitsLeftToRead));
         result |= (decoder->getCurByte() >> decoder->getBitsLeft()) & ((1 << bitsLeftToRead) - 1);
       }
       data[i] = static_cast<int64_t>(result);
