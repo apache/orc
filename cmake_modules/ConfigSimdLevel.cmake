@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckCXXCompilerFlag)
 message(STATUS "System processor: ${CMAKE_SYSTEM_PROCESSOR}")
 
@@ -37,13 +38,14 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   # x86/amd64 compiler flags, msvc/gcc/clang
   if(MSVC)
     set(ORC_AVX512_FLAG "/arch:AVX512")
+    check_cxx_compiler_flag(${ORC_AVX512_FLAG} COMPILER_SUPPORT_AVX512)
   else()
     # "arch=native" selects the CPU to generate code for at compilation time by determining the processor type of the compiling machine.
     # Using -march=native enables all instruction subsets supported by the local machine.
     # Using -mtune=native produces code optimized for the local machine under the constraints of the selected instruction set.
     set(ORC_AVX512_FLAG "-march=native -mtune=native")
+    check_cxx_compiler_flag("-mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw" COMPILER_SUPPORT_AVX512)
   endif()
-  check_cxx_compiler_flag("-mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw" COMPILER_SUPPORT_AVX512)
 
   if(MINGW)
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
@@ -52,7 +54,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     # Check for AVX512 support in the compiler.
     set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
     set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_AVX512_FLAG}")
-    CHECK_CXX_SOURCE_COMPILES("
+    check_cxx_source_runs("
       #ifdef _MSC_VER
       #include <intrin.h>
       #else
