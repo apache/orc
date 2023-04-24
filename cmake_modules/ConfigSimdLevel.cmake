@@ -76,10 +76,13 @@ if(ORC_CPU_FLAG STREQUAL "x86")
                     COMMAND head -1
                     OUTPUT_VARIABLE flags_ver)
     message(STATUS "CPU ${flags_ver}")
+    execute_process(COMMAND grep avx512f /proc/cpuinfo
+                    COMMAND head -1
+                    OUTPUT_VARIABLE CPU_HAS_AVX512)
   endif()
 
   # Runtime SIMD level it can get from compiler
-  if(CXX_SUPPORTS_AVX512 AND COMPILER_SUPPORT_AVX512)
+  if(CPU_HAS_AVX512 AND CXX_SUPPORTS_AVX512 AND COMPILER_SUPPORT_AVX512)
     message(STATUS "Enabled the AVX512 for RLE bit-unpacking")
     set(ORC_SIMD_LEVEL "AVX512")
     add_definitions(-DORC_HAVE_RUNTIME_AVX512)
