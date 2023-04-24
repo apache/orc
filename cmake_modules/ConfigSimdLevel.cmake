@@ -54,7 +54,7 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     # Check for AVX512 support in the compiler.
     set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
     set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_AVX512_FLAG}")
-    check_cxx_source_runs("
+    CHECK_CXX_SOURCE_COMPILES("
       #ifdef _MSC_VER
       #include <intrin.h>
       #else
