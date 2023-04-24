@@ -98,6 +98,13 @@ namespace orc {
      * Close the stream and flush any pending data to the disk.
      */
     virtual void close() = 0;
+
+    /**
+     * Flush any pending data to the disk.
+     */
+    virtual void flush() {
+      throw NotImplementedYet("Not supported");
+    }
   };
 
   /**
