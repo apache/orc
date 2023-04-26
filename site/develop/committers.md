@@ -20,7 +20,6 @@ Dongjoon Hyun           | dongjoon     | PMC
 Deepak Majeti           | mdeepak      | PMC
 Eugene Koifman          | ekoifman     | PMC
 Gang Wu                 | gangwu       | PMC
-Alan Gates              | gates        | PMC
 Gopal Vijayaraghavan    | gopalv       | PMC
 Gunther Hagleitner      | gunther      | Committer
 Ashutosh Chauhan        | hashutosh    | Committer
@@ -57,6 +56,15 @@ Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
 Yiqun Zhang             | yqzhang      | PMC
 Aihua Xu                | zihuaxu      | Committer
+
+## Emiritus Members
+
+{% comment %}
+please sort by Apache Id
+{% endcomment %}
+Name                    | Apache Id
+:---------------------- | :-----------
+Alan Gates              | gates
 
 Companies with employees that are committers:
 
