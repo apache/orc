@@ -4207,8 +4207,7 @@ namespace orc {
     }
   }
 
-  // ORC-1408: Row batch not reset notNull data if strip doesn't have PRESENT stream.
-  TEST(TestColumnReader, testORC1408) {
+  TEST(TestColumnReader, testVectorBatchHasNull) {
     // reuse same StructVectorBatch
     LongVectorBatch* longBatch = new LongVectorBatch(1024, *getDefaultPool());
     StructVectorBatch batch(1024, *getDefaultPool());
@@ -4293,11 +4292,6 @@ namespace orc {
       ASSERT_EQ(true, !batch.hasNulls);
       ASSERT_EQ(100, longBatch->numElements);
       ASSERT_EQ(true, !longBatch->hasNulls);
-      int next = 0;
-      for (size_t i = 0; i < batch.numElements; ++i) {
-        EXPECT_EQ(1, longBatch->notNull[i]);
-        EXPECT_EQ(next++, longBatch->data[i]);
-      }
     }
   }
 
