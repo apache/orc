@@ -37,8 +37,11 @@ namespace orc {
    * The base class for each of the column vectors. This class handles
    * the generic attributes such as number of elements, capacity, and
    * notNull vector.
-   * Note: Because we don't reset notNull buffer if hasNulls == false for better performance,
-   * it need to check hasNull firstly, and then check notNull buffer.
+   * Note: If hasNull is true, the values in the notNull buffer are not required.
+   * On the writer side, it does not read values from notNull buffer so users are
+   * not expected to write notNull buffer if hasNull is true. On the reader side,
+   * it does not set notNull buffer if hasNull is true, meaning that it is undefined
+   * behavior to consume values from notNull buffer in this case by downstream users.
    */
   struct ColumnVectorBatch {
     ColumnVectorBatch(uint64_t capacity, MemoryPool& pool);
