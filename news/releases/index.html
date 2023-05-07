@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2023/05/07/ORC-1.7.9/">ORC 1.7.9 Released</option>
+      
       <option value="/news/2023/03/15/ORC-1.8.3/">ORC 1.8.3 Released</option>
       
       <option value="/news/2023/02/13/add-xin/">Xin Zhang added as committer</option>
@@ -278,6 +280,58 @@
         
   <article>
   <h2>
+    <a href="/news/2023/05/07/ORC-1.7.9/">
+      ORC 1.7.9 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      07 May 2023
+    </span>
+    <a href="https://people.apache.org/~gangwu" class="post-author">
+      <img src="https://people.apache.org/~gangwu//gangwu.png"
+           class="avatar" alt="gangwu avatar"
+           width="24" height="24">
+      gangwu
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.7.9.</p>
+
+<ul>
+  <li>Released: 7 May 2023</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.9/orc-1.7.9.tar.gz">orc-1.7.9.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.9/orc-1.7.9.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Gang Wu (578F619B)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.9">rel/release-1.7.9</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.9%22">ORC 1.7.9</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.9/orc-1.7.9.tar.gz.sha256">fa0a6ed34c1c9673…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.9%22&amp;tempMax=500">ORC-1.7.9</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1382">ORC-1382</a> Fix secondary config names <code class="highlighter-rouge">org.sarg.*</code> to <code class="highlighter-rouge">orc.sarg.*</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1395">ORC-1395</a> Enforce license check</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1407">ORC-1407</a> Upgrade cyclonedx-maven-plugin to 2.7.6</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1374">ORC-1374</a> Update Spark to 3.3.2</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2023/03/15/ORC-1.8.3/">
       ORC 1.8.3 Released
     </a>
@@ -363,12 +417,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 21 January 2023</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.8/orc-1.7.8.tar.gz">orc-1.7.8.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.7.8/orc-1.7.8.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.7.8/orc-1.7.8.tar.gz">orc-1.7.8.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.7.8/orc-1.7.8.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.8">rel/release-1.7.8</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.8%22">ORC 1.7.8</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.8/orc-1.7.8.tar.gz.sha256">4e92db5380d6596e…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.7.8/orc-1.7.8.tar.gz.sha256">4e92db5380d6596e…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.8%22&amp;tempMax=500">ORC-1.7.8</a></li>
 </ul>
 
@@ -4234,6 +4288,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2023/05/07/ORC-1.7.9/">Version 1.7.9</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2023/03/15/ORC-1.8.3/">Version 1.8.3</a>
       </li>
       
@@ -4249,13 +4307,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2022/12/02/ORC-1.8.1/">Version 1.8.1</a>
       </li>
       
-      <li class="">
-        <a href="/news/2022/11/17/ORC-1.7.7/">Version 1.7.7</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
