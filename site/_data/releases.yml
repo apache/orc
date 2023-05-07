@@ -32,9 +32,17 @@
   sha256: 859d78bfded98405c32ccb2847b565a57bcc53f473a74087c1f750aeb5932e62
   known-issues:
 
+1.7.9:
+  date: 2023-05-07
+  state: stable
+  tar: orc-1.7.9.tar.gz
+  signed-by: Gang Wu (578F619B)
+  sha256: fa0a6ed34c1c9673fa84175e1af5a4d41898c34f0cbaa3eebcec92be11ec7692
+  known-issues:
+
 1.7.8:
   date: 2023-01-21
-  state: stable
+  state: archived
   tar: orc-1.7.8.tar.gz
   signed-by: William Hyun (DECDFA29)
   sha256: 4e92db5380d6596e86b280cbc25df712c38b0c77cbc9d77df4b6b2a791280d64
