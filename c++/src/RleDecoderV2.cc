@@ -17,7 +17,12 @@
  */
 
 #include "Adaptor.hh"
+#include "BpackingDefault.hh"
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+#include "BpackingAvx512.hh"
+#endif
 #include "Compression.hh"
+#include "Dispatch.hh"
 #include "RLEV2Util.hh"
 #include "RLEv2.hh"
 #include "Utils.hh"
@@ -32,7 +37,7 @@ namespace orc {
       if (!inputStream->Next(&bufferPointer, &bufferLength)) {
         throw ParseError("bad read in RleDecoderV2::readByte");
       }
-      bufferStart = static_cast<const char*>(bufferPointer);
+      bufferStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
       bufferEnd = bufferStart + bufferLength;
     }
 
@@ -66,336 +71,22 @@ namespace orc {
     return ret;
   }
 
+  struct UnpackDynamicFunction {
+    using FunctionType = decltype(&BitUnpack::readLongs);
+
+    static std::vector<std::pair<DispatchLevel, FunctionType>> implementations() {
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+      return {{DispatchLevel::NONE, BitUnpackDefault::readLongs},
+              {DispatchLevel::AVX512, BitUnpackAVX512::readLongs}};
+#else
+      return {{DispatchLevel::NONE, BitUnpackDefault::readLongs}};
+#endif
+    }
+  };
+
   void RleDecoderV2::readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs) {
-    switch (fbs) {
-      case 4:
-        unrolledUnpack4(data, offset, len);
-        return;
-      case 8:
-        unrolledUnpack8(data, offset, len);
-        return;
-      case 16:
-        unrolledUnpack16(data, offset, len);
-        return;
-      case 24:
-        unrolledUnpack24(data, offset, len);
-        return;
-      case 32:
-        unrolledUnpack32(data, offset, len);
-        return;
-      case 40:
-        unrolledUnpack40(data, offset, len);
-        return;
-      case 48:
-        unrolledUnpack48(data, offset, len);
-        return;
-      case 56:
-        unrolledUnpack56(data, offset, len);
-        return;
-      case 64:
-        unrolledUnpack64(data, offset, len);
-        return;
-      default:
-        // Fallback to the default implementation for deprecated bit size.
-        plainUnpackLongs(data, offset, len, fbs);
-        return;
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack4(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Make sure bitsLeft is 0 before the loop. bitsLeft can only be 0, 4, or 8.
-      while (bitsLeft > 0 && curIdx < offset + len) {
-        bitsLeft -= 4;
-        data[curIdx++] = (curByte >> bitsLeft) & 15;
-      }
-      if (curIdx == offset + len) return;
-
-      // Exhaust the buffer
-      uint64_t numGroups = (offset + len - curIdx) / 2;
-      numGroups = std::min(numGroups, static_cast<uint64_t>(bufferEnd - bufferStart));
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      uint32_t localByte;
-      for (uint64_t i = 0; i < numGroups; ++i) {
-        localByte = *buffer++;
-        data[curIdx] = (localByte >> 4) & 15;
-        data[curIdx + 1] = localByte & 15;
-        curIdx += 2;
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // readByte() will update 'bufferStart' and 'bufferEnd'
-      curByte = readByte();
-      bitsLeft = 8;
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack8(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = bufferEnd - bufferStart;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        data[curIdx++] = *buffer++;
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // readByte() will update 'bufferStart' and 'bufferEnd'.
-      data[curIdx++] = readByte();
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack16(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 2;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint16_t b0, b1;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint16_t>(*buffer);
-        b1 = static_cast<uint16_t>(*(buffer + 1));
-        buffer += 2;
-        data[curIdx++] = (b0 << 8) | b1;
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      data[curIdx++] = (b0 << 8) | b1;
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack24(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 3;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint32_t b0, b1, b2;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint32_t>(*buffer);
-        b1 = static_cast<uint32_t>(*(buffer + 1));
-        b2 = static_cast<uint32_t>(*(buffer + 2));
-        buffer += 3;
-        data[curIdx++] = static_cast<int64_t>((b0 << 16) | (b1 << 8) | b2);
-      }
-      bufferStart += bufferNum * 3;
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      b2 = readByte();
-      data[curIdx++] = static_cast<int64_t>((b0 << 16) | (b1 << 8) | b2);
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack32(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 4;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint32_t b0, b1, b2, b3;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint32_t>(*buffer);
-        b1 = static_cast<uint32_t>(*(buffer + 1));
-        b2 = static_cast<uint32_t>(*(buffer + 2));
-        b3 = static_cast<uint32_t>(*(buffer + 3));
-        buffer += 4;
-        data[curIdx++] = static_cast<int64_t>((b0 << 24) | (b1 << 16) | (b2 << 8) | b3);
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      b2 = readByte();
-      b3 = readByte();
-      data[curIdx++] = static_cast<int64_t>((b0 << 24) | (b1 << 16) | (b2 << 8) | b3);
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack40(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 5;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint64_t b0, b1, b2, b3, b4;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint32_t>(*buffer);
-        b1 = static_cast<uint32_t>(*(buffer + 1));
-        b2 = static_cast<uint32_t>(*(buffer + 2));
-        b3 = static_cast<uint32_t>(*(buffer + 3));
-        b4 = static_cast<uint32_t>(*(buffer + 4));
-        buffer += 5;
-        data[curIdx++] =
-            static_cast<int64_t>((b0 << 32) | (b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      b2 = readByte();
-      b3 = readByte();
-      b4 = readByte();
-      data[curIdx++] = static_cast<int64_t>((b0 << 32) | (b1 << 24) | (b2 << 16) | (b3 << 8) | b4);
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack48(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 6;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint64_t b0, b1, b2, b3, b4, b5;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint32_t>(*buffer);
-        b1 = static_cast<uint32_t>(*(buffer + 1));
-        b2 = static_cast<uint32_t>(*(buffer + 2));
-        b3 = static_cast<uint32_t>(*(buffer + 3));
-        b4 = static_cast<uint32_t>(*(buffer + 4));
-        b5 = static_cast<uint32_t>(*(buffer + 5));
-        buffer += 6;
-        data[curIdx++] = static_cast<int64_t>((b0 << 40) | (b1 << 32) | (b2 << 24) | (b3 << 16) |
-                                              (b4 << 8) | b5);
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      b2 = readByte();
-      b3 = readByte();
-      b4 = readByte();
-      b5 = readByte();
-      data[curIdx++] =
-          static_cast<int64_t>((b0 << 40) | (b1 << 32) | (b2 << 24) | (b3 << 16) | (b4 << 8) | b5);
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack56(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 7;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint64_t b0, b1, b2, b3, b4, b5, b6;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint32_t>(*buffer);
-        b1 = static_cast<uint32_t>(*(buffer + 1));
-        b2 = static_cast<uint32_t>(*(buffer + 2));
-        b3 = static_cast<uint32_t>(*(buffer + 3));
-        b4 = static_cast<uint32_t>(*(buffer + 4));
-        b5 = static_cast<uint32_t>(*(buffer + 5));
-        b6 = static_cast<uint32_t>(*(buffer + 6));
-        buffer += 7;
-        data[curIdx++] = static_cast<int64_t>((b0 << 48) | (b1 << 40) | (b2 << 32) | (b3 << 24) |
-                                              (b4 << 16) | (b5 << 8) | b6);
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      b2 = readByte();
-      b3 = readByte();
-      b4 = readByte();
-      b5 = readByte();
-      b6 = readByte();
-      data[curIdx++] = static_cast<int64_t>((b0 << 48) | (b1 << 40) | (b2 << 32) | (b3 << 24) |
-                                            (b4 << 16) | (b5 << 8) | b6);
-    }
-  }
-
-  void RleDecoderV2::unrolledUnpack64(int64_t* data, uint64_t offset, uint64_t len) {
-    uint64_t curIdx = offset;
-    while (curIdx < offset + len) {
-      // Exhaust the buffer
-      int64_t bufferNum = (bufferEnd - bufferStart) / 8;
-      bufferNum = std::min(bufferNum, static_cast<int64_t>(offset + len - curIdx));
-      uint64_t b0, b1, b2, b3, b4, b5, b6, b7;
-      // Avoid updating 'bufferStart' inside the loop.
-      const auto* buffer = reinterpret_cast<const unsigned char*>(bufferStart);
-      for (int i = 0; i < bufferNum; ++i) {
-        b0 = static_cast<uint32_t>(*buffer);
-        b1 = static_cast<uint32_t>(*(buffer + 1));
-        b2 = static_cast<uint32_t>(*(buffer + 2));
-        b3 = static_cast<uint32_t>(*(buffer + 3));
-        b4 = static_cast<uint32_t>(*(buffer + 4));
-        b5 = static_cast<uint32_t>(*(buffer + 5));
-        b6 = static_cast<uint32_t>(*(buffer + 6));
-        b7 = static_cast<uint32_t>(*(buffer + 7));
-        buffer += 8;
-        data[curIdx++] = static_cast<int64_t>((b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) |
-                                              (b4 << 24) | (b5 << 16) | (b6 << 8) | b7);
-      }
-      bufferStart = reinterpret_cast<const char*>(buffer);
-      if (curIdx == offset + len) return;
-
-      // One of the following readByte() will update 'bufferStart' and 'bufferEnd'.
-      b0 = readByte();
-      b1 = readByte();
-      b2 = readByte();
-      b3 = readByte();
-      b4 = readByte();
-      b5 = readByte();
-      b6 = readByte();
-      b7 = readByte();
-      data[curIdx++] = static_cast<int64_t>((b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) |
-                                            (b4 << 24) | (b5 << 16) | (b6 << 8) | b7);
-    }
-  }
-
-  void RleDecoderV2::plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs) {
-    for (uint64_t i = offset; i < (offset + len); i++) {
-      uint64_t result = 0;
-      uint64_t bitsLeftToRead = fbs;
-      while (bitsLeftToRead > bitsLeft) {
-        result <<= bitsLeft;
-        result |= curByte & ((1 << bitsLeft) - 1);
-        bitsLeftToRead -= bitsLeft;
-        curByte = readByte();
-        bitsLeft = 8;
-      }
-
-      // handle the left over bits
-      if (bitsLeftToRead > 0) {
-        result <<= bitsLeftToRead;
-        bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
-        result |= (curByte >> bitsLeft) & ((1 << bitsLeftToRead) - 1);
-      }
-      data[i] = static_cast<int64_t>(result);
-    }
+    static DynamicDispatch<UnpackDynamicFunction> dispatch;
+    return dispatch.func(this, data, offset, len, fbs);
   }
 
   RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input, bool _isSigned,
@@ -404,10 +95,10 @@ namespace orc {
         inputStream(std::move(input)),
         isSigned(_isSigned),
         firstByte(0),
-        runLength(0),
-        runRead(0),
         bufferStart(nullptr),
         bufferEnd(bufferStart),
+        runLength(0),
+        runRead(0),
         bitsLeft(0),
         curByte(0),
         unpackedPatch(pool, 0),

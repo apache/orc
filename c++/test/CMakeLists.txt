@@ -23,6 +23,10 @@ include_directories(
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
 
+if(BUILD_ENABLE_AVX512)
+  set(SIMD_TEST_SRCS TestRleVectorDecoder.cc)
+endif(BUILD_ENABLE_AVX512)
+
 add_executable (orc-test
   MemoryInputStream.cc
   MemoryOutputStream.cc
@@ -58,6 +62,7 @@ add_executable (orc-test
   TestTimezone.cc
   TestType.cc
   TestWriter.cc
+  ${SIMD_TEST_SRCS}
 )
 
 target_link_libraries (orc-test

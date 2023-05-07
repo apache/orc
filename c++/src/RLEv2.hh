@@ -166,6 +166,50 @@ namespace orc {
 
     void next(int16_t* data, uint64_t numValues, const char* notNull) override;
 
+    unsigned char readByte();
+
+    void setBufStart(const char* start) {
+      bufferStart = const_cast<char*>(start);
+    }
+
+    char* getBufStart() {
+      return bufferStart;
+    }
+
+    void setBufEnd(const char* end) {
+      bufferEnd = const_cast<char*>(end);
+    }
+
+    char* getBufEnd() {
+      return bufferEnd;
+    }
+
+    uint64_t bufLength() {
+      return bufferEnd - bufferStart;
+    }
+
+    void setBitsLeft(const uint32_t bits) {
+      bitsLeft = bits;
+    }
+
+    void setCurByte(const uint32_t byte) {
+      curByte = byte;
+    }
+
+    uint32_t getBitsLeft() {
+      return bitsLeft;
+    }
+
+    uint32_t getCurByte() {
+      return curByte;
+    }
+
+    /**
+     * Most hotspot of this function locates in saving stack, so inline this function to have
+     * performance gain.
+     */
+    inline void resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupLen);
+
    private:
     /**
      * Decode the next gap and patch from 'unpackedPatch' and update the index on it.
@@ -189,23 +233,10 @@ namespace orc {
       resetReadLongs();
     }
 
-    unsigned char readByte();
-
     int64_t readLongBE(uint64_t bsz);
     int64_t readVslong();
     uint64_t readVulong();
     void readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
-    void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
-
-    void unrolledUnpack4(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack8(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack16(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack24(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack32(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack40(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack48(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack56(int64_t* data, uint64_t offset, uint64_t len);
-    void unrolledUnpack64(int64_t* data, uint64_t offset, uint64_t len);
 
     template <typename T>
     uint64_t nextShortRepeats(T* data, uint64_t offset, uint64_t numValues, const char* notNull);
@@ -220,17 +251,39 @@ namespace orc {
 
     const std::unique_ptr<SeekableInputStream> inputStream;
     const bool isSigned;
-
     unsigned char firstByte;
-    uint64_t runLength;  // Length of the current run
-    uint64_t runRead;    // Number of returned values of the current run
-    const char* bufferStart;
-    const char* bufferEnd;
+    char* bufferStart;
+    char* bufferEnd;
+    uint64_t runLength;                 // Length of the current run
+    uint64_t runRead;                   // Number of returned values of the current run
     uint32_t bitsLeft;                  // Used by readLongs when bitSize < 8
     uint32_t curByte;                   // Used by anything that uses readLongs
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
   };
+
+  inline void RleDecoderV2::resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupByteLen) {
+    uint64_t remainingLen = bufLength();
+    int bufferLength = 0;
+    const void* bufferPointer = nullptr;
+
+    if (backupByteLen != 0) {
+      inputStream->BackUp(backupByteLen);
+    }
+
+    if (len >= remainingLen && resetBuf) {
+      if (!inputStream->Next(&bufferPointer, &bufferLength)) {
+        throw ParseError("bad read in RleDecoderV2::resetBufferStart");
+      }
+    }
+
+    if (bufferPointer == nullptr) {
+      bufferStart += len;
+    } else {
+      bufferStart = const_cast<char*>(static_cast<const char*>(bufferPointer));
+      bufferEnd = bufferStart + bufferLength;
+    }
+  }
 }  // namespace orc
 
 #endif  // ORC_RLEV2_HH
