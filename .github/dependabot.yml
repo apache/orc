@@ -39,9 +39,9 @@ updates:
       # Pin maven-dependency-plugin to 3.1.2 due to MDEP-753, MDEP-757, MDEP-759
       - dependency-name: "org.apache.maven.plugins:maven-dependency-plugin"
         versions: "[3.2.0,)"
-      # Pin protobuf-java to 3.17.3
+      # Pin protobuf-java to 3.22.3
       - dependency-name: "com.google.protobuf:protobuf-java"
-        versions: "[3.17.4,)"
+        versions: "[3.22.4,)"
       # Pin jodd-core to 3.5.2
       - dependency-name: "org.jodd:jodd-core"
         versions: "[3.5.3,)"
@@ -51,6 +51,9 @@ updates:
       # Pin mockito to 4.x
       - dependency-name: "org.mockito"
         versions: "[5.0.0,)"
+      # Pin byte-buddy to 1.12.x aline with mockito
+      - dependency-name: "net.bytebuddy"
+        versions: "[1.13.0,)"
       # Pin spotless to 2.30.0 due to Java 8 support
       - dependency-name: "com.diffplug.spotless:spotless-maven-plugin"
         versions: "[2.31.0,)"

@@ -60,10 +60,10 @@
   </modules>
 
   <properties>
-    <checkstyle.version>10.9.2</checkstyle.version>
+    <checkstyle.version>10.10.0</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>2.7.3</hadoop.version>
-    <junit.version>5.9.0</junit.version>
+    <junit.version>5.9.3</junit.version>
     <maven-assembly-plugin.version>3.5.0</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -131,7 +131,7 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>3.17.3</version>
+        <version>3.22.3</version>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>
@@ -438,6 +438,12 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
+        <version>1.12.23</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
         <version>1.12.23</version>
         <scope>test</scope>
       </dependency>

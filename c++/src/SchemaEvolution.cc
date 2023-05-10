@@ -49,19 +49,10 @@ namespace orc {
     }
   };
 
-  // map from file type to read type. it does not contain identity mapping.
-  using TypeSet = std::unordered_set<TypeKind, EnumClassHash>;
-  using ConvertMap = std::unordered_map<TypeKind, TypeSet, EnumClassHash>;
-
-  inline bool supportConversion(const Type& readType, const Type& fileType) {
-    static const ConvertMap& SUPPORTED_CONVERSIONS = *new ConvertMap{
-        // support nothing now
-    };
-    auto iter = SUPPORTED_CONVERSIONS.find(fileType.getKind());
-    if (iter == SUPPORTED_CONVERSIONS.cend()) {
-      return false;
-    }
-    return iter->second.find(readType.getKind()) != iter->second.cend();
+  bool isNumeric(const Type& type) {
+    auto kind = type.getKind();
+    return kind == BOOLEAN || kind == BYTE || kind == SHORT || kind == INT || kind == LONG ||
+           kind == FLOAT || kind == DOUBLE;
   }
 
   struct ConversionCheckResult {
@@ -74,10 +65,10 @@ namespace orc {
     if (readType.getKind() == fileType.getKind()) {
       ret.isValid = true;
       if (fileType.getKind() == CHAR || fileType.getKind() == VARCHAR) {
-        ret.needConvert = readType.getMaximumLength() < fileType.getMaximumLength();
+        ret.isValid = readType.getMaximumLength() == fileType.getMaximumLength();
       } else if (fileType.getKind() == DECIMAL) {
-        ret.needConvert = readType.getPrecision() != fileType.getPrecision() ||
-                          readType.getScale() != fileType.getScale();
+        ret.isValid = readType.getPrecision() == fileType.getPrecision() &&
+                      readType.getScale() == fileType.getScale();
       }
     } else {
       switch (fileType.getKind()) {
@@ -87,48 +78,19 @@ namespace orc {
         case INT:
         case LONG:
         case FLOAT:
-        case DOUBLE:
-        case DECIMAL: {
-          ret.isValid = ret.needConvert =
-              (readType.getKind() != DATE && readType.getKind() != BINARY);
+        case DOUBLE: {
+          ret.isValid = ret.needConvert = isNumeric(readType);
           break;
         }
-        case STRING: {
-          ret.isValid = ret.needConvert = true;
-          break;
-        }
+        case DECIMAL:
+        case STRING:
         case CHAR:
-        case VARCHAR: {
-          ret.isValid = true;
-          if (readType.getKind() == STRING) {
-            ret.needConvert = false;
-          } else if (readType.getKind() == CHAR || readType.getKind() == VARCHAR) {
-            ret.needConvert = readType.getMaximumLength() < fileType.getMaximumLength();
-          } else {
-            ret.needConvert = true;
-          }
-          break;
-        }
+        case VARCHAR:
         case TIMESTAMP:
-        case TIMESTAMP_INSTANT: {
-          if (readType.getKind() == TIMESTAMP || readType.getKind() == TIMESTAMP_INSTANT) {
-            ret = {true, false};
-          } else {
-            ret.isValid = ret.needConvert = (readType.getKind() != BINARY);
-          }
-          break;
-        }
-        case DATE: {
-          ret.isValid = ret.needConvert =
-              readType.getKind() == STRING || readType.getKind() == CHAR ||
-              readType.getKind() == VARCHAR || readType.getKind() == TIMESTAMP ||
-              readType.getKind() == TIMESTAMP_INSTANT;
-          break;
-        }
+        case TIMESTAMP_INSTANT:
+        case DATE:
         case BINARY: {
-          ret.isValid = ret.needConvert = readType.getKind() == STRING ||
-                                          readType.getKind() == CHAR ||
-                                          readType.getKind() == VARCHAR;
+          // Not support
           break;
         }
         case STRUCT:

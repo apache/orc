@@ -29,6 +29,7 @@ import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.Utilities;
 import org.apache.orc.bench.core.convert.GenerateVariants;
+import org.apache.spark.paths.SparkPath;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.avro.AvroFileFormat;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -201,7 +202,7 @@ public class SparkBenchmark implements OrcBenchmark {
             JavaConverters.collectionAsScalaIterableConverter(filters).asScala().toSeq(),
             scalaMap, source.conf);
     PartitionedFile file = new PartitionedFile(InternalRow.empty(),
-        source.path.toString(), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
+        SparkPath.fromPath(source.path), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
     processReader(factory.apply(file), statistics, counters, blackhole);
   }
 
@@ -249,7 +250,7 @@ public class SparkBenchmark implements OrcBenchmark {
             JavaConverters.collectionAsScalaIterableConverter(filters).asScala().toSeq(),
             scalaMap, source.conf);
     PartitionedFile file = new PartitionedFile(InternalRow.empty(),
-        source.path.toString(), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
+        SparkPath.fromPath(source.path), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
     processReader(factory.apply(file), statistics, counters, blackhole);
   }
 
@@ -301,7 +302,7 @@ public class SparkBenchmark implements OrcBenchmark {
             JavaConverters.collectionAsScalaIterableConverter(filters).asScala().toSeq(),
             scalaMap, source.conf);
     PartitionedFile file = new PartitionedFile(InternalRow.empty(),
-        source.path.toString(), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
+        SparkPath.fromPath(source.path), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
     processReader(factory.apply(file), statistics, counters, blackhole);
   }
 }

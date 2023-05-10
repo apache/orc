@@ -72,6 +72,10 @@ option(BUILD_CPP_ENABLE_METRICS
     "Enable the metrics collection at compile phase"
     OFF)
 
+option(BUILD_ENABLE_AVX512
+    "Enable build with AVX512 at compile time"
+    OFF)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -121,7 +125,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-covered-switch-default")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
-  set (WARN_FLAGS "${WARN_FLAGS} -Wconversion")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wno-conversion")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "13.0")
     set (WARN_FLAGS "${WARN_FLAGS} -Wno-reserved-identifier")
   endif()
@@ -140,7 +144,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   else ()
     set (CXX17_FLAGS "-std=c++17")
   endif ()
-  set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion")
+  set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wno-conversion")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "12.0")
     set (WARN_FLAGS "${WARN_FLAGS} -Wno-array-bounds -Wno-stringop-overread") # To compile protobuf in Fedora37
   endif ()
@@ -174,6 +178,15 @@ enable_testing()
 
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
+message(STATUS "BUILD_ENABLE_AVX512: ${BUILD_ENABLE_AVX512}")
+#
+# macOS doesn't fully support AVX512, it has a different way dealing with AVX512 than Windows and Linux.
+#
+# Here can find the description:
+# https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/osfmk/i386/fpu.c#L174
+if (BUILD_ENABLE_AVX512 AND NOT APPLE)
+  INCLUDE(ConfigSimdLevel)
+endif ()
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 

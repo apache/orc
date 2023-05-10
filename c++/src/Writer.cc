@@ -307,6 +307,8 @@ namespace orc {
     static const char* magicId;
     static const WriterId writerId;
     bool useTightNumericVector;
+    int32_t stripesAtLastFlush;
+    uint64_t lastFlushOffset;
 
    public:
     WriterImpl(const Type& type, OutputStream* stream, const WriterOptions& options);
@@ -318,6 +320,8 @@ namespace orc {
     void close() override;
 
     void addUserMetadata(const std::string& name, const std::string& value) override;
+
+    uint64_t writeIntermediateFooter() override;
 
    private:
     void init();
@@ -340,6 +344,8 @@ namespace orc {
     columnWriter = buildWriter(type, *streamsFactory, options);
     stripeRows = totalRows = indexRows = 0;
     currentOffset = 0;
+    stripesAtLastFlush = 0;
+    lastFlushOffset = 0;
 
     useTightNumericVector = opts.getUseTightNumericVector();
 
@@ -398,6 +404,24 @@ namespace orc {
     writeFileFooter();
     writePostscript();
     outStream->close();
+  }
+
+  uint64_t WriterImpl::writeIntermediateFooter() {
+    if (stripeRows > 0) {
+      writeStripe();
+    }
+    if (stripesAtLastFlush != fileFooter.stripes_size()) {
+      writeMetadata();
+      writeFileFooter();
+      writePostscript();
+      stripesAtLastFlush = fileFooter.stripes_size();
+      outStream->flush();
+      lastFlushOffset = outStream->getLength();
+      currentOffset = lastFlushOffset;
+      // init stripe now that we adjusted the currentOffset
+      initStripe();
+    }
+    return lastFlushOffset;
   }
 
   void WriterImpl::addUserMetadata(const std::string& name, const std::string& value) {
@@ -542,6 +566,7 @@ namespace orc {
     // update file statistics
     std::vector<proto::ColumnStatistics> colStats;
     columnWriter->getFileStatistics(colStats);
+    fileFooter.clear_statistics();
     for (uint32_t i = 0; i != colStats.size(); ++i) {
       *fileFooter.add_statistics() = colStats[i];
     }

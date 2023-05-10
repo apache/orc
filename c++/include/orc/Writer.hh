@@ -303,6 +303,13 @@ namespace orc {
      * Add user metadata to the writer.
      */
     virtual void addUserMetadata(const std::string& name, const std::string& value) = 0;
+
+    /**
+     * Write an intermediate footer on the file such that if the file is
+     * truncated to the returned offset, it would be a valid ORC file.
+     * @return the offset that would be a valid end location for an ORC file
+     */
+    virtual uint64_t writeIntermediateFooter() = 0;
   };
 }  // namespace orc
 

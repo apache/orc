@@ -166,12 +166,15 @@ set(SOURCE_FILES
   Adaptor.cc
   BlockBuffer.cc
   BloomFilter.cc
+  BpackingDefault.cc
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc
   ColumnWriter.cc
   Common.cc
   Compression.cc
+  ConvertColumnReader.cc
+  CpuInfoUtil.cc
   Exceptions.cc
   Int128.cc
   LzoDecompressor.cc
@@ -196,6 +199,12 @@ if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)
   add_definitions(-DBUILD_LIBHDFSPP)
 endif(BUILD_LIBHDFSPP)
+
+if(BUILD_ENABLE_AVX512)
+  set(SOURCE_FILES
+    ${SOURCE_FILES}
+    BpackingAvx512.cc)
+endif(BUILD_ENABLE_AVX512)
 
 add_library (orc STATIC ${SOURCE_FILES})
 

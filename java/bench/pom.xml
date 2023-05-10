@@ -37,10 +37,10 @@
     <hadoop.version>3.3.5</hadoop.version>
     <hive.version>3.1.3</hive.version>
     <jmh.version>1.20</jmh.version>
-    <junit.version>5.9.0</junit.version>
+    <junit.version>5.9.3</junit.version>
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.13.0</parquet.version>
-    <spark.version>3.3.2</spark.version>
+    <spark.version>3.4.0</spark.version>
   </properties>
 
   <dependencyManagement>

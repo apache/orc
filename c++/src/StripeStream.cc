@@ -129,6 +129,10 @@ namespace orc {
     return reader.getForcedScaleOnHive11Decimal();
   }
 
+  const SchemaEvolution* StripeStreamsImpl::getSchemaEvolution() const {
+    return reader.getSchemaEvolution();
+  }
+
   void StripeInformationImpl::ensureStripeFooterLoaded() const {
     if (stripeFooter.get() == nullptr) {
       std::unique_ptr<SeekableInputStream> pbStream =

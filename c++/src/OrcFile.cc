@@ -33,6 +33,7 @@
 #define S_IWUSR _S_IWRITE
 #define stat _stat64
 #define fstat _fstat64
+#define fsync _commit
 #else
 #include <unistd.h>
 #define O_BINARY 0
@@ -173,6 +174,12 @@ namespace orc {
       if (!closed) {
         ::close(file);
         closed = true;
+      }
+    }
+
+    void flush() override {
+      if (!closed) {
+        ::fsync(file);
       }
     }
   };

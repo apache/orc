@@ -18,12 +18,9 @@
 
 #include "Adaptor.hh"
 #include "ColumnReader.hh"
+#include "MockStripeStreams.hh"
 #include "OrcTest.hh"
 #include "orc/Exceptions.hh"
-
-#include "wrap/gmock.h"
-#include "wrap/gtest-wrapper.h"
-#include "wrap/orc-proto-wrapper.hh"
 
 #include <cmath>
 #include <iostream>
@@ -40,52 +37,6 @@ DIAGNOSTIC_IGNORE("-Wparentheses")
 namespace orc {
   using ::testing::TestWithParam;
   using ::testing::Values;
-
-  class MockStripeStreams : public StripeStreams {
-   public:
-    ~MockStripeStreams() override;
-
-    std::unique_ptr<SeekableInputStream> getStream(uint64_t columnId, proto::Stream_Kind kind,
-                                                   bool stream) const override;
-
-    MOCK_CONST_METHOD0(getSelectedColumns,
-
-                       const std::vector<bool>()
-
-    );
-    MOCK_CONST_METHOD1(getEncoding, proto::ColumnEncoding(uint64_t));
-    MOCK_CONST_METHOD3(getStreamProxy, SeekableInputStream*(uint64_t, proto::Stream_Kind, bool));
-    MOCK_CONST_METHOD0(getErrorStream, std::ostream*());
-    MOCK_CONST_METHOD0(getThrowOnHive11DecimalOverflow, bool());
-    MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t());
-    MOCK_CONST_METHOD0(isDecimalAsLong, bool());
-
-    MemoryPool& getMemoryPool() const override {
-      return *getDefaultPool();
-    }
-
-    ReaderMetrics* getReaderMetrics() const override {
-      return getDefaultReaderMetrics();
-    }
-
-    const Timezone& getWriterTimezone() const override {
-      return getTimezoneByName("America/Los_Angeles");
-    }
-
-    const Timezone& getReaderTimezone() const override {
-      return getTimezoneByName("GMT");
-    }
-  };
-
-  MockStripeStreams::~MockStripeStreams() {
-    // PASS
-  }
-
-  std::unique_ptr<SeekableInputStream> MockStripeStreams::getStream(uint64_t columnId,
-                                                                    proto::Stream_Kind kind,
-                                                                    bool shouldStream) const {
-    return std::unique_ptr<SeekableInputStream>(getStreamProxy(columnId, kind, shouldStream));
-  }
 
   bool isNotNull(tm* timeptr) {
     return timeptr != nullptr;
@@ -4204,6 +4155,94 @@ namespace orc {
               << "Wrong contents at " << i << ", " << letter;
         }
       }
+    }
+  }
+
+  TEST(TestColumnReader, testVectorBatchHasNull) {
+    // reuse same StructVectorBatch
+    LongVectorBatch* longBatch = new LongVectorBatch(1024, *getDefaultPool());
+    StructVectorBatch batch(1024, *getDefaultPool());
+    batch.fields.push_back(longBatch);
+
+    // create the row type
+    std::unique_ptr<Type> rowType = createStructType();
+    rowType->addStructField("myInt", createPrimitiveType(INT));
+
+    // read integer with nulls
+    {
+      MockStripeStreams streams;
+
+      // set getSelectedColumns()
+      std::vector<bool> selectedColumns(2, true);
+
+      EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+
+      // set getEncoding
+      proto::ColumnEncoding directEncoding;
+      directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+      EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+
+      // set getStream
+      EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
+          .WillRepeatedly(testing::Return(nullptr));
+      const unsigned char buffer1[] = {0x16, 0xf0};
+      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+          .WillRepeatedly(
+              testing::Return(new SeekableArrayInputStream(buffer1, ARRAY_SIZE(buffer1))));
+      const unsigned char buffer2[] = {0x32, 0x01, 0x00};
+      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+          .WillRepeatedly(
+              testing::Return(new SeekableArrayInputStream(buffer2, ARRAY_SIZE(buffer2))));
+
+      std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
+
+      reader->next(batch, 100, 0);
+      ASSERT_EQ(100, batch.numElements);
+      ASSERT_EQ(true, !batch.hasNulls);
+      ASSERT_EQ(100, longBatch->numElements);
+      ASSERT_EQ(true, longBatch->hasNulls);
+      long next = 0;
+      for (size_t i = 0; i < batch.numElements; ++i) {
+        if (i & 4) {
+          EXPECT_EQ(0, longBatch->notNull[i]);
+        } else {
+          EXPECT_EQ(1, longBatch->notNull[i]);
+          EXPECT_EQ(next++, longBatch->data[i]);
+        }
+      }
+    }
+
+    // read no-null integers without PRESENT stream.
+    {
+      MockStripeStreams streams;
+
+      // set getSelectedColumns()
+      std::vector<bool> selectedColumns(2, true);
+
+      EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+
+      // set getEncoding
+      proto::ColumnEncoding directEncoding;
+      directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+      EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+
+      // set getStream
+      EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
+          .WillRepeatedly(testing::Return(nullptr));
+      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+          .WillRepeatedly(testing::Return(nullptr));
+      const unsigned char buffer[] = {0x64, 0x01, 0x00};
+      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+          .WillRepeatedly(
+              testing::Return(new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))));
+
+      std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
+
+      reader->next(batch, 100, 0);
+      ASSERT_EQ(100, batch.numElements);
+      ASSERT_EQ(true, !batch.hasNulls);
+      ASSERT_EQ(100, longBatch->numElements);
+      ASSERT_EQ(true, !longBatch->hasNulls);
     }
   }
 
