@@ -1011,7 +1011,7 @@ message ColumnEncoding {
 }
 ```
 
-# Column Encodings
+# <a id="column-encoding-section">Column Encodings</a>
 
 ## SmallInt, Int, and BigInt Columns
 
@@ -1264,7 +1264,7 @@ if only part of a stripe is being read.
 Note that for columns with multiple streams, the order of stream
 positions in the RowIndex is **fixed**, which may be different to
 the actual data stream placement, and it is the same as
-**Column Encodings** section we described above.
+[Column Encodings](#column-encoding-section) section we described above.
 
 ## Bloom Filter Index
 
