@@ -501,16 +501,23 @@ uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
 following subsections.
 
-There are a few points to note about the order of streams:
+There is a general order for index and data streams:
+* Index streams are always placed together in the beginning of the stripe.
+* Data streams are placed together after index streams (if any).
+* Inside index streams or data streams, the unencrypted streams should be
+  placed first and then followed by streams grouped by each encryption variant.
 
-* For a specific column type, the order of streams is **not fixed**.
-* Index and data streams cannot be **interleaved**.
-* The order of streams from different columns is **not fixed** as well.
+There is no fixed order within each unencrypted or encryption variant in the
+index and data streams:
+* Different stream kinds of the same column can be placed in any order.
+* Streams from different columns can even be placed in any order.
+  To get the precise information (a.k.a stream kind, column id and location) of
+  a stream within a stripe, the streams field in the StripeFooter described below
+  is the single source of truth.
 
-In the example of the integer column mentioned above, the order of the 
+In the example of the integer column mentioned above, the order of the
 PRESENT stream and the DATA stream cannot be determined in advance.
-We need to infer the type of stream via the Stream Kind rather than
-relying on the order of the streams.
+We need to get the precise information by **StripeFooter**.
 
 ## Stripe Footer
 
@@ -804,7 +811,7 @@ record for the dictionary and the entire dictionary must be read even
 if only part of a stripe is being read.
 
 Note that for columns with multiple streams, the order of these
-streams is **fixed**, which is different from Row data we mentioned above.
+streams is **fixed**, which is different from data stream we mentioned above.
 
 The following table shows the order of types that contain multiple streams:
 
