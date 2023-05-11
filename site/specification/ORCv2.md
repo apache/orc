@@ -1277,18 +1277,10 @@ Because dictionaries are accessed randomly, there is not a position to
 record for the dictionary and the entire dictionary must be read even
 if only part of a stripe is being read.
 
-Note that for columns with multiple streams, the order of these
-streams is **fixed**, which is different from data stream we mentioned above.
-
-The following table shows the order of types that contain multiple streams:
-
- Type      | The First Postion Stream Type   | The Second Postion Stream Type | Contents        |
-:----------|:--------------------------------|:-------------------------------|:----------------|
-| Binary    | DATA                            | LENGTH                         |                 |
-| String    | DATA                            | LENGTH                         | Direct encoding |
-| Decimal   | DATA                            | SECONDARY                      |                 |
-| Timestamp | DATA                            | SECONDARY                      |                 |
-
+Note that for columns with multiple streams, the order of stream
+positions in the RowIndex is **fixed**, which may be different to
+the actual data stream placement, and it is the same as
+**Column Encodings** section we described above.
 
 ## Bloom Filter Index
 
