@@ -895,6 +895,24 @@ The layout of each stripe looks like:
    * encryption variant 1..N
 * stripe footer
 
+There is a general order for index and data streams:
+* Index streams are always placed together in the beginning of the stripe.
+* Data streams are placed together after index streams (if any).
+* Inside index streams or data streams, the unencrypted streams should be
+  placed first and then followed by streams grouped by each encryption variant.
+
+There is no fixed order within each unencrypted or encryption variant in the
+index and data streams:
+* Different stream kinds of the same column can be placed in any order.
+* Streams from different columns can even be placed in any order.
+  To get the precise information (a.k.a stream kind, column id and location) of
+  a stream within a stripe, the streams field in the StripeFooter described below
+  is the single source of truth.
+
+In the example of the integer column mentioned above, the order of the
+PRESENT stream and the DATA stream cannot be determined in advance.
+We need to get the precise information by **StripeFooter**.
+
 ## Stripe Footer
 
 The stripe footer contains the encoding of each column and the
@@ -993,7 +1011,7 @@ message ColumnEncoding {
 }
 ```
 
-# Column Encodings
+# <a id="column-encoding-section">Column Encodings</a>
 
 ## SmallInt, Int, and BigInt Columns
 
@@ -1009,6 +1027,8 @@ DIRECT    | PRESENT     | Yes      | Boolean RLE
           | DATA        | No       | Signed Integer RLE v1
 DIRECT_V2 | PRESENT     | Yes      | Boolean RLE
           | DATA        | No       | Signed Integer RLE v2
+
+> Note that the order of the Stream is not fixed. It also applies to other Column types.
 
 ## Float and Double Columns
 
@@ -1240,6 +1260,11 @@ indexes error-prone.
 Because dictionaries are accessed randomly, there is not a position to
 record for the dictionary and the entire dictionary must be read even
 if only part of a stripe is being read.
+
+Note that for columns with multiple streams, the order of stream
+positions in the RowIndex is **fixed**, which may be different to
+the actual data stream placement, and it is the same as
+[Column Encodings](#column-encoding-section) section we described above.
 
 ## Bloom Filter Index
 
