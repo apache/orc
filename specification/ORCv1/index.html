@@ -1148,6 +1148,28 @@ following subsections.</p>
   <li>stripe footer</li>
 </ul>
 
+<p>There is a general order for index and data streams:</p>
+<ul>
+  <li>Index streams are always placed together in the beginning of the stripe.</li>
+  <li>Data streams are placed together after index streams (if any).</li>
+  <li>Inside index streams or data streams, the unencrypted streams should be
+placed first and then followed by streams grouped by each encryption variant.</li>
+</ul>
+
+<p>There is no fixed order within each unencrypted or encryption variant in the
+index and data streams:</p>
+<ul>
+  <li>Different stream kinds of the same column can be placed in any order.</li>
+  <li>Streams from different columns can even be placed in any order.
+To get the precise information (a.k.a stream kind, column id and location) of
+a stream within a stripe, the streams field in the StripeFooter described below
+is the single source of truth.</li>
+</ul>
+
+<p>In the example of the integer column mentioned above, the order of the
+PRESENT stream and the DATA stream cannot be determined in advance.
+We need to get the precise information by <strong>StripeFooter</strong>.</p>
+
 <h2 id="stripe-footer">Stripe Footer</h2>
 
 <p>The stripe footer contains the encoding of each column and the
@@ -1242,7 +1264,7 @@ further refined as to whether they use RLE v1 or v2.</p>
 }
 </code></pre></div></div>
 
-<h1 id="column-encodings">Column Encodings</h1>
+<h1 id="column-encodings"><a id="column-encoding-section">Column Encodings</a></h1>
 
 <h2 id="smallint-int-and-bigint-columns">SmallInt, Int, and BigInt Columns</h2>
 
@@ -1288,6 +1310,10 @@ values are included in the data stream.</p>
     </tr>
   </tbody>
 </table>
+
+<blockquote>
+  <p>Note that the order of the Stream is not fixed. It also applies to other Column types.</p>
+</blockquote>
 
 <h2 id="float-and-double-columns">Float and Double Columns</h2>
 
@@ -1902,6 +1928,11 @@ indexes error-prone.</p>
 <p>Because dictionaries are accessed randomly, there is not a position to
 record for the dictionary and the entire dictionary must be read even
 if only part of a stripe is being read.</p>
+
+<p>Note that for columns with multiple streams, the order of stream
+positions in the RowIndex is <strong>fixed</strong>, which may be different to
+the actual data stream placement, and it is the same as
+<a href="#column-encoding-section">Column Encodings</a> section we described above.</p>
 
 <h2 id="bloom-filter-index">Bloom Filter Index</h2>
 
