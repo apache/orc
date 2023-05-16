@@ -488,4 +488,42 @@ namespace orc {
     return value;
   }
 
+  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromPrecision, int32_t fromScale,
+                                         int32_t toPrecision, int32_t toScale, bool round) {
+    std::pair<bool, Int128> result;
+    bool negative = value < 0;
+    result.second = value.abs();
+    result.first = false;
+
+    Int128 upperBound = scaleUpInt128ByPowerOfTen(1, toPrecision - 1, result.first);
+    int8_t roundOffset = 0;
+    int32_t deltaScale = fromScale - toScale;
+
+    if (deltaScale > 0) {
+      Int128 scale = scaleUpInt128ByPowerOfTen(1, deltaScale, result.first), remainder;
+      result.second = result.second.divide(scale, remainder);
+      remainder *= 2;
+      if (round && remainder >= scale) {
+        upperBound -= 1;
+        roundOffset = 1;
+      }
+    } else if (deltaScale < 0) {
+      if (result.second > upperBound) {
+        result.first = true;
+        return result;
+      }
+      result.second = scaleUpInt128ByPowerOfTen(result.second, -deltaScale, result.first);
+    }
+
+    if (result.second > upperBound) {
+      result.first = true;
+      return result;
+    }
+
+    result.second += roundOffset;
+    if (negative) {
+      result.second *= -1;
+    }
+    return result;
+  }
 }  // namespace orc

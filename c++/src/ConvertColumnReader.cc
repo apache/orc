@@ -186,9 +186,281 @@ namespace orc {
     }
   };
 
+  class ConvertToStringVariantColumnReader : public ConvertColumnReader {
+   public:
+    ConvertToStringVariantColumnReader(const Type& _readType, const Type& fileType,
+                                       StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ConvertColumnReader::next(rowBatch, numValues, notNull);
+
+      // cache converted string in the buffer
+      auto totalLength = convertToStrBuffer(rowBatch, numValues, notNull);
+
+      // contact string values to blob buffer of vector batch
+      auto& dstBatch = *SafeCastBatchTo<StringVectorBatch*>(&rowBatch);
+      dstBatch.blob.resize(totalLength);
+      char* blob = dstBatch.blob.data();
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          const auto size = strBuffer[i].size();
+          ::memcpy(blob, strBuffer[i].c_str(), size);
+          dstBatch.data[i] = blob;
+          dstBatch.length[i] = static_cast<int32_t>(size);
+          blob += size;
+        }
+      }
+      strBuffer.clear();
+    }
+
+    virtual size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                                      char* notNull) = 0;
+
+   protected:
+    std::vector<std::string> strBuffer;
+  };
+
+  class BooleanToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
+   public:
+    BooleanToStringVariantColumnReader(const Type& _readType, const Type& fileType,
+                                       StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+
+    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                              char* notNull) override {
+      size_t size = 0;
+      strBuffer.resize(numValues);
+      const auto& srcBatch = *SafeCastBatchTo<const BooleanVectorBatch*>(data.get());
+      std::string trueValue = "TRUE";
+      std::string falseValue = "FALSE";
+      if (readType.getKind() == CHAR) {
+        trueValue.resize(readType.getMaximumLength(), ' ');
+        falseValue.resize(readType.getMaximumLength(), ' ');
+      } else if (readType.getKind() == VARCHAR) {
+        trueValue = trueValue.substr(0, std::min((uint64_t)4, readType.getMaximumLength()));
+        falseValue = falseValue.substr(0, std::min((uint64_t)5, readType.getMaximumLength()));
+      }
+      // cast the bool value to string and truncate to the max length
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          strBuffer[i] = (srcBatch.data[i] ? trueValue : falseValue);
+          size += strBuffer[i].size();
+        }
+      }
+      return size;
+    }
+  };
+
+  template <typename FileTypeBatch>
+  class NumericToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
+   public:
+    NumericToStringVariantColumnReader(const Type& _readType, const Type& fileType,
+                                       StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+
+    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                              char* notNull) override {
+      size_t size = 0;
+      strBuffer.resize(numValues);
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      if (readType.getKind() == STRING) {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            strBuffer[i] = std::to_string(srcBatch.data[i]);
+            size += strBuffer[i].size();
+          }
+        }
+      } else if (readType.getKind() == VARCHAR) {
+        const auto maxLength = readType.getMaximumLength();
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            strBuffer[i] = std::to_string(srcBatch.data[i]);
+            if (strBuffer[i].size() > maxLength) {
+              strBuffer[i].resize(maxLength);
+            }
+            size += strBuffer[i].size();
+          }
+        }
+      } else {
+        const auto maxLength = readType.getMaximumLength();
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            strBuffer[i] = std::to_string(srcBatch.data[i]);
+            if (strBuffer[i].size() > maxLength) {
+              strBuffer[i].resize(maxLength);
+            } else {
+              strBuffer[i].resize(maxLength, ' ');
+            }
+            size += strBuffer[i].size();
+          }
+        }
+      }
+      return size;
+    }
+  };
+
+  template <typename FileTypeBatch, typename ReadTypeBatch, bool isFileTypeDouble>
+  class NumericToDecimalColumnReader : public ConvertColumnReader {
+   public:
+    NumericToDecimalColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
+                                 bool _throwOnOverflow)
+        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
+      precision = static_cast<int32_t>(readType.getPrecision());
+      scale = static_cast<int32_t>(readType.getScale());
+    }
+
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ConvertColumnReader::next(rowBatch, numValues, notNull);
+
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      auto& dstBatch = *SafeCastBatchTo<ReadTypeBatch*>(&rowBatch);
+      dstBatch.precision = precision;
+      dstBatch.scale = scale;
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          if constexpr (isFileTypeDouble) {
+            convertDoubleToDecimal(dstBatch, i, srcBatch.data[i]);
+          } else {
+            convertIntegerToDecimal(dstBatch, i, srcBatch.data[i]);
+          }
+        }
+      }
+    }
+
+   private:
+    template <typename srcType>
+    void convertDoubleToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, srcType value) {
+      std::string strValue = std::to_string(value);
+      int32_t fromScale = 0;
+      int32_t fromPrecision = static_cast<int32_t>(strValue.length());
+      Int128 i128 = 0;
+      for (size_t i = 0; i < strValue.length(); ++i) {
+        auto c = strValue[i];
+        if (c == '.') {
+          fromScale = static_cast<int32_t>(strValue.length() - i - 1);
+          fromPrecision -= 1;
+          continue;
+        }
+        i128 *= 10;
+        i128 += c - '0';
+      }
+      auto result = convertDecimal(i128, fromPrecision, fromScale, precision, scale);
+      if (result.first) {
+        handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+      } else {
+        if constexpr (std::is_same<ReadTypeBatch, Decimal64VectorBatch>::value) {
+          if (!result.second.fitsInLong()) {
+            handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+          } else {
+            dstBatch.values[idx] = result.second.toLong();
+          }
+        } else {
+          dstBatch.values[idx] = result.second;
+        }
+      }
+    }
+
+    template <typename srcType>
+    void convertIntegerToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, srcType value) {
+      int fromScale = 0;
+      int fromPrecision = 1;
+      for (srcType tmp = value; tmp /= 10; ++fromPrecision)
+        ;
+      auto result = convertDecimal(value, fromPrecision, fromScale, precision, scale);
+      if (result.first) {
+        handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+      } else {
+        if constexpr (std::is_same<ReadTypeBatch, Decimal64VectorBatch>::value) {
+          if (!result.second.fitsInLong()) {
+            handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+          } else {
+            dstBatch.values[idx] = result.second.toLong();
+          }
+        } else {
+          dstBatch.values[idx] = result.second;
+        }
+      }
+    }
+
+    int32_t precision;
+    int32_t scale;
+  };
+
+  class ConvertToTimestampColumnReader : public ConvertColumnReader {
+   public:
+    ConvertToTimestampColumnReader(const Type& _readType, const Type& fileType,
+                                   StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow),
+          readerTimezone(readType.getKind() == TIMESTAMP_INSTANT ? getTimezoneByName("GMT")
+                                                                 : stripe.getReaderTimezone()),
+          needConvertTimezone(&readerTimezone != &getTimezoneByName("GMT")) {}
+
+   protected:
+    const orc::Timezone& readerTimezone;
+    const bool needConvertTimezone;
+  };
+
+  template <typename FileTypeBatch>
+  class NumericToTimestampColumnReader : public ConvertToTimestampColumnReader {
+   public:
+    NumericToTimestampColumnReader(const Type& _readType, const Type& fileType,
+                                   StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertToTimestampColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ConvertToTimestampColumnReader::next(rowBatch, numValues, notNull);
+
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      auto& dstBatch = *SafeCastBatchTo<TimestampVectorBatch*>(&rowBatch);
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          convertToTimestamp(dstBatch, i, srcBatch.data[i]);
+        }
+      }
+    }
+
+   private:
+    template <typename FileType>
+    void convertToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx, FileType value) {
+      if constexpr (std::is_floating_point<FileType>::value) {
+        if (value > static_cast<FileType>(std::numeric_limits<int64_t>::max()) ||
+            value < static_cast<FileType>(std::numeric_limits<int64_t>::min())) {
+          handleOverflow<FileType, int64_t>(dstBatch, idx, throwOnOverflow);
+          return;
+        }
+        dstBatch.data[idx] = static_cast<int64_t>(value);
+        dstBatch.nanoseconds[idx] = static_cast<int32_t>(
+            (value - static_cast<FileType>(dstBatch.data[idx])) * 1e9);
+        if (dstBatch.nanoseconds[idx] < 0) {
+          dstBatch.data[idx] -= 1;
+          dstBatch.nanoseconds[idx] += static_cast<int32_t>(1e9);
+        }
+      } else {
+        dstBatch.data[idx] = value;
+        dstBatch.nanoseconds[idx] = 0;
+      }
+      if (needConvertTimezone) {
+        dstBatch.data[idx] = readerTimezone.convertFromUTC(dstBatch.data[idx]);
+      }
+    }
+  };
+
 #define DEFINE_NUMERIC_CONVERT_READER(FROM, TO, TYPE) \
   using FROM##To##TO##ColumnReader =                  \
       NumericConvertColumnReader<FROM##VectorBatch, TO##VectorBatch, TYPE>;
+
+#define DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(FROM, TO) \
+  using FROM##To##TO##ColumnReader = NumericToStringVariantColumnReader<FROM##VectorBatch>;
+
+#define DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(FROM, IS_FROM_FLOATING)                       \
+  using FROM##To##Decimal64##ColumnReader =                                                    \
+      NumericToDecimalColumnReader<FROM##VectorBatch, Decimal64VectorBatch, IS_FROM_FLOATING>; \
+  using FROM##To##Decimal128##ColumnReader =                                                   \
+      NumericToDecimalColumnReader<FROM##VectorBatch, Decimal128VectorBatch, IS_FROM_FLOATING>;
+
+#define DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(FROM) \
+  using FROM##ToTimestampColumnReader = NumericToTimestampColumnReader<FROM##VectorBatch>;
 
   DEFINE_NUMERIC_CONVERT_READER(Boolean, Byte, int8_t)
   DEFINE_NUMERIC_CONVERT_READER(Boolean, Short, int16_t)
@@ -235,9 +507,63 @@ namespace orc {
   DEFINE_NUMERIC_CONVERT_READER(Int, Double, double)
   DEFINE_NUMERIC_CONVERT_READER(Long, Double, double)
 
+  // Numeric to String/Char
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Byte, String)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Short, String)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Int, String)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Long, String)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Float, String)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Double, String)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Byte, Char)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Short, Char)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Int, Char)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Long, Char)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Float, Char)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Double, Char)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Byte, Varchar)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Short, Varchar)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Int, Varchar)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Long, Varchar)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Float, Varchar)
+  DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER(Double, Varchar)
+  using BooleanToStringColumnReader = BooleanToStringVariantColumnReader;
+  using BooleanToCharColumnReader = BooleanToStringVariantColumnReader;
+  using BooleanToVarcharColumnReader = BooleanToStringVariantColumnReader;
+
+  // Numeric to Decimal
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Boolean, false)
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Byte, false)
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Short, false)
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Int, false)
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Long, false)
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Float, true)
+  DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER(Double, true)
+
+  // Numeric to Timestamp
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Boolean)
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Byte)
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Short)
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Int)
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Long)
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Float)
+  DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER(Double)
+
 #define CASE_CREATE_READER(TYPE, CONVERT) \
   case TYPE:                              \
     return std::make_unique<CONVERT##ColumnReader>(_readType, fileType, stripe, throwOnOverflow);
+
+  const static int32_t MAX_PRECISION_64 = 18;
+
+#define CASE_CREATE_DECIMAL_READER(FROM)                                                   \
+  case DECIMAL: {                                                                          \
+    if (_readType.getPrecision() <= MAX_PRECISION_64) {                                    \
+      return std::make_unique<FROM##ToDecimal64ColumnReader>(_readType, fileType, stripe,  \
+                                                             throwOnOverflow);             \
+    } else {                                                                               \
+      return std::make_unique<FROM##ToDecimal128ColumnReader>(_readType, fileType, stripe, \
+                                                              throwOnOverflow);            \
+    }                                                                                      \
+  }
 
 #define CASE_EXCEPTION                                                                 \
   default:                                                                             \
@@ -263,19 +589,19 @@ namespace orc {
           CASE_CREATE_READER(LONG, BooleanToLong);
           CASE_CREATE_READER(FLOAT, BooleanToFloat);
           CASE_CREATE_READER(DOUBLE, BooleanToDouble);
+          CASE_CREATE_READER(STRING, BooleanToString);
+          CASE_CREATE_READER(CHAR, BooleanToChar);
+          CASE_CREATE_READER(VARCHAR, BooleanToVarchar);
+          CASE_CREATE_DECIMAL_READER(Boolean)
+          CASE_CREATE_READER(TIMESTAMP, BooleanToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, BooleanToTimestamp)
           case BOOLEAN:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -287,19 +613,19 @@ namespace orc {
           CASE_CREATE_READER(LONG, ByteToLong);
           CASE_CREATE_READER(FLOAT, ByteToFloat);
           CASE_CREATE_READER(DOUBLE, ByteToDouble);
+          CASE_CREATE_READER(STRING, ByteToString);
+          CASE_CREATE_READER(CHAR, ByteToChar);
+          CASE_CREATE_READER(VARCHAR, ByteToVarchar);
+          CASE_CREATE_DECIMAL_READER(Byte)
+          CASE_CREATE_READER(TIMESTAMP, ByteToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, ByteToTimestamp)
           case BYTE:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -311,19 +637,19 @@ namespace orc {
           CASE_CREATE_READER(LONG, ShortToLong);
           CASE_CREATE_READER(FLOAT, ShortToFloat);
           CASE_CREATE_READER(DOUBLE, ShortToDouble);
+          CASE_CREATE_READER(STRING, ShortToString);
+          CASE_CREATE_READER(CHAR, ShortToChar);
+          CASE_CREATE_READER(VARCHAR, ShortToVarchar);
+          CASE_CREATE_DECIMAL_READER(Short)
+          CASE_CREATE_READER(TIMESTAMP, ShortToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, ShortToTimestamp)
           case SHORT:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -335,19 +661,19 @@ namespace orc {
           CASE_CREATE_READER(LONG, IntToLong);
           CASE_CREATE_READER(FLOAT, IntToFloat);
           CASE_CREATE_READER(DOUBLE, IntToDouble);
+          CASE_CREATE_READER(STRING, IntToString);
+          CASE_CREATE_READER(CHAR, IntToChar);
+          CASE_CREATE_READER(VARCHAR, IntToVarchar);
+          CASE_CREATE_DECIMAL_READER(Int)
+          CASE_CREATE_READER(TIMESTAMP, IntToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, IntToTimestamp)
           case INT:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -359,19 +685,19 @@ namespace orc {
           CASE_CREATE_READER(INT, LongToInt);
           CASE_CREATE_READER(FLOAT, LongToFloat);
           CASE_CREATE_READER(DOUBLE, LongToDouble);
+          CASE_CREATE_READER(STRING, LongToString);
+          CASE_CREATE_READER(CHAR, LongToChar);
+          CASE_CREATE_READER(VARCHAR, LongToVarchar);
+          CASE_CREATE_DECIMAL_READER(Long)
+          CASE_CREATE_READER(TIMESTAMP, LongToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, LongToTimestamp)
           case LONG:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -383,19 +709,19 @@ namespace orc {
           CASE_CREATE_READER(INT, FloatToInt);
           CASE_CREATE_READER(LONG, FloatToLong);
           CASE_CREATE_READER(DOUBLE, FloatToDouble);
+          CASE_CREATE_READER(STRING, FloatToString);
+          CASE_CREATE_READER(CHAR, FloatToChar);
+          CASE_CREATE_READER(VARCHAR, FloatToVarchar);
+          CASE_CREATE_DECIMAL_READER(Float)
+          CASE_CREATE_READER(TIMESTAMP, FloatToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, FloatToTimestamp)
           case FLOAT:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -407,19 +733,19 @@ namespace orc {
           CASE_CREATE_READER(INT, DoubleToInt);
           CASE_CREATE_READER(LONG, DoubleToLong);
           CASE_CREATE_READER(FLOAT, DoubleToFloat);
+          CASE_CREATE_READER(STRING, DoubleToString);
+          CASE_CREATE_READER(CHAR, DoubleToChar);
+          CASE_CREATE_READER(VARCHAR, DoubleToVarchar);
+          CASE_CREATE_DECIMAL_READER(Double)
+          CASE_CREATE_READER(TIMESTAMP, DoubleToTimestamp)
+          CASE_CREATE_READER(TIMESTAMP_INSTANT, DoubleToTimestamp)
           case DOUBLE:
-          case STRING:
           case BINARY:
-          case TIMESTAMP:
           case LIST:
           case MAP:
           case STRUCT:
           case UNION:
-          case DECIMAL:
           case DATE:
-          case VARCHAR:
-          case CHAR:
-          case TIMESTAMP_INSTANT:
             CASE_EXCEPTION
         }
       }
@@ -440,6 +766,9 @@ namespace orc {
   }
 
 #undef DEFINE_NUMERIC_CONVERT_READER
+#undef DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER
+#undef DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER
+#undef DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER
 #undef CASE_CREATE_READER
 #undef CASE_EXCEPTION
 
