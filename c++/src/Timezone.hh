@@ -85,10 +85,10 @@ namespace orc {
      * Convert wall clock time of current timezone to UTC timezone
      */
     virtual int64_t convertToUTC(int64_t clk) const = 0;
-    
+
     /**
      * Convert UTC timezone to wall clock time of current timezone
-    */
+     */
     virtual int64_t convertFromUTC(int64_t clk) const = 0;
   };
 

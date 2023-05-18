@@ -586,7 +586,7 @@ namespace orc {
     int64_t convertToUTC(int64_t clk) const override {
       return clk + getVariant(clk).gmtOffset;
     }
-    
+
     int64_t convertFromUTC(int64_t clk) const override {
       int64_t adjustedTime = clk - getVariant(clk).gmtOffset;
       const auto& adjustedReader = getVariant(adjustedTime);

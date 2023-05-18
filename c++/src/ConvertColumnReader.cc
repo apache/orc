@@ -196,7 +196,7 @@ namespace orc {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
 
       // cache converted string in the buffer
-      auto totalLength = convertToStrBuffer(rowBatch, numValues, notNull);
+      auto totalLength = convertToStrBuffer(rowBatch, numValues);
 
       // contact string values to blob buffer of vector batch
       auto& dstBatch = *SafeCastBatchTo<StringVectorBatch*>(&rowBatch);
@@ -214,8 +214,7 @@ namespace orc {
       strBuffer.clear();
     }
 
-    virtual size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues,
-                                      char* notNull) = 0;
+    virtual size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) = 0;
 
    protected:
     std::vector<std::string> strBuffer;
@@ -227,30 +226,32 @@ namespace orc {
                                        StripeStreams& stripe, bool _throwOnOverflow)
         : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
 
-    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues,
-                              char* notNull) override {
-      size_t size = 0;
-      strBuffer.resize(numValues);
-      const auto& srcBatch = *SafeCastBatchTo<const BooleanVectorBatch*>(data.get());
-      std::string trueValue = "TRUE";
-      std::string falseValue = "FALSE";
-      if (readType.getKind() == CHAR) {
-        trueValue.resize(readType.getMaximumLength(), ' ');
-        falseValue.resize(readType.getMaximumLength(), ' ');
-      } else if (readType.getKind() == VARCHAR) {
-        trueValue = trueValue.substr(0, std::min((uint64_t)4, readType.getMaximumLength()));
-        falseValue = falseValue.substr(0, std::min((uint64_t)5, readType.getMaximumLength()));
-      }
-      // cast the bool value to string and truncate to the max length
-      for (uint64_t i = 0; i < numValues; ++i) {
-        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-          strBuffer[i] = (srcBatch.data[i] ? trueValue : falseValue);
-          size += strBuffer[i].size();
-        }
-      }
-      return size;
-    }
+    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
   };
+
+  size_t BooleanToStringVariantColumnReader::convertToStrBuffer(ColumnVectorBatch& rowBatch,
+                                                                uint64_t numValues) {
+    size_t size = 0;
+    strBuffer.resize(numValues);
+    const auto& srcBatch = *SafeCastBatchTo<const BooleanVectorBatch*>(data.get());
+    std::string trueValue = "TRUE";
+    std::string falseValue = "FALSE";
+    if (readType.getKind() == CHAR) {
+      trueValue.resize(readType.getMaximumLength(), ' ');
+      falseValue.resize(readType.getMaximumLength(), ' ');
+    } else if (readType.getKind() == VARCHAR) {
+      trueValue = trueValue.substr(0, std::min(4UL, readType.getMaximumLength()));
+      falseValue = falseValue.substr(0, std::min(5UL, readType.getMaximumLength()));
+    }
+    // cast the bool value to string and truncate to the max length
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+        strBuffer[i] = (srcBatch.data[i] ? trueValue : falseValue);
+        size += strBuffer[i].size();
+      }
+    }
+    return size;
+  }
 
   template <typename FileTypeBatch>
   class NumericToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
@@ -258,48 +259,49 @@ namespace orc {
     NumericToStringVariantColumnReader(const Type& _readType, const Type& fileType,
                                        StripeStreams& stripe, bool _throwOnOverflow)
         : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
-
-    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues,
-                              char* notNull) override {
-      size_t size = 0;
-      strBuffer.resize(numValues);
-      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
-      if (readType.getKind() == STRING) {
-        for (uint64_t i = 0; i < numValues; ++i) {
-          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-            strBuffer[i] = std::to_string(srcBatch.data[i]);
-            size += strBuffer[i].size();
-          }
-        }
-      } else if (readType.getKind() == VARCHAR) {
-        const auto maxLength = readType.getMaximumLength();
-        for (uint64_t i = 0; i < numValues; ++i) {
-          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-            strBuffer[i] = std::to_string(srcBatch.data[i]);
-            if (strBuffer[i].size() > maxLength) {
-              strBuffer[i].resize(maxLength);
-            }
-            size += strBuffer[i].size();
-          }
-        }
-      } else {
-        const auto maxLength = readType.getMaximumLength();
-        for (uint64_t i = 0; i < numValues; ++i) {
-          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-            strBuffer[i] = std::to_string(srcBatch.data[i]);
-            if (strBuffer[i].size() > maxLength) {
-              strBuffer[i].resize(maxLength);
-            } else {
-              strBuffer[i].resize(maxLength, ' ');
-            }
-            size += strBuffer[i].size();
-          }
-        }
-      }
-      return size;
-    }
+    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
   };
 
+  template <typename FileTypeBatch>
+  size_t NumericToStringVariantColumnReader<FileTypeBatch>::convertToStrBuffer(
+      ColumnVectorBatch& rowBatch, uint64_t numValues) {
+    size_t size = 0;
+    strBuffer.resize(numValues);
+    const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+    if (readType.getKind() == STRING) {
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          strBuffer[i] = std::to_string(srcBatch.data[i]);
+          size += strBuffer[i].size();
+        }
+      }
+    } else if (readType.getKind() == VARCHAR) {
+      const auto maxLength = readType.getMaximumLength();
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          strBuffer[i] = std::to_string(srcBatch.data[i]);
+          if (strBuffer[i].size() > maxLength) {
+            strBuffer[i].resize(maxLength);
+          }
+          size += strBuffer[i].size();
+        }
+      }
+    } else {
+      const auto maxLength = readType.getMaximumLength();
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          strBuffer[i] = std::to_string(srcBatch.data[i]);
+          if (strBuffer[i].size() > maxLength) {
+            strBuffer[i].resize(maxLength);
+          } else {
+            strBuffer[i].resize(maxLength, ' ');
+          }
+          size += strBuffer[i].size();
+        }
+      }
+    }
+    return size;
+  }
   template <typename FileTypeBatch, typename ReadTypeBatch, bool isFileTypeDouble>
   class NumericToDecimalColumnReader : public ConvertColumnReader {
    public:
@@ -422,29 +424,34 @@ namespace orc {
 
    private:
     template <typename FileType>
-    void convertToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx, FileType value) {
-      if constexpr (std::is_floating_point<FileType>::value) {
-        if (value > static_cast<FileType>(std::numeric_limits<int64_t>::max()) ||
-            value < static_cast<FileType>(std::numeric_limits<int64_t>::min())) {
-          handleOverflow<FileType, int64_t>(dstBatch, idx, throwOnOverflow);
-          return;
-        }
-        dstBatch.data[idx] = static_cast<int64_t>(value);
-        dstBatch.nanoseconds[idx] = static_cast<int32_t>(
-            (value - static_cast<FileType>(dstBatch.data[idx])) * 1e9);
-        if (dstBatch.nanoseconds[idx] < 0) {
-          dstBatch.data[idx] -= 1;
-          dstBatch.nanoseconds[idx] += static_cast<int32_t>(1e9);
-        }
-      } else {
-        dstBatch.data[idx] = value;
-        dstBatch.nanoseconds[idx] = 0;
-      }
-      if (needConvertTimezone) {
-        dstBatch.data[idx] = readerTimezone.convertFromUTC(dstBatch.data[idx]);
-      }
-    }
+    void convertToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx, FileType value);
   };
+
+  template <typename FileTypeBatch>
+  template <typename FileType>
+  void NumericToTimestampColumnReader<FileTypeBatch>::convertToTimestamp(
+      TimestampVectorBatch& dstBatch, uint64_t idx, FileType value) {
+    if constexpr (std::is_floating_point<FileType>::value) {
+      if (value > static_cast<FileType>(std::numeric_limits<int64_t>::max()) ||
+          value < static_cast<FileType>(std::numeric_limits<int64_t>::min())) {
+        handleOverflow<FileType, int64_t>(dstBatch, idx, throwOnOverflow);
+        return;
+      }
+      dstBatch.data[idx] = static_cast<int64_t>(value);
+      dstBatch.nanoseconds[idx] = static_cast<int32_t>(
+          static_cast<double>(value - static_cast<FileType>(dstBatch.data[idx])) * 1e9);
+      if (dstBatch.nanoseconds[idx] < 0) {
+        dstBatch.data[idx] -= 1;
+        dstBatch.nanoseconds[idx] += static_cast<int32_t>(1e9);
+      }
+    } else {
+      dstBatch.data[idx] = value;
+      dstBatch.nanoseconds[idx] = 0;
+    }
+    if (needConvertTimezone) {
+      dstBatch.data[idx] = readerTimezone.convertFromUTC(dstBatch.data[idx]);
+    }
+  }
 
 #define DEFINE_NUMERIC_CONVERT_READER(FROM, TO, TYPE) \
   using FROM##To##TO##ColumnReader =                  \
