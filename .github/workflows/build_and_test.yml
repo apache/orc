@@ -6,13 +6,13 @@ on:
     - 'docker'
     - 'site/**'
     branches:
-    - main
+    - branch-1.9
   pull_request:
     paths-ignore:
     - 'docker'
     - 'site/**'
     branches:
-    - main
+    - branch-1.9
 
 # Cancel previous PR build and test
 concurrency:
