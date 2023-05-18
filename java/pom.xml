@@ -79,7 +79,7 @@
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
-    <tools.hadoop.version>2.10.2</tools.hadoop.version>
+    <tools.hadoop.version>3.3.5</tools.hadoop.version>
     <zookeeper.version>3.8.1</zookeeper.version>
   </properties>
 
@@ -981,7 +981,6 @@
       <properties>
         <hadoop.version>3.3.5</hadoop.version>
         <min.hadoop.version>3.3.5</min.hadoop.version>
-        <tools.hadoop.version>3.3.5</tools.hadoop.version>
       </properties>
     </profile>
     <profile>
