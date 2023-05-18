@@ -42,7 +42,7 @@ jobs:
             java: 8
             cxx: g++
           - os: ubuntu-20.04
-            java: 20
+            java: 21-ea
             cxx: g++
     env:
       MAVEN_OPTS: -Xmx2g
