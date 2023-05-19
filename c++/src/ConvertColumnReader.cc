@@ -240,8 +240,8 @@ namespace orc {
       trueValue.resize(readType.getMaximumLength(), ' ');
       falseValue.resize(readType.getMaximumLength(), ' ');
     } else if (readType.getKind() == VARCHAR) {
-      trueValue = trueValue.substr(0, std::min(4UL, readType.getMaximumLength()));
-      falseValue = falseValue.substr(0, std::min(5UL, readType.getMaximumLength()));
+      trueValue = trueValue.substr(0, std::min(static_cast<uint64_t>(4), readType.getMaximumLength()));
+      falseValue = falseValue.substr(0, std::min(static_cast<uint64_t>(5), readType.getMaximumLength()));
     }
     // cast the bool value to string and truncate to the max length
     for (uint64_t i = 0; i < numValues; ++i) {
