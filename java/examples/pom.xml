@@ -51,12 +51,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
+      <artifactId>hadoop-client-api</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -111,16 +106,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
-          <ignoredUnusedDeclaredDependencies>
-            <ignoredUnusedDeclaredDependency>com.google.guava:guava</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>org.apache.hadoop:hadoop-hdfs</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>org.apache.hadoop:hadoop-common</ignoredUnusedDeclaredDependency>
-          </ignoredUnusedDeclaredDependencies>
-          <ignoredDependencies>
-            <ignoredDependency>org.apache.hadoop:hadoop-client-api</ignoredDependency>
-          </ignoredDependencies>
-        </configuration>
       </plugin>
     </plugins>
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
