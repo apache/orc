@@ -341,6 +341,7 @@ namespace orc {
     inline void nextBuffer();
     inline signed char readByte();
     inline void readHeader();
+    inline void reset();
 
     std::unique_ptr<SeekableInputStream> inputStream;
     size_t remainingValues;
@@ -380,14 +381,18 @@ namespace orc {
     }
   }
 
-  ByteRleDecoderImpl::ByteRleDecoderImpl(std::unique_ptr<SeekableInputStream>
-                                         input) {
-    inputStream = std::move(input);
+  void ByteRleDecoderImpl::reset() {
     repeating = false;
     remainingValues = 0;
     value = 0;
     bufferStart = nullptr;
     bufferEnd = nullptr;
+  }
+
+  ByteRleDecoderImpl::ByteRleDecoderImpl(
+                        std::unique_ptr<SeekableInputStream> input) {
+    inputStream = std::move(input);
+    reset();
   }
 
   ByteRleDecoderImpl::~ByteRleDecoderImpl() {
@@ -397,10 +402,8 @@ namespace orc {
   void ByteRleDecoderImpl::seek(PositionProvider& location) {
     // move the input stream
     inputStream->seek(location);
-    // force a re-read from the stream
-    bufferEnd = bufferStart;
-    // read a new header
-    readHeader();
+    // reset the decoder status and lazily call readHeader()
+    reset();
     // skip ahead the given number of records
     ByteRleDecoderImpl::skip(location.next());
   }
