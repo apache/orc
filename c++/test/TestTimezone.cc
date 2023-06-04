@@ -367,4 +367,39 @@ namespace orc {
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "1974-01-06 09:59:59"));
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "2015-06-06 12:34:56"));
   }
+
+  TEST(TestTimezone, testConvertFromUtc) {
+    const Timezone* la = &getTimezoneByName("America/Los_Angeles");
+    const Timezone* ny = &getTimezoneByName("America/New_York");
+    const Timezone* gmt = &getTimezoneByName("GMT");
+    const Timezone* sh = &getTimezoneByName("Asia/Shanghai");
+    // 2023-05-29 22:20:00 UTC
+    EXPECT_EQ(1685398800 + 7 * 3600, la->convertFromUTC(1685398800)); // it's PDT
+    EXPECT_EQ(1685398800 + 4 * 3600, ny->convertFromUTC(1685398800)); // it's EDT
+    EXPECT_EQ(1685398800, gmt->convertFromUTC(1685398800));
+    EXPECT_EQ(1685398800 - 8 * 3600, sh->convertFromUTC(1685398800)); // no DST in China
+
+    // DST starts in Los Angeles March 12, 2:00 am
+    // 2023-03-12 03:00:00 UTC
+    EXPECT_EQ(1678590000 + 7 * 3600, la->convertFromUTC(1678590000));
+    // 2023-03-12 01:59:59 UTC
+    EXPECT_EQ(1678590000 + 7 * 3600 - 1, la->convertFromUTC(1678586399));
+
+    // DST starts in New York March 12, 2:00 am
+    // 2023-03-12 03:00:00 UTC
+    EXPECT_EQ(1678590000 + 4 * 3600, ny->convertFromUTC(1678590000));
+    // 2023-03-12 01:59:59 UTC
+    EXPECT_EQ(1678590000 + 4 * 3600 - 1, ny->convertFromUTC(1678586399));
+
+    // no DST in China
+    EXPECT_EQ(1678590000 - 8 * 3600, sh->convertFromUTC(1678590000));
+    EXPECT_EQ(1678586399 - 8 * 3600, sh->convertFromUTC(1678586399));
+
+    // DST ends in New York November 5, 2:00 am
+    // 2023-11-05 06:00:00 UTC
+    EXPECT_EQ(1699164000 + 5 * 3600, ny->convertFromUTC(1699164000));
+    // DST ends in Los Angeles November 5, 2:00 am
+    EXPECT_EQ(1699164000 + 8 * 3600, la->convertFromUTC(1699164000));
+
+  }
 }  // namespace orc

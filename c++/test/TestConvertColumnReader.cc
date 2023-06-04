@@ -160,7 +160,7 @@ namespace orc {
     std::unique_ptr<Type> fileType(Type::buildTypeFromString(
         "struct<t1:boolean,t2:boolean,t3:boolean,t4:boolean,t5:boolean>"));
     std::shared_ptr<Type> readType(Type::buildTypeFromString(
-        "struct<t1:string,t2:char(3),t3:char(7),t4:varchar(3),t5:varchar(7)>"));
+        "struct<t1:string,t2:char(6),t3:char(7),t4:varchar(5),t5:varchar(7)>"));
     WriterOptions options;
     options.setUseTightNumericVector(true);
     auto writer = createWriter(*fileType, &memStream, options);
@@ -202,11 +202,16 @@ namespace orc {
     auto& readC4 = dynamic_cast<StringVectorBatch&>(*readStructBatch.fields[4]);
 
     for (size_t i = 0; i < 1024; i++) {
-      EXPECT_EQ(std::string(readC0.data[i], readC0.length[i]), i % 2 == 0 ? "FALSE" : "TRUE");
-      EXPECT_EQ(std::string(readC1.data[i], readC1.length[i]), i % 3 == 0 ? "FAL" : "TRU");
-      EXPECT_EQ(std::string(readC2.data[i], readC2.length[i]), i % 5 == 0 ? "FALSE  " : "TRUE   ");
-      EXPECT_EQ(std::string(readC3.data[i], readC3.length[i]), i % 7 == 0 ? "FAL" : "TRU");
-      EXPECT_EQ(std::string(readC4.data[i], readC4.length[i]), i % 11 == 0 ? "FALSE" : "TRUE");
+      EXPECT_EQ(std::string(readC0.data[i], static_cast<size_t>(readC0.length[i])),
+                i % 2 == 0 ? "FALSE" : "TRUE");
+      EXPECT_EQ(std::string(readC1.data[i], static_cast<size_t>(readC1.length[i])),
+                i % 3 == 0 ? "FALSE " : "TRUE  ");
+      EXPECT_EQ(std::string(readC2.data[i], static_cast<size_t>(readC2.length[i])),
+                i % 5 == 0 ? "FALSE  " : "TRUE   ");
+      EXPECT_EQ(std::string(readC3.data[i], static_cast<size_t>(readC3.length[i])),
+                i % 7 == 0 ? "FALSE" : "TRUE");
+      EXPECT_EQ(std::string(readC4.data[i], static_cast<size_t>(readC4.length[i])),
+                i % 11 == 0 ? "FALSE" : "TRUE");
     }
   }
 
@@ -231,7 +236,7 @@ namespace orc {
     auto batch = writer->createRowBatch(TEST_CASES);
     auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
 
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < 3; i++) {
       auto& col0 = dynamic_cast<ByteVectorBatch&>(*structBatch.fields[i * 6]);
       auto& col1 = dynamic_cast<ShortVectorBatch&>(*structBatch.fields[i * 6 + 1]);
       auto& col2 = dynamic_cast<IntVectorBatch&>(*structBatch.fields[i * 6 + 2]);
@@ -240,12 +245,13 @@ namespace orc {
       auto& col5 = dynamic_cast<DoubleVectorBatch&>(*structBatch.fields[i * 6 + 5]);
       for (int j = 0; j < TEST_CASES; j++) {
         int flag = j % 2 == 0 ? -1 : 1;
-        col0.data[j] = static_cast<char>(flag * (j % 128));
-        col1.data[j] = static_cast<short>(flag * (j % 32768));
-        col2.data[j] = flag * j;
-        col3.data[j] = flag * j;
-        col4.data[j] = static_cast<float>(flag * j) * 1.234f;
-        col5.data[j] = static_cast<double>(flag * j) * 1.234;
+        uint64_t idx = static_cast<uint64_t>(j);
+        col0.data[idx] = static_cast<char>(flag * (j % 128));
+        col1.data[idx] = static_cast<short>(flag * (j % 32768));
+        col2.data[idx] = flag * j;
+        col3.data[idx] = flag * j;
+        col4.data[idx] = static_cast<float>(flag * j) * 1.234f;
+        col5.data[idx] = static_cast<double>(flag * j) * 1.234;
       }
       col0.numElements = col1.numElements = col2.numElements = col3.numElements = col4.numElements =
           col5.numElements = TEST_CASES;
@@ -288,54 +294,67 @@ namespace orc {
 
     std::vector<std::vector<std::string>> origin(30, std::vector<std::string>(TEST_CASES));
     for (int j = 0; j < TEST_CASES; j++) {
-      for (int k = 0; k < 5; k++) {
+      for (size_t k = 0; k < 5; k++) {
         int flag = j % 2 == 0 ? -1 : 1;
-        origin[6 * k + 0][j] = std::to_string(static_cast<char>(flag * (j % 128)));
-        origin[6 * k + 1][j] = std::to_string(static_cast<short>(flag * (j % 32768)));
-        origin[6 * k + 2][j] = std::to_string(flag * j);
-        origin[6 * k + 3][j] = std::to_string(flag * j);
-        origin[6 * k + 4][j] = std::to_string(static_cast<float>(flag * j) * 1.234f);
-        origin[6 * k + 5][j] = std::to_string(static_cast<double>(flag * j) * 1.234);
+        uint64_t idx = static_cast<uint64_t>(j);
+        origin[6 * k + 0][idx] = std::to_string(static_cast<char>(flag * (j % 128)));
+        origin[6 * k + 1][idx] = std::to_string(static_cast<short>(flag * (j % 32768)));
+        origin[6 * k + 2][idx] = std::to_string(flag * j);
+        origin[6 * k + 3][idx] = std::to_string(flag * j);
+        origin[6 * k + 4][idx] = std::to_string(static_cast<float>(flag * j) * 1.234f);
+        origin[6 * k + 5][idx] = std::to_string(static_cast<double>(flag * j) * 1.234);
       }
     }
-
-    for (int i = 0; i < TEST_CASES; i++) {
+    for (size_t i = 0; i < TEST_CASES; i++) {
       std::vector<std::string> expected(19);
-      for (int j = 1; j <= 18; j++) {
+      std::vector<bool> isNull(19, false);
+      for (size_t j = 1; j <= 18; j++) {
         expected[j] = origin[j - 1][i];
       }
-      for (int i = 7; i <= 12; i++) {
-        int length = i - 6;
-        if (expected[i].size() > length) {
-          expected[i].resize(length);
+      for (size_t j = 7; j <= 12; j++) {
+        size_t length = j - 6;
+        if (expected[j].size() > length) {
+          isNull[j] = true;
         } else {
-          expected[i].resize(length, ' ');
+          expected[j].resize(length, ' ');
         }
       }
-      for (int i = 13; i <= 18; i++) {
-        int length = i - 12;
-        if (expected[i].size() > length) {
-          expected[i].resize(length);
+      for (size_t j = 13; j <= 18; j++) {
+        size_t length = j - 12;
+        if (expected[j].size() > length) {
+          isNull[j] = true;
         }
       }
-      EXPECT_EQ(expected[1], std::string(readC1.data[i], readC1.length[i])) << i;
-      EXPECT_EQ(expected[2], std::string(readC2.data[i], readC2.length[i])) << i;
-      EXPECT_EQ(expected[3], std::string(readC3.data[i], readC3.length[i])) << i;
-      EXPECT_EQ(expected[4], std::string(readC4.data[i], readC4.length[i])) << i;
-      EXPECT_EQ(expected[5], std::string(readC5.data[i], readC5.length[i])) << i;
-      EXPECT_EQ(expected[6], std::string(readC6.data[i], readC6.length[i])) << i;
-      EXPECT_EQ(expected[7], std::string(readC7.data[i], readC7.length[i])) << i;
-      EXPECT_EQ(expected[8], std::string(readC8.data[i], readC8.length[i])) << i;
-      EXPECT_EQ(expected[9], std::string(readC9.data[i], readC9.length[i])) << i;
-      EXPECT_EQ(expected[10], std::string(readC10.data[i], readC10.length[i])) << i;
-      EXPECT_EQ(expected[11], std::string(readC11.data[i], readC11.length[i])) << i;
-      EXPECT_EQ(expected[12], std::string(readC12.data[i], readC12.length[i])) << i;
-      EXPECT_EQ(expected[13], std::string(readC13.data[i], readC13.length[i])) << i;
-      EXPECT_EQ(expected[14], std::string(readC14.data[i], readC14.length[i])) << i;
-      EXPECT_EQ(expected[15], std::string(readC15.data[i], readC15.length[i])) << i;
-      EXPECT_EQ(expected[16], std::string(readC16.data[i], readC16.length[i])) << i;
-      EXPECT_EQ(expected[17], std::string(readC17.data[i], readC17.length[i])) << i;
-      EXPECT_EQ(expected[18], std::string(readC18.data[i], readC18.length[i])) << i;
+#define TEST_COLUMN(index)                                                                    \
+  if (isNull[index]) {                                                                        \
+    EXPECT_EQ(false, readC##index.notNull[i])                                                 \
+        << i << " " << expected[index] << " "                                                 \
+        << std::string(readC##index.data[i], static_cast<size_t>(readC##index.length[i]));    \
+  } else {                                                                                    \
+    EXPECT_EQ(true, readC##index.notNull[i]) << i;                                            \
+    EXPECT_EQ(expected[index],                                                                \
+              std::string(readC##index.data[i], static_cast<size_t>(readC##index.length[i]))) \
+        << i;                                                                                 \
+  }
+      TEST_COLUMN(1);
+      TEST_COLUMN(2);
+      TEST_COLUMN(3);
+      TEST_COLUMN(4);
+      TEST_COLUMN(5);
+      TEST_COLUMN(6);
+      TEST_COLUMN(7);
+      TEST_COLUMN(8);
+      TEST_COLUMN(9);
+      TEST_COLUMN(10);
+      TEST_COLUMN(11);
+      TEST_COLUMN(12);
+      TEST_COLUMN(13);
+      TEST_COLUMN(14);
+      TEST_COLUMN(15);
+      TEST_COLUMN(16);
+      TEST_COLUMN(17);
+      TEST_COLUMN(18);
+#undef TEST_COLUMN
     }
   }
 
@@ -358,16 +377,19 @@ namespace orc {
     auto& c3 = dynamic_cast<LongVectorBatch&>(*structBatch->fields[2]);
     auto& c4 = dynamic_cast<DoubleVectorBatch&>(*structBatch->fields[3]);
 
-    for (int i = 0; i < TEST_CASES; i++) {
-      c1.data[i] = i * 12;
-      c3.data[i] = i * 16;
-      if (i % 2) {
-        c2.data[i] = i * 13 + 0.55555;
-        c4.data[i] = i * 1234 + 0.55555;
-      } else {
-        c2.data[i] = i * 17 + 0.11111;
-        c4.data[i] = i * 1234 + 0.11111;
-      }
+    for (int32_t i = 0; i < TEST_CASES / 2; i++) {
+      size_t idx = static_cast<size_t>(i);
+      c1.data[idx] = i * 12;
+      c3.data[idx] = i * 16;
+      c2.data[idx] = (i % 2 ? -1 : 1) * (i * 1000 + 0.111111 * (i % 9));
+      c4.data[idx] = (i % 2 ? -1 : 1) * (i * 1000 + 0.111111 * (i % 9));
+    }
+    for (int32_t i = TEST_CASES / 2; i < TEST_CASES; i++) {
+      size_t idx = static_cast<size_t>(i);
+      c1.data[idx] = 12345678910LL * i;
+      c2.data[idx] = 12345678910.1234 * i;
+      c3.data[idx] = 12345678910LL * i;
+      c4.data[idx] = (123456.0 * i + (0.1111 * (i % 9))) * (i % 2 ? -1 : 1);
     }
     structBatch->numElements = c1.numElements = c2.numElements = c3.numElements = c4.numElements =
         TEST_CASES;
@@ -390,21 +412,33 @@ namespace orc {
     auto& readC3 = dynamic_cast<Decimal128VectorBatch&>(*readStructBatch.fields[2]);
     auto& readC4 = dynamic_cast<Decimal128VectorBatch&>(*readStructBatch.fields[3]);
     EXPECT_EQ(TEST_CASES, readBatch->numElements);
-    for (int i = 0; i < TEST_CASES; i++) {
-      EXPECT_TRUE(readC1.notNull[i]) << i;
-      EXPECT_TRUE(readC2.notNull[i]) << i;
-      EXPECT_TRUE(readC3.notNull[i]) << i;
-      EXPECT_TRUE(readC4.notNull[i]) << i;
+    for (int i = 0; i < TEST_CASES / 2; i++) {
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_TRUE(readC1.notNull[idx]) << i;
+      EXPECT_TRUE(readC2.notNull[idx]) << i;
+      EXPECT_TRUE(readC3.notNull[idx]) << i;
+      EXPECT_TRUE(readC4.notNull[idx]) << i;
 
-      EXPECT_EQ(i * 1200, readC1.values[i]) << i;
-      EXPECT_EQ(i * 16000, readC3.values[i].toLong()) << i;
-      if (i % 2) {
-        EXPECT_EQ(1LL * i * 130000 + 5556, readC2.values[i]);
-        EXPECT_EQ(1LL * i * 1234000 + 556, readC4.values[i].toLong());
-      } else {
-        EXPECT_EQ(1LL * i * 170000 + 1111, readC2.values[i]);
-        EXPECT_EQ(1LL * i * 1234000 + 111, readC4.values[i].toLong());
-      }
+      EXPECT_EQ(i * 1200, readC1.values[idx]) << i;
+      EXPECT_EQ(i * 16000, readC3.values[idx].toLong()) << i;
+      EXPECT_EQ((1LL * i * 10000000 + (1111 * (i % 9) + (i % 9 > 4))) * (i % 2 ? -1 : 1),
+                readC2.values[idx])
+          << i;
+      EXPECT_EQ((1LL * i * 1000000 + (111 * (i % 9) + (i % 9 > 4))) * (i % 2 ? -1 : 1),
+                readC4.values[idx].toLong())
+          << i;
+    }
+    for (int i = TEST_CASES / 2; i < TEST_CASES; i++) {
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_FALSE(readC1.notNull[idx]) << i;
+      EXPECT_FALSE(readC2.notNull[idx]) << i;
+      EXPECT_TRUE(readC3.notNull[idx]) << i;
+      EXPECT_TRUE(readC4.notNull[idx]) << i;
+
+      EXPECT_EQ(12345678910000LL * i, readC3.values[idx].toLong()) << i;
+      EXPECT_EQ((123456000LL * i + (111 * (i % 9) + (i % 9 > 4))) * (i % 2 ? -1 : 1),
+                readC4.values[idx].toLong())
+          << i;
     }
   }
 
@@ -429,16 +463,17 @@ namespace orc {
     auto& c4 = dynamic_cast<DoubleVectorBatch&>(*structBatch->fields[3]);
 
     for (int i = 0; i < TEST_CASES; i++) {
-      c1.data[i] = (i - TEST_CASES / 2) * 3600 + i;
-      c2.data[i] = (i - TEST_CASES / 2) * 3600 + i;
-      c3.data[i] = (i - TEST_CASES / 2) * 3600 + i * i;
-      c4.data[i] = (i - TEST_CASES / 2) * 3600 + i * i;
+      size_t idx = static_cast<size_t>(i);
+      c1.data[idx] = (i - TEST_CASES / 2) * 3600 + i;
+      c2.data[idx] = (i - TEST_CASES / 2) * 3600 + i;
+      c3.data[idx] = (i - TEST_CASES / 2) * 3600 + i * i;
+      c4.data[idx] = (i - TEST_CASES / 2) * 3600 + i * i;
       if (i % 2) {
-        c2.data[i] += 0.55555;
-        c4.data[i] += 0.777;
+        c2.data[idx] += 0.55555;
+        c4.data[idx] += 0.777;
       } else {
-        c2.data[i] += 0.11111;
-        c4.data[i] += 0.333;
+        c2.data[idx] += 0.11111;
+        c4.data[idx] += 0.333;
       }
     }
 
@@ -465,23 +500,24 @@ namespace orc {
     auto& readC4 = dynamic_cast<TimestampVectorBatch&>(*readStructBatch.fields[3]);
     EXPECT_EQ(TEST_CASES, readBatch->numElements);
     for (int i = 0; i < TEST_CASES; i++) {
-      EXPECT_TRUE(readC1.notNull[i]) << i;
-      EXPECT_TRUE(readC2.notNull[i]) << i;
-      EXPECT_TRUE(readC3.notNull[i]) << i;
-      EXPECT_TRUE(readC4.notNull[i]) << i;
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_TRUE(readC1.notNull[idx]) << i;
+      EXPECT_TRUE(readC2.notNull[idx]) << i;
+      EXPECT_TRUE(readC3.notNull[idx]) << i;
+      EXPECT_TRUE(readC4.notNull[idx]) << i;
 
-      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i - 8 * 3600, readC1.data[i]) << i;
-      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i - 8 * 3600, readC2.data[i]) << i;
-      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i * i, readC3.data[i]) << i;
-      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i * i, readC4.data[i]) << i;
-      EXPECT_EQ(0, readC1.nanoseconds[i]) << i;
-      EXPECT_EQ(0, readC3.nanoseconds[i]) << i;
+      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i - 8 * 3600, readC1.data[idx]) << i;
+      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i - 8 * 3600, readC2.data[idx]) << i;
+      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i * i, readC3.data[idx]) << i;
+      EXPECT_EQ((i - TEST_CASES / 2) * 3600 + i * i, readC4.data[idx]) << i;
+      EXPECT_EQ(0, readC1.nanoseconds[idx]) << i;
+      EXPECT_EQ(0, readC3.nanoseconds[idx]) << i;
       if (i % 2) {
-        EXPECT_TRUE(std::abs(555550000 - readC2.nanoseconds[i]) <= 1) << i;
-        EXPECT_TRUE(std::abs(777000000 - readC4.nanoseconds[i]) <= 1) << i;
+        EXPECT_TRUE(std::abs(555550000 - readC2.nanoseconds[idx]) <= 1) << i;
+        EXPECT_TRUE(std::abs(777000000 - readC4.nanoseconds[idx]) <= 1) << i;
       } else {
-        EXPECT_TRUE(std::abs(111110000 - readC2.nanoseconds[i]) <= 1) << i;
-        EXPECT_TRUE(std::abs(333000000 - readC4.nanoseconds[i]) <= 1) << i;
+        EXPECT_TRUE(std::abs(111110000 - readC2.nanoseconds[idx]) <= 1) << i;
+        EXPECT_TRUE(std::abs(333000000 - readC4.nanoseconds[idx]) <= 1) << i;
       }
     }
   }

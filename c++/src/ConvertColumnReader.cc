@@ -192,27 +192,7 @@ namespace orc {
                                        StripeStreams& stripe, bool _throwOnOverflow)
         : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
 
-    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
-      ConvertColumnReader::next(rowBatch, numValues, notNull);
-
-      // cache converted string in the buffer
-      auto totalLength = convertToStrBuffer(rowBatch, numValues);
-
-      // contact string values to blob buffer of vector batch
-      auto& dstBatch = *SafeCastBatchTo<StringVectorBatch*>(&rowBatch);
-      dstBatch.blob.resize(totalLength);
-      char* blob = dstBatch.blob.data();
-      for (uint64_t i = 0; i < numValues; ++i) {
-        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-          const auto size = strBuffer[i].size();
-          ::memcpy(blob, strBuffer[i].c_str(), size);
-          dstBatch.data[i] = blob;
-          dstBatch.length[i] = static_cast<int32_t>(size);
-          blob += size;
-        }
-      }
-      strBuffer.clear();
-    }
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
     virtual size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) = 0;
 
@@ -220,13 +200,53 @@ namespace orc {
     std::vector<std::string> strBuffer;
   };
 
+  void ConvertToStringVariantColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                                                char* notNull) {
+    ConvertColumnReader::next(rowBatch, numValues, notNull);
+
+    // cache converted string in the buffer
+    auto totalLength = convertToStrBuffer(rowBatch, numValues);
+
+    // contact string values to blob buffer of vector batch
+    auto& dstBatch = *SafeCastBatchTo<StringVectorBatch*>(&rowBatch);
+    dstBatch.blob.resize(totalLength);
+    char* blob = dstBatch.blob.data();
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+        const auto size = strBuffer[i].size();
+        ::memcpy(blob, strBuffer[i].c_str(), size);
+        dstBatch.data[i] = blob;
+        dstBatch.length[i] = static_cast<int32_t>(size);
+        blob += size;
+      }
+    }
+    strBuffer.clear();
+  }
+
   class BooleanToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
    public:
     BooleanToStringVariantColumnReader(const Type& _readType, const Type& fileType,
                                        StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
+      trueValue = "TRUE";
+      falseValue = "FALSE";
+      if (readType.getKind() != STRING) {
+        if (readType.getMaximumLength() < 5) {
+          throw SchemaEvolutionError("Invalid maximum length for boolean type: " +
+                                     std::to_string(readType.getMaximumLength()));
+        }
+        if (readType.getKind() == CHAR) {
+          trueValue.resize(readType.getMaximumLength(), ' ');
+          falseValue.resize(readType.getMaximumLength(), ' ');
+        }
+      }
+    }
 
     size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
+
+    private:
+      std::string trueValue;
+      std::string falseValue;
   };
 
   size_t BooleanToStringVariantColumnReader::convertToStrBuffer(ColumnVectorBatch& rowBatch,
@@ -234,15 +254,6 @@ namespace orc {
     size_t size = 0;
     strBuffer.resize(numValues);
     const auto& srcBatch = *SafeCastBatchTo<const BooleanVectorBatch*>(data.get());
-    std::string trueValue = "TRUE";
-    std::string falseValue = "FALSE";
-    if (readType.getKind() == CHAR) {
-      trueValue.resize(readType.getMaximumLength(), ' ');
-      falseValue.resize(readType.getMaximumLength(), ' ');
-    } else if (readType.getKind() == VARCHAR) {
-      trueValue = trueValue.substr(0, std::min(static_cast<uint64_t>(4), readType.getMaximumLength()));
-      falseValue = falseValue.substr(0, std::min(static_cast<uint64_t>(5), readType.getMaximumLength()));
-    }
     // cast the bool value to string and truncate to the max length
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
@@ -281,9 +292,10 @@ namespace orc {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
           strBuffer[i] = std::to_string(srcBatch.data[i]);
           if (strBuffer[i].size() > maxLength) {
-            strBuffer[i].resize(maxLength);
+            handleOverflow<decltype(srcBatch.data[i]), std::string>(rowBatch, i, throwOnOverflow);
+          } else {
+            size += strBuffer[i].size();
           }
-          size += strBuffer[i].size();
         }
       }
     } else {
@@ -292,17 +304,18 @@ namespace orc {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
           strBuffer[i] = std::to_string(srcBatch.data[i]);
           if (strBuffer[i].size() > maxLength) {
-            strBuffer[i].resize(maxLength);
+            handleOverflow<decltype(srcBatch.data[i]), std::string>(rowBatch, i, throwOnOverflow);
           } else {
             strBuffer[i].resize(maxLength, ' ');
+            size += strBuffer[i].size();
           }
-          size += strBuffer[i].size();
         }
       }
     }
     return size;
   }
-  template <typename FileTypeBatch, typename ReadTypeBatch, bool isFileTypeDouble>
+
+  template <typename FileTypeBatch, typename ReadTypeBatch, bool isFLoatingFileType>
   class NumericToDecimalColumnReader : public ConvertColumnReader {
    public:
     NumericToDecimalColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
@@ -310,6 +323,12 @@ namespace orc {
         : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
       precision = static_cast<int32_t>(readType.getPrecision());
       scale = static_cast<int32_t>(readType.getScale());
+      scaleMultiplier = 1;
+      bool overflow = false;
+      upperBound = scaleUpInt128ByPowerOfTen(1, precision, overflow);
+      for (int i = 0; i < scale; i++) {
+        scaleMultiplier *= 10;
+      }
     }
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
@@ -321,7 +340,7 @@ namespace orc {
       dstBatch.scale = scale;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-          if constexpr (isFileTypeDouble) {
+          if constexpr (isFLoatingFileType) {
             convertDoubleToDecimal(dstBatch, i, srcBatch.data[i]);
           } else {
             convertIntegerToDecimal(dstBatch, i, srcBatch.data[i]);
@@ -331,51 +350,60 @@ namespace orc {
     }
 
    private:
-    template <typename srcType>
-    void convertDoubleToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, srcType value) {
-      std::string strValue = std::to_string(value);
-      int32_t fromScale = 0;
-      int32_t fromPrecision = static_cast<int32_t>(strValue.length());
-      Int128 i128 = 0;
-      for (size_t i = 0; i < strValue.length(); ++i) {
-        auto c = strValue[i];
-        if (c == '.') {
-          fromScale = static_cast<int32_t>(strValue.length() - i - 1);
-          fromPrecision -= 1;
-          continue;
-        }
-        i128 *= 10;
-        i128 += c - '0';
+    template <typename SrcType>
+    void convertDoubleToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, SrcType value) {
+      if (value < -std::ldexp(static_cast<SrcType>(1), 127) ||
+          value >= std::ldexp(static_cast<SrcType>(1), 127)) {
+        handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+        return;
       }
-      auto result = convertDecimal(i128, fromPrecision, fromScale, precision, scale);
-      if (result.first) {
-        handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+      bool isNegative = (value < 0);
+      Int128 i128, remainder;
+      value = std::fabs(value);
+      // i128 = (Int128)value
+      if (value >= std::ldexp(static_cast<SrcType>(1.0), 64)) {
+        int64_t hi = static_cast<int64_t>(std::ldexp(value, -64));
+        uint64_t lo = static_cast<uint64_t>(value - std::ldexp(static_cast<SrcType>(hi), 64));
+        i128 = Int128(hi, lo);
       } else {
-        if constexpr (std::is_same<ReadTypeBatch, Decimal64VectorBatch>::value) {
-          if (!result.second.fitsInLong()) {
-            handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
-          } else {
-            dstBatch.values[idx] = result.second.toLong();
-          }
+        i128 = Int128(0, static_cast<uint64_t>(value));
+      }
+      value = value - std::floor(value);
+
+      bool overflow = false;
+      i128 = scaleUpInt128ByPowerOfTen(i128, scale, overflow);
+      if (overflow || i128 >= upperBound) {
+        handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+        return;
+      }
+
+      value = value * scaleMultiplier;
+      i128 += static_cast<int64_t>(std::round(value));
+      if (isNegative) {
+        i128 = i128.negate();
+      }
+
+      if constexpr (std::is_same<ReadTypeBatch, Decimal64VectorBatch>::value) {
+        if (!i128.fitsInLong()) {
+          handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
         } else {
-          dstBatch.values[idx] = result.second;
+          dstBatch.values[idx] = i128.toLong();
         }
+      } else {
+        dstBatch.values[idx] = i128;
       }
     }
 
-    template <typename srcType>
-    void convertIntegerToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, srcType value) {
+    template <typename SrcType>
+    void convertIntegerToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, SrcType value) {
       int fromScale = 0;
-      int fromPrecision = 1;
-      for (srcType tmp = value; tmp /= 10; ++fromPrecision)
-        ;
-      auto result = convertDecimal(value, fromPrecision, fromScale, precision, scale);
+      auto result = convertDecimal(value, fromScale, precision, scale);
       if (result.first) {
-        handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+        handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
       } else {
         if constexpr (std::is_same<ReadTypeBatch, Decimal64VectorBatch>::value) {
           if (!result.second.fitsInLong()) {
-            handleOverflow<srcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
+            handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
           } else {
             dstBatch.values[idx] = result.second.toLong();
           }
@@ -387,6 +415,8 @@ namespace orc {
 
     int32_t precision;
     int32_t scale;
+    int64_t scaleMultiplier;
+    Int128 upperBound;
   };
 
   class ConvertToTimestampColumnReader : public ConvertColumnReader {
@@ -398,10 +428,18 @@ namespace orc {
                                                                  : stripe.getReaderTimezone()),
           needConvertTimezone(&readerTimezone != &getTimezoneByName("GMT")) {}
 
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
+
    protected:
     const orc::Timezone& readerTimezone;
     const bool needConvertTimezone;
   };
+
+  // avoid emitting vtable in every translation unit
+  void ConvertToTimestampColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues,
+                                            char* notNull) {
+    ConvertColumnReader::next(rowBatch, numValues, notNull);
+  }
 
   template <typename FileTypeBatch>
   class NumericToTimestampColumnReader : public ConvertToTimestampColumnReader {
@@ -563,7 +601,7 @@ namespace orc {
 
 #define CASE_CREATE_DECIMAL_READER(FROM)                                                   \
   case DECIMAL: {                                                                          \
-    if (_readType.getPrecision() <= MAX_PRECISION_64) {                                    \
+    if (_readType.getPrecision() > 0 && _readType.getPrecision() <= MAX_PRECISION_64) {    \
       return std::make_unique<FROM##ToDecimal64ColumnReader>(_readType, fileType, stripe,  \
                                                              throwOnOverflow);             \
     } else {                                                                               \

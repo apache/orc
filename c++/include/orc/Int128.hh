@@ -370,14 +370,13 @@ namespace orc {
   /**
    * Converts decimal value to different precision/scale
    * @param value the Int128 value to convert
-   * @param fromPrecision the precision of the value
    * @param fromScale the scale of the value
    * @param toPrecision the precision to convert to
    * @param toScale the scale to convert to
    * @param round whether to round the value or truncate
    * @return whether the conversion overflows and the converted value if does not overflow
    */
-  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromPrecision, int32_t fromScale,
+  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale,
                                          int32_t toPrecision, int32_t toScale, bool round = true);
 
 }  // namespace orc

@@ -488,7 +488,7 @@ namespace orc {
     return value;
   }
 
-  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromPrecision, int32_t fromScale,
+  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale,
                                          int32_t toPrecision, int32_t toScale, bool round) {
     std::pair<bool, Int128> result;
     bool negative = value < 0;
