@@ -32,36 +32,58 @@ endif()
 
 message (STATUS "PROTOBUF_HOME: ${PROTOBUF_HOME}")
 
-find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/zero_copy_stream.h HINTS
-  ${_protobuf_path}
-  NO_DEFAULT_PATH
-  PATH_SUFFIXES "include")
+find_package (Protobuf CONFIG)
+if (Protobuf_FOUND)
+    set (PROTOBUF_LIBRARY protobuf::libprotobuf)
+    set (PROTOBUF_STATIC_LIB PROTOBUF_STATIC_LIB-NOTFOUND)
+    set (PROTOC_LIBRARY protobuf::libprotoc)
+    set (PROTOC_STATIC_LIB PROTOC_STATIC_LIB-NOTFOUND)
+    set (PROTOBUF_EXECUTABLE protobuf::protoc)
 
-find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/coded_stream.h HINTS
-  ${_protobuf_path}
-  NO_DEFAULT_PATH
-  PATH_SUFFIXES "include")
+    get_target_property (target_type protobuf::libprotobuf TYPE)
+    if (target_type STREQUAL "STATIC_LIBRARY")
+        set(PROTOBUF_STATIC_LIB protobuf::libprotobuf)
+    endif ()
 
-find_library (PROTOBUF_LIBRARY NAMES protobuf HINTS
-  ${_protobuf_path}
-  PATH_SUFFIXES "lib")
+    get_target_property (target_type protobuf::libprotoc TYPE)
+    if (target_type STREQUAL "STATIC_LIBRARY")
+        set (PROTOC_STATIC_LIB protobuf::libprotoc)
+    endif ()
 
-find_library (PROTOBUF_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
-  ${_protobuf_path}
-  PATH_SUFFIXES "lib")
+    get_target_property (PROTOBUF_INCLUDE_DIR protobuf::libprotoc INTERFACE_INCLUDE_DIRECTORIES)
 
-find_library (PROTOC_LIBRARY NAMES protoc HINTS
-  ${_protobuf_path}
-  PATH_SUFFIXES "lib")
+else()
+    find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/zero_copy_stream.h HINTS
+      ${_protobuf_path}
+      NO_DEFAULT_PATH
+      PATH_SUFFIXES "include")
 
-find_library (PROTOC_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
-  ${_protobuf_path}
-  PATH_SUFFIXES "lib")
+    find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/coded_stream.h HINTS
+      ${_protobuf_path}
+      NO_DEFAULT_PATH
+      PATH_SUFFIXES "include")
 
-find_program(PROTOBUF_EXECUTABLE protoc HINTS
-  ${_protobuf_path}
-  NO_DEFAULT_PATH
-  PATH_SUFFIXES "bin")
+    find_library (PROTOBUF_LIBRARY NAMES protobuf HINTS
+      ${_protobuf_path}
+      PATH_SUFFIXES "lib")
+
+    find_library (PROTOBUF_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+      ${_protobuf_path}
+      PATH_SUFFIXES "lib")
+
+    find_library (PROTOC_LIBRARY NAMES protoc HINTS
+      ${_protobuf_path}
+      PATH_SUFFIXES "lib")
+
+    find_library (PROTOC_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+      ${_protobuf_path}
+      PATH_SUFFIXES "lib")
+
+    find_program(PROTOBUF_EXECUTABLE protoc HINTS
+      ${_protobuf_path}
+      NO_DEFAULT_PATH
+      PATH_SUFFIXES "bin")
+endif ()
 
 if (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY AND PROTOC_LIBRARY AND PROTOBUF_EXECUTABLE)
   set (PROTOBUF_FOUND TRUE)
