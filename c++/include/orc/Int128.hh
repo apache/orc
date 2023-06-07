@@ -376,8 +376,24 @@ namespace orc {
    * @param round whether to round the value or truncate
    * @return whether the conversion overflows and the converted value if does not overflow
    */
-  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale,
-                                         int32_t toPrecision, int32_t toScale, bool round = true);
+  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale, int32_t toPrecision,
+                                         int32_t toScale, bool round = true);
+
+  /**
+   * Converts a float value to decimal
+   * @param value the float value to convert
+   * @param precision the precision of the decimal
+   * @param scale the scale of the decimal
+   * @return whether the conversion overflows and the converted value if does not overflow
+   */
+  template <typename T>
+  std::pair<bool, Int128> convertDecimal(T value, int32_t precision, int32_t scale);
+
+  extern template std::pair<bool, Int128> convertDecimal<float>(float value, int32_t precision,
+                                                                int32_t scale);
+
+  extern template std::pair<bool, Int128> convertDecimal<double>(double value, int32_t precision,
+                                                                 int32_t scale);
 
 }  // namespace orc
 #endif

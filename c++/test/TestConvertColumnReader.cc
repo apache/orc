@@ -336,24 +336,24 @@ namespace orc {
               std::string(readC##index.data[i], static_cast<size_t>(readC##index.length[i]))) \
         << i;                                                                                 \
   }
-      TEST_COLUMN(1);
-      TEST_COLUMN(2);
-      TEST_COLUMN(3);
-      TEST_COLUMN(4);
-      TEST_COLUMN(5);
-      TEST_COLUMN(6);
-      TEST_COLUMN(7);
-      TEST_COLUMN(8);
-      TEST_COLUMN(9);
-      TEST_COLUMN(10);
-      TEST_COLUMN(11);
-      TEST_COLUMN(12);
-      TEST_COLUMN(13);
-      TEST_COLUMN(14);
-      TEST_COLUMN(15);
-      TEST_COLUMN(16);
-      TEST_COLUMN(17);
-      TEST_COLUMN(18);
+      TEST_COLUMN(1)
+      TEST_COLUMN(2)
+      TEST_COLUMN(3)
+      TEST_COLUMN(4)
+      TEST_COLUMN(5)
+      TEST_COLUMN(6)
+      TEST_COLUMN(7)
+      TEST_COLUMN(8)
+      TEST_COLUMN(9)
+      TEST_COLUMN(10)
+      TEST_COLUMN(11)
+      TEST_COLUMN(12)
+      TEST_COLUMN(13)
+      TEST_COLUMN(14)
+      TEST_COLUMN(15)
+      TEST_COLUMN(16)
+      TEST_COLUMN(17)
+      TEST_COLUMN(18)
 #undef TEST_COLUMN
     }
   }

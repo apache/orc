@@ -374,10 +374,10 @@ namespace orc {
     const Timezone* gmt = &getTimezoneByName("GMT");
     const Timezone* sh = &getTimezoneByName("Asia/Shanghai");
     // 2023-05-29 22:20:00 UTC
-    EXPECT_EQ(1685398800 + 7 * 3600, la->convertFromUTC(1685398800)); // it's PDT
-    EXPECT_EQ(1685398800 + 4 * 3600, ny->convertFromUTC(1685398800)); // it's EDT
+    EXPECT_EQ(1685398800 + 7 * 3600, la->convertFromUTC(1685398800));  // it's PDT
+    EXPECT_EQ(1685398800 + 4 * 3600, ny->convertFromUTC(1685398800));  // it's EDT
     EXPECT_EQ(1685398800, gmt->convertFromUTC(1685398800));
-    EXPECT_EQ(1685398800 - 8 * 3600, sh->convertFromUTC(1685398800)); // no DST in China
+    EXPECT_EQ(1685398800 - 8 * 3600, sh->convertFromUTC(1685398800));  // no DST in China
 
     // DST starts in Los Angeles March 12, 2:00 am
     // 2023-03-12 03:00:00 UTC
@@ -400,6 +400,5 @@ namespace orc {
     EXPECT_EQ(1699164000 + 5 * 3600, ny->convertFromUTC(1699164000));
     // DST ends in Los Angeles November 5, 2:00 am
     EXPECT_EQ(1699164000 + 8 * 3600, la->convertFromUTC(1699164000));
-
   }
 }  // namespace orc

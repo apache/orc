@@ -488,14 +488,14 @@ namespace orc {
     return value;
   }
 
-  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale,
-                                         int32_t toPrecision, int32_t toScale, bool round) {
+  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale, int32_t toPrecision,
+                                         int32_t toScale, bool round) {
     std::pair<bool, Int128> result;
     bool negative = value < 0;
     result.second = value.abs();
     result.first = false;
 
-    Int128 upperBound = scaleUpInt128ByPowerOfTen(1, toPrecision - 1, result.first);
+    Int128 upperBound = scaleUpInt128ByPowerOfTen(1, toPrecision, result.first);
     int8_t roundOffset = 0;
     int32_t deltaScale = fromScale - toScale;
 
@@ -526,4 +526,46 @@ namespace orc {
     }
     return result;
   }
+
+  template <typename T>
+  std::pair<bool, Int128> convertDecimal(T value, int32_t precision, int32_t scale) {
+    std::pair<bool, Int128> result = {false, 0};
+    if (value <= -std::ldexp(static_cast<T>(1), 127) ||
+        value >= std::ldexp(static_cast<T>(1), 127)) {
+      result.first = true;
+      return result;
+    }
+    bool isNegative = (value < 0);
+    Int128 i128, remainder;
+    value = std::fabs(value);
+    // Round towards zero
+    if (value >= std::ldexp(static_cast<T>(1.0), 64)) {
+      int64_t hi = static_cast<int64_t>(std::ldexp(value, -64));
+      uint64_t lo = static_cast<uint64_t>(value - std::ldexp(static_cast<T>(hi), 64));
+      i128 = Int128(hi, lo);
+    } else {
+      i128 = Int128(0, static_cast<uint64_t>(value));
+    }
+    value = value - std::floor(value);
+
+    bool overflow = false;
+    i128 = scaleUpInt128ByPowerOfTen(i128, scale, overflow);
+    if (overflow || (i128 >= scaleUpInt128ByPowerOfTen(1, precision, overflow) || overflow)) {
+      result.first = true;
+      return result;
+    }
+
+    value = value * static_cast<T>(pow(10, scale));
+    i128 += static_cast<int64_t>(std::round(value));
+    if (isNegative) {
+      i128 = i128.negate();
+    }
+    result.second = i128;
+    return result;
+  }
+
+  template std::pair<bool, Int128> convertDecimal(float value, int32_t precision, int32_t scale);
+
+  template std::pair<bool, Int128> convertDecimal(double value, int32_t precision, int32_t scale);
+
 }  // namespace orc

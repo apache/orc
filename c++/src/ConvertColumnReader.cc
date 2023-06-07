@@ -194,7 +194,7 @@ namespace orc {
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
-    virtual size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) = 0;
+    virtual uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) = 0;
 
    protected:
     std::vector<std::string> strBuffer;
@@ -230,7 +230,7 @@ namespace orc {
         : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
       trueValue = "TRUE";
       falseValue = "FALSE";
-      if (readType.getKind() != STRING) {
+      if (readType.getKind() == CHAR || readType.getKind() == VARCHAR) {
         if (readType.getMaximumLength() < 5) {
           throw SchemaEvolutionError("Invalid maximum length for boolean type: " +
                                      std::to_string(readType.getMaximumLength()));
@@ -242,19 +242,19 @@ namespace orc {
       }
     }
 
-    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
+    uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
 
-    private:
-      std::string trueValue;
-      std::string falseValue;
+   private:
+    std::string trueValue;
+    std::string falseValue;
   };
 
   size_t BooleanToStringVariantColumnReader::convertToStrBuffer(ColumnVectorBatch& rowBatch,
                                                                 uint64_t numValues) {
-    size_t size = 0;
+    uint64_t size = 0;
     strBuffer.resize(numValues);
     const auto& srcBatch = *SafeCastBatchTo<const BooleanVectorBatch*>(data.get());
-    // cast the bool value to string and truncate to the max length
+    // cast the bool value to string
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
         strBuffer[i] = (srcBatch.data[i] ? trueValue : falseValue);
@@ -274,9 +274,9 @@ namespace orc {
   };
 
   template <typename FileTypeBatch>
-  size_t NumericToStringVariantColumnReader<FileTypeBatch>::convertToStrBuffer(
+  uint64_t NumericToStringVariantColumnReader<FileTypeBatch>::convertToStrBuffer(
       ColumnVectorBatch& rowBatch, uint64_t numValues) {
-    size_t size = 0;
+    uint64_t size = 0;
     strBuffer.resize(numValues);
     const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
     if (readType.getKind() == STRING) {
@@ -298,7 +298,7 @@ namespace orc {
           }
         }
       }
-    } else {
+    } else if (readType.getKind() == CHAR) {
       const auto maxLength = readType.getMaximumLength();
       for (uint64_t i = 0; i < numValues; ++i) {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
@@ -311,11 +311,14 @@ namespace orc {
           }
         }
       }
+    } else {
+      throw SchemaEvolutionError("Invalid type for numeric to string conversion: " +
+                                 readType.toString());
     }
     return size;
   }
 
-  template <typename FileTypeBatch, typename ReadTypeBatch, bool isFLoatingFileType>
+  template <typename FileTypeBatch, typename ReadTypeBatch, bool isFloatingFileType>
   class NumericToDecimalColumnReader : public ConvertColumnReader {
    public:
     NumericToDecimalColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
@@ -323,12 +326,8 @@ namespace orc {
         : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
       precision = static_cast<int32_t>(readType.getPrecision());
       scale = static_cast<int32_t>(readType.getScale());
-      scaleMultiplier = 1;
       bool overflow = false;
       upperBound = scaleUpInt128ByPowerOfTen(1, precision, overflow);
-      for (int i = 0; i < scale; i++) {
-        scaleMultiplier *= 10;
-      }
     }
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
@@ -340,7 +339,7 @@ namespace orc {
       dstBatch.scale = scale;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-          if constexpr (isFLoatingFileType) {
+          if constexpr (isFloatingFileType) {
             convertDoubleToDecimal(dstBatch, i, srcBatch.data[i]);
           } else {
             convertIntegerToDecimal(dstBatch, i, srcBatch.data[i]);
@@ -352,35 +351,11 @@ namespace orc {
    private:
     template <typename SrcType>
     void convertDoubleToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, SrcType value) {
-      if (value < -std::ldexp(static_cast<SrcType>(1), 127) ||
-          value >= std::ldexp(static_cast<SrcType>(1), 127)) {
+      const auto result = convertDecimal(value, precision, scale);
+      Int128 i128 = result.second;
+      if (result.first) {
         handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
         return;
-      }
-      bool isNegative = (value < 0);
-      Int128 i128, remainder;
-      value = std::fabs(value);
-      // i128 = (Int128)value
-      if (value >= std::ldexp(static_cast<SrcType>(1.0), 64)) {
-        int64_t hi = static_cast<int64_t>(std::ldexp(value, -64));
-        uint64_t lo = static_cast<uint64_t>(value - std::ldexp(static_cast<SrcType>(hi), 64));
-        i128 = Int128(hi, lo);
-      } else {
-        i128 = Int128(0, static_cast<uint64_t>(value));
-      }
-      value = value - std::floor(value);
-
-      bool overflow = false;
-      i128 = scaleUpInt128ByPowerOfTen(i128, scale, overflow);
-      if (overflow || i128 >= upperBound) {
-        handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
-        return;
-      }
-
-      value = value * scaleMultiplier;
-      i128 += static_cast<int64_t>(std::round(value));
-      if (isNegative) {
-        i128 = i128.negate();
       }
 
       if constexpr (std::is_same<ReadTypeBatch, Decimal64VectorBatch>::value) {
@@ -628,15 +603,15 @@ namespace orc {
     switch (fileType.getKind()) {
       case BOOLEAN: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BYTE, BooleanToByte);
-          CASE_CREATE_READER(SHORT, BooleanToShort);
-          CASE_CREATE_READER(INT, BooleanToInt);
-          CASE_CREATE_READER(LONG, BooleanToLong);
-          CASE_CREATE_READER(FLOAT, BooleanToFloat);
-          CASE_CREATE_READER(DOUBLE, BooleanToDouble);
-          CASE_CREATE_READER(STRING, BooleanToString);
-          CASE_CREATE_READER(CHAR, BooleanToChar);
-          CASE_CREATE_READER(VARCHAR, BooleanToVarchar);
+          CASE_CREATE_READER(BYTE, BooleanToByte)
+          CASE_CREATE_READER(SHORT, BooleanToShort)
+          CASE_CREATE_READER(INT, BooleanToInt)
+          CASE_CREATE_READER(LONG, BooleanToLong)
+          CASE_CREATE_READER(FLOAT, BooleanToFloat)
+          CASE_CREATE_READER(DOUBLE, BooleanToDouble)
+          CASE_CREATE_READER(STRING, BooleanToString)
+          CASE_CREATE_READER(CHAR, BooleanToChar)
+          CASE_CREATE_READER(VARCHAR, BooleanToVarchar)
           CASE_CREATE_DECIMAL_READER(Boolean)
           CASE_CREATE_READER(TIMESTAMP, BooleanToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, BooleanToTimestamp)
@@ -652,15 +627,15 @@ namespace orc {
       }
       case BYTE: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BOOLEAN, ByteToBoolean);
-          CASE_CREATE_READER(SHORT, ByteToShort);
-          CASE_CREATE_READER(INT, ByteToInt);
-          CASE_CREATE_READER(LONG, ByteToLong);
-          CASE_CREATE_READER(FLOAT, ByteToFloat);
-          CASE_CREATE_READER(DOUBLE, ByteToDouble);
-          CASE_CREATE_READER(STRING, ByteToString);
-          CASE_CREATE_READER(CHAR, ByteToChar);
-          CASE_CREATE_READER(VARCHAR, ByteToVarchar);
+          CASE_CREATE_READER(BOOLEAN, ByteToBoolean)
+          CASE_CREATE_READER(SHORT, ByteToShort)
+          CASE_CREATE_READER(INT, ByteToInt)
+          CASE_CREATE_READER(LONG, ByteToLong)
+          CASE_CREATE_READER(FLOAT, ByteToFloat)
+          CASE_CREATE_READER(DOUBLE, ByteToDouble)
+          CASE_CREATE_READER(STRING, ByteToString)
+          CASE_CREATE_READER(CHAR, ByteToChar)
+          CASE_CREATE_READER(VARCHAR, ByteToVarchar)
           CASE_CREATE_DECIMAL_READER(Byte)
           CASE_CREATE_READER(TIMESTAMP, ByteToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, ByteToTimestamp)
@@ -676,15 +651,15 @@ namespace orc {
       }
       case SHORT: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BOOLEAN, ShortToBoolean);
-          CASE_CREATE_READER(BYTE, ShortToByte);
-          CASE_CREATE_READER(INT, ShortToInt);
-          CASE_CREATE_READER(LONG, ShortToLong);
-          CASE_CREATE_READER(FLOAT, ShortToFloat);
-          CASE_CREATE_READER(DOUBLE, ShortToDouble);
-          CASE_CREATE_READER(STRING, ShortToString);
-          CASE_CREATE_READER(CHAR, ShortToChar);
-          CASE_CREATE_READER(VARCHAR, ShortToVarchar);
+          CASE_CREATE_READER(BOOLEAN, ShortToBoolean)
+          CASE_CREATE_READER(BYTE, ShortToByte)
+          CASE_CREATE_READER(INT, ShortToInt)
+          CASE_CREATE_READER(LONG, ShortToLong)
+          CASE_CREATE_READER(FLOAT, ShortToFloat)
+          CASE_CREATE_READER(DOUBLE, ShortToDouble)
+          CASE_CREATE_READER(STRING, ShortToString)
+          CASE_CREATE_READER(CHAR, ShortToChar)
+          CASE_CREATE_READER(VARCHAR, ShortToVarchar)
           CASE_CREATE_DECIMAL_READER(Short)
           CASE_CREATE_READER(TIMESTAMP, ShortToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, ShortToTimestamp)
@@ -700,15 +675,15 @@ namespace orc {
       }
       case INT: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BOOLEAN, IntToBoolean);
-          CASE_CREATE_READER(BYTE, IntToByte);
-          CASE_CREATE_READER(SHORT, IntToShort);
-          CASE_CREATE_READER(LONG, IntToLong);
-          CASE_CREATE_READER(FLOAT, IntToFloat);
-          CASE_CREATE_READER(DOUBLE, IntToDouble);
-          CASE_CREATE_READER(STRING, IntToString);
-          CASE_CREATE_READER(CHAR, IntToChar);
-          CASE_CREATE_READER(VARCHAR, IntToVarchar);
+          CASE_CREATE_READER(BOOLEAN, IntToBoolean)
+          CASE_CREATE_READER(BYTE, IntToByte)
+          CASE_CREATE_READER(SHORT, IntToShort)
+          CASE_CREATE_READER(LONG, IntToLong)
+          CASE_CREATE_READER(FLOAT, IntToFloat)
+          CASE_CREATE_READER(DOUBLE, IntToDouble)
+          CASE_CREATE_READER(STRING, IntToString)
+          CASE_CREATE_READER(CHAR, IntToChar)
+          CASE_CREATE_READER(VARCHAR, IntToVarchar)
           CASE_CREATE_DECIMAL_READER(Int)
           CASE_CREATE_READER(TIMESTAMP, IntToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, IntToTimestamp)
@@ -724,15 +699,15 @@ namespace orc {
       }
       case LONG: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BOOLEAN, LongToBoolean);
-          CASE_CREATE_READER(BYTE, LongToByte);
-          CASE_CREATE_READER(SHORT, LongToShort);
-          CASE_CREATE_READER(INT, LongToInt);
-          CASE_CREATE_READER(FLOAT, LongToFloat);
-          CASE_CREATE_READER(DOUBLE, LongToDouble);
-          CASE_CREATE_READER(STRING, LongToString);
-          CASE_CREATE_READER(CHAR, LongToChar);
-          CASE_CREATE_READER(VARCHAR, LongToVarchar);
+          CASE_CREATE_READER(BOOLEAN, LongToBoolean)
+          CASE_CREATE_READER(BYTE, LongToByte)
+          CASE_CREATE_READER(SHORT, LongToShort)
+          CASE_CREATE_READER(INT, LongToInt)
+          CASE_CREATE_READER(FLOAT, LongToFloat)
+          CASE_CREATE_READER(DOUBLE, LongToDouble)
+          CASE_CREATE_READER(STRING, LongToString)
+          CASE_CREATE_READER(CHAR, LongToChar)
+          CASE_CREATE_READER(VARCHAR, LongToVarchar)
           CASE_CREATE_DECIMAL_READER(Long)
           CASE_CREATE_READER(TIMESTAMP, LongToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, LongToTimestamp)
@@ -748,15 +723,15 @@ namespace orc {
       }
       case FLOAT: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BOOLEAN, FloatToBoolean);
-          CASE_CREATE_READER(BYTE, FloatToByte);
-          CASE_CREATE_READER(SHORT, FloatToShort);
-          CASE_CREATE_READER(INT, FloatToInt);
-          CASE_CREATE_READER(LONG, FloatToLong);
-          CASE_CREATE_READER(DOUBLE, FloatToDouble);
-          CASE_CREATE_READER(STRING, FloatToString);
-          CASE_CREATE_READER(CHAR, FloatToChar);
-          CASE_CREATE_READER(VARCHAR, FloatToVarchar);
+          CASE_CREATE_READER(BOOLEAN, FloatToBoolean)
+          CASE_CREATE_READER(BYTE, FloatToByte)
+          CASE_CREATE_READER(SHORT, FloatToShort)
+          CASE_CREATE_READER(INT, FloatToInt)
+          CASE_CREATE_READER(LONG, FloatToLong)
+          CASE_CREATE_READER(DOUBLE, FloatToDouble)
+          CASE_CREATE_READER(STRING, FloatToString)
+          CASE_CREATE_READER(CHAR, FloatToChar)
+          CASE_CREATE_READER(VARCHAR, FloatToVarchar)
           CASE_CREATE_DECIMAL_READER(Float)
           CASE_CREATE_READER(TIMESTAMP, FloatToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, FloatToTimestamp)
@@ -772,15 +747,15 @@ namespace orc {
       }
       case DOUBLE: {
         switch (_readType.getKind()) {
-          CASE_CREATE_READER(BOOLEAN, DoubleToBoolean);
-          CASE_CREATE_READER(BYTE, DoubleToByte);
-          CASE_CREATE_READER(SHORT, DoubleToShort);
-          CASE_CREATE_READER(INT, DoubleToInt);
-          CASE_CREATE_READER(LONG, DoubleToLong);
-          CASE_CREATE_READER(FLOAT, DoubleToFloat);
-          CASE_CREATE_READER(STRING, DoubleToString);
-          CASE_CREATE_READER(CHAR, DoubleToChar);
-          CASE_CREATE_READER(VARCHAR, DoubleToVarchar);
+          CASE_CREATE_READER(BOOLEAN, DoubleToBoolean)
+          CASE_CREATE_READER(BYTE, DoubleToByte)
+          CASE_CREATE_READER(SHORT, DoubleToShort)
+          CASE_CREATE_READER(INT, DoubleToInt)
+          CASE_CREATE_READER(LONG, DoubleToLong)
+          CASE_CREATE_READER(FLOAT, DoubleToFloat)
+          CASE_CREATE_READER(STRING, DoubleToString)
+          CASE_CREATE_READER(CHAR, DoubleToChar)
+          CASE_CREATE_READER(VARCHAR, DoubleToVarchar)
           CASE_CREATE_DECIMAL_READER(Double)
           CASE_CREATE_READER(TIMESTAMP, DoubleToTimestamp)
           CASE_CREATE_READER(TIMESTAMP_INSTANT, DoubleToTimestamp)
