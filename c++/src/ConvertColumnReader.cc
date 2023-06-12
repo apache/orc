@@ -249,8 +249,8 @@ namespace orc {
     std::string falseValue;
   };
 
-  size_t BooleanToStringVariantColumnReader::convertToStrBuffer(ColumnVectorBatch& rowBatch,
-                                                                uint64_t numValues) {
+  uint64_t BooleanToStringVariantColumnReader::convertToStrBuffer(ColumnVectorBatch& rowBatch,
+                                                                  uint64_t numValues) {
     uint64_t size = 0;
     strBuffer.resize(numValues);
     const auto& srcBatch = *SafeCastBatchTo<const BooleanVectorBatch*>(data.get());
@@ -270,7 +270,7 @@ namespace orc {
     NumericToStringVariantColumnReader(const Type& _readType, const Type& fileType,
                                        StripeStreams& stripe, bool _throwOnOverflow)
         : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
-    size_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
+    uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
   };
 
   template <typename FileTypeBatch>

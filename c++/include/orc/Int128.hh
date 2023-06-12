@@ -387,7 +387,8 @@ namespace orc {
    * @return whether the conversion overflows and the converted value if does not overflow
    */
   template <typename T>
-  std::pair<bool, Int128> convertDecimal(T value, int32_t precision, int32_t scale);
+  std::enable_if_t<std::is_floating_point_v<T>, std::pair<bool, Int128>> convertDecimal(
+      T value, int32_t precision, int32_t scale);
 
   extern template std::pair<bool, Int128> convertDecimal<float>(float value, int32_t precision,
                                                                 int32_t scale);

@@ -436,6 +436,7 @@ namespace orc {
   }
 
   const static int32_t MAX_PRECISION_64 = 18;
+  const static int32_t MAX_PRECISION_128 = 38;
   const static int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] = {1,
                                                               10,
                                                               100,
@@ -490,6 +491,14 @@ namespace orc {
 
   std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale, int32_t toPrecision,
                                          int32_t toScale, bool round) {
+    if (toPrecision > MAX_PRECISION_128 || toPrecision < 1 || toScale < 0 ||
+        toScale > toPrecision || fromScale < 0 ||
+        std::abs(fromScale - toScale) > MAX_PRECISION_128) {
+      std::stringstream buf;
+      buf << "Invalid argument: fromScale=" << fromScale << ", toPrecision=" << toPrecision
+          << ", toScale=" << toScale;
+      throw std::invalid_argument(buf.str());
+    }
     std::pair<bool, Int128> result;
     bool negative = value < 0;
     result.second = value.abs();
@@ -528,17 +537,25 @@ namespace orc {
   }
 
   template <typename T>
-  std::pair<bool, Int128> convertDecimal(T value, int32_t precision, int32_t scale) {
+  std::enable_if_t<std::is_floating_point_v<T>, std::pair<bool, Int128>> convertDecimal(
+      T value, int32_t precision, int32_t scale) {
+    const static T upperbound = std::ldexp(static_cast<T>(1), 127);
+    const static T lowerbound = -upperbound;
+
     std::pair<bool, Int128> result = {false, 0};
-    if (value <= -std::ldexp(static_cast<T>(1), 127) ||
-        value >= std::ldexp(static_cast<T>(1), 127)) {
+    if (precision > MAX_PRECISION_128 || precision < 1 || scale > precision || scale < 0) {
       result.first = true;
       return result;
     }
+
+    if (std::isnan(value) || value <= lowerbound || value >= upperbound) {
+      result.first = true;
+      return result;
+    }
+
     bool isNegative = (value < 0);
     Int128 i128, remainder;
     value = std::fabs(value);
-    // Round towards zero
     if (value >= std::ldexp(static_cast<T>(1.0), 64)) {
       int64_t hi = static_cast<int64_t>(std::ldexp(value, -64));
       uint64_t lo = static_cast<uint64_t>(value - std::ldexp(static_cast<T>(hi), 64));
@@ -550,7 +567,7 @@ namespace orc {
 
     bool overflow = false;
     i128 = scaleUpInt128ByPowerOfTen(i128, scale, overflow);
-    if (overflow || (i128 >= scaleUpInt128ByPowerOfTen(1, precision, overflow) || overflow)) {
+    if (overflow || i128 >= scaleUpInt128ByPowerOfTen(1, precision, overflow)) {
       result.first = true;
       return result;
     }
