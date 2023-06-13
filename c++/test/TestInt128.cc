@@ -1109,7 +1109,7 @@ namespace orc {
     EXPECT_EQ(pair.first, true);  // overflow
 
     // 2^126
-    fromFloat = std::ldexpf(1.0, 126);
+    fromFloat = std::ldexp(1.0f, 126);
     toPrecision = 38;
     toScale = 0;
     pair = convertDecimal(fromFloat, toPrecision, toScale);
@@ -1118,35 +1118,35 @@ namespace orc {
         << pair.second.toString();
 
     // 2^127
-    fromFloat = std::ldexpf(1.0, 127);
+    fromFloat = std::ldexp(1.0f, 127);
     toPrecision = 38;
     toScale = 0;
     pair = convertDecimal(fromFloat, toPrecision, toScale);
     EXPECT_EQ(pair.first, true);  // overflow
 
     // 2^70 + 2^69
-    fromFloat = std::ldexpf(1.0, 70) + std::ldexpf(1.0, 69);
+    fromFloat = std::ldexp(1.0f, 70) + std::ldexp(1.0f, 69);
     toPrecision = 38;
     toScale = 3;
     pair = convertDecimal(fromFloat, toPrecision, toScale);
     EXPECT_EQ(pair.first, false);  // no overflow
     EXPECT_EQ(pair.second.toString(), "1770887431076116955136000") << pair.second.toString();
 
-    fromFloat = std::ldexpf(1.0, 70) + std::ldexpf(1.0, 60);
+    fromFloat = std::ldexp(1.0f, 70) + std::ldexp(1.0f, 60);
     toPrecision = 38;
     toScale = 3;
     pair = convertDecimal(fromFloat, toPrecision, toScale);
     EXPECT_EQ(pair.first, false);  // no overflow
     EXPECT_EQ(pair.second.toString(), "1181744542222018150400000") << pair.second.toString();
 
-    fromFloat = -(std::ldexpf(1.0, 70) + std::ldexpf(1.0, 50));
+    fromFloat = -(std::ldexp(1.0f, 70) + std::ldexp(1.0f, 50));
     toPrecision = 38;
     toScale = 3;
     pair = convertDecimal(fromFloat, toPrecision, toScale);
     EXPECT_EQ(pair.first, false);  // no overflow
     EXPECT_EQ(pair.second.toString(), "-1180592746617318146048000") << pair.second.toString();
 
-    fromFloat = std::ldexpf(1.0, 70) - std::ldexpf(1.0, 60);
+    fromFloat = std::ldexp(1.0f, 70) - std::ldexp(1.0f, 60);
     toPrecision = 38;
     toScale = 3;
     pair = convertDecimal(fromFloat, toPrecision, toScale);
