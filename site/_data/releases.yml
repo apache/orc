@@ -1,8 +1,16 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.8.4:
+  date: 2023-06-14
+  state: latest
+  tar: orc-1.8.4.tar.gz
+  signed-by: Yiqun Zhang (42E05C03)
+  sha256: 1a4400c1daea0997728b5d5a2e022ea3d9389540a9551e3ee2588c2e9566c4b0
+  known-issues:
+
 1.8.3:
   date: 2023-03-15
-  state: latest
+  state: archived
   tar: orc-1.8.3.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: a78678ec425c8129d63370cb8a9bacb54186aa66af1e2bec01ce92e7eaf72e20
