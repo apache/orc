@@ -618,6 +618,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>3.3.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>extra-enforcer-rules</artifactId>
+            <version>1.7.0</version>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
             <id>enforce-maven</id>
@@ -632,6 +639,14 @@
                 <requireJavaVersion>
                   <version>${java.version}</version>
                 </requireJavaVersion>
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>${java.version}</maxJdkVersion>
+                  <ignoredScopes>test</ignoredScopes>
+                  <ignoredScopes>provided</ignoredScopes>
+                  <excludes>
+                    <exclude>org.threeten:threeten-extra</exclude>
+                  </excludes>
+                </enforceBytecodeVersion>
                 <bannedDependencies>
                   <excludes>
                     <exclude>org.apache.hadoop:hadoop-common</exclude>
