@@ -89,6 +89,30 @@ namespace orc {
       }
     }
 
+    // conversion from numeric to string/char/varchar
+    for (size_t i = 0; i <= 6; i++) {
+      for (size_t j = 7; j <= 11; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = true;
+      }
+    }
+
+    // conversion from numeric to decimal
+    for (size_t i = 0; i <= 6; i++) {
+      for (size_t j = 12; j <= 13; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = true;
+      }
+    }
+
+    // conversion from numeric to timestamp
+    for (size_t i = 0; i <= 6; i++) {
+      for (size_t j = 14; j <= 15; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = true;
+      }
+    }
+
     for (size_t i = 0; i < typesSize; i++) {
       for (size_t j = 0; j < typesSize; j++) {
         testConvertReader(types[i], types[j], canConvert[i][j], needConvert[i][j]);
