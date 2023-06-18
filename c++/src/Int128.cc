@@ -436,6 +436,7 @@ namespace orc {
   }
 
   const static int32_t MAX_PRECISION_64 = 18;
+  const static int32_t MAX_PRECISION_128 = 38;
   const static int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] = {1,
                                                               10,
                                                               100,
@@ -487,5 +488,101 @@ namespace orc {
     }
     return value;
   }
+
+  std::pair<bool, Int128> convertDecimal(Int128 value, int32_t fromScale, int32_t toPrecision,
+                                         int32_t toScale, bool round) {
+    if (toPrecision > MAX_PRECISION_128 || toPrecision < 1 || toScale < 0 ||
+        toScale > toPrecision || fromScale < 0 ||
+        std::abs(fromScale - toScale) > MAX_PRECISION_128) {
+      std::stringstream buf;
+      buf << "Invalid argument: fromScale=" << fromScale << ", toPrecision=" << toPrecision
+          << ", toScale=" << toScale;
+      throw std::invalid_argument(buf.str());
+    }
+    std::pair<bool, Int128> result;
+    bool negative = value < 0;
+    result.second = value.abs();
+    result.first = false;
+
+    Int128 upperBound = scaleUpInt128ByPowerOfTen(1, toPrecision, result.first);
+    int8_t roundOffset = 0;
+    int32_t deltaScale = fromScale - toScale;
+
+    if (deltaScale > 0) {
+      Int128 scale = scaleUpInt128ByPowerOfTen(1, deltaScale, result.first), remainder;
+      result.second = result.second.divide(scale, remainder);
+      remainder *= 2;
+      if (round && remainder >= scale) {
+        upperBound -= 1;
+        roundOffset = 1;
+      }
+    } else if (deltaScale < 0) {
+      if (result.second > upperBound) {
+        result.first = true;
+        return result;
+      }
+      result.second = scaleUpInt128ByPowerOfTen(result.second, -deltaScale, result.first);
+    }
+
+    if (result.second > upperBound) {
+      result.first = true;
+      return result;
+    }
+
+    result.second += roundOffset;
+    if (negative) {
+      result.second *= -1;
+    }
+    return result;
+  }
+
+  template <typename T>
+  std::enable_if_t<std::is_floating_point_v<T>, std::pair<bool, Int128>> convertDecimal(
+      T value, int32_t precision, int32_t scale) {
+    const static T upperbound = std::ldexp(static_cast<T>(1), 127);
+    const static T lowerbound = -upperbound;
+
+    std::pair<bool, Int128> result = {false, 0};
+    if (precision > MAX_PRECISION_128 || precision < 1 || scale > precision || scale < 0) {
+      result.first = true;
+      return result;
+    }
+
+    if (std::isnan(value) || value <= lowerbound || value >= upperbound) {
+      result.first = true;
+      return result;
+    }
+
+    bool isNegative = (value < 0);
+    Int128 i128, remainder;
+    value = std::fabs(value);
+    if (value >= std::ldexp(static_cast<T>(1.0), 64)) {
+      int64_t hi = static_cast<int64_t>(std::ldexp(value, -64));
+      uint64_t lo = static_cast<uint64_t>(value - std::ldexp(static_cast<T>(hi), 64));
+      i128 = Int128(hi, lo);
+    } else {
+      i128 = Int128(0, static_cast<uint64_t>(value));
+    }
+    value = value - std::floor(value);
+
+    bool overflow = false;
+    i128 = scaleUpInt128ByPowerOfTen(i128, scale, overflow);
+    if (overflow || i128 >= scaleUpInt128ByPowerOfTen(1, precision, overflow)) {
+      result.first = true;
+      return result;
+    }
+
+    value = value * static_cast<T>(pow(10, scale));
+    i128 += static_cast<int64_t>(std::round(value));
+    if (isNegative) {
+      i128 = i128.negate();
+    }
+    result.second = i128;
+    return result;
+  }
+
+  template std::pair<bool, Int128> convertDecimal(float value, int32_t precision, int32_t scale);
+
+  template std::pair<bool, Int128> convertDecimal(double value, int32_t precision, int32_t scale);
 
 }  // namespace orc

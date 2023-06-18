@@ -55,6 +55,21 @@ namespace orc {
            kind == FLOAT || kind == DOUBLE;
   }
 
+  bool isStringVariant(const Type& type) {
+    auto kind = type.getKind();
+    return kind == STRING || kind == CHAR || kind == VARCHAR;
+  }
+
+  bool isDecimal(const Type& type) {
+    auto kind = type.getKind();
+    return kind == DECIMAL;
+  }
+
+  bool isTimestamp(const Type& type) {
+    auto kind = type.getKind();
+    return kind == TIMESTAMP || kind == TIMESTAMP_INSTANT;
+  }
+
   struct ConversionCheckResult {
     bool isValid;
     bool needConvert;
@@ -79,7 +94,8 @@ namespace orc {
         case LONG:
         case FLOAT:
         case DOUBLE: {
-          ret.isValid = ret.needConvert = isNumeric(readType);
+          ret.isValid = ret.needConvert = isNumeric(readType) || isStringVariant(readType) ||
+                                          isDecimal(readType) || isTimestamp(readType);
           break;
         }
         case DECIMAL:

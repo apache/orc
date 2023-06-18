@@ -587,6 +587,12 @@ namespace orc {
       return clk + getVariant(clk).gmtOffset;
     }
 
+    int64_t convertFromUTC(int64_t clk) const override {
+      int64_t adjustedTime = clk - getVariant(clk).gmtOffset;
+      const auto& adjustedReader = getVariant(adjustedTime);
+      return clk - adjustedReader.gmtOffset;
+    }
+
    private:
     void parseTimeVariants(const unsigned char* ptr, uint64_t variantOffset, uint64_t variantCount,
                            uint64_t nameOffset, uint64_t nameCount);
