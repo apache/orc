@@ -178,6 +178,12 @@ enable_testing()
 
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
+
+if (BUILD_ENABLE_AVX512 AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|X86|x86|i[3456]86|x64"))
+  message(WARNING "Only X86 platform support AVX512")
+  set (BUILD_ENABLE_AVX512 "OFF")
+endif ()
+
 message(STATUS "BUILD_ENABLE_AVX512: ${BUILD_ENABLE_AVX512}")
 #
 # macOS doesn't fully support AVX512, it has a different way dealing with AVX512 than Windows and Linux.

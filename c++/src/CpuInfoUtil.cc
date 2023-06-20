@@ -476,8 +476,8 @@ namespace orc {
     }
 
     void ArchVerifyCpuRequirements(const CpuInfo* ci) {
-      if (!ci->IsDetected(CpuInfo::ASIMD)) {
-        DCHECK(false) << "CPU does not support the Armv8 Neon instruction set";
+      if (!ci->isDetected(CpuInfo::ASIMD)) {
+        throw ParseError("CPU does not support the Armv8 Neon instruction set");
       }
     }
 
