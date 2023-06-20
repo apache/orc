@@ -55,6 +55,9 @@ namespace orc {
     static constexpr int64_t BMI1 = (1LL << 11);
     static constexpr int64_t BMI2 = (1LL << 12);
 
+    /// Arm features
+    static constexpr int64_t ASIMD = (1LL << 32);
+
     // Cache enums for L1 (data), L2 and L3
     enum class CacheLevel { L1 = 0, L2, L3, Last = L3 };
 
