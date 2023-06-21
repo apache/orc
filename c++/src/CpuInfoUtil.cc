@@ -51,11 +51,14 @@
 
 #undef CPUINFO_ARCH_X86
 #undef CPUINFO_ARCH_ARM
+#undef CPUINFO_ARCH_PPC
 
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
 #define CPUINFO_ARCH_X86
 #elif defined(_M_ARM64) || defined(__aarch64__) || defined(__arm64__)
 #define CPUINFO_ARCH_ARM
+#elif defined(__PPC64__) || defined(__PPC64LE__) || defined(__ppc64__) || defined(__powerpc64__)
+#define CPUINFO_ARCH_PPC
 #endif
 
 #ifndef ORC_HAVE_RUNTIME_AVX512
@@ -481,7 +484,15 @@ namespace orc {
       }
     }
 
-#endif  // X86, ARM
+#else
+    //------------------------------ PPC, ... ------------------------------//
+    bool ArchParseUserSimdLevel(const std::string& simd_level, int64_t* hardware_flags) {
+      return true;
+    }
+
+    void ArchVerifyCpuRequirements(const CpuInfo* ci) {}
+
+#endif  // X86, ARM, PPC
 
   }  // namespace
 
@@ -576,3 +587,4 @@ namespace orc {
 
 #undef CPUINFO_ARCH_X86
 #undef CPUINFO_ARCH_ARM
+#undef CPUINFO_ARCH_PPC
