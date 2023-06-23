@@ -1725,16 +1725,13 @@ namespace orc {
       case SHORT:
         if (useTightNumericVector) {
           return std::make_unique<IntegerColumnReader<ShortVectorBatch>>(type, stripe);
-        } else {
-          return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
         }
-      case INT: {
+        return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
+      case INT:
         if (useTightNumericVector) {
           return std::make_unique<IntegerColumnReader<IntVectorBatch>>(type, stripe);
-        } else {
-          return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
         }
-      }
+        return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
       case LONG:
       case DATE:
         return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
