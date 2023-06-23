@@ -286,38 +286,37 @@ namespace orc {
                                                               MemoryPool& memoryPool, bool encoded,
                                                               bool useTightNumericVector) const {
     switch (static_cast<int64_t>(kind)) {
-      case BOOLEAN: {
+      case BOOLEAN:
         if (useTightNumericVector) {
           return std::make_unique<ByteVectorBatch>(capacity, memoryPool);
         }
-      }
-      case BYTE: {
+        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
+      case BYTE:
         if (useTightNumericVector) {
           return std::make_unique<ByteVectorBatch>(capacity, memoryPool);
         }
-      }
-      case SHORT: {
+        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
+      case SHORT:
         if (useTightNumericVector) {
           return std::make_unique<ShortVectorBatch>(capacity, memoryPool);
         }
-      }
-      case INT: {
+        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
+      case INT:
         if (useTightNumericVector) {
           return std::make_unique<IntVectorBatch>(capacity, memoryPool);
         }
-      }
-      case LONG:
-      case DATE: {
         return std::make_unique<LongVectorBatch>(capacity, memoryPool);
-      }
+      case LONG:
+      case DATE:
+        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
 
       case FLOAT:
         if (useTightNumericVector) {
           return std::make_unique<FloatVectorBatch>(capacity, memoryPool);
         }
-      case DOUBLE: {
         return std::make_unique<DoubleVectorBatch>(capacity, memoryPool);
-      }
+      case DOUBLE:
+        return std::make_unique<DoubleVectorBatch>(capacity, memoryPool);
 
       case STRING:
       case BINARY:
