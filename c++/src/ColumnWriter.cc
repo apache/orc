@@ -2824,10 +2824,12 @@ namespace orc {
         if (options.getUseTightNumericVector()) {
           return std::make_unique<IntegerColumnWriter<ShortVectorBatch>>(type, factory, options);
         }
+        return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case INT:
         if (options.getUseTightNumericVector()) {
           return std::make_unique<IntegerColumnWriter<IntVectorBatch>>(type, factory, options);
         }
+        return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case LONG:
         return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case BYTE:
@@ -2835,13 +2837,11 @@ namespace orc {
           return std::make_unique<ByteColumnWriter<ByteVectorBatch>>(type, factory, options);
         }
         return std::make_unique<ByteColumnWriter<LongVectorBatch>>(type, factory, options);
-      case BOOLEAN: {
+      case BOOLEAN:
         if (options.getUseTightNumericVector()) {
           return std::make_unique<BooleanColumnWriter<ByteVectorBatch>>(type, factory, options);
-        } else {
-          return std::make_unique<BooleanColumnWriter<LongVectorBatch>>(type, factory, options);
         }
-      }
+        return std::make_unique<BooleanColumnWriter<LongVectorBatch>>(type, factory, options);
       case DOUBLE:
         return std::make_unique<FloatingColumnWriter<double, DoubleVectorBatch>>(type, factory,
                                                                                  options, false);
