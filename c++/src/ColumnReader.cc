@@ -1722,14 +1722,17 @@ namespace orc {
     }
 
     switch (static_cast<int64_t>(type.getKind())) {
-      case SHORT: {
+      case SHORT:
         if (useTightNumericVector) {
           return std::make_unique<IntegerColumnReader<ShortVectorBatch>>(type, stripe);
+        } else {
+          return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
         }
-      }
       case INT: {
         if (useTightNumericVector) {
           return std::make_unique<IntegerColumnReader<IntVectorBatch>>(type, stripe);
+        } else {
+          return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
         }
       }
       case LONG:

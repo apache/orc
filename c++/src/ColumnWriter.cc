@@ -2824,10 +2824,12 @@ namespace orc {
         if (options.getUseTightNumericVector()) {
           return std::make_unique<IntegerColumnWriter<ShortVectorBatch>>(type, factory, options);
         }
+        return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case INT:
         if (options.getUseTightNumericVector()) {
           return std::make_unique<IntegerColumnWriter<IntVectorBatch>>(type, factory, options);
         }
+        return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case LONG:
         return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case BYTE:
