@@ -55,14 +55,13 @@
 
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
 #define CPUINFO_ARCH_X86
+#ifndef ORC_HAVE_RUNTIME_AVX512
+#define UNUSED(x) (void)(x)
+#endif
 #elif defined(_M_ARM64) || defined(__aarch64__) || defined(__arm64__)
 #define CPUINFO_ARCH_ARM
 #elif defined(__PPC64__) || defined(__PPC64LE__) || defined(__ppc64__) || defined(__powerpc64__)
 #define CPUINFO_ARCH_PPC
-#endif
-
-#ifndef ORC_HAVE_RUNTIME_AVX512
-#define UNUSED(x) (void)(x)
 #endif
 
 namespace orc {
