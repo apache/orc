@@ -60,7 +60,7 @@
   </modules>
 
   <properties>
-    <checkstyle.version>10.12.0</checkstyle.version>
+    <checkstyle.version>10.12.1</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.3.5</hadoop.version>
     <java.version>1.8</java.version>
