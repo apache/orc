@@ -917,39 +917,34 @@
         <article>
           <h1>Releases</h1>
           
-<h2 id="current-release---184">Current Release - 1.8.4:</h2>
+<h2 id="current-release---190">Current Release - 1.9.0:</h2>
 
-<p>ORC 1.8.4 contains both the Java and C++ reader and writer
+<p>ORC 1.9.0 contains both the Java and C++ reader and writer
 for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.</p>
 
 <ul>
-  <li>Released: 14 June 2023</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.4/orc-1.8.4.tar.gz">orc-1.8.4.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.8.4/orc-1.8.4.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Yiqun Zhang (42E05C03)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.4">rel/release-1.8.4</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.4%22">ORC 1.8.4</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.4/orc-1.8.4.tar.gz.sha256">1a4400c1daea0997…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.4%22&amp;tempMax=500">ORC-1.8.4</a></li>
+  <li>Released: 28 June 2023</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.0/orc-1.9.0.tar.gz">orc-1.9.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.0/orc-1.9.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.0">rel/release-1.9.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.0%22">ORC 1.9.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.0/orc-1.9.0.tar.gz.sha256">0dca8bbccdb2ee87…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.0%22&amp;tempMax=500">ORC-1.9.0</a></li>
 </ul>
 
-<p>The New Features and Notable Changes of ORC 1.8:</p>
+<p>The New Features and Notable Changes of ORC 1.9:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-450">ORC-450</a> Support selecting list indices without materializing list items</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-824">ORC-824</a> Add column statistics for List and Map</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1004">ORC-1004</a> Java ORC writer supports the selection vector</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1075">ORC-1075</a> Support reading ORC files with no column statistics</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1125">ORC-1125</a> Support decoding decimals in RLE</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1136">ORC-1136</a> Optimize reads by combining multiple reads without significant separation into a single read</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1138">ORC-1138</a> Seek vs Read Optimization</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1172">ORC-1172</a> Add row count limit config for one stripe</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1212">ORC-1212</a> Upgrade protobuf-java to 3.17.3</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1220">ORC-1220</a> Set min.hadoop.version to 2.7.3</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1248">ORC-1248</a> Redefine Hadoop dependency for Apache ORC 1.8.0</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1256">ORC-1256</a> Publish test-jar to maven central</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1260">ORC-1260</a> Publish shaded-protobuf classifier artifacts</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-961">ORC-961</a>: Expose metrics of the reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1167">ORC-1167</a>: Support orc.row.batch.size configuration</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1252">ORC-1252</a>: Expose io metrics for write operation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1301">ORC-1301</a>: Enforce C++ 17</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1310">ORC-1310</a>: allowlist Support for plugin filter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1356">ORC-1356</a>: Use Intel AVX-512 instructions to accelerate the Rle-bit-packing decode</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1385">ORC-1385</a>: Support schema evolution from numeric to numeric</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1386">ORC-1386</a>: Support schema evolution from primitive to string group/decimal/timestamp</li>
 </ul>
 
 <p>Known issues:</p>
@@ -980,9 +975,19 @@ committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
     
       
       <tr>
+        <td style="text-align: center">1.9.0</td>
+        <td style="text-align: center">2023-06-28</td>
+        <td style="text-align: center">latest</td>
+        <td style="text-align: center">
+          <a href="/news/2023/06/28/ORC-1.9.0/">
+          ORC-1.9.0</a></td>
+      </tr>
+    
+      
+      <tr>
         <td style="text-align: center">1.8.4</td>
         <td style="text-align: center">2023-06-14</td>
-        <td style="text-align: center">latest</td>
+        <td style="text-align: center">stable</td>
         <td style="text-align: center">
           <a href="/news/2023/06/14/ORC-1.8.4/">
           ORC-1.8.4</a></td>

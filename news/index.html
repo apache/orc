@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2023/06/28/ORC-1.9.0/">ORC 1.9.0 Released</option>
+      
       <option value="/news/2023/06/14/ORC-1.8.4/">ORC 1.8.4 Released</option>
       
       <option value="/news/2023/05/07/ORC-1.7.9/">ORC 1.7.9 Released</option>
@@ -280,6 +282,200 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2023/06/28/ORC-1.9.0/">
+      ORC 1.9.0 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      28 Jun 2023
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.9.0.</p>
+
+<ul>
+  <li>Released: 28 June 2023</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.0/orc-1.9.0.tar.gz">orc-1.9.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.0/orc-1.9.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.0">rel/release-1.9.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.0%22">ORC 1.9.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.0/orc-1.9.0.tar.gz.sha256">0dca8bbccdb2ee87…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.0%22&amp;tempMax=500">ORC-1.9.0</a></li>
+</ul>
+
+<p>New Feature and Notable Changes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-961">ORC-961</a>: Expose metrics of the reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1167">ORC-1167</a>: Support orc.row.batch.size configuration</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1252">ORC-1252</a>: Expose io metrics for write operation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1301">ORC-1301</a>: Enforce C++ 17</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1310">ORC-1310</a>: allowlist Support for plugin filter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1356">ORC-1356</a>: Use Intel AVX-512 instructions to accelerate the Rle-bit-packing decode</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1385">ORC-1385</a>: Support schema evolution from numeric to numeric</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1386">ORC-1386</a>: Support schema evolution from primitive to string group/decimal/timestamp</li>
+</ul>
+
+<p>Improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-827">ORC-827</a>: Utilize Array copyOf</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1170">ORC-1170</a>: Optimize the RowReader::seekToRow function</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1232">ORC-1232</a> Disable metrics collector by default</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1278">ORC-1278</a> Update Readme.md cmake to 3.12</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1279">ORC-1279</a> Update cmake version</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1286">ORC-1286</a> Replace DataBuffer with BlockBuffer in the BufferedOutputStream</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1298">ORC-1298</a> Support dedicated ColumnVectorBatch of numeric types</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1302">ORC-1302</a> Upgrade Github workflow to build on Windows</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1306">ORC-1306</a> Fixed indented code style for Java modules</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1307">ORC-1307</a> Add coding style enforcement</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1314">ORC-1314</a> Remove macros defined before C++11</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1347">ORC-1347</a> Use make_unique and make_shared when creating unique_ptr and shared_ptr</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1348">ORC-1348</a> TimezoneImpl constructor should pass std::vector&lt;&gt; &amp; instead of std::vector&lt;&gt;</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1349">ORC-1349</a> Remove useless bufStream definition</li>
+  <li>
+    <table>
+      <tbody>
+        <tr>
+          <td><a href="https://issues.apache.org/jira/browse/ORC-1352">ORC-1352</a> Remove ORC_[NOEXCEPT</td>
+          <td>NULLPTR</td>
+          <td>OVERRIDE</td>
+          <td>UNIQUE_PTR] macro usages</td>
+        </tr>
+      </tbody>
+    </table>
+  </li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1355">ORC-1355</a> Writer::addUserMetadata change parameter to reference</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1373">ORC-1373</a> Add log when DynamicByteArray length overflow</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1401">ORC-1401</a> Allow writing an intermediate footer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1421">ORC-1421</a> Use PyArrow 12.0.0 in document</li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1225">ORC-1225</a> Bump maven-assembly-plugin to 3.4.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1266">ORC-1266</a> DecimalColumnVector resets the isRepeating flag in the nextVector method</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1273">ORC-1273</a> Bump opencsv to 5.7.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1297">ORC-1297</a> Bump opencsv to 5.7.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1304">ORC-1304</a> throw ParseError when using SearchArgument with nested struct</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1315">ORC-1315</a> Byte to integer conversions fail on platforms with unsigned char type</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1320">ORC-1320</a> Fix build break of C++ code on docker images</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1363">ORC-1363</a> Upgrade zookeeper to 3.8.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1368">ORC-1368</a> Bump commons-csv to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1398">ORC-1398</a> Bump aircompressor to 0.24</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1399">ORC-1399</a> Fix boolean type with useTightNumericVector enabled</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1433">ORC-1433</a> Fix comment in the Vector.hh</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1447">ORC-1447</a> Fix a bug in CpuInfoUtil.cc to support ARM platform</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1449">ORC-1449</a> Add -Wno-unused-macros for Clang 14.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1450">ORC-1450</a> Stop enforcing override keyword</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1453">ORC-1453</a> Fix fall-through warning cases</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1231">ORC-1231</a> Update supported OS list in building.md</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1233">ORC-1233</a> Bump junit to 5.9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1234">ORC-1234</a> Upgrade objenesis to 3.2 in Spark benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1235">ORC-1235</a> Bump avro to 1.11.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1240">ORC-1240</a> Update site README to use apache/orc-dev</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1241">ORC-1241</a> Use apache/orc-dev DockerHub repository in Docker tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1250">ORC-1250</a> Bump mockito to 4.7.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1254">ORC-1254</a> Add spotbugs check</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1258">ORC-1258</a> Bump byte-buddy to 1.12.14</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1262">ORC-1262</a> Bump maven-checkstyle-plugin to 3.2.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1265">ORC-1265</a> Upgrade spotbugs to 4.7.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1267">ORC-1267</a> Bump mockito to 4.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1271">ORC-1271</a> Bump spotbugs-maven-plugin to 4.7.2.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1272">ORC-1272</a> Bump byte-buddy to 1.12.16</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1300">ORC-1300</a> Update Spark to 3.3.1 and its dependencies</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1303">ORC-1303</a> Upgrade GoogleTest to 1.12.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1318">ORC-1318</a> Upgrade mockito.version to 4.9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1319">ORC-1319</a> Upgrade byte-buddy to 1.12.19</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1321">ORC-1321</a> Bump checkstyle to 10.5.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1322">ORC-1322</a> Upgrade centos7 docker image to use gcc9</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1324">ORC-1324</a> Use Java 19 instead of 18 in GHA</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1333">ORC-1333</a> Bump mockito to 4.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1341">ORC-1341</a> Bump mockito to 4.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1353">ORC-1353</a> Bump byte-buddy to 1.12.21</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1359">ORC-1359</a> Bump byte-buddy to 1.12.22</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1366">ORC-1366</a> Bump checkstyle to 10.7.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1367">ORC-1367</a> Bump maven-enforcer-plugin to 3.2.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1369">ORC-1369</a> Bump byte-buddy to 1.12.23</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1370">ORC-1370</a> Bump snappy-java to 1.1.9.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1374">ORC-1374</a> Update Spark to 3.3.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1379">ORC-1379</a> Upgrade spotbugs to 4.7.3.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1380">ORC-1380</a> Upgrade checkstyle to 10.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1394">ORC-1394</a> Bump maven-assembly-plugin to 3.5.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1397">ORC-1397</a> Bump checkstyle to 10.9.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1405">ORC-1405</a> Bump spotbugs-maven-plugin to 4.7.3.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1406">ORC-1406</a> Bump maven-enforcer-plugin to 3.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1408">ORC-1408</a> Add testVectorBatchHasNull test case and comment</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1415">ORC-1415</a> Add Java 20 to GitHub Action CI</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1417">ORC-1417</a> Bump checkstyle to 10.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1418">ORC-1418</a> Bump junit to 5.9.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1426">ORC-1426</a> Use Java 21-ea instead of 20 in GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1435">ORC-1435</a> Bump maven-checkstyle-plugin to 3.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1436">ORC-1436</a> Bump snappy-java to 1.1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1452">ORC-1452</a> Use the latest OS versions in variant tests</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1264">ORC-1164</a> Setting version to 1.9.0-SNAPSHOT</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1218">ORC-1218</a> Bump apache pom to 27</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1219">ORC-1219</a> Remove redundant toString</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1237">ORC-1237</a> Remove a wrong image link to article-footer.png</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1239">ORC-1239</a> Upgrade maven-shade-plugin to 3.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1256">ORC-1256</a> Publish test-jar to maven central</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1259">ORC-1259</a> Bump slf4j to 2.0.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1269">ORC-1269</a> Remove FindBugs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1270">ORC-1270</a> Move opencsv dependency to the tools module.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1274">ORC-1274</a> Add a checkstyle rule to ban starting LAND and LOR</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1275">ORC-1275</a> Bump maven-jar-plugin to 3.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1276">ORC-1276</a> Bump slf4j to 2.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1277">ORC-1277</a> Bump maven-shade-plugin to 3.4.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1284">ORC-1284</a> Add permissions to GitHub Action labeler</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1296">ORC-1296</a> Bump reproducible-build-maven-plugin to 0.16</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1311">ORC-1311</a> Bump maven-shade-plugin to 3.4.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1316">ORC-1316</a> Bump slf4j.version to 2.0.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1334">ORC-1334</a> Bump slf4j.version to 2.0.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1335">ORC-1335</a> Bump netty-all to 4.1.86.Final</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1351">ORC-1351</a> Update PR Labeler definition</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1358">ORC-1358</a> Use spotless to format pom files</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1371">ORC-1371</a> Remove unsupported SLF4J bindings from classpath</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1372">ORC-1372</a> Bump zstd to v1.5.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1375">ORC-1375</a> Cancel old running ci tasks when a pr has a new commit</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1377">ORC-1377</a> Enforce override keyword</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1383">ORC-1383</a> Upgrade aircompressor to 0.22</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1395">ORC-1395</a> Enforce license check</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1396">ORC-1396</a> Bump slf4j to 2.0.7</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1410">ORC-1410</a> Bump zstd to v1.5.5</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1411">ORC-1411</a> Remove Ubuntu18.04 from docker-based tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1419">ORC-1419</a> Bump protobuf-java to 3.22.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1428">ORC-1428</a> Setup GitHub Action CI on branch-1.9</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1443">ORC-1443</a> Enforce Java version</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1444">ORC-1444</a> Enforce JDK Bytecode version</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1446">ORC-1446</a> Publish snapshot from branch-1.9</li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2023/06/14/ORC-1.8.4/">
@@ -5233,6 +5429,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2023/06/28/ORC-1.9.0/">Version 1.9.0</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2023/06/14/ORC-1.8.4/">Version 1.8.4</a>
       </li>
       
@@ -5248,13 +5448,11 @@ together with the Java implementation.</p>
         <a href="/news/2023/01/21/ORC-1.7.8/">Version 1.7.8</a>
       </li>
       
-      <li class="">
-        <a href="/news/2023/01/13/ORC-1.8.2/">Version 1.8.2</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
