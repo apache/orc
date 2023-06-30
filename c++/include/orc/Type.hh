@@ -78,9 +78,9 @@ namespace orc {
     virtual std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size, MemoryPool& pool,
                                                               bool encoded = false) const = 0;
 
-    virtual std::unique_ptr<ColumnVectorBatch> createRowBatch(
-        uint64_t size, MemoryPool& pool, bool encoded = false,
-        bool useTightNumericVector = false) const = 0;
+    virtual std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size, MemoryPool& pool,
+                                                              bool encoded,
+                                                              bool useTightNumericVector) const = 0;
 
     /**
      * Add a new field to a struct type.
