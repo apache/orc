@@ -279,7 +279,7 @@ namespace orc {
   std::unique_ptr<ColumnVectorBatch> TypeImpl::createRowBatch(uint64_t capacity,
                                                               MemoryPool& memoryPool,
                                                               bool encoded) const {
-    return createRowBatch(capacity, memoryPool, encoded, false);
+    return createRowBatch(capacity, memoryPool, encoded, /*useTightNumericVector=*/false);
   }
 
   std::unique_ptr<ColumnVectorBatch> TypeImpl::createRowBatch(uint64_t capacity,
