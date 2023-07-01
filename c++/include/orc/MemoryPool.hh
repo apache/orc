@@ -64,11 +64,11 @@ namespace orc {
       return buf;
     }
 
-    uint64_t size() {
+    uint64_t size() const {
       return currentSize;
     }
 
-    uint64_t capacity() {
+    uint64_t capacity() const {
       return currentCapacity;
     }
 
