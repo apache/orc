@@ -325,14 +325,14 @@ namespace orc {
     /**
      * Get the high bits of the twos complement representation of the number.
      */
-    int64_t getHighBits() {
+    int64_t getHighBits() const {
       return highbits;
     }
 
     /**
      * Get the low bits of the twos complement representation of the number.
      */
-    uint64_t getLowBits() {
+    uint64_t getLowBits() const {
       return lowbits;
     }
 
