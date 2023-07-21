@@ -23,5 +23,5 @@ package org.apache.orc;
  * can be applied to ORC files.
  */
 public enum CompressionKind {
-  NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD
+  NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD, BROTLI
 }

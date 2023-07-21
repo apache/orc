@@ -290,6 +290,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case ZSTD:
         return new AircompressorCodec(kind, new ZstdCompressor(),
             new ZstdDecompressor());
+      case BROTLI:
+        return new BrotliCodec();
       default:
         throw new IllegalArgumentException("Unknown compression codec: " +
             kind);

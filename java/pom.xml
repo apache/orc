@@ -80,6 +80,7 @@
     <surefire.version>3.0.0-M5</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
     <zookeeper.version>3.8.1</zookeeper.version>
+    <brotli-codec.version>0.1.1</brotli-codec.version>
   </properties>
 
   <dependencyManagement>
@@ -271,6 +272,17 @@
         <version>1.1.1</version>
         <optional>true</optional>
       </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.23.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.rdblue</groupId>
+        <artifactId>brotli-codec</artifactId>
+        <version>${brotli-codec.version}</version>
+        <optional>true</optional>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -303,6 +315,12 @@
       <id>central</id>
       <name>Maven Repository</name>
       <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+      <name>Jitpack.io repository</name>
+      <!-- needed for brotli-codec -->
     </repository>
   </repositories>
   <pluginRepositories>

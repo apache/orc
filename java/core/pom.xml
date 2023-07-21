@@ -109,6 +109,14 @@
       <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.rdblue</groupId>
+      <artifactId>brotli-codec</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
