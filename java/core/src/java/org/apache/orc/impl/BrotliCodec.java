@@ -178,7 +178,8 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
     if (directDecompressor == null) {
       directDecompressor = new BrotliStreamDeCompressor();
     }
-    directDecompressor.deCompress(in, out);
+    int written = directDecompressor.deCompress(in, out);
+    out.position(out.position() + written);
     out.flip(); // flip for read
   }
 

@@ -56,4 +56,33 @@ public class TestBrotli {
       fail(e);
     }
   }
+
+  @Test
+  public void testDirectDecompress() {
+    ByteBuffer in = ByteBuffer.allocate(100);
+    ByteBuffer out = ByteBuffer.allocate(100);
+    ByteBuffer directOut = ByteBuffer.allocateDirect(100);
+    ByteBuffer directResult = ByteBuffer.allocateDirect(100);
+    in.put(new byte[]{1,2,3,4,5,6,7,7,7,7,7,7,7,4,4,4});
+    in.flip();
+    try (BrotliCodec brotliCodec = new BrotliCodec()) {
+      // write bytes to heap buffer.
+      assertFalse(brotliCodec.compress(in, out, null,
+          brotliCodec.getDefaultOptions()));
+      out.flip();
+      // copy heap buffer to direct buffer.
+      directOut.put(out.array());
+      directOut.flip();
+
+      brotliCodec.decompress(directOut, directResult);
+
+      // copy result from direct buffer to heap.
+      byte[] heapBytes = new byte[in.array().length];
+      directResult.get(heapBytes, 0, directResult.limit());
+
+      assertArrayEquals(in.array(), heapBytes);
+    } catch (Exception e) {
+      fail(e);
+    }
+  }
 }
