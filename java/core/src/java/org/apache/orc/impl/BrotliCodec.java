@@ -41,8 +41,8 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
 
   static class BrotliOptions implements Options {
 
-    private Brotli.Mode mode;
-    private int quality;
+    private Brotli.Mode mode = Brotli.Mode.GENERIC;
+    private int quality = 11;
     private int lgwin = 22;
     private int lgblock = 0;
 
@@ -88,7 +88,7 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
     }
 
     public Brotli.Parameter brotliParameter() {
-      return new Brotli.Parameter();
+      return new Brotli.Parameter(mode, quality, lgwin, lgblock);
     }
   }
 
