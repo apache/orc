@@ -59,9 +59,6 @@ public class HadoopShimsCurrent implements HadoopShims {
       case SNAPPY:
         return new SnappyDirectDecompressWrapper(
             new SnappyDecompressor.SnappyDirectDecompressor());
-      case BROTLI:
-        return new BrotliDirectDecompressWrapper(
-            new BrotliStreamDeCompressor());
       default:
         return null;
     }

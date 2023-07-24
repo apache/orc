@@ -42,10 +42,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.github.rdblue</groupId>
-      <artifactId>brotli-codec</artifactId>
-    </dependency>
 
     <!-- test inter-project -->
     <dependency>

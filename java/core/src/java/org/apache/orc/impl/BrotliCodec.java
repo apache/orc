@@ -23,19 +23,18 @@ import org.apache.hadoop.io.compress.brotli.BrotliDecompressor;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.meteogroup.jbrotli.Brotli;
+import org.meteogroup.jbrotli.BrotliStreamDeCompressor;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
-public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec{
+public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
   // load jni library.
-  private final org.apache.hadoop.io.compress.BrotliCodec hadoopCodec = new org.apache.hadoop.io.compress.BrotliCodec();
-  private static final HadoopShims SHIMS = HadoopShimsFactory.get();
-  private Boolean direct = null;
+  private final org.apache.hadoop.io.compress.BrotliCodec codec = new org.apache.hadoop.io.compress.BrotliCodec();
 
-  // Note: shim path does not care about levels and strategies (only used for decompression).
-  private HadoopShims.DirectDecompressor decompressShim = null;
+  private BrotliStreamDeCompressor directDecompressor;
+  private Boolean direct = null;
 
   public BrotliCodec() {
   }
@@ -56,7 +55,7 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec{
     public Options setSpeed(SpeedModifier newValue) {
       switch (newValue) {
         case FAST:
-          // best quality + 1.
+          // best speed + 1.
           quality = 1;
           break;
         case DEFAULT:
@@ -159,10 +158,10 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec{
   public boolean isAvailable() {
     if (direct == null) {
       try {
-        ensureShim();
-        direct = (decompressShim != null);
+        if (directDecompressor == null) directDecompressor = new BrotliStreamDeCompressor();
+        direct = Boolean.TRUE;
       } catch (UnsatisfiedLinkError ule) {
-        direct = false;
+        direct = Boolean.FALSE;
       }
     }
     return direct;
@@ -174,32 +173,29 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec{
   }
 
 
-  private void ensureShim() {
-    if (decompressShim == null) {
-      decompressShim = SHIMS.getDirectDecompressor(
-          HadoopShims.DirectCompressionType.BROTLI);
-    }
-  }
-
   @Override
   public void directDecompress(ByteBuffer in, ByteBuffer out) throws IOException {
-    ensureShim();
-    decompressShim.decompress(in, out);
+    if (directDecompressor == null) {
+      directDecompressor = new BrotliStreamDeCompressor();
+    }
+    directDecompressor.deCompress(in, out);
     out.flip(); // flip for read
   }
 
   @Override
   public void reset() {
-    if (decompressShim != null) {
-      decompressShim.reset();
+    if (directDecompressor != null) {
+      directDecompressor.close();
     }
+    directDecompressor = new BrotliStreamDeCompressor();
   }
 
   @Override
   public void destroy() {
-    if (decompressShim != null) {
-      decompressShim.end();
+    if (directDecompressor != null) {
+      directDecompressor.close();
     }
+    directDecompressor = null;
   }
 
   @Override
