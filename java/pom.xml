@@ -273,11 +273,6 @@
         <optional>true</optional>
       </dependency>
       <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-compress</artifactId>
-        <version>1.23.0</version>
-      </dependency>
-      <dependency>
         <groupId>com.github.rdblue</groupId>
         <artifactId>brotli-codec</artifactId>
         <version>${brotli-codec.version}</version>
@@ -317,10 +312,10 @@
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
     <repository>
+      <!-- needed for brotli-codec -->
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
       <name>Jitpack.io repository</name>
-      <!-- needed for brotli-codec -->
     </repository>
   </repositories>
   <pluginRepositories>
