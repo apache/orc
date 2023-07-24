@@ -35,6 +35,7 @@ public interface HadoopShims {
     ZLIB_NOHEADER,
     ZLIB,
     SNAPPY,
+    BROTLI,
   }
 
   interface DirectDecompressor {

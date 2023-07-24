@@ -26,6 +26,7 @@ import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 import org.apache.orc.EncryptionAlgorithm;
+import org.meteogroup.jbrotli.BrotliStreamDeCompressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,9 @@ public class HadoopShimsCurrent implements HadoopShims {
       case SNAPPY:
         return new SnappyDirectDecompressWrapper(
             new SnappyDecompressor.SnappyDirectDecompressor());
+      case BROTLI:
+        return new BrotliDirectDecompressWrapper(
+            new BrotliStreamDeCompressor());
       default:
         return null;
     }

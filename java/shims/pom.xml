@@ -49,6 +49,11 @@
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.github.rdblue</groupId>
+      <artifactId>brotli-codec</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
