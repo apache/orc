@@ -52,10 +52,10 @@ public class SnappyCodec extends AircompressorCodec
         ensureShim();
         direct = (decompressShim != null);
       } catch (UnsatisfiedLinkError ule) {
-        direct = Boolean.FALSE;
+        direct = Boolean.valueOf(false);
       }
     }
-    return direct;
+    return direct.booleanValue();
   }
 
   @Override
