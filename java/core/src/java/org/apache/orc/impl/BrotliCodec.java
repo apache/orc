@@ -31,7 +31,8 @@ import java.nio.ByteBuffer;
 
 public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
   // load jni library.
-  private final org.apache.hadoop.io.compress.BrotliCodec codec = new org.apache.hadoop.io.compress.BrotliCodec();
+  private final org.apache.hadoop.io.compress.BrotliCodec codec =
+      new org.apache.hadoop.io.compress.BrotliCodec();
 
   private BrotliStreamDeCompressor directDecompressor;
   private Boolean direct = null;
@@ -100,7 +101,11 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
   }
 
   @Override
-  public boolean compress(ByteBuffer in, ByteBuffer out, ByteBuffer overflow, Options options) throws IOException {
+  public boolean compress(
+      ByteBuffer in,
+      ByteBuffer out,
+      ByteBuffer overflow,
+      Options options) throws IOException {
     int length = in.remaining();
     int outSize = 0;
     BrotliCompressor compressor = new BrotliCompressor(null);
