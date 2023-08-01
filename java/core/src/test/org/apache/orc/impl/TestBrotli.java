@@ -19,11 +19,13 @@
 package org.apache.orc.impl;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 
 import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisabledOnOs(architectures = "aarch64")
 public class TestBrotli {
   @Test
   public void testNoOverflow() {

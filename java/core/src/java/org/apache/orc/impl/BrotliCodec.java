@@ -28,6 +28,7 @@ import org.meteogroup.jbrotli.BrotliStreamDeCompressor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
   // load jni library.
@@ -36,8 +37,13 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
 
   private BrotliStreamDeCompressor directDecompressor;
   private Boolean direct = null;
+  private static final String[] NON_SUPPORT_ARCH = {"aarch64"};
 
   public BrotliCodec() {
+    final String arch = System.getProperty("os.arch");
+    if (Arrays.asList(NON_SUPPORT_ARCH).contains(arch)) {
+      throw new UnsupportedOperationException(arch + " does not support brotli codec.");
+    }
   }
 
   static class BrotliOptions implements Options {
