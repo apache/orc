@@ -132,8 +132,8 @@ public class RecordReaderUtils {
     }
 
     @Override
-    public void releaseBuffer(ByteBuffer buffer) {
-      zcr.releaseBuffer(buffer);
+    public void releaseAllBuffers() {
+      zcr.releaseAllBuffers();
     }
 
     @Override
@@ -374,7 +374,7 @@ public class RecordReaderUtils {
 
       // did we get the current range in a single read?
       if (currentOffset + currentBuffer.remaining() >= current.getEnd()) {
-        ByteBuffer copy = currentBuffer.duplicate();
+        ByteBuffer copy = currentBuffer.slice();
         copy.position((int) (current.getOffset() - currentOffset));
         copy.limit(copy.position() + current.getLength());
         current.setChunk(copy);
@@ -385,7 +385,7 @@ public class RecordReaderUtils {
                               ? ByteBuffer.allocateDirect(current.getLength())
                               : ByteBuffer.allocate(current.getLength());
         // we know that the range spans buffers
-        ByteBuffer copy = currentBuffer.duplicate();
+        ByteBuffer copy = currentBuffer.slice();
         // skip over the front matter
         copy.position((int) (current.getOffset() - currentOffset));
         result.put(copy);
@@ -394,11 +394,11 @@ public class RecordReaderUtils {
         currentBuffer = buffers.next();
         while (result.hasRemaining()) {
           if (result.remaining() > currentBuffer.remaining()) {
-            result.put(currentBuffer.duplicate());
+            result.put(currentBuffer.slice());
             currentOffset += currentBuffer.remaining();
             currentBuffer = buffers.next();
           } else {
-            copy = currentBuffer.duplicate();
+            copy = currentBuffer.slice();
             copy.limit(result.remaining());
             result.put(copy);
           }

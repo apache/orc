@@ -24,6 +24,7 @@ import org.apache.hadoop.io.ByteBufferPool;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 
 class ZeroCopyShims {
   private static final class ByteBufferPoolAdapter implements ByteBufferPool {
@@ -51,6 +52,7 @@ class ZeroCopyShims {
         .noneOf(ReadOption.class);
     private static final EnumSet<ReadOption> NO_CHECK_SUM = EnumSet
         .of(ReadOption.SKIP_CHECKSUMS);
+    private final IdentityHashMap<ByteBuffer, Object> readBuffers = new IdentityHashMap<>(0);
 
     ZeroCopyAdapter(FSDataInputStream in,
                            HadoopShims.ByteBufferPoolShim poolshim) {
@@ -69,12 +71,18 @@ class ZeroCopyShims {
       if (verifyChecksums) {
         options = CHECK_SUM;
       }
-      return this.in.read(this.pool, maxLength, options);
+
+      ByteBuffer bb = this.in.read(this.pool, maxLength, options);
+      readBuffers.put(bb, null);
+      return bb;
     }
 
     @Override
-    public void releaseBuffer(ByteBuffer buffer) {
-      this.in.releaseBuffer(buffer);
+    public void releaseAllBuffers() {
+      readBuffers.forEach((k, v) -> {
+        this.in.releaseBuffer(k);
+      });
+      readBuffers.clear();
     }
 
     @Override

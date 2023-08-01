@@ -214,12 +214,7 @@ public class StripePlanner {
    */
   public void clearStreams() {
     if (dataReader.isTrackingDiskRanges()) {
-      for (StreamInformation stream : indexStreams) {
-        stream.releaseBuffers(dataReader);
-      }
-      for (StreamInformation stream : dataStreams) {
-        stream.releaseBuffers(dataReader);
-      }
+      dataReader.releaseAllBuffers();
     }
     indexStreams.clear();
     dataStreams.clear();
@@ -617,19 +612,6 @@ public class StripePlanner {
       this.column = column;
       this.offset = offset;
       this.length = length;
-    }
-
-    void releaseBuffers(DataReader reader) {
-      long end = offset + length;
-      BufferChunk ptr = firstChunk;
-      while (ptr != null && ptr.getOffset() < end) {
-        ByteBuffer buffer = ptr.getData();
-        if (buffer != null) {
-          reader.releaseBuffer(buffer);
-          ptr.setChunk(null);
-        }
-        ptr = (BufferChunk) ptr.next;
-      }
     }
   }
 }

@@ -52,10 +52,9 @@ public interface DataReader extends AutoCloseable, Cloneable {
   boolean isTrackingDiskRanges();
 
   /**
-   * Releases buffers created by readFileData. See readFileData javadoc.
-   * @param toRelease The buffer to release.
+   * Releases all buffers created by readFileData. See readFileData javadoc.
    */
-  void releaseBuffer(ByteBuffer toRelease);
+  void releaseAllBuffers();
 
   /**
    * Clone the entire state of the DataReader with the assumption that the
