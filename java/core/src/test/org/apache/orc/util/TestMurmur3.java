@@ -39,7 +39,7 @@ public class TestMurmur3 {
   public void testHashCodesM3_32_string() {
     String key = "test";
     int seed = 123;
-    HashFunction hf = Hashing.murmur3_32(seed);
+    HashFunction hf = Hashing.murmur3_32_fixed(seed);
     int hc1 = hf.hashBytes(key.getBytes(StandardCharsets.UTF_8)).asInt();
     int hc2 = Murmur3.hash32(key.getBytes(StandardCharsets.UTF_8),
         key.getBytes(StandardCharsets.UTF_8).length, seed);
@@ -56,7 +56,7 @@ public class TestMurmur3 {
   public void testHashCodesM3_32_ints() {
     int seed = 123;
     Random rand = new Random(seed);
-    HashFunction hf = Hashing.murmur3_32(seed);
+    HashFunction hf = Hashing.murmur3_32_fixed(seed);
     for (int i = 0; i < 1000; i++) {
       int val = rand.nextInt();
       byte[] data = ByteBuffer.allocate(4).putInt(val).array();
@@ -70,7 +70,7 @@ public class TestMurmur3 {
   public void testHashCodesM3_32_longs() {
     int seed = 123;
     Random rand = new Random(seed);
-    HashFunction hf = Hashing.murmur3_32(seed);
+    HashFunction hf = Hashing.murmur3_32_fixed(seed);
     for (int i = 0; i < 1000; i++) {
       long val = rand.nextLong();
       byte[] data = ByteBuffer.allocate(8).putLong(val).array();
@@ -84,7 +84,7 @@ public class TestMurmur3 {
   public void testHashCodesM3_32_double() {
     int seed = 123;
     Random rand = new Random(seed);
-    HashFunction hf = Hashing.murmur3_32(seed);
+    HashFunction hf = Hashing.murmur3_32_fixed(seed);
     for (int i = 0; i < 1000; i++) {
       double val = rand.nextDouble();
       byte[] data = ByteBuffer.allocate(8).putDouble(val).array();
