@@ -19,6 +19,7 @@
 package org.apache.orc;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,7 +28,6 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.shaded.org.apache.commons.text.StringEscapeUtils;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
