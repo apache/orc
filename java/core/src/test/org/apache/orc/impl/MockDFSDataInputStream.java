@@ -36,7 +36,7 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
     ByteBuffer copy = hdfsBlockBuffer.duplicate();
     copy.limit(copy.position() + i);
     currentPosition += i;
-    hdfsBlockBuffer.position(hdfsBlockBuffer.position() + i);
+    hdfsBlockBuffer.position(currentPosition - startPosition);
     bufferStore.put(copy, byteBufferPool);
     return copy;
   }
@@ -51,8 +51,8 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
 
   @Override
   public void seek(long l) throws IOException {
-    currentPosition += (l - startPosition);
-    hdfsBlockBuffer.position((int) l - startPosition);
+    currentPosition = (int) l;
+    hdfsBlockBuffer.position(currentPosition - startPosition);
   }
 
   @Override
@@ -62,7 +62,7 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
 
   @Override
   public boolean seekToNewSource(long l) throws IOException {
-    return false;
+    throw new RuntimeException("unsupported");
   }
 
   public boolean isAllReleased() {
@@ -71,16 +71,16 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
 
   @Override
   public int read(long l, byte[] bytes, int i, int i1) throws IOException {
-    return 0;
+    throw new RuntimeException("unsupported");
   }
 
   @Override
   public void readFully(long l, byte[] bytes, int i, int i1) throws IOException {
-
+    throw new RuntimeException("unsupported");
   }
 
   @Override
   public void readFully(long l, byte[] bytes) throws IOException {
-
+    throw new RuntimeException("unsupported");
   }
 }
