@@ -613,5 +613,19 @@ public class StripePlanner {
       this.offset = offset;
       this.length = length;
     }
+
+    @Deprecated
+    void releaseBuffers(DataReader reader) {
+      long end = offset + length;
+      BufferChunk ptr = firstChunk;
+      while (ptr != null && ptr.getOffset() < end) {
+        ByteBuffer buffer = ptr.getData();
+        if (buffer != null) {
+          reader.releaseBuffer(buffer);
+          ptr.setChunk(null);
+        }
+        ptr = (BufferChunk) ptr.next;
+      }
+    }
   }
 }
