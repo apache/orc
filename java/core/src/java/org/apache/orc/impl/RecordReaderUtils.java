@@ -131,6 +131,12 @@ public class RecordReaderUtils {
       return zcr != null;
     }
 
+    @Deprecated
+    @Override
+    public void releaseBuffer(ByteBuffer buffer) {
+      zcr.releaseBuffer(buffer);
+    }
+
     @Override
     public void releaseAllBuffers() {
       zcr.releaseAllBuffers();

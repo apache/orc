@@ -101,6 +101,13 @@ public interface HadoopShims {
                           boolean verifyChecksums) throws IOException;
 
     /**
+     * Release a ByteBuffer obtained from a readBuffer on this
+     * ZeroCopyReaderShim.
+     */
+    @Deprecated
+    void releaseBuffer(ByteBuffer buffer);
+
+    /**
      * Release all ByteBuffers obtained from readBuffer on this
      * ZeroCopyReaderShim.
      */

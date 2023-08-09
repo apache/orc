@@ -77,6 +77,12 @@ class ZeroCopyShims {
       return bb;
     }
 
+    @Deprecated
+    @Override
+    public void releaseBuffer(ByteBuffer buffer) {
+      this.in.releaseBuffer(buffer);
+    }
+
     @Override
     public void releaseAllBuffers() {
       readBuffers.forEach((k, v) -> {

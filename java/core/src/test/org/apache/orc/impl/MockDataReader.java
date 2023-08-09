@@ -98,9 +98,15 @@ public class MockDataReader implements DataReader {
     return true;
   }
 
+  @Deprecated
   @Override
   public void releaseBuffer(ByteBuffer toRelease) {
     outBuffers.remove(toRelease);
+  }
+
+  @Override
+  public void releaseAllBuffers() {
+    outBuffers.clear();
   }
 
   @Override
