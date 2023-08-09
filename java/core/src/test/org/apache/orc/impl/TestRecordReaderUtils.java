@@ -18,9 +18,16 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
+import sun.nio.ch.DirectBuffer;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -138,6 +145,44 @@ class TestRecordReaderUtils {
     validateChunks(chunkReader);
     assertNotEquals(chunkReader.getReadBytes(), chunkReader.getReqBytes());
     assertEquals(chunkReader.getReadBytes(), chunkReader.getFrom().getData().array().length);
+  }
+
+  @Test
+  public void testZeroCopyReadAndRelease() throws IOException {
+    int blockSize = 4096;
+    ByteBuffer hdfsBlockMMapBuffer = makeByteBuffer(blockSize, 0);
+    int blockStartPosition = 4096;
+    MockDFSDataInputStream dis = new MockDFSDataInputStream(hdfsBlockMMapBuffer, blockStartPosition);
+    FSDataInputStream fis = new FSDataInputStream(dis);
+    RecordReaderUtils.ByteBufferAllocatorPool pool = new RecordReaderUtils.ByteBufferAllocatorPool();
+    HadoopShims.ZeroCopyReaderShim zrc = RecordReaderUtils.createZeroCopyShim(fis, null, pool);
+    BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
+            .range(5000, 1000)
+            .range(6000, 1000)
+            .range(7000, 500).build();
+    RecordReaderUtils.zeroCopyReadRanges(fis, zrc, rangeList.get(0), rangeList.get(2), false);
+
+    Assertions.assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 5000 - blockStartPosition, 5000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(0).getData()));
+    Assertions.assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 6000 - blockStartPosition, 6000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(1).getData()));
+    Assertions.assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 7000 - blockStartPosition, 7000 - blockStartPosition + 500), byteBufferToArray(rangeList.get(2).getData()));
+
+    Assertions.assertThrowsExactly(IllegalArgumentException.class, new Executable() {
+      @Override
+      public void execute() throws Throwable {
+        zrc.releaseBuffer(rangeList.get(0).getData());
+      }
+    });
+
+    zrc.releaseAllBuffers();
+
+    Assertions.assertTrue(dis.isAllReleased());
+  }
+
+  private static byte[] byteBufferToArray(ByteBuffer buf) {
+    byte resultArray[] = new byte[buf.remaining()];
+    ByteBuffer buffer = buf.slice();
+    buffer.get(resultArray);
+    return resultArray;
   }
 
   private ByteBuffer makeByteBuffer(int length, long offset) {
