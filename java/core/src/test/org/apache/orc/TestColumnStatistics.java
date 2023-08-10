@@ -408,15 +408,15 @@ public class TestColumnStatistics {
     stats2.increment(2);
     stats1.merge(stats2);
     DateColumnStatistics typed = (DateColumnStatistics) stats1;
-    assertEquals(new DateWritable(10).get(), typed.getMinimum());
-    assertEquals(new DateWritable(2000).get(), typed.getMaximum());
+    assertEquals(10, typed.getMinimumLocalDate().toEpochDay());
+    assertEquals(2000, typed.getMaximumLocalDate().toEpochDay());
     stats1.reset();
     stats1.updateDate(new DateWritable(-10));
     stats1.updateDate(new DateWritable(10000));
     stats1.increment(2);
     stats1.merge(stats2);
-    assertEquals(new DateWritable(-10).get(), typed.getMinimum());
-    assertEquals(new DateWritable(10000).get(), typed.getMaximum());
+    assertEquals(-10, typed.getMinimumLocalDate().toEpochDay());
+    assertEquals(10000, typed.getMaximumLocalDate().toEpochDay());
   }
 
   @Test
