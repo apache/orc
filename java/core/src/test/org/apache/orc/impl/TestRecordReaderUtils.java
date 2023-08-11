@@ -19,13 +19,10 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-import sun.nio.ch.DirectBuffer;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -33,6 +30,8 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 class TestRecordReaderUtils {
 
@@ -162,11 +161,11 @@ class TestRecordReaderUtils {
             .range(7000, 500).build();
     RecordReaderUtils.zeroCopyReadRanges(fis, zrc, rangeList.get(0), rangeList.get(2), false);
 
-    Assertions.assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 5000 - blockStartPosition, 5000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(0).getData()));
-    Assertions.assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 6000 - blockStartPosition, 6000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(1).getData()));
-    Assertions.assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 7000 - blockStartPosition, 7000 - blockStartPosition + 500), byteBufferToArray(rangeList.get(2).getData()));
+    assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 5000 - blockStartPosition, 5000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(0).getData()));
+    assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 6000 - blockStartPosition, 6000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(1).getData()));
+    assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 7000 - blockStartPosition, 7000 - blockStartPosition + 500), byteBufferToArray(rangeList.get(2).getData()));
 
-    Assertions.assertThrowsExactly(IllegalArgumentException.class, new Executable() {
+    assertThrowsExactly(IllegalArgumentException.class, new Executable() {
       @Override
       public void execute() throws Throwable {
         zrc.releaseBuffer(rangeList.get(0).getData());
@@ -175,7 +174,7 @@ class TestRecordReaderUtils {
 
     zrc.releaseAllBuffers();
 
-    Assertions.assertTrue(dis.isAllReleased());
+    assertTrue(dis.isAllReleased());
   }
 
   private static byte[] byteBufferToArray(ByteBuffer buf) {
