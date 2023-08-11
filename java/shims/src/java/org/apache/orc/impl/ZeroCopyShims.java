@@ -77,6 +77,10 @@ class ZeroCopyShims {
       return bb;
     }
 
+    /**
+     * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+     * incorrectly added and shouldn't be used anymore.
+     */
     @Deprecated
     @Override
     public void releaseBuffer(ByteBuffer buffer) {

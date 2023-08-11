@@ -614,6 +614,10 @@ public class StripePlanner {
       this.length = length;
     }
 
+    /**
+     * @deprecated Use {@link DataReader#releaseAllBuffers()} instead. This method was
+     * incorrectly added and shouldn't be used anymore.
+     */
     @Deprecated
     void releaseBuffers(DataReader reader) {
       long end = offset + length;

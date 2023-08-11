@@ -131,6 +131,10 @@ public class RecordReaderUtils {
       return zcr != null;
     }
 
+    /**
+     * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+     * incorrectly added and shouldn't be used anymore.
+     */
     @Deprecated
     @Override
     public void releaseBuffer(ByteBuffer buffer) {
