@@ -246,8 +246,8 @@ namespace orc {
       for (int j = 0; j < TEST_CASES; j++) {
         int flag = j % 2 == 0 ? -1 : 1;
         uint64_t idx = static_cast<uint64_t>(j);
-        col0.data[idx] = static_cast<char>(flag * (j % 128));
-        col1.data[idx] = static_cast<short>(flag * (j % 32768));
+        col0.data[idx] = static_cast<int8_t>(flag * (j % 128));
+        col1.data[idx] = static_cast<int16_t>(flag * (j % 32768));
         col2.data[idx] = flag * j;
         col3.data[idx] = flag * j;
         col4.data[idx] = static_cast<float>(flag * j) * 1.234f;
@@ -297,8 +297,8 @@ namespace orc {
       for (size_t k = 0; k < 5; k++) {
         int flag = j % 2 == 0 ? -1 : 1;
         uint64_t idx = static_cast<uint64_t>(j);
-        origin[6 * k + 0][idx] = std::to_string(static_cast<char>(flag * (j % 128)));
-        origin[6 * k + 1][idx] = std::to_string(static_cast<short>(flag * (j % 32768)));
+        origin[6 * k + 0][idx] = std::to_string(static_cast<int8_t>(flag * (j % 128)));
+        origin[6 * k + 1][idx] = std::to_string(static_cast<int16_t>(flag * (j % 32768)));
         origin[6 * k + 2][idx] = std::to_string(flag * j);
         origin[6 * k + 3][idx] = std::to_string(flag * j);
         origin[6 * k + 4][idx] = std::to_string(static_cast<float>(flag * j) * 1.234f);
