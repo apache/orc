@@ -67,7 +67,7 @@ public class Driver {
     if (options.command == null) {
       System.err.println("ORC Java Examples");
       System.err.println();
-      System.err.println("usage: java -jar orc-examples-*.jar [--help]" +
+      System.err.println("usage: java -jar orc-examples-*-uber.jar [--help]" +
           " [--define X=Y] <command> <args>");
       System.err.println();
       System.err.println("Commands:");
