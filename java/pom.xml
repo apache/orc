@@ -76,6 +76,7 @@
     <mockito.version>4.11.0</mockito.version>
     <!-- Build Properties -->
     <project.build.outputTimestamp>2023-08-11T15:10:30Z</project.build.outputTimestamp>
+    <protoc.version>3.17.3</protoc.version>
     <slf4j.version>2.0.7</slf4j.version>
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.0.0-M5</surefire.version>
@@ -691,7 +692,8 @@
               </goals>
               <phase>generate-sources</phase>
               <configuration>
-                <protocVersion>3.17.3</protocVersion>
+                <protocVersion>${protoc.version}</protocVersion>
+                <protocArtifact>com.google.protobuf:protoc:${protoc.version}</protocArtifact>
                 <addSources>none</addSources>
                 <includeDirectories>
                   <include>../../proto</include>
