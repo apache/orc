@@ -1360,7 +1360,8 @@ the length of each value is written into the LENGTH stream. In direct
 encoding, if the values were [“Nevada”, “California”]; the DATA
 would be “NevadaCalifornia” and the LENGTH would be [6, 10].</p>
 
-<p>For dictionary encodings the dictionary is sorted and UTF-8 bytes of
+<p>For dictionary encodings the dictionary is sorted (in lexicographical
+order of bytes in the UTF-8 encodings) and UTF-8 bytes of
 each unique value are placed into DICTIONARY_DATA. The length of each
 item in the dictionary is put into the LENGTH stream. The DATA stream
 consists of the sequence of references to the dictionary elements.</p>

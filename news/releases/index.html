@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2023/08/16/ORC-1.9.1/">ORC 1.9.1 Released</option>
+      
       <option value="/news/2023/06/28/ORC-1.9.0/">ORC 1.9.0 Released</option>
       
       <option value="/news/2023/06/14/ORC-1.8.4/">ORC 1.8.4 Released</option>
@@ -284,6 +286,60 @@
         
   <article>
   <h2>
+    <a href="/news/2023/08/16/ORC-1.9.1/">
+      ORC 1.9.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      16 Aug 2023
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.9.1.</p>
+
+<ul>
+  <li>Released: 16 August 2023</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.1/orc-1.9.1.tar.gz">orc-1.9.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.1/orc-1.9.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.1">rel/release-1.9.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.1%22">ORC 1.9.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.1/orc-1.9.1.tar.gz.sha256">804492c6562516f9…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.1%22&amp;tempMax=500">ORC-1.9.1</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1455">ORC-1455</a> Fix build failure on non-x86 with unused macro in CpuInfoUtil.cc</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1457">ORC-1457</a> Fix ambiguous overload of Type::createRowBatch</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1462">ORC-1462</a> Bump aircompressor to 0.25 to fix JDK-8081450</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1432">ORC-1432</a> Add MacOS 13 GitHub Action Job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1464">ORC-1464</a> Bump avro to 1.11.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1465">ORC-1465</a> Bump snappy-java to 1.1.10.3</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2023/06/28/ORC-1.9.0/">
       ORC 1.9.0 Released
     </a>
@@ -309,12 +365,12 @@
 
 <ul>
   <li>Released: 28 June 2023</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.0/orc-1.9.0.tar.gz">orc-1.9.0.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.9.0/orc-1.9.0.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.9.0/orc-1.9.0.tar.gz">orc-1.9.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.9.0/orc-1.9.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.0">rel/release-1.9.0</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.0%22">ORC 1.9.0</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.0/orc-1.9.0.tar.gz.sha256">0dca8bbccdb2ee87…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.9.0/orc-1.9.0.tar.gz.sha256">0dca8bbccdb2ee87…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.0%22&amp;tempMax=500">ORC-1.9.0</a></li>
 </ul>
 
@@ -4535,6 +4591,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2023/08/16/ORC-1.9.1/">Version 1.9.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2023/06/28/ORC-1.9.0/">Version 1.9.0</a>
       </li>
       
@@ -4550,13 +4610,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2023/03/15/ORC-1.8.3/">Version 1.8.3</a>
       </li>
       
-      <li class="">
-        <a href="/news/2023/01/21/ORC-1.7.8/">Version 1.7.8</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
