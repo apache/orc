@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <iostream>
+#include <filesystem>
 #include <map>
 #include <sstream>
 
@@ -675,6 +675,13 @@ namespace orc {
     if (itr != timezoneCache.end()) {
       return *(itr->second).get();
     }
+    if (!std::filesystem::exists(std::filesystem::path(filename))) {
+      std::stringstream ss;
+      ss << "Time zone file " << filename << " does not exist."
+         << " Please install IANA time zone database and set TZDIR env properly"
+         << " if not at /usr/share/zoneinfo";
+      throw TimezoneError(ss.str());
+    }
     try {
       std::unique_ptr<InputStream> file = readFile(filename);
       size_t size = static_cast<size_t>(file->getLength());
@@ -880,8 +887,8 @@ namespace orc {
           strftime(buffer, sizeof(buffer), "%F %H:%M:%S", &timeStruct);
         }
       }
-      std::cout << "  Transition: " << (result == nullptr ? "null" : buffer) << " ("
-                << transitions[t] << ") -> " << variants[currentVariant[t]].name << "\n";
+      out << "  Transition: " << (result == nullptr ? "null" : buffer) << " (" << transitions[t]
+          << ") -> " << variants[currentVariant[t]].name << "\n";
     }
   }
 
