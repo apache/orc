@@ -281,10 +281,6 @@ public class OrcFile {
     private long maxLength = Long.MAX_VALUE;
     private OrcTail orcTail;
     private KeyProvider keyProvider;
-    // TODO: We can generalize FileMetadata interface. Make OrcTail implement FileMetadata interface
-    // and remove this class altogether. Both footer caching and llap caching just needs OrcTail.
-    // For now keeping this around to avoid complex surgery
-    private FileMetadata fileMetadata;
     private boolean useUTCTimestamp;
     private boolean useProlepticGregorian;
 
@@ -348,18 +344,6 @@ public class OrcFile {
 
     public KeyProvider getKeyProvider() {
       return keyProvider;
-    }
-
-    /**
-     * @deprecated Use {@link #orcTail(OrcTail)} instead.
-     */
-    public ReaderOptions fileMetadata(final FileMetadata metadata) {
-      fileMetadata = metadata;
-      return this;
-    }
-
-    public FileMetadata getFileMetadata() {
-      return fileMetadata;
     }
 
     public ReaderOptions useUTCTimestamp(boolean value) {

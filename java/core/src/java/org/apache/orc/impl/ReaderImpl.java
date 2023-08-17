@@ -36,7 +36,6 @@ import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.EncryptionKey;
 import org.apache.orc.EncryptionVariant;
 import org.apache.orc.FileFormatException;
-import org.apache.orc.FileMetadata;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
@@ -539,59 +538,34 @@ public class ReaderImpl implements Reader {
     this.conf = options.getConfiguration();
     this.maxLength = options.getMaxLength();
     this.useUTCTimestamp = options.getUseUTCTimestamp();
-    FileMetadata fileMetadata = options.getFileMetadata();
-    if (fileMetadata != null) {
-      this.compressionKind = fileMetadata.getCompressionKind();
-      this.bufferSize = fileMetadata.getCompressionBufferSize();
-      this.metadataSize = fileMetadata.getMetadataSize();
-      this.stripeStatistics = fileMetadata.getStripeStats();
-      this.versionList = fileMetadata.getVersionList();
-      OrcFile.WriterImplementation writer =
-          OrcFile.WriterImplementation.from(fileMetadata.getWriterImplementation());
-      this.writerVersion =
-          OrcFile.WriterVersion.from(writer, fileMetadata.getWriterVersionNum());
-      List<OrcProto.Type> types = fileMetadata.getTypes();
-      OrcUtils.isValidTypeTree(types, 0);
-      this.schema = OrcUtils.convertTypeFromProtobuf(types, 0);
-      this.rowIndexStride = fileMetadata.getRowIndexStride();
-      this.contentLength = fileMetadata.getContentLength();
-      this.numberOfRows = fileMetadata.getNumberOfRows();
-      this.fileStats = fileMetadata.getFileStats();
-      this.stripes = fileMetadata.getStripes();
-      this.tail = null;
-      this.userMetadata = null; // not cached and not needed here
-      // FileMetadata is obsolete and doesn't support encryption
-      this.encryption = new ReaderEncryption();
-      this.softwareVersion = null;
+
+    OrcTail orcTail = options.getOrcTail();
+    if (orcTail == null) {
+      tail = extractFileTail(getFileSystem(), path, options.getMaxLength());
+      options.orcTail(tail);
     } else {
-      OrcTail orcTail = options.getOrcTail();
-      if (orcTail == null) {
-        tail = extractFileTail(getFileSystem(), path, options.getMaxLength());
-        options.orcTail(tail);
-      } else {
-        checkOrcVersion(path, orcTail.getPostScript());
-        tail = orcTail;
-      }
-      this.compressionKind = tail.getCompressionKind();
-      this.bufferSize = tail.getCompressionBufferSize();
-      this.metadataSize = tail.getMetadataSize();
-      this.versionList = tail.getPostScript().getVersionList();
-      this.schema = tail.getSchema();
-      this.rowIndexStride = tail.getFooter().getRowIndexStride();
-      this.contentLength = tail.getFooter().getContentLength();
-      this.numberOfRows = tail.getFooter().getNumberOfRows();
-      this.userMetadata = tail.getFooter().getMetadataList();
-      this.fileStats = tail.getFooter().getStatisticsList();
-      this.writerVersion = tail.getWriterVersion();
-      this.stripes = tail.getStripes();
-      this.stripeStatistics = null;
-      OrcProto.Footer footer = tail.getFooter();
-      this.encryption = new ReaderEncryption(footer, schema,
-          tail.getStripeStatisticsOffset(), tail.getTailBuffer(), stripes,
-          options.getKeyProvider(), conf);
-      this.softwareVersion = OrcUtils.getSoftwareVersion(footer.getWriter(),
-          footer.getSoftwareVersion());
+      checkOrcVersion(path, orcTail.getPostScript());
+      tail = orcTail;
     }
+    this.compressionKind = tail.getCompressionKind();
+    this.bufferSize = tail.getCompressionBufferSize();
+    this.metadataSize = tail.getMetadataSize();
+    this.versionList = tail.getPostScript().getVersionList();
+    this.schema = tail.getSchema();
+    this.rowIndexStride = tail.getFooter().getRowIndexStride();
+    this.contentLength = tail.getFooter().getContentLength();
+    this.numberOfRows = tail.getFooter().getNumberOfRows();
+    this.userMetadata = tail.getFooter().getMetadataList();
+    this.fileStats = tail.getFooter().getStatisticsList();
+    this.writerVersion = tail.getWriterVersion();
+    this.stripes = tail.getStripes();
+    this.stripeStatistics = null;
+    OrcProto.Footer footer = tail.getFooter();
+    this.encryption = new ReaderEncryption(footer, schema,
+        tail.getStripeStatisticsOffset(), tail.getTailBuffer(), stripes,
+        options.getKeyProvider(), conf);
+    this.softwareVersion = OrcUtils.getSoftwareVersion(footer.getWriter(),
+        footer.getSoftwareVersion());
     this.types = OrcUtils.getOrcTypes(schema);
   }
 
