@@ -31,8 +31,8 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
-      .build();
+        .equals("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -42,10 +42,10 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testNotEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .equals("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .equals("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -55,8 +55,8 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testLessThan() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .lessThan("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
-      .build();
+        .lessThan("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -66,10 +66,10 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testNotLessThan() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .lessThan("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .lessThan("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -79,8 +79,9 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testLessThanEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .lessThanEquals("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
-      .build();
+        .lessThanEquals("f1", PredicateLeaf.Type.LONG,
+            getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -90,10 +91,11 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testNotLessThanEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .lessThanEquals("f1", PredicateLeaf.Type.LONG, getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .lessThanEquals("f1", PredicateLeaf.Type.LONG,
+            getPredicateValue(PredicateLeaf.Type.LONG, lowIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -103,10 +105,10 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testBetween() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .between("f1", PredicateLeaf.Type.LONG,
-          getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
-      .build();
+        .between("f1", PredicateLeaf.Type.LONG,
+            getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -116,12 +118,12 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testNotBetween() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .between("f1", PredicateLeaf.Type.LONG,
-          getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
-      .end()
-      .build();
+        .startNot()
+        .between("f1", PredicateLeaf.Type.LONG,
+            getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -131,10 +133,10 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testIn() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .in("f1", PredicateLeaf.Type.LONG,
-          getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
-      .build();
+        .in("f1", PredicateLeaf.Type.LONG,
+            getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -144,12 +146,12 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testNotIn() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .in("f1", PredicateLeaf.Type.LONG,
-          getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
-      .end()
-      .build();
+        .startNot()
+        .in("f1", PredicateLeaf.Type.LONG,
+            getPredicateValue(PredicateLeaf.Type.LONG, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.LONG, highIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -159,8 +161,8 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testIsNull() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .build();
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -170,10 +172,10 @@ public class TestLongFilters extends ATestLeafFilter {
   @Test
     public void testNotIsNull() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .end()
-      .build();
+        .startNot()
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 

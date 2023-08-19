@@ -52,7 +52,8 @@ public class TestTypeDescription {
                 + "\"fields\": [\n"
             + "{  \"f1\": {\"category\": \"int\", \"id\": 1, \"max\": 1}},\n"
             + "{  \"f2\": {\"category\": \"string\", \"id\": 2, \"max\": 2}},\n"
-            + "{  \"f3\": {\"category\": \"decimal\", \"id\": 3, \"max\": 3, \"precision\": 38, \"scale\": 10}}"
+            + "{  \"f3\": {\"category\": \"decimal\", \"id\": 3, \"max\": 3,"
+            + " \"precision\": 38, \"scale\": 10}}"
             + "]"
             + "}",
         struct.toJson());
@@ -66,21 +67,25 @@ public class TestTypeDescription {
             .addField("f4", TypeDescription.createDouble())
             .addField("f5", TypeDescription.createBoolean()))
         .addField("f6", TypeDescription.createChar().withMaxLength(100));
-    assertEquals("struct<f1:uniontype<tinyint,decimal(20,10)>,f2:struct<f3:date,f4:double,f5:boolean>,f6:char(100)>",
+    assertEquals(
+        "struct<f1:uniontype<tinyint,decimal(20,10)>,f2:struct<f3:date,f4:double,"
+            +"f5:boolean>,f6:char(100)>",
         struct.toString());
+
     assertEquals(
         "{\"category\": \"struct\", "
-        + "\"id\": 0, "
-        + "\"max\": 8, "
-        + "\"fields\": [\n" +
-            "{  \"f1\": {\"category\": \"uniontype\", \"id\": 1, \"max\": 3, \"children\": [\n" +
-            "    {\"category\": \"tinyint\", \"id\": 2, \"max\": 2},\n" +
-            "    {\"category\": \"decimal\", \"id\": 3, \"max\": 3, \"precision\": 20, \"scale\": 10}]}},\n" +
-            "{  \"f2\": {\"category\": \"struct\", \"id\": 4, \"max\": 7, \"fields\": [\n" +
-            "{    \"f3\": {\"category\": \"date\", \"id\": 5, \"max\": 5}},\n" +
-            "{    \"f4\": {\"category\": \"double\", \"id\": 6, \"max\": 6}},\n" +
-            "{    \"f5\": {\"category\": \"boolean\", \"id\": 7, \"max\": 7}}]}},\n" +
-            "{  \"f6\": {\"category\": \"char\", \"id\": 8, \"max\": 8, \"length\": 100}}]}",
+            + "\"id\": 0, "
+            + "\"max\": 8, "
+            + "\"fields\": [\n"
+            + "{  \"f1\": {\"category\": \"uniontype\", \"id\": 1, \"max\": 3, \"children\": [\n"
+            + "    {\"category\": \"tinyint\", \"id\": 2, \"max\": 2},\n"
+            + "    {\"category\": \"decimal\", \"id\": 3, \"max\": 3,"
+            + " \"precision\": 20, \"scale\": 10}]}},\n"
+            + "{  \"f2\": {\"category\": \"struct\", \"id\": 4, \"max\": 7, \"fields\": [\n"
+            + "{    \"f3\": {\"category\": \"date\", \"id\": 5, \"max\": 5}},\n"
+            + "{    \"f4\": {\"category\": \"double\", \"id\": 6, \"max\": 6}},\n"
+            + "{    \"f5\": {\"category\": \"boolean\", \"id\": 7, \"max\": 7}}]}},\n"
+            + "{  \"f6\": {\"category\": \"char\", \"id\": 8, \"max\": 8, \"length\": 100}}]}",
         struct.toJson());
   }
 
@@ -90,7 +95,8 @@ public class TestTypeDescription {
         .addField("foo bar", TypeDescription.createInt())
         .addField("`some`thing`", TypeDescription.createInt())
         .addField("èœ", TypeDescription.createInt())
-        .addField("1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", TypeDescription.createInt())
+        .addField("1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                  TypeDescription.createInt())
         .addField("'!@#$%^&*()-=_+", TypeDescription.createInt());
     assertEquals("struct<`foo bar`:int,```some``thing```:int,`èœ`:int," +
         "1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:int," +

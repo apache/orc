@@ -53,7 +53,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestStringDictionary {
 
-  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
+  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target"
+      + File.separator + "test"
       + File.separator + "tmp"));
 
   private Configuration conf;
@@ -237,7 +238,8 @@ public class TestStringDictionary {
     }
 
     @Override
-    public void setEncoding(int column, WriterEncryptionVariant variant, OrcProto.ColumnEncoding encoding) {
+    public void setEncoding(int column, WriterEncryptionVariant variant,
+                            OrcProto.ColumnEncoding encoding) {
 
     }
 
@@ -489,8 +491,10 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      shortStringColumnVector.setVal(batch.size, SHORT_STRING_VALUE.getBytes(StandardCharsets.UTF_8));
-      longStringColumnVector.setVal( batch.size, LONG_STRING_VALUE.getBytes(StandardCharsets.UTF_8));
+      shortStringColumnVector.setVal(batch.size,
+                                      SHORT_STRING_VALUE.getBytes(StandardCharsets.UTF_8));
+      longStringColumnVector.setVal( batch.size,
+                                      LONG_STRING_VALUE.getBytes(StandardCharsets.UTF_8));
       ++batch.size;
     }
     writer.addRowBatch(batch);
@@ -644,11 +648,13 @@ public class TestStringDictionary {
   @MethodSource("data")
   public void testRowIndexPreORC569(String dictImpl) throws Exception {
     OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
-    testFilePath = new Path(System.getProperty("example.dir"), "TestStringDictionary.testRowIndex.orc");
+    testFilePath = new Path(System.getProperty("example.dir"),
+                            "TestStringDictionary.testRowIndex.orc");
     SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
         .lessThan("str", PredicateLeaf.Type.STRING, "row 001000")
         .build();
-    try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs))) {
+    try (Reader reader = OrcFile.createReader(testFilePath,
+                                              OrcFile.readerOptions(conf).filesystem(fs))) {
       Reader.Options options = reader.options().searchArgument(sarg, null).allowSARGToFilter(false);
       try (RecordReader recordReader = reader.rows(options)) {
         VectorizedRowBatch batch = reader.getSchema().createRowBatch();

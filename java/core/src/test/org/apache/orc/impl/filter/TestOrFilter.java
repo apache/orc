@@ -35,11 +35,11 @@ public class TestOrFilter extends ATestFilter {
   @Test
   public void testORConversion() throws FilterFactory.UnSupportedSArgException {
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .in("f1", PredicateLeaf.Type.LONG, 1L, 2L, 3L)
-      .in("f2", PredicateLeaf.Type.STRING, "a", "b", "c")
-      .end()
-      .build();
+        .startOr()
+        .in("f1", PredicateLeaf.Type.LONG, 1L, 2L, 3L)
+        .in("f2", PredicateLeaf.Type.STRING, "a", "b", "c")
+        .end()
+        .build();
 
     Set<String> colIds = new HashSet<>();
     VectorFilter f = FilterFactory.createSArgFilter(sarg.getCompactExpression(),

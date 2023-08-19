@@ -42,11 +42,11 @@ public class TestDataReaderProperties {
     InStream.StreamOptions options = InStream.options()
         .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB));
     DataReaderProperties properties = DataReaderProperties.builder()
-      .withFileSystemSupplier(mockedSupplier)
-      .withPath(mockedPath)
-      .withCompression(options)
-      .withZeroCopy(mockedZeroCopy)
-      .build();
+        .withFileSystemSupplier(mockedSupplier)
+        .withPath(mockedPath)
+        .withCompression(options)
+        .withZeroCopy(mockedZeroCopy)
+        .build();
     assertEquals(mockedSupplier, properties.getFileSystemSupplier());
     assertEquals(mockedPath, properties.getPath());
     assertEquals(CompressionKind.ZLIB,
@@ -66,7 +66,8 @@ public class TestDataReaderProperties {
   }
 
   @Test
-  public void testWhenFilesystemIsProvidedGetFileSystemSupplierReturnsSupplier() throws IOException {
+  public void testWhenFilesystemIsProvidedGetFileSystemSupplierReturnsSupplier()
+      throws IOException {
     DataReaderProperties properties = DataReaderProperties.builder()
         .withFileSystemSupplier(mockedSupplier)
         .withPath(mockedPath)
@@ -79,9 +80,9 @@ public class TestDataReaderProperties {
   @Test
   public void testMissingNonRequiredArgs() throws IOException {
     DataReaderProperties properties = DataReaderProperties.builder()
-      .withFileSystemSupplier(mockedSupplier)
-      .withPath(mockedPath)
-      .build();
+        .withFileSystemSupplier(mockedSupplier)
+        .withPath(mockedPath)
+        .build();
     assertEquals(mockedSupplier, properties.getFileSystemSupplier());
     assertEquals(mockedPath, properties.getPath());
     assertNull(properties.getCompression());
@@ -102,7 +103,7 @@ public class TestDataReaderProperties {
         .withFileSystemSupplier(mockedSupplier)
         .withCompression(InStream.options())
         .withZeroCopy(mockedZeroCopy)
-        .build();
+          .build();
     });
   }
 
@@ -113,7 +114,7 @@ public class TestDataReaderProperties {
         .withPath(mockedPath)
         .withCompression(InStream.options())
         .withZeroCopy(mockedZeroCopy)
-        .build();
+          .build();
     });
   }
 

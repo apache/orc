@@ -146,7 +146,8 @@ public class TestProlepticConversions {
       SimpleDateFormat timeFormat = createParser("yyyy-MM-dd HH:mm:ss", cal);
       Chronology readerChronology = readerProlepticGregorian
           ? IsoChronology.INSTANCE : HybridChronology.INSTANCE;
-      DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE.withChronology(readerChronology);
+      DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE
+                                        .withChronology(readerChronology);
 
       // Check the file statistics
       ColumnStatistics[] colStats = reader.getStatistics();

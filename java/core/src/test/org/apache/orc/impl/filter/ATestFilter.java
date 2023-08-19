@@ -40,11 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ATestFilter {
   protected final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createString())
-    .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(2))
-    .addField("f4", TypeDescription.createDouble())
-    .addField("f5", TypeDescription.createTimestamp());
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createString())
+      .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(2))
+      .addField("f4", TypeDescription.createDouble())
+      .addField("f5", TypeDescription.createTimestamp());
   protected final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
 
   protected final VectorizedRowBatch batch = schema.createRowBatch();

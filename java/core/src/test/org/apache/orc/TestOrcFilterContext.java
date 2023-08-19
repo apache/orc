@@ -18,6 +18,9 @@
 
 package org.apache.orc;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
@@ -29,9 +32,6 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.orc.impl.OrcFilterContextImpl;
 import org.apache.orc.impl.SchemaEvolution;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,23 +49,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestOrcFilterContext {
   private final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createString())
-    .addField("f3",
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createString())
+      .addField("f3",
               TypeDescription.createStruct()
                 .addField("a", TypeDescription.createInt())
                 .addField("b", TypeDescription.createLong())
                 .addField("c",
                           TypeDescription.createMap(TypeDescription.createInt(),
                                                     TypeDescription.createDate())))
-    .addField("f4",
+      .addField("f4",
               TypeDescription.createList(TypeDescription.createStruct()
                                            .addField("a", TypeDescription.createChar())
                                            .addField("b", TypeDescription.createBoolean())))
-    .addField("f5",
+      .addField("f5",
               TypeDescription.createMap(TypeDescription.createInt(),
                                         TypeDescription.createDate()))
-    .addField("f6",
+      .addField("f6",
               TypeDescription.createUnion()
                 .addUnionChild(TypeDescription.createInt())
                 .addUnionChild(TypeDescription.createStruct()
@@ -85,7 +84,7 @@ public class TestOrcFilterContext {
   private static final int RowCount = 400;
 
   private final OrcFilterContext filterContext = new OrcFilterContextImpl(schema, false)
-    .setBatch(schema.createRowBatch());
+      .setBatch(schema.createRowBatch());
   TypeDescription typeDescriptionACID =
           TypeDescription.fromString("struct<int1:int,string1:string>");
   TypeDescription acidSchema = SchemaEvolution.createEventSchema(typeDescriptionACID);
@@ -204,12 +203,12 @@ public class TestOrcFilterContext {
   @Test
   public void testTopLevelList() {
     TypeDescription topListSchema = TypeDescription.createList(
-      TypeDescription.createStruct()
+        TypeDescription.createStruct()
         .addField("a", TypeDescription.createChar())
         .addField("b", TypeDescription
           .createBoolean()));
     OrcFilterContext fc = new OrcFilterContextImpl(topListSchema, false)
-      .setBatch(topListSchema.createRowBatch());
+        .setBatch(topListSchema.createRowBatch());
     ColumnVector[] vectorBranch = fc.findColumnVector("_elem");
     assertEquals(2, vectorBranch.length);
     assertTrue(vectorBranch[0] instanceof ListColumnVector);
@@ -252,15 +251,16 @@ public class TestOrcFilterContext {
     assertTrue(OrcFilterContext.isNull(vectorBranch, 1));
     assertTrue(OrcFilterContext.isNull(vectorBranch, 2));
   }
-  
   @Test
   public void testACIDTable() {
     ColumnVector[] columnVector = filterContextACID.findColumnVector("string1");
     assertEquals(1, columnVector.length);
-    assertTrue(columnVector[0] instanceof BytesColumnVector, "Expected a  BytesColumnVector, but found "+ columnVector[0].getClass());
+    assertTrue(columnVector[0] instanceof BytesColumnVector,
+        "Expected a  BytesColumnVector, but found "+ columnVector[0].getClass());
     columnVector = filterContextACID.findColumnVector("int1");
     assertEquals(1, columnVector.length);
-    assertTrue(columnVector[0] instanceof LongColumnVector, "Expected a  LongColumnVector, but found "+ columnVector[0].getClass());
+    assertTrue(columnVector[0] instanceof LongColumnVector,
+        "Expected a  LongColumnVector, but found "+ columnVector[0].getClass());
   }
 
   @Test
@@ -268,7 +268,6 @@ public class TestOrcFilterContext {
     createAcidORCFile();
     readSingleRowWithFilter(new Random().nextInt(RowCount));
     fileSystem.delete(filePath, false);
-    
   }
 
   private void createAcidORCFile() throws IOException {
@@ -303,8 +302,8 @@ public class TestOrcFilterContext {
       }
     }
   }
-  
-  private void populateColumnValues(TypeDescription typeDescription, ColumnVector[] columnVectors, int index, long value) {
+  private void populateColumnValues(TypeDescription typeDescription, ColumnVector[] columnVectors,
+                                    int index, long value) {
     for (int columnId = 0; columnId < typeDescription.getChildren().size() ; columnId++) {
       switch (typeDescription.getChildren().get(columnId).getCategory()) {
         case INT:
@@ -318,16 +317,17 @@ public class TestOrcFilterContext {
                   ("String-"+ index).getBytes(StandardCharsets.UTF_8));
           break;
         case STRUCT:
-          populateColumnValues(typeDescription.getChildren().get(columnId), ((StructColumnVector)columnVectors[columnId]).fields, index, value);
-          break;           
+          populateColumnValues(typeDescription.getChildren().get(columnId),
+              ((StructColumnVector)columnVectors[columnId]).fields, index, value);
+          break;
         default:
           throw new IllegalArgumentException();
       }
     }
   }
-  
   private void readSingleRowWithFilter(int id) throws IOException {
-    Reader reader = OrcFile.createReader(filePath, OrcFile.readerOptions(configuration).filesystem(fileSystem));
+    Reader reader = OrcFile.createReader(filePath,
+        OrcFile.readerOptions(configuration).filesystem(fileSystem));
     SearchArgument searchArgument = SearchArgumentFactory.newBuilder()
             .in("int1", PredicateLeaf.Type.LONG, new Long(id))
             .build();
@@ -342,9 +342,14 @@ public class TestOrcFilterContext {
       rowCount += vectorizedRowBatch.size;
       assertEquals(6, vectorizedRowBatch.cols.length);
       assertTrue(vectorizedRowBatch.cols[5] instanceof StructColumnVector);
-      assertTrue(((StructColumnVector) vectorizedRowBatch.cols[5]).fields[0] instanceof LongColumnVector);
-      assertTrue(((StructColumnVector) vectorizedRowBatch.cols[5]).fields[1] instanceof BytesColumnVector);
-      assertEquals(id, ((LongColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[0]).vector[vectorizedRowBatch.selected[0]]);
+      assertTrue((
+          (StructColumnVector) vectorizedRowBatch.cols[5]).fields[0] instanceof LongColumnVector);
+      assertTrue((
+          (StructColumnVector) vectorizedRowBatch.cols[5]).fields[1] instanceof BytesColumnVector);
+      assertEquals(
+          id,
+          ((LongColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[0])
+              .vector[vectorizedRowBatch.selected[0]]);
       checkStringColumn(id, vectorizedRowBatch);
       assertFalse(recordReader.nextBatch(vectorizedRowBatch));
     }
@@ -352,7 +357,8 @@ public class TestOrcFilterContext {
   }
 
   private static void checkStringColumn(int id, VectorizedRowBatch vectorizedRowBatch) {
-    BytesColumnVector bytesColumnVector = (BytesColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[1];
+    BytesColumnVector bytesColumnVector = (BytesColumnVector) (
+        (StructColumnVector) vectorizedRowBatch.cols[5]).fields[1];
     assertEquals("String-"+ id, bytesColumnVector.toString(id));
   }
 }

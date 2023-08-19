@@ -540,7 +540,9 @@ public class TestInStream {
 
     assertEquals(961, bytes.length);
     InStream in = InStream.create("test", new BufferChunk(ByteBuffer.wrap(bytes), 0), 0,
-                                  bytes.length, InStream.options().withCodec(new ZlibCodec()).withBufferSize(300));
+                                  bytes.length,
+                                  InStream.options().withCodec(
+                                      new ZlibCodec()).withBufferSize(300));
     assertEquals("compressed stream test position: 0 length: 961 range: 0" +
                  " offset: 0 limit: 961 range 0 = 0 to 961",
                  in.toString());
@@ -960,7 +962,6 @@ public class TestInStream {
 
   private static final byte[] uncompressed = input(
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-  
   @Test
   public void testStreamResetWithIncreasedLength() throws IOException {
     // Set up an initial buffer of PREVIOUS_LENGTH followed by our stream

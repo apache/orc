@@ -67,17 +67,17 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testAndOfOr() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .startOr()
-      .in("f1", PredicateLeaf.Type.LONG, 1L, 6L)
-      .in("f1", PredicateLeaf.Type.LONG, 3L, 4L)
-      .end()
-      .startOr()
-      .in("f1", PredicateLeaf.Type.LONG, 1L, 6L)
-      .in("f2", PredicateLeaf.Type.STRING, "c", "e")
-      .end()
-      .end()
-      .build();
+        .startAnd()
+        .startOr()
+        .in("f1", PredicateLeaf.Type.LONG, 1L, 6L)
+        .in("f1", PredicateLeaf.Type.LONG, 3L, 4L)
+        .end()
+        .startOr()
+        .in("f1", PredicateLeaf.Type.LONG, 1L, 6L)
+        .in("f2", PredicateLeaf.Type.STRING, "c", "e")
+        .end()
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -91,17 +91,17 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testOrOfAnd() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .startAnd()
-      .in("f1", PredicateLeaf.Type.LONG, 1L, 6L)
-      .in("f2", PredicateLeaf.Type.STRING, "a", "c")
-      .end()
-      .startAnd()
-      .in("f1", PredicateLeaf.Type.LONG, 3L, 4L)
-      .in("f2", PredicateLeaf.Type.STRING, "c", "e")
-      .end()
-      .end()
-      .build();
+        .startOr()
+        .startAnd()
+        .in("f1", PredicateLeaf.Type.LONG, 1L, 6L)
+        .in("f2", PredicateLeaf.Type.STRING, "a", "c")
+        .end()
+        .startAnd()
+        .in("f1", PredicateLeaf.Type.LONG, 3L, 4L)
+        .in("f2", PredicateLeaf.Type.STRING, "c", "e")
+        .end()
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -113,20 +113,20 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testOrOfAndNative() {
     VectorFilter f = new OrFilter(
-      new VectorFilter[] {
-        new AndFilter(new VectorFilter[] {
-          new LongFilters.LongIn("f1",
-                                 Arrays.asList(1L, 6L), false),
-          new StringFilters.StringIn("f2",
+        new VectorFilter[] {
+          new AndFilter(new VectorFilter[] {
+            new LongFilters.LongIn("f1",
+                                   Arrays.asList(1L, 6L), false),
+            new StringFilters.StringIn("f2",
                                      Arrays.asList("a", "c"), false)
-        }),
-        new AndFilter(new VectorFilter[] {
-          new LongFilters.LongIn("f1",
-                                 Arrays.asList(3L, 4L), false),
-          new StringFilters.StringIn("f2",
-                                     Arrays.asList("c", "e"), false)
-        })
-      }
+          }),
+          new AndFilter(new VectorFilter[] {
+            new LongFilters.LongIn("f1",
+                                   Arrays.asList(3L, 4L), false),
+            new StringFilters.StringIn("f2",
+                                       Arrays.asList("c", "e"), false)
+          })
+        }
     );
 
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
@@ -141,15 +141,15 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testAndNotNot() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .startNot()
-      .in("f1", PredicateLeaf.Type.LONG, 7L)
-      .end()
-      .startNot()
-      .isNull("f2", PredicateLeaf.Type.STRING)
-      .end()
-      .end()
-      .build();
+        .startAnd()
+        .startNot()
+        .in("f1", PredicateLeaf.Type.LONG, 7L)
+        .end()
+        .startNot()
+        .isNull("f2", PredicateLeaf.Type.STRING)
+        .end()
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -164,8 +164,8 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testUnSupportedSArg() {
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .nullSafeEquals("f1", PredicateLeaf.Type.LONG, 0L)
-      .build();
+        .nullSafeEquals("f1", PredicateLeaf.Type.LONG, 0L)
+        .build();
 
     assertNull(FilterUtils.createVectorFilter(sarg, schema));
   }
@@ -173,11 +173,11 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testRepeatedProtected() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .in("f2", PredicateLeaf.Type.STRING, "a", "d")
-      .lessThan("f1", PredicateLeaf.Type.LONG, 6L)
-      .end()
-      .build();
+        .startOr()
+        .in("f2", PredicateLeaf.Type.STRING, "a", "d")
+        .lessThan("f1", PredicateLeaf.Type.LONG, 6L)
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 1L, 1L, 1L, 1L, 1L},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -189,11 +189,11 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testNullProtected() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .in("f2", PredicateLeaf.Type.STRING, "a", "d")
-      .lessThan("f1", PredicateLeaf.Type.LONG, 4L)
-      .end()
-      .build();
+        .startOr()
+        .in("f2", PredicateLeaf.Type.STRING, "a", "d")
+        .lessThan("f1", PredicateLeaf.Type.LONG, 4L)
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, null, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -204,10 +204,10 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testUnsupportedNotLeaf() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .nullSafeEquals("f1", PredicateLeaf.Type.LONG, 2L)
-      .end()
-      .build();
+        .startNot()
+        .nullSafeEquals("f1", PredicateLeaf.Type.LONG, 2L)
+        .end()
+        .build();
 
     assertNull(FilterUtils.createVectorFilter(sArg, schema));
   }
@@ -215,17 +215,17 @@ public class TestFilters extends ATestFilter {
   @Test
   public void testAndOrAnd() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .startOr()
-      .lessThan("f1", PredicateLeaf.Type.LONG, 3L)
-      .startAnd()
-      .equals("f2", PredicateLeaf.Type.STRING, "a")
-      .equals("f1", PredicateLeaf.Type.LONG, 5L)
-      .end()
-      .end()
-      .in("f2", PredicateLeaf.Type.STRING, "a", "c")
-      .end()
-      .build();
+        .startAnd()
+        .startOr()
+        .lessThan("f1", PredicateLeaf.Type.LONG, 3L)
+        .startAnd()
+        .equals("f2", PredicateLeaf.Type.STRING, "a")
+        .equals("f1", PredicateLeaf.Type.LONG, 5L)
+        .end()
+        .end()
+        .in("f2", PredicateLeaf.Type.STRING, "a", "c")
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, null, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});

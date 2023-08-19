@@ -81,9 +81,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import static org.apache.orc.OrcFile.CURRENT_WRITER;
 import static org.apache.orc.impl.RecordReaderUtils.MAX_BYTE_WIDTH;
 import static org.apache.orc.impl.RecordReaderUtils.MAX_VALUES_LENGTH;
-import static org.apache.orc.OrcFile.CURRENT_WRITER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -112,7 +112,8 @@ public class TestRecordReaderImpl {
   public void testFindColumn() throws Exception {
     Configuration conf = new Configuration();
     TypeDescription file = TypeDescription.fromString("struct<a:int,c:string,e:int>");
-    TypeDescription reader = TypeDescription.fromString("struct<a:int,b:double,c:string,d:double,e:bigint>");
+    TypeDescription reader = TypeDescription.fromString(
+        "struct<a:int,b:double,c:string,d:double,e:bigint>");
     SchemaEvolution evo = new SchemaEvolution(file, reader, new Reader.Options(conf));
     assertEquals(1, RecordReaderImpl.findColumns(evo, "a"));
     assertEquals(-1, RecordReaderImpl.findColumns(evo, "b"));
@@ -395,7 +396,7 @@ public class TestRecordReaderImpl {
   @Test
   public void testGetMin() throws Exception {
     assertEquals(10L, RecordReaderImpl.getValueRange(
-      ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L)),
+        ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L)),
         new StubPredicate(PredicateLeaf.Type.LONG), true).lower);
     assertEquals(10.0d, RecordReaderImpl.getValueRange(
         ColumnStatisticsImpl.deserialize(null,
@@ -663,9 +664,9 @@ public class TestRecordReaderImpl {
     pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.BOOLEAN, "x", false, null);
     assertEquals(TruthValue.NO,
-      evaluateBoolean(createBooleanStats(10, 10), pred));
+        evaluateBoolean(createBooleanStats(10, 10), pred));
     assertEquals(TruthValue.YES_NO,
-      evaluateBoolean(createBooleanStats(10, 0), pred));
+        evaluateBoolean(createBooleanStats(10, 0), pred));
   }
 
   @Test
@@ -927,23 +928,29 @@ public class TestRecordReaderImpl {
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
         Timestamp.valueOf("1017-01-01 00:00:00"), null);
     assertEquals(TruthValue.YES_NO,
-        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+        evaluateTimestampWithWriterCalendar(
+            createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
             pred, true, true, false));
 
     // NoProleptic - NoUTC -> 1016-12-26 00:00:00.0
-    long predTime = DateUtils.convertTimeToProleptic(Timestamp.valueOf("1017-01-01 00:00:00").getTime(), false);
+    long predTime = DateUtils.convertTimeToProleptic(
+        Timestamp.valueOf("1017-01-01 00:00:00").getTime(), false);
     PredicateLeaf pred2 = createPredicateLeaf(
-        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS,
+        PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
     assertEquals(TruthValue.YES_NO,
-        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+        evaluateTimestampWithWriterCalendar(
+            createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
             pred2, true, false, false));
 
     // NoProleptic - UTC -> 1016-12-25 16:00:00.0
     predTime = DateUtils.convertTimeToProleptic(getUtcTimestamp("1017-01-01 00:00:00"), true);
     PredicateLeaf pred3 = createPredicateLeaf(
-        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS,
+        PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
     assertEquals(TruthValue.YES_NO,
-        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+        evaluateTimestampWithWriterCalendar(
+            createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
             pred3, true, false, true));
 
     // Proleptic - UTC -> 1016-12-31 16:00:00.0
@@ -951,7 +958,8 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred4 = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
     assertEquals(TruthValue.YES_NO,
-        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+        evaluateTimestampWithWriterCalendar(
+            createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
             pred4, true, true, true));
   }
 
@@ -1294,17 +1302,19 @@ public class TestRecordReaderImpl {
   @Test
   public void testTimestampStatsOldFiles() throws Exception {
     PredicateLeaf pred = createPredicateLeaf
-      (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
+        (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
         "x", Timestamp.valueOf("2000-01-01 00:00:00"), null);
-    OrcProto.ColumnStatistics cs = createTimestampStats("2000-01-01 00:00:00", "2001-01-01 00:00:00");
+    OrcProto.ColumnStatistics cs =
+        createTimestampStats("2000-01-01 00:00:00", "2001-01-01 00:00:00");
     assertEquals(TruthValue.YES_NO_NULL,
-      evaluateTimestampBloomfilter(cs, pred, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_101, false));
+        evaluateTimestampBloomfilter(cs, pred,
+          new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_101, false));
     BloomFilterUtf8 bf = new BloomFilterUtf8(10, 0.05);
     bf.addLong(getUtcTimestamp("2000-06-01 00:00:00"));
     assertEquals(TruthValue.NO_NULL,
-      evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_135, false));
+        evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_135, false));
     assertEquals(TruthValue.YES_NO_NULL,
-      evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_101, false));
+        evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_101, false));
   }
 
   @Test
@@ -1320,7 +1330,8 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred3 = createPredicateLeaf
         (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
             "x", new Timestamp(f.parse("2016-01-01 00:00:01").getTime()), null);
-    OrcProto.ColumnStatistics cs = createTimestampStats("2015-01-01 00:00:00", "2016-01-01 00:00:00");
+    OrcProto.ColumnStatistics cs =
+        createTimestampStats("2015-01-01 00:00:00", "2016-01-01 00:00:00");
 
     assertEquals(TruthValue.YES_NO_NULL,
         evaluateTimestamp(cs, pred, true, true));
@@ -1330,9 +1341,11 @@ public class TestRecordReaderImpl {
         evaluateTimestamp(cs, pred3, true, true));
 
     assertEquals(TruthValue.NO_NULL,
-        evaluateTimestampBloomfilter(cs, pred, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_135, true));
+        evaluateTimestampBloomfilter(cs, pred,
+            new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_135, true));
     assertEquals(TruthValue.NO_NULL,
-        evaluateTimestampBloomfilter(cs, pred2, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_135, true));
+        evaluateTimestampBloomfilter(cs, pred2,
+            new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_135, true));
 
     BloomFilterUtf8 bf = new BloomFilterUtf8(10, 0.05);
     bf.addLong(getUtcTimestamp("2015-06-01 00:00:00"));
@@ -1547,7 +1560,7 @@ public class TestRecordReaderImpl {
     int stretchFactor = 2 + (MAX_VALUES_LENGTH * MAX_BYTE_WIDTH - 1) / options.getBufferSize();
     final int SLOP = stretchFactor * (OutStream.HEADER_SIZE + options.getBufferSize());
     MockDataReader dataReader = new MockDataReader(schema, options)
-      .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
+        .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
           createRowIndex(options,
               entry(0,   -1, -1, -1, 0),
               entry(100, -1, -1, -1, 10000),
@@ -1555,7 +1568,7 @@ public class TestRecordReaderImpl {
               entry(300, -1, -1, -1, 30000),
               entry(400, -1, -1, -1, 40000),
               entry(500, -1, -1, -1, 50000)))
-      .addStream(2, OrcProto.Stream.Kind.ROW_INDEX,
+        .addStream(2, OrcProto.Stream.Kind.ROW_INDEX,
           createRowIndex(options,
               entry(0,   -1, -1, -1, 0),
               entry(200, -1, -1, -1, 20000),
@@ -1563,14 +1576,14 @@ public class TestRecordReaderImpl {
               entry(600, -1, -1, -1, 60000),
               entry(800, -1, -1, -1, 80000),
               entry(1000, -1, -1, -1, 100000)))
-      .addStream(1, OrcProto.Stream.Kind.PRESENT, createDataStream(1, 1000))
-      .addStream(1, OrcProto.Stream.Kind.DATA, createDataStream(2, 99000))
-      .addStream(2, OrcProto.Stream.Kind.PRESENT, createDataStream(3, 2000))
-      .addStream(2, OrcProto.Stream.Kind.DATA, createDataStream(4, 198000))
-      .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
-      .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
-      .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
-      .addStripeFooter(1000, null);
+        .addStream(1, OrcProto.Stream.Kind.PRESENT, createDataStream(1, 1000))
+        .addStream(1, OrcProto.Stream.Kind.DATA, createDataStream(2, 99000))
+        .addStream(2, OrcProto.Stream.Kind.PRESENT, createDataStream(3, 2000))
+        .addStream(2, OrcProto.Stream.Kind.DATA, createDataStream(4, 198000))
+        .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .addStripeFooter(1000, null);
     MockStripe stripe = dataReader.getStripe(0);
     // get the start of the data streams
     final long START = stripe.getStream(1, OrcProto.Stream.Kind.PRESENT).offset;
@@ -1776,7 +1789,8 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStats("str_10", "str_200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null,
+        createStringStats("str_10", "str_200"));
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString("str_15");
@@ -1791,7 +1805,8 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStats("str_10", "str_200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null,
+        createStringStats("str_10", "str_200"));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString("str_15");
@@ -1810,7 +1825,8 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStats("str_10", "str_200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null,
+        createStringStats("str_10", "str_200"));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString("str_19");
@@ -1926,7 +1942,8 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDecimalStats("10", "200", false));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null,
+        createDecimalStats("10", "200", false));
     // hasNull is false, so bloom filter should return NO
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
@@ -2372,11 +2389,14 @@ public class TestRecordReaderImpl {
     indexes[2] = null; // no-op, just for clarifying that new reader column doesn't have an index
 
     List<OrcProto.ColumnEncoding> encodings = new ArrayList<>();
-    encodings.add(OrcProto.ColumnEncoding.newBuilder().setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
+    encodings.add(OrcProto.ColumnEncoding.newBuilder().setKind(
+        OrcProto.ColumnEncoding.Kind.DIRECT).build());
 
-    boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe,  1, -1, null),
+    boolean[] rows = applier.pickRowGroups(
+        new ReaderImpl.StripeInformationImpl(stripe,  1, -1, null),
         indexes, null, encodings, null, false);
-    assertTrue(Arrays.equals(SargApplier.READ_ALL_RGS, rows)); //cannot filter for new column, return all rows
+    //cannot filter for new column, return all rows
+    assertTrue(Arrays.equals(SargApplier.READ_ALL_RGS, rows));
   }
 
   private boolean[] includeAll(TypeDescription readerType) {
@@ -2398,7 +2418,8 @@ public class TestRecordReaderImpl {
     Configuration conf = new Configuration();
     Path path = new Path(workDir, "empty.orc");
     FileSystem.get(conf).delete(path, true);
-    OrcFile.WriterOptions options = OrcFile.writerOptions(conf).setSchema(TypeDescription.createLong());
+    OrcFile.WriterOptions options = OrcFile.writerOptions(conf).setSchema(
+        TypeDescription.createLong());
     Writer writer = OrcFile.createWriter(path, options);
     writer.close();
 
@@ -2446,7 +2467,7 @@ public class TestRecordReaderImpl {
     SearchArgument sarg = SearchArgumentFactory.newBuilder().build();
     SchemaEvolution evo = new SchemaEvolution(schema, schema, new Reader.Options(conf));
     RecordReaderImpl.SargApplier applier1 =
-      new RecordReaderImpl.SargApplier(sarg, 0, evo, OrcFile.WriterVersion.ORC_135, false);
+        new RecordReaderImpl.SargApplier(sarg, 0, evo, OrcFile.WriterVersion.ORC_135, false);
 
     Field f1 = RecordReaderImpl.SargApplier.class.getDeclaredField("writerUsedProlepticGregorian");
     f1.setAccessible(true);
@@ -2567,7 +2588,8 @@ public class TestRecordReaderImpl {
       while (rows.nextBatch(batch)) {
         for (int i = 0; i < batch.size; i++) {
           final int current_row = row++;
-          final int expectedVal = current_row >= 10_000 && current_row < 20_000 ? current_row + 100_000 : current_row;
+          final int expectedVal = current_row >= 10_000 && current_row < 20_000 ?
+              current_row + 100_000 : current_row;
           assertEquals(expectedVal, readX.vector[i]);
         }
       }

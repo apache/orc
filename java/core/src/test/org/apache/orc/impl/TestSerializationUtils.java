@@ -80,7 +80,7 @@ public class TestSerializationUtils {
         SerializationUtils.readBigInteger(fromBuffer(buffer)).longValue());
     for(int i=-8192; i < 8192; ++i) {
       buffer.reset();
-        SerializationUtils.writeBigInteger(buffer, BigInteger.valueOf(i));
+      SerializationUtils.writeBigInteger(buffer, BigInteger.valueOf(i));
       assertEquals(i >= -64 && i < 64 ? 1 : 2, buffer.size(),
           "compare length for " + i);
       assertEquals(i, SerializationUtils.readBigInteger(fromBuffer(buffer)).intValue(),
@@ -149,7 +149,8 @@ public class TestSerializationUtils {
       LongMath.checkedSubtract(Long.MIN_VALUE, Long.MAX_VALUE);
       fail("expected ArithmeticException for overflow");
     } catch (ArithmeticException ex) {
-      assertEquals("overflow: checkedSubtract(-9223372036854775808, 9223372036854775807)", ex.getMessage());
+      assertEquals("overflow: checkedSubtract(-9223372036854775808, 9223372036854775807)",
+          ex.getMessage());
     }
 
     assertEquals(-8106206116692740190L,

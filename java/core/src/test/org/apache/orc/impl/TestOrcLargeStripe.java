@@ -58,8 +58,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class TestOrcLargeStripe {
 
-  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
-    + File.separator + "tmp"));
+  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target"
+      + File.separator + "test"
+      + File.separator + "tmp"));
 
   Configuration conf;
   FileSystem fs;
@@ -141,7 +142,7 @@ public class TestOrcLargeStripe {
     TypeDescription schema = TypeDescription.createTimestamp();
     fs.delete(testFilePath, false);
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000)
         .version(OrcFile.Version.V_0_11).fileSystem(fs));
     writer.close();
 
@@ -149,7 +150,8 @@ public class TestOrcLargeStripe {
     Reader reader = OrcFile.createReader(testFilePath, opts);
     RecordReader recordReader = reader.rows(new Reader.Options().range(0L, Long.MAX_VALUE));
     assertTrue(recordReader instanceof RecordReaderImpl);
-    assertEquals(Integer.MAX_VALUE - 1024, ((RecordReaderImpl) recordReader).getMaxDiskRangeChunkLimit());
+    assertEquals(Integer.MAX_VALUE - 1024,
+        ((RecordReaderImpl) recordReader).getMaxDiskRangeChunkLimit());
 
     conf = new Configuration();
     conf.setInt(OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getHiveConfName(), 1000);
@@ -168,8 +170,8 @@ public class TestOrcLargeStripe {
 
     conf.setDouble("hive.exec.orc.dictionary.key.size.threshold", 0.0);
     Writer writer = OrcFile.createWriter(
-      testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema)
+        testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema)
         .compress(CompressionKind.NONE));
     // 5000 is the lower bound for a stripe
     int size = 5000;
@@ -203,7 +205,7 @@ public class TestOrcLargeStripe {
 
     try {
       Reader reader = OrcFile.createReader(testFilePath,
-        OrcFile.readerOptions(conf).filesystem(fs));
+          OrcFile.readerOptions(conf).filesystem(fs));
       RecordReader rows = reader.rows();
       batch = reader.getSchema().createRowBatch();
       int rowsRead = 0;

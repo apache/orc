@@ -582,10 +582,10 @@ public class TestVectorOrcFile {
   @MethodSource("data")
   public void testHiveDecimalStatsAllNulls(Version fileFormat) throws Exception {
     TypeDescription schema = TypeDescription.createStruct()
-      .addField("dec1", TypeDescription.createDecimal());
+        .addField("dec1", TypeDescription.createDecimal());
 
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
           .bufferSize(10000).version(fileFormat));
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 4;
@@ -599,7 +599,7 @@ public class TestVectorOrcFile {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
     assertEquals(4, stats[0].getNumberOfValues());
@@ -607,7 +607,8 @@ public class TestVectorOrcFile {
     assertTrue(stats[1].hasNull());
     assertNull(((DecimalColumnStatistics)stats[1]).getMinimum());
     assertNull(((DecimalColumnStatistics)stats[1]).getMaximum());
-    assertEquals(new HiveDecimalWritable(0).getHiveDecimal(), ((DecimalColumnStatistics)stats[1]).getSum());
+    assertEquals(new HiveDecimalWritable(0).getHiveDecimal(),
+                ((DecimalColumnStatistics)stats[1]).getSum());
   }
 
   @ParameterizedTest
@@ -872,7 +873,8 @@ public class TestVectorOrcFile {
       map.offsets[rowId] = offset;
 
       for (Map.Entry<String, InnerStruct> entry : value.entrySet()) {
-        ((BytesColumnVector) map.keys).setVal(offset, entry.getKey().getBytes(StandardCharsets.UTF_8));
+        ((BytesColumnVector) map.keys).setVal(offset,
+                                              entry.getKey().getBytes(StandardCharsets.UTF_8));
         InnerStruct inner = entry.getValue();
         setInner((StructColumnVector) map.values, offset, inner.int1,
             inner.string1.toString());
@@ -1156,7 +1158,7 @@ public class TestVectorOrcFile {
     for(int i=0; i < expected.length; ++i) {
       if (expected[i] != actual[i]) {
         System.out.println("Difference at " + i + " expected: " + expected[i] +
-          " actual: " + actual[i]);
+            " actual: " + actual[i]);
         diff = true;
       }
     }
@@ -1720,7 +1722,7 @@ public class TestVectorOrcFile {
     assertEquals("count: 19 hasNull: false", reader.getStatistics()[0].toString());
     // the size of the column in the different formats
     int size = (fileFormat == OrcFile.Version.V_0_11 ? 89 :
-      fileFormat == OrcFile.Version.V_0_12 ? 90 : 154);
+        fileFormat == OrcFile.Version.V_0_12 ? 90 : 154);
     assertEquals("count: 19 hasNull: false bytesOnDisk: " + size +
             " min: -2 max: 100000000000000 sum: 111111111111109.111",
         reader.getStatistics()[1].toString());
@@ -1990,7 +1992,7 @@ public class TestVectorOrcFile {
     assertEquals(HiveDecimal.create("-5643.234"), decStats.getMinimum());
     assertEquals(maxValue, decStats.getMaximum());
     // TODO: fix this
-//    assertEquals(null,stats.getSum());
+    //    assertEquals(null,stats.getSum());
     int stripeCount = 0;
     int rowCount = 0;
     long currentOffset = -1;
@@ -2560,7 +2562,7 @@ public class TestVectorOrcFile {
     }
     rows.close();
     Iterator<StripeInformation> stripeIterator =
-      reader.getStripes().iterator();
+        reader.getStripes().iterator();
     long offsetOfStripe2 = 0;
     long offsetOfStripe4 = 0;
     long lastRowOfStripe2 = 0;
@@ -3157,9 +3159,11 @@ public class TestVectorOrcFile {
       assertEquals(3, maps.lengths[3], msg);
       assertEquals(Integer.toHexString(3 * r), mapKeys.toString((int) maps.offsets[r]), msg);
       assertEquals(Integer.toString(3 * r), mapValues.toString((int) maps.offsets[r]), msg);
-      assertEquals(Integer.toHexString(3 * r + 1), mapKeys.toString((int) maps.offsets[r] + 1), msg);
+      assertEquals(Integer.toHexString(3 * r + 1),
+                    mapKeys.toString((int) maps.offsets[r] + 1), msg);
       assertEquals(Integer.toString(3 * r + 1), mapValues.toString((int) maps.offsets[r] + 1), msg);
-      assertEquals(Integer.toHexString(3 * r + 2), mapKeys.toString((int) maps.offsets[r] + 2), msg);
+      assertEquals(Integer.toHexString(3 * r + 2),
+                    mapKeys.toString((int) maps.offsets[r] + 2), msg);
       assertEquals(Integer.toString(3 * r + 2), mapValues.toString((int) maps.offsets[r] + 2), msg);
     }
 
@@ -4853,30 +4857,31 @@ public class TestVectorOrcFile {
           // a function from the row to the value as a string
           IntFunction<String> actual = row -> null;
           switch (c) {
-          case 0:
-            expected = new HiveDecimalWritable(String.format("%d.%03d", b, b)).toString();
-            actual = row -> ((DecimalColumnVector) batch.cols[0]).vector[row].toString();
-            break;
-          case 1:
-            expected = Long.toString(new DateWritable(new Date(96 + b, 12, 11)).getDays());
-            actual = row -> Long.toString(((LongColumnVector) batch.cols[1]).vector[row]);
-            break;
-          case 2:
-            expected = Timestamp.valueOf(String.format("2014-12-14 12:00:00.%04d", b)).toString();
-            actual = row -> ((TimestampColumnVector) batch.cols[2]).asScratchTimestamp(row).toString();
-            break;
-          case 3:
-            expected = Double.toString(b + 0.5);
-            actual = row -> Double.toString(((DoubleColumnVector) batch.cols[3]).vector[row]);
-            break;
-          case 4:
-            expected = Long.toString(b % 2);
-            actual = row -> Long.toString(((LongColumnVector) batch.cols[4]).vector[row]);
-            break;
-          default:
-            expected = Integer.toString(b);
-            actual = row -> ((BytesColumnVector) batch.cols[5]).toString(row);
-            break;
+            case 0:
+              expected = new HiveDecimalWritable(String.format("%d.%03d", b, b)).toString();
+              actual = row -> ((DecimalColumnVector) batch.cols[0]).vector[row].toString();
+              break;
+            case 1:
+              expected = Long.toString(new DateWritable(new Date(96 + b, 12, 11)).getDays());
+              actual = row -> Long.toString(((LongColumnVector) batch.cols[1]).vector[row]);
+              break;
+            case 2:
+              expected = Timestamp.valueOf(String.format("2014-12-14 12:00:00.%04d", b)).toString();
+              actual = row -> ((TimestampColumnVector) batch.cols[2])
+                  .asScratchTimestamp(row).toString();
+              break;
+            case 3:
+              expected = Double.toString(b + 0.5);
+              actual = row -> Double.toString(((DoubleColumnVector) batch.cols[3]).vector[row]);
+              break;
+            case 4:
+              expected = Long.toString(b % 2);
+              actual = row -> Long.toString(((LongColumnVector) batch.cols[4]).vector[row]);
+              break;
+            default:
+              expected = Integer.toString(b);
+              actual = row -> ((BytesColumnVector) batch.cols[5]).toString(row);
+              break;
           }
           assertTrue(batch.cols[c].noNulls, "batch " + b + " column " + c);
           assertEquals(expected, actual.apply(0), "batch " + b + " column " + c + " row 0");

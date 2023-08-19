@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRowFilteringComplexTypesNulls {
   private static final Logger LOG =
-    LoggerFactory.getLogger(TestRowFilteringComplexTypesNulls.class);
+      LoggerFactory.getLogger(TestRowFilteringComplexTypesNulls.class);
   private static final Path workDir = new Path(System.getProperty("test.tmp.dir",
                                                                   "target" + File.separator + "test"
                                                                   + File.separator + "tmp"));
@@ -58,17 +58,17 @@ public class TestRowFilteringComplexTypesNulls {
   private static FileSystem fs;
 
   private static final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("s2", TypeDescription.createStruct()
+      .addField("f1", TypeDescription.createLong())
+      .addField("s2", TypeDescription.createStruct()
       .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
       .addField("f2f", TypeDescription.createString())
     )
-    .addField("u3", TypeDescription.createUnion()
+      .addField("u3", TypeDescription.createUnion()
       .addUnionChild(TypeDescription.createLong())
       .addUnionChild(TypeDescription.createString())
-    )
-    .addField("f4", TypeDescription.createString())
-    .addField("ridx", TypeDescription.createLong());
+      )
+      .addField("f4", TypeDescription.createString())
+      .addField("ridx", TypeDescription.createLong());
   private static final long RowCount = 4000000L;
   private static final String[] FilterColumns = new String[] {"ridx", "s2.f2", "u3.0"};
   private static final int scale = 3;
@@ -182,7 +182,7 @@ public class TestRowFilteringComplexTypesNulls {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
-      .setRowFilter(new String[] {"s2.f2"}, new F2InFilter(new HashSet<>(0)));
+        .setRowFilter(new String[] {"s2.f2"}, new F2InFilter(new HashSet<>(0)));
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
       while (rr.nextBatch(b)) {
@@ -276,7 +276,7 @@ public class TestRowFilteringComplexTypesNulls {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
-      .setRowFilter(FilterColumns, new AlternateFilter());
+        .setRowFilter(FilterColumns, new AlternateFilter());
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
       rowCount = validateFilteredRecordReader(rr, b);
@@ -291,7 +291,7 @@ public class TestRowFilteringComplexTypesNulls {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
-      .setRowFilter(FilterColumns, new AlternateFilter());
+        .setRowFilter(FilterColumns, new AlternateFilter());
     long seekRow;
     try (RecordReader rr = r.rows(options)) {
       // Validate the first batch
@@ -362,8 +362,7 @@ public class TestRowFilteringComplexTypesNulls {
       ColumnVector[] f2Branch = b.findColumnVector("s2.f2");
       DecimalColumnVector f2 = (DecimalColumnVector) f2Branch[f2Branch.length - 1];
       for (int i = 0; i < b.getSelectedSize(); i++) {
-        if (!OrcFilterContext.isNull(f2Branch, i)
-            && ids.contains(f2.vector[i].getHiveDecimal())) {
+        if (!OrcFilterContext.isNull(f2Branch, i) && ids.contains(f2.vector[i].getHiveDecimal())) {
           b.getSelected()[newSize] = i;
           newSize += 1;
         }

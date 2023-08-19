@@ -51,9 +51,12 @@ public class TestInMemoryKeystore {
     Random random = new Random(2);
     memoryKeystore =
         new InMemoryKeystore(random)
-            .addKey("key128", EncryptionAlgorithm.AES_CTR_128, "123".getBytes(StandardCharsets.UTF_8))
-            .addKey("key256", EncryptionAlgorithm.AES_CTR_256, "secret123".getBytes(StandardCharsets.UTF_8))
-            .addKey("key256short", EncryptionAlgorithm.AES_CTR_256, "5".getBytes(StandardCharsets.UTF_8));
+            .addKey("key128", EncryptionAlgorithm.AES_CTR_128,
+                    "123".getBytes(StandardCharsets.UTF_8))
+            .addKey("key256", EncryptionAlgorithm.AES_CTR_256,
+                    "secret123".getBytes(StandardCharsets.UTF_8))
+            .addKey("key256short", EncryptionAlgorithm.AES_CTR_256,
+                    "5".getBytes(StandardCharsets.UTF_8));
 
   }
 
@@ -114,11 +117,11 @@ public class TestInMemoryKeystore {
     // this is forced by the fixed Random in the keystore for this test
     if (InMemoryKeystore.SUPPORTS_AES_256) {
       assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08 0f " +
-                              "7b 6c db 79 e5 51 ec 9c 9c c7 fc bd 60 ee 73",
+                   "7b 6c db 79 e5 51 ec 9c 9c c7 fc bd 60 ee 73",
           stringify(key256.getEncryptedKey()));
-       // used online aes/cbc calculator to encrypt key
+      // used online aes/cbc calculator to encrypt key
       assertEquals("00 b0 1c 24 d9 03 bc 02 63 87 b3 f9 65 4e e7 a8 b8" +
-                              " 58 eb a0 81 06 b3 61 cf f8 06 ba 30 d4 c5 36",
+                   " 58 eb a0 81 06 b3 61 cf f8 06 ba 30 d4 c5 36",
           stringify(key256.getDecryptedKey().getEncoded()));
     } else {
       assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08",
@@ -139,7 +142,8 @@ public class TestInMemoryKeystore {
 
     assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
-    memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_CTR_128, "NewSecret".getBytes(StandardCharsets.UTF_8));
+    memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_CTR_128,
+                          "NewSecret".getBytes(StandardCharsets.UTF_8));
     assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
   }

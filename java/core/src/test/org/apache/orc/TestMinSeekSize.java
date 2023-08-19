@@ -38,7 +38,6 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestMinSeekSize {
@@ -51,11 +50,11 @@ public class TestMinSeekSize {
   private static FileSystem fs;
 
   private static final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
-    .addField("f3", TypeDescription.createLong())
-    .addField("f4", TypeDescription.createString())
-    .addField("ridx", TypeDescription.createLong());
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
+      .addField("f3", TypeDescription.createLong())
+      .addField("f4", TypeDescription.createString())
+      .addField("ridx", TypeDescription.createLong());
   private static final boolean[] AlternateColumns = new boolean[] {true, true, false, true, false
     , true};
   private static final long RowCount = 16384;

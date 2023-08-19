@@ -20,7 +20,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -57,12 +56,12 @@ public class TestOrcWithLargeStripeStatistics {
   /**
    * Creates an Orc file with a metadata section of the specified size and return its path in the
    * filesystem.
-   * 
+   *
    * The file has a fixed schema (500 string columns) and content (every column contains 200
    * characters, which is roughly 200 bytes). Each row is roughly 100KB uncompressed and each stripe
    * holds exactly one row thus stripe metadata (column statistics) per row is 200KB (100KB for min,
    * 100KB for max, few bytes for sum).
-   * 
+   *
    * @param metadataSize the desired size of the resulting metadata section in bytes
    * @param version the desired version to create the file
    * @return the path to filesystem where the file was created.

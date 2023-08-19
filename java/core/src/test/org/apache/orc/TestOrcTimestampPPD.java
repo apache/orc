@@ -42,7 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestOrcTimestampPPD {
   Path workDir =
-      new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test" + File.separator + "tmp"));
+      new Path(System.getProperty("test.tmp.dir",
+                            "target" + File.separator + "test" + File.separator + "tmp"));
   Configuration conf;
   FileSystem fs;
   Path testFilePath;
@@ -118,18 +119,23 @@ public class TestOrcTimestampPPD {
     Timestamp gotMax = ((TimestampColumnStatistics) colStats[0]).getMaximum();
     assertEquals("1970-01-01 00:00:00.0005", gotMax.toString());
 
-    PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
+    PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS,
+        PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
     // Make sure PPD is now passing
-    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES,
+        RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
-    pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
+    pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS,
+        PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
-    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES,
+        RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
-    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.NO,
+        RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
   }
 
   @Test
@@ -181,24 +187,29 @@ public class TestOrcTimestampPPD {
     assertEquals("2037-01-01 00:00:00.0067891", gotMax.toString());
 
     // PPD EQUALS with nano precision passing
-    PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
+    PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS,
+        PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:00.001109"), null);
-    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES_NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     // PPD EQUALS with ms precision NOT passing
     pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:001"), null);
-    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     // PPD LESS_THAN with ns precision passing
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:00.006789"), null);
-    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES_NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     // PPD LESS_THAN with ms precision passing
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:00.002"), null);
-    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES_NO,
+                RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
   }
 }
 

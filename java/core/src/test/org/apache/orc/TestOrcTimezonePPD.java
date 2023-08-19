@@ -58,7 +58,7 @@ public class TestOrcTimezonePPD {
   private static final Logger LOG = LoggerFactory.getLogger(TestOrcTimezonePPD.class);
 
   Path workDir = new Path(System.getProperty("test.tmp.dir",
-    "target" + File.separator + "test" + File.separator + "tmp"));
+      "target" + File.separator + "test" + File.separator + "tmp"));
   Configuration conf;
   FileSystem fs;
   Path testFilePath;
@@ -73,7 +73,8 @@ public class TestOrcTimezonePPD {
         /* Extreme timezones */
         Arguments.of("GMT-12:00", "GMT+14:00"),
         /* No difference in DST */
-        Arguments.of("America/Los_Angeles", "America/Los_Angeles"), /* same timezone both with DST */
+        Arguments.of("America/Los_Angeles", "America/Los_Angeles"),
+        /* same timezone both with DST */
         Arguments.of("Europe/Berlin", "Europe/Berlin"), /* same as above but europe */
         Arguments.of("America/Phoenix", "Asia/Kolkata") /* Writer no DST, Reader no DST */,
         Arguments.of("Europe/Berlin", "America/Los_Angeles") /* Writer DST, Reader DST */,
@@ -103,22 +104,23 @@ public class TestOrcTimezonePPD {
   }
 
   public static PredicateLeaf createPredicateLeaf(PredicateLeaf.Operator operator,
-    PredicateLeaf.Type type,
-    String columnName,
-    Object literal,
-    List<Object> literalList) {
+      PredicateLeaf.Type type,
+      String columnName,
+      Object literal,
+      List<Object> literalList) {
     return new SearchArgumentImpl.PredicateLeafImpl(operator, type, columnName,
       literal, literalList);
   }
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testTimestampPPDMinMax(String writerTimeZone, String readerTimeZone) throws Exception {
+  public void testTimestampPPDMinMax(String writerTimeZone,
+                                     String readerTimeZone) throws Exception {
     TypeDescription schema = TypeDescription.createTimestamp();
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
     List<String> ts = Lists.newArrayList();
@@ -134,7 +136,7 @@ public class TestOrcTimezonePPD {
 
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     assertEquals(readerTimeZone, TimeZone.getDefault().getID());
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
@@ -154,38 +156,44 @@ public class TestOrcTimezonePPD {
     assertEquals("2007-08-01 04:00:00.0", gotMax.toString());
 
     assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
-      SearchArgumentFactory.newBuilder().equals
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0")).build().getLeaves().get(0),
-      null));
+        SearchArgumentFactory.newBuilder().equals
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+            Timestamp.valueOf("2007-08-01 00:00:00.0")).build().getLeaves().get(0),
+        null));
 
     assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
-      SearchArgumentFactory.newBuilder().equals
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0")).build().getLeaves().get(0),
-      null));
+        SearchArgumentFactory.newBuilder().equals
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+         Timestamp.valueOf("2007-08-02 00:00:00.0")).build().getLeaves().get(0),
+         null));
 
     assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
-      SearchArgumentFactory.newBuilder().between
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 05:00:00.0"),
+        SearchArgumentFactory.newBuilder().between
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+          Timestamp.valueOf("2007-08-01 05:00:00.0"),
           Timestamp.valueOf("2007-08-01 06:00:00.0")).build().getLeaves().get(0),
-      null));
+          null));
 
     assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
-      SearchArgumentFactory.newBuilder().between
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0"),
+        SearchArgumentFactory.newBuilder().between
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+          Timestamp.valueOf("2007-08-01 00:00:00.0"),
           Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
-      null));
+          null));
 
     assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
-      SearchArgumentFactory.newBuilder().in
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0"),
+        SearchArgumentFactory.newBuilder().in
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+          Timestamp.valueOf("2007-08-01 00:00:00.0"),
           Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
-      null));
+          null));
 
     assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
-      SearchArgumentFactory.newBuilder().in
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0"),
+        SearchArgumentFactory.newBuilder().in
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+          Timestamp.valueOf("2007-08-02 00:00:00.0"),
           Timestamp.valueOf("2007-08-02 03:00:00.0")).build().getLeaves().get(0),
-      null));
+          null));
   }
 
   static OrcProto.ColumnEncoding buildEncoding() {
@@ -198,13 +206,15 @@ public class TestOrcTimezonePPD {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testTimestampPPDBloomFilter(String writerTimeZone, String readerTimeZone) throws Exception {
+  public void testTimestampPPDBloomFilter(String writerTimeZone,
+                                          String readerTimeZone) throws Exception {
     LOG.info("Writer = " + writerTimeZone + " reader = " + readerTimeZone);
-    TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
+    TypeDescription schema = TypeDescription.createStruct()
+        .addField("ts", TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000).bloomFilterColumns("ts").writerVersion(OrcFile.WriterVersion.ORC_101));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
     List<String> ts = Lists.newArrayList();
@@ -220,7 +230,7 @@ public class TestOrcTimezonePPD {
 
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     assertEquals(readerTimeZone, TimeZone.getDefault().getID());
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
@@ -246,38 +256,45 @@ public class TestOrcTimezonePPD {
     OrcProto.BloomFilter bloomFilter = bloomFilterIndices[1].getBloomFilter(0);
     BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8,
         buildEncoding(), reader.getWriterVersion(),
-      TypeDescription.Category.TIMESTAMP, bloomFilter);
+        TypeDescription.Category.TIMESTAMP, bloomFilter);
     assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
-      SearchArgumentFactory.newBuilder().equals
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0")).build().getLeaves().get(0),
-      bf));
+        SearchArgumentFactory.newBuilder().equals
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+          Timestamp.valueOf("2007-08-01 00:00:00.0")).build().getLeaves().get(0),
+          bf));
 
     assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1],
-      SearchArgumentFactory.newBuilder().equals
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0")).build().getLeaves().get(0),
-      bf));
+        SearchArgumentFactory.newBuilder().equals
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+          Timestamp.valueOf("2007-08-02 00:00:00.0")).build().getLeaves().get(0),
+          bf));
 
     assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
-      SearchArgumentFactory.newBuilder().in
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0"),
-          Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
-      bf));
+        SearchArgumentFactory.newBuilder().in
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+            Timestamp.valueOf("2007-08-01 00:00:00.0"),
+            Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
+            bf));
 
     assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1],
-      SearchArgumentFactory.newBuilder().in
-        ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0"),
-          Timestamp.valueOf("2007-08-02 03:00:00.0")).build().getLeaves().get(0),
-      bf));
+        SearchArgumentFactory.newBuilder().in
+        ("c", PredicateLeaf.Type.TIMESTAMP,
+            Timestamp.valueOf("2007-08-02 00:00:00.0"),
+            Timestamp.valueOf("2007-08-02 03:00:00.0")).build().getLeaves().get(0),
+            bf));
   }
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testTimestampMinMaxAndBloomFilter(String writerTimeZone, String readerTimeZone) throws Exception {
-    TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
+  public void testTimestampMinMaxAndBloomFilter(String writerTimeZone,
+                                                String readerTimeZone) throws Exception {
+    TypeDescription schema = TypeDescription.createStruct()
+                                            .addField("ts",
+                                                      TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000).bloomFilterColumns("ts"));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
     List<String> ts = Lists.newArrayList();
@@ -293,7 +310,7 @@ public class TestOrcTimezonePPD {
 
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     assertEquals(readerTimeZone, TimeZone.getDefault().getID());
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
@@ -321,38 +338,48 @@ public class TestOrcTimezonePPD {
         buildEncoding(), reader.getWriterVersion(),
         TypeDescription.Category.TIMESTAMP, bloomFilter);
     PredicateLeaf pred = createPredicateLeaf(
-      PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
-      Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
+        Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
+    assertEquals(SearchArgument.TruthValue.YES_NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
-    pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
-      Timestamp.valueOf("2007-08-01 02:00:00.0"), null);
-    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
+                              PredicateLeaf.Type.TIMESTAMP, "x",
+                              Timestamp.valueOf("2007-08-01 02:00:00.0"), null);
+    assertEquals(SearchArgument.TruthValue.NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     bf.addLong(SerializationUtils.convertToUtc(TimeZone.getDefault(),
         Timestamp.valueOf("2007-08-01 02:00:00.0").getTime()));
-    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.YES_NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
-    pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
+    pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS,
+                                PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.YES_NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
-    pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.TIMESTAMP, "x", null, null);
-    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL,
+                                PredicateLeaf.Type.TIMESTAMP, "x", null, null);
+    assertEquals(SearchArgument.TruthValue.NO,
+                  RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
   }
 
   @ParameterizedTest
   @MethodSource("data")
   public void testTimestampAllNulls(String writerTimeZone, String readerTimeZone) throws Exception {
-    TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
+    TypeDescription schema = TypeDescription.createStruct()
+                                .addField("ts", TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000).bloomFilterColumns("ts"));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
     VectorizedRowBatch batch = schema.createRowBatch();
@@ -365,7 +392,7 @@ public class TestOrcTimezonePPD {
 
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     assertEquals(readerTimeZone, TimeZone.getDefault().getID());
     RecordReader rows = reader.rows();
     boolean[] sargColumns = new boolean[2];
@@ -385,11 +412,14 @@ public class TestOrcTimezonePPD {
         buildEncoding(), reader.getWriterVersion(),
         TypeDescription.Category.TIMESTAMP, bloomFilter);
     PredicateLeaf pred = createPredicateLeaf(
-      PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
-      Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    assertEquals(SearchArgument.TruthValue.NULL, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
+        Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
+    assertEquals(SearchArgument.TruthValue.NULL,
+        RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
-    pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.TIMESTAMP, "x", null, null);
-    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL,
+        PredicateLeaf.Type.TIMESTAMP, "x", null, null);
+    assertEquals(SearchArgument.TruthValue.YES,
+        RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
   }
 }

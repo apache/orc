@@ -55,7 +55,8 @@ public class TestOrcTimezone1 {
     return Stream.of(/* Extreme timezones */
         Arguments.of("GMT-12:00", "GMT+14:00"),
         /* No difference in DST */
-        Arguments.of("America/Los_Angeles", "America/Los_Angeles"), /* same timezone both with DST */
+        /* same timezone both with DST */
+        Arguments.of("America/Los_Angeles", "America/Los_Angeles"),
         Arguments.of("Europe/Berlin", "Europe/Berlin"), /* same as above but europe */
         Arguments.of("America/Phoenix", "Asia/Kolkata") /* Writer no DST, Reader no DST */,
         Arguments.of("Europe/Berlin", "America/Los_Angeles") /* Writer DST, Reader DST */,
@@ -69,11 +70,11 @@ public class TestOrcTimezone1 {
         Arguments.of("Asia/Saigon", "Pacific/Enderbury"),
         Arguments.of("UTC", "Asia/Jerusalem")
 
-        // NOTE:
-        // "1995-01-01 03:00:00.688888888" this is not a valid time in Pacific/Enderbury timezone.
-        // On 1995-01-01 00:00:00 GMT offset moved from -11:00 hr to +13:00 which makes all values
-        // on 1995-01-01 invalid. Try this with joda time
-        // new MutableDateTime("1995-01-01", DateTimeZone.forTimeZone(readerTimeZone));
+    // NOTE:
+    // "1995-01-01 03:00:00.688888888" this is not a valid time in Pacific/Enderbury timezone.
+    // On 1995-01-01 00:00:00 GMT offset moved from -11:00 hr to +13:00 which makes all values
+    // on 1995-01-01 invalid. Try this with joda time
+    // new MutableDateTime("1995-01-01", DateTimeZone.forTimeZone(readerTimeZone));
     );
   }
 
@@ -141,7 +142,8 @@ public class TestOrcTimezone1 {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testReadTimestampFormat_0_11(String writerTimeZone, String readerTimeZone) throws Exception {
+  public void testReadTimestampFormat_0_11(String writerTimeZone,
+                                           String readerTimeZone) throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Path oldFilePath = new Path(getClass().getClassLoader().
         getSystemResource("orc-file-11-format.orc").getPath());

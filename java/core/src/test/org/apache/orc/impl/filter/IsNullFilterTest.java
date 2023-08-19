@@ -29,11 +29,11 @@ public class IsNullFilterTest extends ATestFilter {
   @Test
   public void nullFilterTest() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .isNull("f2", PredicateLeaf.Type.STRING)
-      .end()
-      .build();
+        .startOr()
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .isNull("f2", PredicateLeaf.Type.STRING)
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, null, 4L, 5L, null},
              new String[] {"a", "b", "c", null, "e", "f"});
@@ -46,11 +46,11 @@ public class IsNullFilterTest extends ATestFilter {
   @Test
   public void repeatedNullFilterTest() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .equals("f2", PredicateLeaf.Type.STRING, "c")
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .end()
-      .build();
+        .startOr()
+        .equals("f2", PredicateLeaf.Type.STRING, "c")
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .end()
+        .build();
 
     setBatch(new Long[] {null, null, null, null, null, null},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -67,13 +67,13 @@ public class IsNullFilterTest extends ATestFilter {
   @Test
   public void notNullFilterTest() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .startOr()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .isNull("f2", PredicateLeaf.Type.STRING)
-      .end()
-      .end()
-      .build();
+        .startNot()
+        .startOr()
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .isNull("f2", PredicateLeaf.Type.STRING)
+        .end()
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 2L, null, 4L, 5L, null},
              new String[] {"a", "b", "c", null, "e", "f"});
@@ -86,13 +86,13 @@ public class IsNullFilterTest extends ATestFilter {
   @Test
   public void repeatedNotNullFilterTest() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .equals("f2", PredicateLeaf.Type.STRING, "c")
-      .startNot()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .end()
-      .end()
-      .build();
+        .startOr()
+        .equals("f2", PredicateLeaf.Type.STRING, "c")
+        .startNot()
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .end()
+        .end()
+        .build();
 
     setBatch(new Long[] {null, null, null, null, null, null},
              new String[] {"a", "b", "c", "d", "e", "f"});
@@ -109,13 +109,13 @@ public class IsNullFilterTest extends ATestFilter {
   @Test
   public void repeatedNotNullFilterNoNullsTest() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .equals("f2", PredicateLeaf.Type.STRING, "c")
-      .startNot()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .end()
-      .end()
-      .build();
+        .startOr()
+        .equals("f2", PredicateLeaf.Type.STRING, "c")
+        .startNot()
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .end()
+        .end()
+        .build();
 
     setBatch(new Long[] {1L, 1L, 1L, 1L, 1L, 1L},
              new String[] {"a", "b", "c", "d", "e", "f"});

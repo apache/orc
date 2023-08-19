@@ -37,9 +37,9 @@ import java.text.SimpleDateFormat;
 public class TestConvFilter {
   private final int scale = 4;
   private final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createBoolean())
-    .addField("f2", TypeDescription.createDate())
-    .addField("f3", TypeDescription.createDecimal().withPrecision(18).withScale(scale));
+      .addField("f1", TypeDescription.createBoolean())
+      .addField("f2", TypeDescription.createDate())
+      .addField("f3", TypeDescription.createDecimal().withPrecision(18).withScale(scale));
 
   private final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
   private final VectorizedRowBatch batch = schema.createRowBatchV2();
@@ -53,8 +53,8 @@ public class TestConvFilter {
   public void testBooleanEquals() {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f1", PredicateLeaf.Type.BOOLEAN, true)
-      .build();
+        .equals("f1", PredicateLeaf.Type.BOOLEAN, true)
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 0, 3, 4);
@@ -64,8 +64,8 @@ public class TestConvFilter {
   public void testBooleanIn() {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f1", PredicateLeaf.Type.BOOLEAN, false)
-      .build();
+        .equals("f1", PredicateLeaf.Type.BOOLEAN, false)
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1, 2);
@@ -75,10 +75,10 @@ public class TestConvFilter {
   public void testBooleanBetween() {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .between("f1", PredicateLeaf.Type.BOOLEAN, false, true)
-      .end()
-      .build();
+        .startOr()
+        .between("f1", PredicateLeaf.Type.BOOLEAN, false, true)
+        .end()
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 0, 1, 2, 3, 4);
@@ -88,8 +88,8 @@ public class TestConvFilter {
   public void testDateEquals() throws ParseException {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f2", PredicateLeaf.Type.DATE, date("2000-01-01"))
-      .build();
+        .equals("f2", PredicateLeaf.Type.DATE, date("2000-01-01"))
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1);
@@ -99,8 +99,8 @@ public class TestConvFilter {
   public void testDateIn() throws ParseException {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .in("f2", PredicateLeaf.Type.DATE, date("2000-01-01"), date("2100-06-07"))
-      .build();
+        .in("f2", PredicateLeaf.Type.DATE, date("2000-01-01"), date("2100-06-07"))
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1, 4);
@@ -110,10 +110,10 @@ public class TestConvFilter {
   public void testDateBetween() throws ParseException {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .between("f2", PredicateLeaf.Type.DATE, date("2000-01-01"), date("2100-06-07"))
-      .end()
-      .build();
+        .startOr()
+        .between("f2", PredicateLeaf.Type.DATE, date("2000-01-01"), date("2100-06-07"))
+        .end()
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1, 2, 3, 4);
@@ -123,8 +123,8 @@ public class TestConvFilter {
   public void testDecimalEquals() {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f3", PredicateLeaf.Type.DECIMAL, decimal(12345678))
-      .build();
+        .equals("f3", PredicateLeaf.Type.DECIMAL, decimal(12345678))
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 2);
@@ -134,8 +134,8 @@ public class TestConvFilter {
   public void testDecimalIn() {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .in("f3", PredicateLeaf.Type.DECIMAL, decimal(0), decimal(Long.MAX_VALUE / 18))
-      .build();
+        .in("f3", PredicateLeaf.Type.DECIMAL, decimal(0), decimal(Long.MAX_VALUE / 18))
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1, 3);
@@ -145,10 +145,10 @@ public class TestConvFilter {
   public void testDecimalBetween() {
     // Equals
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .between("f3", PredicateLeaf.Type.DECIMAL, decimal(0), decimal(Long.MAX_VALUE / 18))
-      .end()
-      .build();
+        .startOr()
+        .between("f3", PredicateLeaf.Type.DECIMAL, decimal(0), decimal(Long.MAX_VALUE / 18))
+        .end()
+        .build();
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1, 2, 3);
@@ -171,8 +171,8 @@ public class TestConvFilter {
       v.noNulls = false;
       v.isNull[idx] = true;
     } else {
-      assert (HiveDecimalWritable.isPrecisionDecimal64(value.precision())
-              && value.scale() <= scale);
+      assert (HiveDecimalWritable.isPrecisionDecimal64(value.precision()) &&
+          value.scale() <= scale);
       v.isNull[idx] = false;
       v.vector[idx] = value.serialize64(scale);
     }

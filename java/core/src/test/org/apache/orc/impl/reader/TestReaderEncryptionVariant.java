@@ -34,7 +34,8 @@ public class TestReaderEncryptionVariant {
   public void testInvalidKeyProvider() throws IOException {
     OrcProto.EncryptionAlgorithm algorithm = OrcProto.EncryptionAlgorithm.AES_CTR_256;
     ReaderEncryptionKey key =
-        new ReaderEncryptionKey(OrcProto.EncryptionKey.newBuilder().setAlgorithm(algorithm).build());
+        new ReaderEncryptionKey(
+            OrcProto.EncryptionKey.newBuilder().setAlgorithm(algorithm).build());
     List<StripeInformation> strips = new ArrayList<>();
     ReaderEncryptionVariant readerEncryptionVariant =
         new ReaderEncryptionVariant(key, 0, null, null, strips, 0L, null, null);

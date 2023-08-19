@@ -64,9 +64,12 @@ public class TestSHA256Mask {
       expectedHashShort = md.digest(inputShort);
       expectedHashLong = md.digest(inputLong);
 
-      expectedHash32_hex = SHA256MaskFactory.printHexBinary(expectedHash32).getBytes(StandardCharsets.UTF_8);
-      expectedHashShort_hex = SHA256MaskFactory.printHexBinary(expectedHashShort).getBytes(StandardCharsets.UTF_8);
-      expectedHashLong_hex = SHA256MaskFactory.printHexBinary(expectedHashLong).getBytes(StandardCharsets.UTF_8);
+      expectedHash32_hex =
+          SHA256MaskFactory.printHexBinary(expectedHash32).getBytes(StandardCharsets.UTF_8);
+      expectedHashShort_hex =
+          SHA256MaskFactory.printHexBinary(expectedHashShort).getBytes(StandardCharsets.UTF_8);
+      expectedHashLong_hex =
+          SHA256MaskFactory.printHexBinary(expectedHashLong).getBytes(StandardCharsets.UTF_8);
 
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
@@ -241,12 +244,16 @@ public class TestSHA256Mask {
       sha256Mask.maskBinary(source, r, target);
     }
 
-    final byte[] reasultInput32 = ByteBuffer.wrap(target.vector[0], target.start[0], target.length[0]).array();
-    final byte[] reasultInputShort = ByteBuffer.wrap(target.vector[1], target.start[1], target.length[1]).array();
-    final byte[] reasultInputLong = ByteBuffer.wrap(target.vector[2], target.start[2], target.length[2]).array();
+    final byte[] reasultInput32 =
+        ByteBuffer.wrap(target.vector[0], target.start[0], target.length[0]).array();
+    final byte[] reasultInputShort =
+        ByteBuffer.wrap(target.vector[1], target.start[1], target.length[1]).array();
+    final byte[] reasultInputLong =
+        ByteBuffer.wrap(target.vector[2], target.start[2], target.length[2]).array();
 
 
-    /* Hash is 32 in length (length in binary), less than max len 100 so the output will always be 32 */
+    /* Hash is 32 in length (length in binary), less than max len 100
+    so the output will always be 32 */
     assertEquals(32, target.length[0]);
     assertEquals(32, target.length[1]);
     assertEquals(32, target.length[2]);

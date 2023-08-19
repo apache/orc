@@ -58,11 +58,11 @@ public class TestRowFilteringIOSkip {
   private static FileSystem fs;
 
   private static final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
-    .addField("f3", TypeDescription.createLong())
-    .addField("f4", TypeDescription.createString())
-    .addField("ridx", TypeDescription.createLong());
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
+      .addField("f3", TypeDescription.createLong())
+      .addField("f4", TypeDescription.createString())
+      .addField("ridx", TypeDescription.createLong());
   private static final boolean[] FirstColumnOnly = new boolean[] {true, true, false, false, false
     , false};
   private static final long RowCount = 4000000L;
@@ -166,12 +166,12 @@ public class TestRowFilteringIOSkip {
   private void readSingleRowWithFilter(long idx) throws IOException {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("ridx", PredicateLeaf.Type.LONG, idx)
-      .build();
+        .in("ridx", PredicateLeaf.Type.LONG, idx)
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"ridx"})
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .searchArgument(sarg, new String[] {"ridx"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
@@ -193,8 +193,8 @@ public class TestRowFilteringIOSkip {
 
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(localConf).filesystem(fs));
     Reader.Options options = r.options()
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .useSelected(true)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
@@ -212,12 +212,12 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     long rowIdx = 12345;
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("ridx", PredicateLeaf.Type.LONG, rowIdx)
-      .build();
+        .in("ridx", PredicateLeaf.Type.LONG, rowIdx)
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"ridx"})
-      .useSelected(false)
-      .allowSARGToFilter(true);
+        .searchArgument(sarg, new String[] {"ridx"})
+        .useSelected(false)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount = 0;
     HiveDecimalWritable d = new HiveDecimalWritable();
@@ -251,12 +251,12 @@ public class TestRowFilteringIOSkip {
     readStart();
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("f1", PredicateLeaf.Type.LONG, 0L)
-      .build();
+        .in("f1", PredicateLeaf.Type.LONG, 0L)
+        .build();
     Reader.Options options = r.options()
-      .allowSARGToFilter(false)
-      .useSelected(true)
-      .searchArgument(sarg, new String[] {"f1"});
+        .allowSARGToFilter(false)
+        .useSelected(true)
+        .searchArgument(sarg, new String[] {"f1"});
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
@@ -272,12 +272,12 @@ public class TestRowFilteringIOSkip {
     readStart();
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("f1", PredicateLeaf.Type.LONG, 0L)
-      .build();
+        .in("f1", PredicateLeaf.Type.LONG, 0L)
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"f1"})
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .searchArgument(sarg, new String[] {"f1"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
@@ -293,14 +293,14 @@ public class TestRowFilteringIOSkip {
     readStart();
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .isNull("f1", PredicateLeaf.Type.LONG)
-      .end()
-      .build();
+        .startNot()
+        .isNull("f1", PredicateLeaf.Type.LONG)
+        .end()
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"f1"})
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .searchArgument(sarg, new String[] {"f1"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
@@ -432,8 +432,8 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
-      .useSelected(true)
-      .setRowFilter(FilterColumns, new AlternateFilter());
+        .useSelected(true)
+        .setRowFilter(FilterColumns, new AlternateFilter());
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
       rowCount = validateFilteredRecordReader(rr, b);
@@ -450,8 +450,8 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
-      .useSelected(true)
-      .setRowFilter(FilterColumns, new AlternateFilter());
+        .useSelected(true)
+        .setRowFilter(FilterColumns, new AlternateFilter());
     long seekRow;
     try (RecordReader rr = r.rows(options)) {
       // Validate the first batch
@@ -502,12 +502,12 @@ public class TestRowFilteringIOSkip {
                                     OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
-      .build();
+        .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
+        .build();
     Reader.Options options = r.options()
-      .allowSARGToFilter(false)
-      .useSelected(true)
-      .searchArgument(sarg, new String[] {"ridx"});
+        .allowSARGToFilter(false)
+        .useSelected(true)
+        .searchArgument(sarg, new String[] {"ridx"});
 
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
@@ -525,12 +525,12 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
-      .build();
+        .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"ridx"})
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .searchArgument(sarg, new String[] {"ridx"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
 
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
@@ -546,18 +546,18 @@ public class TestRowFilteringIOSkip {
   public void schemaEvolutionMissingFilterColumn() throws IOException {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription readSchema = schema
-      .clone()
-      .addField("missing", TypeDescription.createLong());
+        .clone()
+        .addField("missing", TypeDescription.createLong());
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .isNull("missing", PredicateLeaf.Type.LONG)
-      .end()
-      .build();
+        .startNot()
+        .isNull("missing", PredicateLeaf.Type.LONG)
+        .end()
+        .build();
     Reader.Options options = r.options()
-      .schema(readSchema)
-      .searchArgument(sarg, new String[] {"missing"})
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .schema(readSchema)
+        .searchArgument(sarg, new String[] {"missing"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = readSchema.createRowBatch();
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
@@ -571,19 +571,19 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     // Change ridx column from long to string and swap the positions of ridx and f4 columns
     TypeDescription readSchema = TypeDescription.createStruct()
-      .addField("f1", TypeDescription.createLong())
-      .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
-      .addField("f3", TypeDescription.createLong())
-      .addField("ridx", TypeDescription.createString())
-      .addField("f4", TypeDescription.createString());
+        .addField("f1", TypeDescription.createLong())
+        .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
+        .addField("f3", TypeDescription.createLong())
+        .addField("ridx", TypeDescription.createString())
+        .addField("f4", TypeDescription.createString());
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("ridx", PredicateLeaf.Type.STRING, "1")
-      .build();
+        .in("ridx", PredicateLeaf.Type.STRING, "1")
+        .build();
     Reader.Options options = r.options()
-      .schema(readSchema)
-      .searchArgument(sarg, new String[] {"ridx"})
-      .useSelected(true)
-      .allowSARGToFilter(true);
+        .schema(readSchema)
+        .searchArgument(sarg, new String[] {"ridx"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
     VectorizedRowBatch b = readSchema.createRowBatch();
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
@@ -615,13 +615,13 @@ public class TestRowFilteringIOSkip {
     // Use the ridx column input in UpperCase and flag case-sensitivity off
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("RIDX", PredicateLeaf.Type.LONG, 1L)
-      .build();
+        .in("RIDX", PredicateLeaf.Type.LONG, 1L)
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"RIDX"})
-      .useSelected(true)
-      .allowSARGToFilter(true)
-      .isSchemaEvolutionCaseAware(false);
+        .searchArgument(sarg, new String[] {"RIDX"})
+        .useSelected(true)
+        .allowSARGToFilter(true)
+        .isSchemaEvolutionCaseAware(false);
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
@@ -638,13 +638,13 @@ public class TestRowFilteringIOSkip {
     // Use the ridx column input in UpperCase and flag case-sensitivity off
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .in("RIDX", PredicateLeaf.Type.LONG, 1L)
-      .build();
+        .in("RIDX", PredicateLeaf.Type.LONG, 1L)
+        .build();
     Reader.Options options = r.options()
-      .searchArgument(sarg, new String[] {"RIDX"})
-      .useSelected(true)
-      .allowSARGToFilter(true)
-      .isSchemaEvolutionCaseAware(true);
+        .searchArgument(sarg, new String[] {"RIDX"})
+        .useSelected(true)
+        .allowSARGToFilter(true)
+        .isSchemaEvolutionCaseAware(true);
     assertThrows(IllegalArgumentException.class,
                  () -> r.rows(options),
                  "Field RIDX not found in struct<f1:bigint,f2:decimal(20,6),f3:bigint,"

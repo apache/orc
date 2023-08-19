@@ -335,9 +335,8 @@ public class TestNewIntegerEncoding {
   public void testDeltaOverflow() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    long[] inp = new long[]{4513343538618202719l, 4513343538618202711l,
-        2911390882471569739l,
-        -9181829309989854913l};
+    long[] inp = new long[]{4513343538618202719L, 4513343538618202711L,
+                            2911390882471569739L, -9181829309989854913L};
     List<Long> input = Lists.newArrayList(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(
@@ -368,8 +367,8 @@ public class TestNewIntegerEncoding {
   public void testDeltaOverflow2() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    long[] inp = new long[]{Long.MAX_VALUE, 4513343538618202711l,
-        2911390882471569739l,
+    long[] inp = new long[]{Long.MAX_VALUE, 4513343538618202711L,
+        2911390882471569739L,
         Long.MIN_VALUE};
     List<Long> input = Lists.newArrayList(Longs.asList(inp));
 
@@ -401,7 +400,7 @@ public class TestNewIntegerEncoding {
   public void testDeltaOverflow3() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    long[] inp = new long[]{-4513343538618202711l, -2911390882471569739l, -2,
+    long[] inp = new long[]{-4513343538618202711L, -2911390882471569739L, -2,
         Long.MAX_VALUE};
     List<Long> input = Lists.newArrayList(Longs.asList(inp));
 
@@ -646,7 +645,8 @@ public class TestNewIntegerEncoding {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testPatchedBaseNegativeMin(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
+  public void testPatchedBaseNegativeMin(OrcFile.EncodingStrategy encodingStrategy)
+                                          throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { 20, 2, 3, 2, 1, 3, 17, 71, 35, 2, 1, 139, 2, 2,
@@ -692,7 +692,8 @@ public class TestNewIntegerEncoding {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testPatchedBaseNegativeMin2(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
+  public void testPatchedBaseNegativeMin2(OrcFile.EncodingStrategy encodingStrategy
+                                          ) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { 20, 2, 3, 2, 1, 3, 17, 71, 35, 2, 1, 139, 2, 2,
@@ -738,7 +739,8 @@ public class TestNewIntegerEncoding {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testPatchedBaseNegativeMin3(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
+  public void testPatchedBaseNegativeMin3(OrcFile.EncodingStrategy encodingStrategy
+                                          ) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { 20, 2, 3, 2, 1, 3, 17, 71, 35, 2, 1, 139, 2, 2,
@@ -784,7 +786,8 @@ public class TestNewIntegerEncoding {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testPatchedBaseNegativeMin4(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
+  public void testPatchedBaseNegativeMin4(OrcFile.EncodingStrategy encodingStrategy)
+      throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { 13, 13, 11, 8, 13, 10, 10, 11, 11, 14, 11, 7, 13,

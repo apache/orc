@@ -43,8 +43,8 @@ public class TestStringRedBlackTree {
    *        tree properties.
    * @return The black-height of the subtree.
    */
-  private int checkSubtree(RedBlackTree tree, int node, IntWritable count
-                          ) throws IOException {
+  private int checkSubtree(RedBlackTree tree, int node,
+                           IntWritable count) throws IOException {
     if (node == RedBlackTree.NULL) {
       return 1;
     }
@@ -96,13 +96,13 @@ public class TestStringRedBlackTree {
     }
   }
 
-  void printTree(RedBlackTree tree, String indent, int node
-                ) throws IOException {
+  void printTree(RedBlackTree tree, String indent,
+                 int node) throws IOException {
     if (node == RedBlackTree.NULL) {
       System.err.println(indent + "NULL");
     } else {
       System.err.println(indent + "Node " + node + " color " +
-        (tree.isRed(node) ? "red" : "black"));
+          (tree.isRed(node) ? "red" : "black"));
       printTree(tree, indent + "  ", tree.getLeft(node));
       printTree(tree, indent + "  ", tree.getRight(node));
     }
@@ -151,8 +151,8 @@ public class TestStringRedBlackTree {
     assertEquals(9, tree.add("z"));
     checkTree(tree);
     StringDictTestingUtils.checkContents(tree, new int[]{2,5,1,4,6,3,7,0,9,8},
-      "alan", "arun", "ashutosh", "eric", "eric14", "greg",
-      "o", "owen", "z", "ziggy");
+        "alan", "arun", "ashutosh", "eric", "eric14", "greg",
+        "o", "owen", "z", "ziggy");
     assertEquals(32888, tree.getSizeInBytes());
     // check that adding greg again bumps the count
     assertEquals(3, tree.add("greg"));
@@ -178,24 +178,24 @@ public class TestStringRedBlackTree {
   @Test
   public void test2() throws Exception {
     StringRedBlackTree tree =
-      buildTree("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
+        buildTree("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
         "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
     assertEquals(26, tree.size());
     StringDictTestingUtils.checkContents(tree, new int[]{0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14,
-      15,16,17, 18,19,20, 21,22,23, 24,25},
-      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j","k", "l", "m", "n", "o",
-      "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
+        15,16,17, 18,19,20, 21,22,23, 24,25},
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j","k", "l", "m", "n", "o",
+        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
   }
 
   @Test
   public void test3() throws Exception {
     StringRedBlackTree tree =
-      buildTree("z", "y", "x", "w", "v", "u", "t", "s", "r", "q", "p", "o", "n",
+        buildTree("z", "y", "x", "w", "v", "u", "t", "s", "r", "q", "p", "o", "n",
         "m", "l", "k", "j", "i", "h", "g", "f", "e", "d", "c", "b", "a");
     assertEquals(26, tree.size());
     StringDictTestingUtils.checkContents(tree, new int[]{25,24,23, 22,21,20, 19,18,17, 16,15,14,
-      13,12,11, 10,9,8, 7,6,5, 4,3,2, 1,0},
-      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
-      "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
+        13,12,11, 10,9,8, 7,6,5, 4,3,2, 1,0},
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
+        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
   }
 }

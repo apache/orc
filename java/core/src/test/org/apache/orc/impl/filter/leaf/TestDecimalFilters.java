@@ -30,8 +30,9 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f3", PredicateLeaf.Type.DECIMAL, getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
-      .build();
+        .equals("f3", PredicateLeaf.Type.DECIMAL,
+          getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -41,10 +42,11 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testNotEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .equals("f3", PredicateLeaf.Type.DECIMAL, getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .equals("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
+        .end()
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -54,8 +56,9 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testLessThan() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .lessThan("f3", PredicateLeaf.Type.DECIMAL, getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
-      .build();
+        .lessThan("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -65,10 +68,11 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testNotLessThan() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .lessThan("f3", PredicateLeaf.Type.DECIMAL, getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .lessThan("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
+        .end()
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -78,8 +82,9 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testLessThanEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .lessThanEquals("f3", PredicateLeaf.Type.DECIMAL, getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
-      .build();
+        .lessThanEquals("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -89,10 +94,11 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testNotLessThanEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .lessThanEquals("f3", PredicateLeaf.Type.DECIMAL, getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .lessThanEquals("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx))
+        .end()
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -102,10 +108,10 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testBetween() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .between("f3", PredicateLeaf.Type.DECIMAL,
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
-      .build();
+        .between("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -115,12 +121,12 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testNotBetween() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .between("f3", PredicateLeaf.Type.DECIMAL,
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
-      .end()
-      .build();
+        .startNot()
+        .between("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
+        .end()
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -130,10 +136,10 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testIn() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .in("f3", PredicateLeaf.Type.DECIMAL,
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
-      .build();
+        .in("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -143,12 +149,12 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testNotIn() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .in("f3", PredicateLeaf.Type.DECIMAL,
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
-      .end()
-      .build();
+        .startNot()
+        .in("f3", PredicateLeaf.Type.DECIMAL,
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.DECIMAL, highIdx))
+        .end()
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -158,8 +164,8 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testIsNull() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .isNull("f3", PredicateLeaf.Type.DECIMAL)
-      .build();
+        .isNull("f3", PredicateLeaf.Type.DECIMAL)
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -169,10 +175,10 @@ public class TestDecimalFilters extends ATestLeafFilter {
   @Test
     public void testNotIsNull() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .isNull("f3", PredicateLeaf.Type.DECIMAL)
-      .end()
-      .build();
+        .startNot()
+        .isNull("f3", PredicateLeaf.Type.DECIMAL)
+        .end()
+        .build();
     Assertions.assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 

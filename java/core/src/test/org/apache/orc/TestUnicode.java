@@ -144,7 +144,8 @@ public class TestUnicode {
     verifyWrittenStrings(schema, utf8strs, expected, maxLength);
   }
 
-  public void verifyWrittenStrings(TypeDescription schema, String[] inputs, String[] expected, int maxLength)
+  public void verifyWrittenStrings(TypeDescription schema, String[] inputs,
+                                   String[] expected, int maxLength)
       throws Exception {
     Writer writer =
         OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema)

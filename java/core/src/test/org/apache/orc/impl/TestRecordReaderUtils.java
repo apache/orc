@@ -30,16 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TestRecordReaderUtils {
 
   private final BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
-    .range(1000, 1000)
-    .range(2000, 1000)
-    .range(4000, 1000)
-    .range(4100, 100)
-    .range(8000, 1000).build();
+      .range(1000, 1000)
+      .range(2000, 1000)
+      .range(4000, 1000)
+      .range(4100, 100)
+      .range(8000, 1000).build();
 
   private static void assertChunkEquals(BufferChunk expected, BufferChunk actual) {
-    assertTrue(Objects.equals(expected, actual)
-               && expected.getOffset() == actual.getOffset()
-               && expected.getLength() == actual.getLength());
+    assertTrue(Objects.equals(expected, actual) && expected.getOffset() == actual.getOffset() &&
+        expected.getLength() == actual.getLength());
   }
 
   @Test
@@ -72,7 +71,7 @@ class TestRecordReaderUtils {
   @Test
   public void testReadExtraBytes() {
     RecordReaderUtils.ChunkReader chunkReader =
-      RecordReaderUtils.ChunkReader.create(rangeList.get(),
+        RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
     assertChunkEquals(rangeList.get(3), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, false);
@@ -81,7 +80,7 @@ class TestRecordReaderUtils {
   @Test
   public void testRemoveBytes() {
     RecordReaderUtils.ChunkReader chunkReader =
-      RecordReaderUtils.ChunkReader.create(rangeList.get(),
+        RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
     assertChunkEquals(rangeList.get(3), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, true);
@@ -90,13 +89,13 @@ class TestRecordReaderUtils {
   @Test
   public void testRemoveBytesSmallerOverlapFirst() {
     BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
-      .range(1000, 1000)
-      .range(2000, 1000)
-      .range(4000, 100)
-      .range(4000, 1000)
-      .range(8000, 1000).build();
+        .range(1000, 1000)
+        .range(2000, 1000)
+        .range(4000, 100)
+        .range(4000, 1000)
+        .range(8000, 1000).build();
     RecordReaderUtils.ChunkReader chunkReader =
-      RecordReaderUtils.ChunkReader.create(rangeList.get(),
+        RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
     assertChunkEquals(rangeList.get(3), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, true);
@@ -105,14 +104,14 @@ class TestRecordReaderUtils {
   @Test
   public void testRemoveBytesWithOverlap() {
     BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
-      .range(1000, 1000)
-      .range(1800, 400)
-      .range(2000, 1000)
-      .range(4000, 100)
-      .range(4000, 1000)
-      .range(8000, 1000).build();
+        .range(1000, 1000)
+        .range(1800, 400)
+        .range(2000, 1000)
+        .range(4000, 100)
+        .range(4000, 1000)
+        .range(8000, 1000).build();
     RecordReaderUtils.ChunkReader chunkReader =
-      RecordReaderUtils.ChunkReader.create(rangeList.get(),
+        RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
     assertChunkEquals(rangeList.get(4), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, true);
@@ -121,14 +120,14 @@ class TestRecordReaderUtils {
   @Test
   public void testExtraBytesReadWithinThreshold() {
     BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
-      .range(1000, 1000)
-      .range(1800, 400)
-      .range(2000, 1000)
-      .range(4000, 100)
-      .range(4000, 1000)
-      .range(8000, 1000).build();
+        .range(1000, 1000)
+        .range(1800, 400)
+        .range(2000, 1000)
+        .range(4000, 100)
+        .range(4000, 1000)
+        .range(8000, 1000).build();
     RecordReaderUtils.ChunkReader chunkReader =
-      RecordReaderUtils.ChunkReader.create(rangeList.get(),
+        RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
     assertChunkEquals(rangeList.get(4), chunkReader.getTo());
     chunkReader.populateChunks(makeByteBuffer(chunkReader.getReadBytes(),

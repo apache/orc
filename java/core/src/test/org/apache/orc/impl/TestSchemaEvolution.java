@@ -161,7 +161,8 @@ public class TestSchemaEvolution {
             .addField("f4", TypeDescription.createDouble())
             .addField("f5", TypeDescription.createBoolean()))
         .addField("f6", TypeDescription.createChar().withMaxLength(80));
-    SchemaEvolution both2diffChar = new SchemaEvolution(fileStruct2, readerStruct2diffChar, options);
+    SchemaEvolution both2diffChar = new SchemaEvolution(fileStruct2,
+        readerStruct2diffChar, options);
     assertTrue(both2diffChar.hasConversion());
     assertFalse(both2diffChar.isOnlyImplicitConversion());
   }
@@ -181,13 +182,15 @@ public class TestSchemaEvolution {
     TypeDescription readerStructByte1diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createShort())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothByte1diff = new SchemaEvolution(fileStructByte, readerStructByte1diff, options);
+    SchemaEvolution bothByte1diff = new SchemaEvolution(fileStructByte,
+        readerStructByte1diff, options);
     assertTrue(bothByte1diff.hasConversion());
     assertTrue(bothByte1diff.isOnlyImplicitConversion());
     TypeDescription readerStructByte2diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createInt())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothByte2diff = new SchemaEvolution(fileStructByte, readerStructByte2diff, options);
+    SchemaEvolution bothByte2diff = new SchemaEvolution(fileStructByte,
+        readerStructByte2diff, options);
     assertTrue(bothByte2diff.hasConversion());
     assertTrue(bothByte2diff.isOnlyImplicitConversion());
     TypeDescription readerStruct3diff = TypeDescription.createStruct()
@@ -210,13 +213,15 @@ public class TestSchemaEvolution {
     TypeDescription readerStructShort1diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createInt())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothShort1diff = new SchemaEvolution(fileStructShort, readerStructShort1diff, options);
+    SchemaEvolution bothShort1diff = new SchemaEvolution(fileStructShort,
+        readerStructShort1diff, options);
     assertTrue(bothShort1diff.hasConversion());
     assertTrue(bothShort1diff.isOnlyImplicitConversion());
     TypeDescription readerStructShort2diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createLong())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothShort2diff = new SchemaEvolution(fileStructShort, readerStructShort2diff, options);
+    SchemaEvolution bothShort2diff = new SchemaEvolution(fileStructShort,
+        readerStructShort2diff, options);
     assertTrue(bothShort2diff.hasConversion());
     assertTrue(bothShort2diff.isOnlyImplicitConversion());
 
@@ -233,7 +238,8 @@ public class TestSchemaEvolution {
     TypeDescription readerStructInt1diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createLong())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothInt1diff = new SchemaEvolution(fileStructInt, readerStructInt1diff, options);
+    SchemaEvolution bothInt1diff = new SchemaEvolution(fileStructInt,
+        readerStructInt1diff, options);
     assertTrue(bothInt1diff.hasConversion());
     assertTrue(bothInt1diff.isOnlyImplicitConversion());
   }
@@ -253,7 +259,8 @@ public class TestSchemaEvolution {
     TypeDescription readerStructFloat1diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createDouble())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothFloat1diff = new SchemaEvolution(fileStructFloat, readerStructFloat1diff, options);
+    SchemaEvolution bothFloat1diff = new SchemaEvolution(fileStructFloat,
+        readerStructFloat1diff, options);
     assertTrue(bothFloat1diff.hasConversion());
     assertTrue(bothFloat1diff.isOnlyImplicitConversion());
   }
@@ -273,25 +280,29 @@ public class TestSchemaEvolution {
     TypeDescription readerStructChar1diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createString())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothChar1diff = new SchemaEvolution(fileStructChar, readerStructChar1diff, options);
+    SchemaEvolution bothChar1diff = new SchemaEvolution(fileStructChar,
+        readerStructChar1diff, options);
     assertTrue(bothChar1diff.hasConversion());
     assertTrue(bothChar1diff.isOnlyImplicitConversion());
     TypeDescription readerStructChar2diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createChar().withMaxLength(14))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothChar2diff = new SchemaEvolution(fileStructChar, readerStructChar2diff, options);
+    SchemaEvolution bothChar2diff = new SchemaEvolution(fileStructChar,
+        readerStructChar2diff, options);
     assertTrue(bothChar2diff.hasConversion());
     assertFalse(bothChar2diff.isOnlyImplicitConversion());
     TypeDescription readerStructChar3diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createVarchar().withMaxLength(15))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothChar3diff = new SchemaEvolution(fileStructChar, readerStructChar3diff, options);
+    SchemaEvolution bothChar3diff = new SchemaEvolution(fileStructChar,
+        readerStructChar3diff, options);
     assertTrue(bothChar3diff.hasConversion());
     assertTrue(bothChar3diff.isOnlyImplicitConversion());
     TypeDescription readerStructChar4diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createVarchar().withMaxLength(14))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothChar4diff = new SchemaEvolution(fileStructChar, readerStructChar4diff, options);
+    SchemaEvolution bothChar4diff = new SchemaEvolution(fileStructChar,
+        readerStructChar4diff, options);
     assertTrue(bothChar4diff.hasConversion());
     assertFalse(bothChar4diff.isOnlyImplicitConversion());
   }
@@ -306,30 +317,35 @@ public class TestSchemaEvolution {
     TypeDescription readerStructVarchar = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createVarchar().withMaxLength(15))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothVarchar = new SchemaEvolution(fileStructVarchar, readerStructVarchar, options);
+    SchemaEvolution bothVarchar = new SchemaEvolution(fileStructVarchar,
+        readerStructVarchar, options);
     assertFalse(bothVarchar.hasConversion());
     TypeDescription readerStructVarchar1diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createString())
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothVarchar1diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar1diff, options);
+    SchemaEvolution bothVarchar1diff = new SchemaEvolution(fileStructVarchar,
+        readerStructVarchar1diff, options);
     assertTrue(bothVarchar1diff.hasConversion());
     assertTrue(bothVarchar1diff.isOnlyImplicitConversion());
     TypeDescription readerStructVarchar2diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createVarchar().withMaxLength(14))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothVarchar2diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar2diff, options);
+    SchemaEvolution bothVarchar2diff = new SchemaEvolution(fileStructVarchar,
+        readerStructVarchar2diff, options);
     assertTrue(bothVarchar2diff.hasConversion());
     assertFalse(bothVarchar2diff.isOnlyImplicitConversion());
     TypeDescription readerStructVarchar3diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createChar().withMaxLength(15))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothVarchar3diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar3diff, options);
+    SchemaEvolution bothVarchar3diff = new SchemaEvolution(fileStructVarchar,
+        readerStructVarchar3diff, options);
     assertTrue(bothVarchar3diff.hasConversion());
     assertTrue(bothVarchar3diff.isOnlyImplicitConversion());
     TypeDescription readerStructVarchar4diff = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createChar().withMaxLength(14))
         .addField("f2", TypeDescription.createString());
-    SchemaEvolution bothVarchar4diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar4diff, options);
+    SchemaEvolution bothVarchar4diff = new SchemaEvolution(fileStructVarchar,
+        readerStructVarchar4diff, options);
     assertTrue(bothVarchar4diff.hasConversion());
     assertFalse(bothVarchar4diff.isOnlyImplicitConversion());
   }
@@ -367,7 +383,7 @@ public class TestSchemaEvolution {
       testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createFloat();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     DoubleColumnVector dcv = new DoubleColumnVector(1024);
@@ -379,7 +395,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(2);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -394,7 +410,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createFloat();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     DoubleColumnVector dcv = new DoubleColumnVector(1024);
@@ -406,7 +422,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(2);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatchV2();
@@ -421,7 +437,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDouble();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     DoubleColumnVector dcv = new DoubleColumnVector(1024);
@@ -433,7 +449,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(2);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -448,7 +464,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDouble();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     DoubleColumnVector dcv = new DoubleColumnVector(1024);
@@ -460,7 +476,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(2);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatchV2();
@@ -475,7 +491,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createLong();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     LongColumnVector lcv = new LongColumnVector(1024);
@@ -487,7 +503,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(2);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -502,7 +518,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createLong();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     LongColumnVector lcv = new LongColumnVector(1024);
@@ -514,7 +530,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(2);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatchV2();
@@ -529,7 +545,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDecimal().withPrecision(38).withScale(0);
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     DecimalColumnVector dcv = new DecimalColumnVector(1024, 38, 2);
@@ -541,7 +557,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -556,7 +572,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDecimal().withPrecision(38).withScale(2);
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     DecimalColumnVector dcv = new DecimalColumnVector(1024, 38, 0);
@@ -568,7 +584,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(1);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatchV2();
@@ -583,7 +599,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createBoolean();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     LongColumnVector lcv = new LongColumnVector(1024);
@@ -597,7 +613,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createString();
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -624,7 +640,8 @@ public class TestSchemaEvolution {
     TypeReader[] children =
         ((TreeReaderFactory.StructTreeReader) reader).getChildReaders();
     assertEquals(1, children.length);
-    assertEquals(ConvertTreeReaderFactory.StringGroupFromStringGroupTreeReader.class, children[0].getClass());
+    assertEquals(ConvertTreeReaderFactory.StringGroupFromStringGroupTreeReader.class,
+        children[0].getClass());
 
     // Make sure that varchar behaves the same as char
     fileType = TypeDescription.fromString("struct<x:varchar(10)>");
@@ -637,7 +654,8 @@ public class TestSchemaEvolution {
     assertEquals(TreeReaderFactory.StructTreeReader.class, reader.getClass());
     children = ((TreeReaderFactory.StructTreeReader) reader).getChildReaders();
     assertEquals(1, children.length);
-    assertEquals(ConvertTreeReaderFactory.StringGroupFromStringGroupTreeReader.class, children[0].getClass());
+    assertEquals(ConvertTreeReaderFactory.StringGroupFromStringGroupTreeReader.class,
+        children[0].getClass());
   }
 
   @Test
@@ -646,7 +664,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     BytesColumnVector bcv = new BytesColumnVector(1024);
@@ -659,7 +677,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -674,7 +692,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     BytesColumnVector bcv = new BytesColumnVector(1024);
@@ -687,7 +705,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(1);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatchV2();
@@ -702,7 +720,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createTimestamp();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     TimestampColumnVector tcv = new TimestampColumnVector(1024);
@@ -719,7 +737,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(9);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
@@ -738,7 +756,7 @@ public class TestSchemaEvolution {
         testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createTimestamp();
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     TimestampColumnVector tcv = new TimestampColumnVector(1024);
@@ -750,7 +768,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+        OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(1);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatchV2();
@@ -1351,7 +1369,8 @@ public class TestSchemaEvolution {
     boolean[] included = includeAll(readerType);
     options.tolerateMissingSchema(false);
     SchemaEvolution transition =
-            new SchemaEvolution(fileType, readerType, options.include(included).isSchemaEvolutionCaseAware(false));
+            new SchemaEvolution(fileType, readerType,
+                options.include(included).isSchemaEvolutionCaseAware(false));
 
     // a -> A
     TypeDescription reader = readerType.getChildren().get(0);
@@ -1751,7 +1770,7 @@ public class TestSchemaEvolution {
     assertTrue(batch.cols[0].isNull[0]);
     for(int r=0; r < 10; ++r) {
       assertEquals(EXPECTED.substring(r, r+1),
-        ((BytesColumnVector) batch.cols[1]).toString(r), "col1." + r);
+          ((BytesColumnVector) batch.cols[1]).toString(r), "col1." + r);
       assertEquals(r, ((LongColumnVector) batch.cols[2]).vector[r], "col2." + r);
     }
   }
@@ -1813,7 +1832,8 @@ public class TestSchemaEvolution {
     options.forcePositionalEvolution(false);
     options.positionalEvolutionLevel(Integer.MAX_VALUE);
     TypeDescription file = TypeDescription.fromString("array<struct<x:string,y:int,z:double>>");
-    TypeDescription read = TypeDescription.fromString("array<struct<z:double,x:string,a:int,b:int>>");
+    TypeDescription read = TypeDescription.fromString(
+        "array<struct<z:double,x:string,a:int,b:int>>");
     SchemaEvolution evo = new SchemaEvolution(file, read, options);
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(4, evo.getFileType(2).getId());
@@ -1854,8 +1874,10 @@ public class TestSchemaEvolution {
   public void testPositionalEvolutionForThreeLayerNestedStruct() throws IOException {
     options.forcePositionalEvolution(true);
     options.positionalEvolutionLevel(Integer.MAX_VALUE);
-    TypeDescription file = TypeDescription.fromString("struct<s1:struct<s2:struct<x:int,y:int,z:int>>>");
-    TypeDescription read = TypeDescription.fromString("struct<s1:struct<s:struct<z:int,x:int,a:int,b:int>>>");
+    TypeDescription file = TypeDescription.fromString(
+        "struct<s1:struct<s2:struct<x:int,y:int,z:int>>>");
+    TypeDescription read = TypeDescription.fromString(
+        "struct<s1:struct<s:struct<z:int,x:int,a:int,b:int>>>");
     SchemaEvolution evo = new SchemaEvolution(file, read, options);
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
@@ -2091,7 +2113,8 @@ public class TestSchemaEvolution {
         }
 
         // test conversion between timestamps
-        readerSchema = TypeDescription.fromString("struct<t1:timestamp with local time zone,t2:timestamp>");
+        readerSchema = TypeDescription.fromString(
+            "struct<t1:timestamp with local time zone,t2:timestamp>");
         try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
           VectorizedRowBatch batch = readerSchema.createRowBatch(VALUES);
           TimestampColumnVector timeT1 = (TimestampColumnVector) batch.cols[0];
@@ -2240,7 +2263,8 @@ public class TestSchemaEvolution {
         }
 
         // test conversion between timestamps in UTC
-        readerSchema = TypeDescription.fromString("struct<t1:timestamp with local time zone,t2:timestamp>");
+        readerSchema = TypeDescription.fromString(
+            "struct<t1:timestamp with local time zone,t2:timestamp>");
         try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
           VectorizedRowBatch batch = readerSchema.createRowBatch(VALUES);
           TimestampColumnVector timeT1 = (TimestampColumnVector) batch.cols[0];
@@ -2665,12 +2689,14 @@ public class TestSchemaEvolution {
     SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, readerSchema, options);
 
     assertEquals(acidSchema, schemaEvolution.getReaderSchema().toString(),
-        String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()));
+        String.format("Reader schema %s is not acid",
+            schemaEvolution.getReaderSchema().toString()));
 
     String notAcidSchema ="struct<a:int,b:int>";
     readerSchema = TypeDescription.fromString(notAcidSchema);
     schemaEvolution = new SchemaEvolution(fileSchema, readerSchema, options);
     assertEquals(acidSchema, schemaEvolution.getReaderSchema().toString(),
-        String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()));
+        String.format("Reader schema %s is not acid",
+            schemaEvolution.getReaderSchema().toString()));
   }
 }

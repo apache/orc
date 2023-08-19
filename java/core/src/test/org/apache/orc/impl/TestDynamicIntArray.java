@@ -25,56 +25,56 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestDynamicIntArray {
 
-    @Test
-    public void simpleDynamicIntArrayTest() {
-        DynamicIntArray dynamicIntArray = new DynamicIntArray();
-        dynamicIntArray.add(10);
-        assertEquals(10, dynamicIntArray.get(0));
-        assertEquals(1, dynamicIntArray.size());
-        assertEquals(32768, dynamicIntArray.getSizeInBytes());
-        dynamicIntArray.add(20);
-        assertEquals(20, dynamicIntArray.get(1));
-        assertEquals(2, dynamicIntArray.size());
-        assertEquals(32768, dynamicIntArray.getSizeInBytes());
-        dynamicIntArray.clear();
-        assertEquals(0, dynamicIntArray.size());
-        assertEquals(0, dynamicIntArray.getSizeInBytes());
-    }
+  @Test
+  public void simpleDynamicIntArrayTest() {
+    DynamicIntArray dynamicIntArray = new DynamicIntArray();
+    dynamicIntArray.add(10);
+    assertEquals(10, dynamicIntArray.get(0));
+    assertEquals(1, dynamicIntArray.size());
+    assertEquals(32768, dynamicIntArray.getSizeInBytes());
+    dynamicIntArray.add(20);
+    assertEquals(20, dynamicIntArray.get(1));
+    assertEquals(2, dynamicIntArray.size());
+    assertEquals(32768, dynamicIntArray.getSizeInBytes());
+    dynamicIntArray.clear();
+    assertEquals(0, dynamicIntArray.size());
+    assertEquals(0, dynamicIntArray.getSizeInBytes());
+  }
 
-    @Test
-    public void testDynamicIntArrayGrow() {
-        // keep chunk size small to test
-        DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
+  @Test
+  public void testDynamicIntArrayGrow() {
+    // keep chunk size small to test
+    DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
 
-        for(int i = 0; i < 25; i++) {
-            dynamicIntArray.add(i);
-        }
-        assertEquals(25, dynamicIntArray.size());
-        assertEquals(120, dynamicIntArray.getSizeInBytes());
+    for (int i = 0; i < 25; i++) {
+      dynamicIntArray.add(i);
     }
+    assertEquals(25, dynamicIntArray.size());
+    assertEquals(120, dynamicIntArray.getSizeInBytes());
+  }
 
-    @Test
-    public void testIncrement() {
-        DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
-        dynamicIntArray.add(10);
-        assertEquals(10, dynamicIntArray.get(0));
-        dynamicIntArray.increment(0, 10);
-        assertEquals(20, dynamicIntArray.get(0));
-    }
+  @Test
+  public void testIncrement() {
+    DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
+    dynamicIntArray.add(10);
+    assertEquals(10, dynamicIntArray.get(0));
+    dynamicIntArray.increment(0, 10);
+    assertEquals(20, dynamicIntArray.get(0));
+  }
 
-    @Test
-    public void testSet() {
-        DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
-        dynamicIntArray.add(10);
-        assertEquals(10, dynamicIntArray.get(0));
-        dynamicIntArray.set(0, 25);
-        assertEquals(25, dynamicIntArray.get(0));
-    }
+  @Test
+  public void testSet() {
+    DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
+    dynamicIntArray.add(10);
+    assertEquals(10, dynamicIntArray.get(0));
+    dynamicIntArray.set(0, 25);
+    assertEquals(25, dynamicIntArray.get(0));
+  }
 
-    @Test
-    public void testInvalidGetIndex() {
-        DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
-        dynamicIntArray.add(10);
-        assertThrows(IndexOutOfBoundsException.class, () -> dynamicIntArray.get(11));
-    }
+  @Test
+  public void testInvalidGetIndex() {
+    DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
+    dynamicIntArray.add(10);
+    assertThrows(IndexOutOfBoundsException.class, () -> dynamicIntArray.get(11));
+  }
 }

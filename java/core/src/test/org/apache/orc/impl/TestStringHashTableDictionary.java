@@ -39,7 +39,8 @@ public class TestStringHashTableDictionary {
     StringHashTableDictionary htDict = new StringHashTableDictionary(5);
 
     List<Text> testTexts =
-        Stream.of(new String[]{"Alice", "Bob", "Cindy", "David", "Eason"}).map(Text::new).collect(Collectors.toList());
+        Stream.of(new String[]{"Alice", "Bob", "Cindy", "David", "Eason"})
+            .map(Text::new).collect(Collectors.toList());
     List<byte[]> testBytes = testTexts.stream().map(Text::getBytes).collect(Collectors.toList());
 
     assertEquals(0, htDict.getSizeInBytes());
@@ -78,7 +79,8 @@ public class TestStringHashTableDictionary {
     assertEquals("Cindy", text.toString());
 
     // Peaking the hashtable and obtain the order sequence since the hashArray object needs to be private.
-    StringDictTestingUtils.checkContents(htDict, new int[]{1, 2, 3, 0 ,4}, "Bob", "Cindy", "David", "Alice", "Eason");
+    StringDictTestingUtils.checkContents(htDict,
+        new int[]{1, 2, 3, 0 ,4}, "Bob", "Cindy", "David", "Alice", "Eason");
 
     htDict.clear();
     assertEquals(0, htDict.size());
@@ -89,7 +91,7 @@ public class TestStringHashTableDictionary {
    * just to save the effort of obtaining order sequence manually.
    */
   private static class SimpleHashDictionary extends StringHashTableDictionary {
-    public SimpleHashDictionary(int initialCapacity) {
+    SimpleHashDictionary(int initialCapacity) {
       super(initialCapacity);
     }
 
@@ -142,7 +144,8 @@ public class TestStringHashTableDictionary {
 
     // The order of words are based on each string's prefix given their index in the hashArray will be based on that.
     StringDictTestingUtils
-        .checkContents(hashTableDictionary, new int[]{3, 2, 0, 1, 4}, "0_David", "1_Cindy", "2_Alice", "3_Bob",
+        .checkContents(hashTableDictionary,
+            new int[]{3, 2, 0, 1, 4}, "0_David", "1_Cindy", "2_Alice", "3_Bob",
             "4_Eason");
 
     hashTableDictionary.clear();

@@ -38,10 +38,10 @@ public class TestNotFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .in("f1", PredicateLeaf.Type.LONG, 3L, 5L)
-      .end()
-      .build();
+        .startNot()
+        .in("f1", PredicateLeaf.Type.LONG, 3L, 5L)
+        .end()
+        .build();
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
@@ -53,10 +53,10 @@ public class TestNotFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .in("f1", PredicateLeaf.Type.LONG, 7L, 8L)
-      .end()
-      .build();
+        .startNot()
+        .in("f1", PredicateLeaf.Type.LONG, 7L, 8L)
+        .end()
+        .build();
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
@@ -70,13 +70,13 @@ public class TestNotFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .in("f2", PredicateLeaf.Type.STRING, "b", "c")
-      .startNot()
-      .in("f1", PredicateLeaf.Type.LONG, 2L, 8L)
-      .end()
-      .end()
-      .build();
+        .startAnd()
+        .in("f2", PredicateLeaf.Type.STRING, "b", "c")
+        .startNot()
+        .in("f1", PredicateLeaf.Type.LONG, 2L, 8L)
+        .end()
+        .end()
+        .build();
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
@@ -88,13 +88,13 @@ public class TestNotFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .in("f2", PredicateLeaf.Type.STRING, "b", "c")
-      .startNot()
-      .in("f1", PredicateLeaf.Type.LONG, 7L, 8L)
-      .end()
-      .end()
-      .build();
+        .startAnd()
+        .in("f2", PredicateLeaf.Type.STRING, "b", "c")
+        .startNot()
+        .in("f1", PredicateLeaf.Type.LONG, 7L, 8L)
+        .end()
+        .end()
+        .build();
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
@@ -106,13 +106,13 @@ public class TestNotFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .startAnd()
-      .equals("f1", PredicateLeaf.Type.LONG, 3L)
-      .equals("f2", PredicateLeaf.Type.STRING, "c")
-      .end()
-      .end()
-      .build();
+        .startNot()
+        .startAnd()
+        .equals("f1", PredicateLeaf.Type.LONG, 3L)
+        .equals("f2", PredicateLeaf.Type.STRING, "c")
+        .end()
+        .end()
+        .build();
 
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
@@ -125,13 +125,13 @@ public class TestNotFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .startOr()
-      .equals("f1", PredicateLeaf.Type.LONG, 3L)
-      .equals("f2", PredicateLeaf.Type.STRING, "d")
-      .end()
-      .end()
-      .build();
+        .startNot()
+        .startOr()
+        .equals("f1", PredicateLeaf.Type.LONG, 3L)
+        .equals("f2", PredicateLeaf.Type.STRING, "d")
+        .end()
+        .end()
+        .build();
 
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));

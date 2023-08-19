@@ -58,7 +58,8 @@ public class TestColumnStatisticsImpl {
     assertDateStatistics(stat, 3, 16400, 16420);
   }
 
-  private void assertDateStatistics(ColumnStatisticsImpl stat, int count, int minimum, int maximum) {
+  private void assertDateStatistics(ColumnStatisticsImpl stat, int count,
+                                    int minimum, int maximum) {
     OrcProto.ColumnStatistics.Builder builder = stat.serialize();
 
     assertEquals(count, builder.getNumberOfValues());
@@ -196,7 +197,8 @@ public class TestColumnStatisticsImpl {
   @Test
   public void testCollectionColumnStats() {
     /* test List */
-    final ColumnStatisticsImpl statList = ColumnStatisticsImpl.create(TypeDescription.createList(TypeDescription.createInt()));
+    final ColumnStatisticsImpl statList = ColumnStatisticsImpl.create(
+          TypeDescription.createList(TypeDescription.createInt()));
 
     statList.increment();
     statList.updateCollectionLength(10);

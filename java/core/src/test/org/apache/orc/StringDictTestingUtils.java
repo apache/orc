@@ -58,7 +58,8 @@ public class StringDictTestingUtils {
       assertEquals(order[current], context.getOriginalPosition(), "in word " + current);
       buffer.reset();
       context.writeBytes(buffer);
-      assertEquals(word, new String(buffer.getData(), 0, buffer.getLength(), StandardCharsets.UTF_8));
+      assertEquals(word, new String(buffer.getData(), 0, buffer.getLength(),
+                    StandardCharsets.UTF_8));
       current += 1;
     }
   }

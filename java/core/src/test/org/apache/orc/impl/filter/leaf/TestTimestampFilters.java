@@ -31,8 +31,9 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .equals("f5", PredicateLeaf.Type.TIMESTAMP, getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
-      .build();
+        .equals("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -42,10 +43,11 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testNotEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .equals("f5", PredicateLeaf.Type.TIMESTAMP, getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .equals("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -55,8 +57,9 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testLessThan() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .lessThan("f5", PredicateLeaf.Type.TIMESTAMP, getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
-      .build();
+        .lessThan("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -66,10 +69,11 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testNotLessThan() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .lessThan("f5", PredicateLeaf.Type.TIMESTAMP, getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .lessThan("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -79,8 +83,9 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testLessThanEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .lessThanEquals("f5", PredicateLeaf.Type.TIMESTAMP, getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
-      .build();
+        .lessThanEquals("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -90,10 +95,11 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testNotLessThanEquals() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .lessThanEquals("f5", PredicateLeaf.Type.TIMESTAMP, getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
-      .end()
-      .build();
+        .startNot()
+        .lessThanEquals("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -103,10 +109,10 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testBetween() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .between("f5", PredicateLeaf.Type.TIMESTAMP,
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
-      .build();
+        .between("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -116,12 +122,12 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testNotBetween() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .between("f5", PredicateLeaf.Type.TIMESTAMP,
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
-      .end()
-      .build();
+        .startNot()
+        .between("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -131,10 +137,10 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testIn() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .in("f5", PredicateLeaf.Type.TIMESTAMP,
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
-      .build();
+        .in("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -144,12 +150,12 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testNotIn() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .in("f5", PredicateLeaf.Type.TIMESTAMP,
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
-          getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
-      .end()
-      .build();
+        .startNot()
+        .in("f5", PredicateLeaf.Type.TIMESTAMP,
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, lowIdx),
+            getPredicateValue(PredicateLeaf.Type.TIMESTAMP, highIdx))
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -159,8 +165,8 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testIsNull() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .isNull("f5", PredicateLeaf.Type.TIMESTAMP)
-      .build();
+        .isNull("f5", PredicateLeaf.Type.TIMESTAMP)
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 
@@ -170,10 +176,10 @@ public class TestTimestampFilters extends ATestLeafFilter {
   @Test
     public void testNotIsNull() {
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startNot()
-      .isNull("f5", PredicateLeaf.Type.TIMESTAMP)
-      .end()
-      .build();
+        .startNot()
+        .isNull("f5", PredicateLeaf.Type.TIMESTAMP)
+        .end()
+        .build();
     assertFalse(fc.isSelectedInUse());
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
 

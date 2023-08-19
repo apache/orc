@@ -61,7 +61,8 @@ import static org.mockito.Mockito.mock;
 public class TestConvertTreeReaderFactory {
 
   private Path workDir =
-      new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test" + File.separator + "tmp"));
+      new Path(System.getProperty("test.tmp.dir", "target"
+          + File.separator + "test" + File.separator + "tmp"));
 
   private Configuration conf;
   private FileSystem fs;
@@ -82,18 +83,23 @@ public class TestConvertTreeReaderFactory {
     fs.delete(testFilePath, false);
   }
 
-  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithLargeArray(
-      TypeDescription schema, Class<TExpectedColumnVector> expectedColumnType, boolean useDecimal64)
-      throws IOException, ParseException {
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector
+      createORCFileWithLargeArray(
+        TypeDescription schema, Class<TExpectedColumnVector> expectedColumnType,
+        boolean useDecimal64)
+        throws IOException, ParseException {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
 
-    SimpleDateFormat dateFormat = TestProlepticConversions.createParser("yyyy-MM-dd", new GregorianCalendar());
+    SimpleDateFormat dateFormat = TestProlepticConversions.createParser("yyyy-MM-dd",
+        new GregorianCalendar());
     VectorizedRowBatch batch = schema.createRowBatch(
-        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 : TypeDescription.RowBatchVersion.ORIGINAL,
-        LARGE_BATCH_SIZE);
+        useDecimal64 ?
+            TypeDescription.RowBatchVersion.USE_DECIMAL64 :
+            TypeDescription.RowBatchVersion.ORIGINAL,
+            LARGE_BATCH_SIZE);
 
     ListColumnVector listCol = (ListColumnVector) batch.cols[0];
     TExpectedColumnVector dcv = (TExpectedColumnVector) (listCol).child;
@@ -112,7 +118,8 @@ public class TestConvertTreeReaderFactory {
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
   }
 
-  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector
+      createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(
       TypeDescription schema, Class<TExpectedColumnVector> typeClass, boolean useDecimal64)
       throws IOException, ParseException {
     conf = new Configuration();
@@ -121,9 +128,11 @@ public class TestConvertTreeReaderFactory {
     WriterOptions options = OrcFile.writerOptions(conf);
     Writer w = OrcFile.createWriter(testFilePath, options.setSchema(schema));
 
-    SimpleDateFormat dateFormat = TestProlepticConversions.createParser("yyyy-MM-dd", new GregorianCalendar());
+    SimpleDateFormat dateFormat = TestProlepticConversions.createParser("yyyy-MM-dd",
+            new GregorianCalendar());
     VectorizedRowBatch batch = schema.createRowBatch(
-        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 : TypeDescription.RowBatchVersion.ORIGINAL,
+        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 :
+            TypeDescription.RowBatchVersion.ORIGINAL,
         INCREASING_BATCH_SIZE_FIRST);
 
     TExpectedColumnVector columnVector = (TExpectedColumnVector) batch.cols[0];
@@ -136,7 +145,8 @@ public class TestConvertTreeReaderFactory {
     w.writeIntermediateFooter(); //forcing a new stripe
 
     batch = schema.createRowBatch(
-        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 : TypeDescription.RowBatchVersion.ORIGINAL,
+        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 :
+            TypeDescription.RowBatchVersion.ORIGINAL,
         INCREASING_BATCH_SIZE_SECOND);
 
     columnVector = (TExpectedColumnVector) batch.cols[0];
@@ -165,13 +175,16 @@ public class TestConvertTreeReaderFactory {
       ((TimestampColumnVector) dcv).set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
     } else if (dcv instanceof DateColumnVector) {
       String date = String.format("%04d-01-23", row * 2 + 1);
-      ((DateColumnVector) dcv).vector[row] = TimeUnit.MILLISECONDS.toDays(dateFormat.parse(date).getTime());
+      ((DateColumnVector) dcv).vector[row] = TimeUnit.MILLISECONDS.toDays(
+          dateFormat.parse(date).getTime());
     } else {
-      throw new IllegalStateException("Writing File with a large array of "+ expectedColumnType + " is not supported!");
+      throw new IllegalStateException("Writing File with a large array of "
+          + expectedColumnType + " is not supported!");
     }
   }
 
-  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector readORCFileWithLargeArray(
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector
+      readORCFileWithLargeArray(
       String typeString, Class<TExpectedColumnVector> expectedColumnType) throws Exception {
     Reader.Options options = new Reader.Options();
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeString + ">>");
@@ -194,7 +207,8 @@ public class TestConvertTreeReaderFactory {
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
   }
 
-  public void readORCFileIncreasingBatchSize(String typeString, Class<?> expectedColumnType) throws Exception {
+  public void readORCFileIncreasingBatchSize(
+      String typeString, Class<?> expectedColumnType) throws Exception {
     Reader.Options options = new Reader.Options();
     TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeString + ">");
     options.schema(schema);
@@ -226,7 +240,8 @@ public class TestConvertTreeReaderFactory {
   }
 
   public void testConvertToVarchar() throws Exception {
-    BytesColumnVector columnVector = readORCFileWithLargeArray("varchar(10)", BytesColumnVector.class);
+    BytesColumnVector columnVector = readORCFileWithLargeArray("varchar(10)",
+        BytesColumnVector.class);
     assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
@@ -431,7 +446,8 @@ public class TestConvertTreeReaderFactory {
     Class typeClass = DecimalColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
-    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema,
+          typeClass, typeClass.equals(Decimal64ColumnVector.class));
     try {
       testConvertToIntegerIncreasingSize();
       testConvertToDoubleIncreasingSize();
@@ -651,7 +667,8 @@ public class TestConvertTreeReaderFactory {
 
       String typeStr = "decimal(5,1)";
       TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
-      Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(decimalConf).setSchema(schema));
+      Writer w = OrcFile.createWriter(testFilePath,
+          OrcFile.writerOptions(decimalConf).setSchema(schema));
 
       VectorizedRowBatch b = schema.createRowBatch();
       DecimalColumnVector f1 = (DecimalColumnVector) b.cols[0];

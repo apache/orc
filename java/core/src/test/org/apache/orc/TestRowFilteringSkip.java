@@ -55,7 +55,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class TestRowFilteringSkip {
 
-  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
+  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target"
+      + File.separator + "test"
       + File.separator + "tmp"));
 
   private Configuration conf;
@@ -184,8 +185,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].compareTo(passDataVal) == 0)
-            noNullCnt ++;
+          if (col2.vector[r].compareTo(passDataVal) == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -225,10 +227,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.vector[row] = new HiveDecimalWritable(row+1);
-          else
+          if ((row % 2) == 0) {
+            col2.vector[row] = new HiveDecimalWritable(row + 1);
+          } else {
             col2.vector[row] = failDataVal;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -255,8 +258,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].getHiveDecimal().longValue() > 0)
-            noNullCnt ++;
+          if (col2.vector[r].getHiveDecimal().longValue() > 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -295,8 +299,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.vector[row] = new HiveDecimalWritable(row+1);
+          if ((row % 2) == 0) {
+            col2.vector[row] = new HiveDecimalWritable(row + 1);
+          }
         }
         // Make sure we trigger the nullCount path of DecimalTreeReader
         col2.noNulls = false;
@@ -324,8 +329,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].getHiveDecimal().longValue() > 0)
-            noNullCnt ++;
+          if (col2.vector[r].getHiveDecimal().longValue() > 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -404,8 +410,10 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].compareTo(passDataVal) == 0 && col3.vector[r].compareTo(passDataVal) == 0)
-            noNullCnt ++;
+          if (col2.vector[r].compareTo(passDataVal) == 0 &&
+              col3.vector[r].compareTo(passDataVal) == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -449,10 +457,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = row + 1;
-          else
+          } else {
             col2.vector[row] = -1 * row;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -479,8 +488,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
-            noNullCnt ++;
+          if (col2.vector[r] != 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -517,8 +527,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = row + 1;
+          }
         }
         col2.noNulls = false;
         writer.addRowBatch(batch);
@@ -545,8 +556,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 0)
-            noNullCnt ++;
+          if (col2.vector[r] == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -583,10 +595,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
+          if ((row % 2) == 0) {
             col2.vector[row] = 100;
-          else
+          } else {
             col2.vector[row] = 999;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -613,8 +626,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 100)
-            noNullCnt ++;
+          if (col2.vector[r] == 100) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -651,10 +665,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
-            col2.vector[row] = 100+row;
-          else
+          if ((row % 2) == 0) {
+            col2.vector[row] = 100 + row;
+          } else {
             col2.vector[row] = 999;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -681,8 +696,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
-            noNullCnt ++;
+          if (col2.vector[r] != 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -722,10 +738,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.setVal(row, passData);
-          else
+          } else {
             col2.setVal(row, failData);
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -752,8 +769,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -793,10 +811,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.setVal(row, passData);
-          else
+          } else {
             col2.setVal(row, failData);
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -823,8 +842,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -862,10 +882,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
+          if ((row % 2) == 0) {
             col2.setVal(row, ("passData-" + row).getBytes(StandardCharsets.UTF_8));
-          else
+          } else {
             col2.setVal(row, ("failData-" + row).getBytes(StandardCharsets.UTF_8));
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -892,8 +913,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -929,10 +951,11 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if (row % 2 ==0)
+          if (row % 2 == 0) {
             col2.setVal(row, ("passData").getBytes(StandardCharsets.UTF_8));
-          else
+          } else {
             col2.setVal(row, ("failData").getBytes(StandardCharsets.UTF_8));
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -959,8 +982,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1023,8 +1047,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 0)
-            noNullCnt ++;
+          if (col2.vector[r] == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1061,8 +1086,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = 1;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -1089,8 +1115,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 0)
-            noNullCnt ++;
+          if (col2.vector[r] == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1126,8 +1153,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if (row == 924 || row == 940)
+          if (row == 924 || row == 940) {
             col2.vector[row] = 1;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -1154,8 +1182,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 1)
-            noNullCnt ++;
+          if (col2.vector[r] == 1) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1192,9 +1221,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            col2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             col2.isNull[row] = true;
             col2.set(row, null);
           }
@@ -1226,8 +1255,9 @@ public class TestRowFilteringSkip {
         assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.getTime(r) == 0)
-            noNullCnt ++;
+          if (col2.getTime(r) == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1249,8 +1279,8 @@ public class TestRowFilteringSkip {
     final int NUM_BATCHES = 10;
 
     TypeDescription fileSchema = TypeDescription.createStruct()
-      .addField("int1", TypeDescription.createInt())
-      .addField("ts2", TypeDescription.createTimestamp());
+        .addField("int1", TypeDescription.createInt())
+        .addField("ts2", TypeDescription.createTimestamp());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
                                               OrcFile.writerOptions(conf)
@@ -1264,9 +1294,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            col2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             col2.isNull[row] = true;
             col2.set(row, null);
           }
@@ -1278,13 +1308,13 @@ public class TestRowFilteringSkip {
     }
 
     TypeDescription readSchema = fileSchema
-      .clone()
-      .addField("missing", TypeDescription.createInt());
+        .clone()
+        .addField("missing", TypeDescription.createInt());
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     // Read nothing with NOT NULL filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-      reader.options()
+        reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
@@ -1294,11 +1324,11 @@ public class TestRowFilteringSkip {
 
     // Read everything with select all filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-      reader.options()
+        reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::allowAll))) {
       VectorizedRowBatch batch = readSchema
-        .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
+          .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
       long rowCount = 0;
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       TimestampColumnVector col2 = (TimestampColumnVector) batch.cols[1];
@@ -1328,8 +1358,8 @@ public class TestRowFilteringSkip {
     final int NUM_BATCHES = 10;
 
     TypeDescription fileSchema = TypeDescription.createStruct()
-      .addField("int1", TypeDescription.createInt())
-      .addField("s2", TypeDescription.createStruct()
+        .addField("int1", TypeDescription.createInt())
+        .addField("s2", TypeDescription.createStruct()
         .addField("ts2", TypeDescription.createTimestamp()));
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
@@ -1345,9 +1375,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           int1.vector[row] = row;
-          if ((row % 2) == 0)
-            ts2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            ts2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             s2.isNull[row] = true;
           }
         }
@@ -1361,12 +1391,12 @@ public class TestRowFilteringSkip {
     TypeDescription readSchema = fileSchema.clone();
     readSchema
       .findSubtype("s2")
-      .addField("missing", TypeDescription.createInt());
+        .addField("missing", TypeDescription.createInt());
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     // Read nothing with NOT NULL filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-      reader.options()
+        reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"s2.missing"},
                       TestRowFilteringSkip::notNullFilterNestedMissing))) {
@@ -1376,11 +1406,11 @@ public class TestRowFilteringSkip {
 
     // Read everything with select all filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-      reader.options()
+        reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"s2.missing"}, TestRowFilteringSkip::allowAll))) {
       VectorizedRowBatch batch = readSchema
-        .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
+          .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
       long rowCount = 0;
       LongColumnVector int1 = (LongColumnVector) batch.cols[0];
       StructColumnVector s2 = (StructColumnVector) batch.cols[1];
@@ -1413,8 +1443,8 @@ public class TestRowFilteringSkip {
     final int NUM_BATCHES = 10;
 
     TypeDescription fileSchema = TypeDescription.createStruct()
-      .addField("int1", TypeDescription.createInt())
-      .addField("s2", TypeDescription.createStruct()
+        .addField("int1", TypeDescription.createInt())
+        .addField("s2", TypeDescription.createStruct()
         .addField("ts2", TypeDescription.createTimestamp()));
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
@@ -1430,9 +1460,9 @@ public class TestRowFilteringSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           int1.vector[row] = row;
-          if ((row % 2) == 0)
-            ts2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            ts2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             s2.isNull[row] = true;
           }
         }
@@ -1444,15 +1474,15 @@ public class TestRowFilteringSkip {
     }
 
     TypeDescription readSchema = TypeDescription.createStruct()
-      .addField("int1", TypeDescription.createInt())
-      .addField("s2", TypeDescription.createStruct()
+        .addField("int1", TypeDescription.createInt())
+        .addField("s2", TypeDescription.createStruct()
         .addField("missing_other", TypeDescription.createString())
         .addField("missing", TypeDescription.createInt()));
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     // Read nothing with NOT NULL filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-      reader.options()
+        reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"s2.missing"},
                       TestRowFilteringSkip::notNullFilterNestedMissing))) {
@@ -1462,11 +1492,11 @@ public class TestRowFilteringSkip {
 
     // Read everything with select all filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-      reader.options()
+        reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"s2.missing"}, TestRowFilteringSkip::allowAll))) {
       VectorizedRowBatch batch = readSchema
-        .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
+          .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
       long rowCount = 0;
       LongColumnVector int1 = (LongColumnVector) batch.cols[0];
       StructColumnVector s2 = (StructColumnVector) batch.cols[1];

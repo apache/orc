@@ -42,11 +42,11 @@ public class TestAndFilter extends ATestFilter {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
     SearchArgument s = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .equals("f1", PredicateLeaf.Type.LONG, 3L)
-      .equals("f1", PredicateLeaf.Type.LONG, 4L)
-      .end()
-      .build();
+        .startAnd()
+        .equals("f1", PredicateLeaf.Type.LONG, 3L)
+        .equals("f1", PredicateLeaf.Type.LONG, 4L)
+        .end()
+        .build();
     Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(s,
                                                                  schema,
                                                                  OrcFile.Version.CURRENT);
@@ -59,11 +59,11 @@ public class TestAndFilter extends ATestFilter {
   @Test
   public void testANDConversion() throws FilterFactory.UnSupportedSArgException {
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
-      .startAnd()
-      .in("f1", PredicateLeaf.Type.LONG, 1L, 2L, 3L)
-      .in("f2", PredicateLeaf.Type.STRING, "a", "b", "c")
-      .end()
-      .build();
+        .startAnd()
+        .in("f1", PredicateLeaf.Type.LONG, 1L, 2L, 3L)
+        .in("f2", PredicateLeaf.Type.STRING, "a", "b", "c")
+        .end()
+        .build();
 
     Set<String> colIds = new HashSet<>();
     VectorFilter f = FilterFactory.createSArgFilter(sarg.getCompactExpression(),

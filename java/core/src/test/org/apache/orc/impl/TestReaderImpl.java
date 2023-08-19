@@ -24,9 +24,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
@@ -125,7 +125,8 @@ public class TestReaderImpl {
     in = new FSDataInputStream(new SeekableByteArrayInputStream(bytes));
   }
 
-  private byte[] composeContent(String headerStr, String footerStr) throws CharacterCodingException {
+  private byte[] composeContent(String headerStr,
+                                String footerStr) throws CharacterCodingException {
     ByteBuffer header = Text.encode(headerStr);
     ByteBuffer footer = Text.encode(footerStr);
     int headerLen = header.remaining();
@@ -142,7 +143,7 @@ public class TestReaderImpl {
   private static final class SeekableByteArrayInputStream extends ByteArrayInputStream
           implements Seekable, PositionedReadable {
 
-    public SeekableByteArrayInputStream(byte[] buf) {
+    SeekableByteArrayInputStream(byte[] buf) {
       super(buf);
     }
 
@@ -207,17 +208,19 @@ public class TestReaderImpl {
   static class MockInputStream extends FSDataInputStream {
     MockFileSystem fs;
     // A single row ORC file
-    static final byte[] SIMPLE_ORC = byteArray(
-        0x4f, 0x52, 0x43, 0x42, 0x00, 0x80, 0x0a, 0x06, 0x08, 0x01, 0x10, 0x01, 0x18, 0x03, 0x12, 0x02,
-        0x08, 0x00, 0x12, 0x02, 0x08, 0x02, 0x0a, 0x12, 0x0a, 0x04, 0x08, 0x00, 0x50, 0x00, 0x0a, 0x0a,
-        0x08, 0x00, 0x12, 0x02, 0x18, 0x00, 0x50, 0x00, 0x58, 0x03, 0x08, 0x03, 0x10, 0x16, 0x1a, 0x0a,
-        0x08, 0x03, 0x10, 0x00, 0x18, 0x03, 0x20, 0x10, 0x28, 0x01, 0x22, 0x08, 0x08, 0x0c, 0x12, 0x01,
-        0x01, 0x1a, 0x01, 0x78, 0x22, 0x02, 0x08, 0x03, 0x30, 0x01, 0x3a, 0x04, 0x08, 0x00, 0x50, 0x00,
-        0x3a, 0x0a, 0x08, 0x00, 0x12, 0x02, 0x18, 0x00, 0x50, 0x00, 0x58, 0x03, 0x40, 0x00, 0x48, 0x00,
-        0x08, 0x36, 0x10, 0x00, 0x22, 0x02, 0x00, 0x0c, 0x28, 0x14, 0x30, 0x07, 0x82, 0xf4, 0x03, 0x03,
-        0x4f, 0x52, 0x43, 0x13);
+    static final byte[] SIMPLE_ORC =
+        byteArray(
+            0x4f, 0x52, 0x43, 0x42, 0x00, 0x80, 0x0a, 0x06, 0x08, 0x01, 0x10, 0x01, 0x18, 0x03,
+            0x12, 0x02, 0x08, 0x00, 0x12, 0x02, 0x08, 0x02, 0x0a, 0x12, 0x0a, 0x04, 0x08, 0x00,
+            0x50, 0x00, 0x0a, 0x0a, 0x08, 0x00, 0x12, 0x02, 0x18, 0x00, 0x50, 0x00, 0x58, 0x03,
+            0x08, 0x03, 0x10, 0x16, 0x1a, 0x0a, 0x08, 0x03, 0x10, 0x00, 0x18, 0x03, 0x20, 0x10,
+            0x28, 0x01, 0x22, 0x08, 0x08, 0x0c, 0x12, 0x01, 0x01, 0x1a, 0x01, 0x78, 0x22, 0x02,
+            0x08, 0x03, 0x30, 0x01, 0x3a, 0x04, 0x08, 0x00, 0x50, 0x00, 0x3a, 0x0a, 0x08, 0x00,
+            0x12, 0x02, 0x18, 0x00, 0x50, 0x00, 0x58, 0x03, 0x40, 0x00, 0x48, 0x00, 0x08, 0x36,
+            0x10, 0x00, 0x22, 0x02, 0x00, 0x0c, 0x28, 0x14, 0x30, 0x07, 0x82, 0xf4, 0x03, 0x03,
+            0x4f, 0x52, 0x43, 0x13);
 
-    public MockInputStream(MockFileSystem fs) throws IOException {
+    MockInputStream(MockFileSystem fs) throws IOException {
       super(new SeekableByteArrayInputStream(SIMPLE_ORC));
       this.fs = fs;
     }
@@ -230,7 +233,7 @@ public class TestReaderImpl {
   static class MockFileSystem extends FileSystem {
     final List<MockInputStream> streams = new ArrayList<>();
 
-    public MockFileSystem(Configuration conf) {
+    MockFileSystem(Configuration conf) {
       setConf(conf);
     }
 
@@ -390,7 +393,8 @@ public class TestReaderImpl {
       List<StripeStatistics> tailBufferStats = dummyReader.getVariantStripeStatistics(null);
 
       assertEquals(stats.size(), tailBufferStats.size());
-      OrcProto.TimestampStatistics bufferTsStats = tailBufferStats.get(0).getColumn(5).getTimestampStatistics();
+      OrcProto.TimestampStatistics bufferTsStats =
+          tailBufferStats.get(0).getColumn(5).getTimestampStatistics();
       assertEquals(tsStats.getMinimumUtc(), bufferTsStats.getMinimumUtc());
       assertEquals(tsStats.getMaximumUtc(), bufferTsStats.getMaximumUtc());
     }
@@ -413,8 +417,8 @@ public class TestReaderImpl {
       }
       List<OrcProto.ColumnStatistics> stats = reader.getFileTail().getFooter().getStatisticsList();
       assertEquals(
-        ReaderImpl.getRawDataSizeFromColIndices(include, schema, stats),
-        ReaderImpl.getRawDataSizeFromColIndices(list, types, stats));
+          ReaderImpl.getRawDataSizeFromColIndices(include, schema, stats),
+          ReaderImpl.getRawDataSizeFromColIndices(list, types, stats));
     }
   }
 
@@ -462,7 +466,8 @@ public class TestReaderImpl {
 
       try (RecordReader rows = reader.rows()) {
         TypeDescription schema = reader.getSchema();
-        assertEquals("struct<a:bigint,b:decimal(10,2),c:decimal(2,2),d:decimal(2,2),e:decimal(2,2)>",
+        assertEquals(
+            "struct<a:bigint,b:decimal(10,2),c:decimal(2,2),d:decimal(2,2),e:decimal(2,2)>",
             schema.toString());
         VectorizedRowBatch batch = schema.createRowBatchV2();
         assertTrue(rows.nextBatch(batch), "No rows read out!");
@@ -498,7 +503,8 @@ public class TestReaderImpl {
       OrcTail tail = reader.extractFileTail(fs, path, Long.MAX_VALUE);
       ByteBuffer tailBuffer = tail.getSerializedTail();
 
-      OrcTail extractedTail = ReaderImpl.extractFileTail(tailBuffer, fileStatus.getLen(), fileStatus.getModificationTime());
+      OrcTail extractedTail = ReaderImpl.extractFileTail(tailBuffer, fileStatus.getLen(),
+          fileStatus.getModificationTime());
 
       assertEquals(tail.getFileLength(), extractedTail.getFileLength());
       assertEquals(tail.getFooter().getMetadataList(), extractedTail.getFooter().getMetadataList());
@@ -549,7 +555,8 @@ public class TestReaderImpl {
             .lessThan("x", PredicateLeaf.Type.LONG, 100L)
             .end().build();
 
-        try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{"x"}))) {
+        try (RecordReader rows =
+                 reader.rows(reader.options().searchArgument(sarg, new String[]{"x"}))) {
           TypeDescription schema = reader.getSchema();
           assertEquals("struct<x:int,y:string>", schema.toString());
           VectorizedRowBatch batch = schema.createRowBatchV2();
