@@ -442,6 +442,7 @@
           <configuration>
             <sourceDirectories>
               <directory>${basedir}/src/java</directory>
+              <directory>${basedir}/src/test</directory>
             </sourceDirectories>
             <configLocation>checkstyle.xml</configLocation>
             <failOnViolation>true</failOnViolation>
