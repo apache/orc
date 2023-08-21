@@ -19,19 +19,19 @@
 <!DOCTYPE suppressions PUBLIC "-//Puppy Crawl//DTD Suppressions 1.1//EN" "https://checkstyle.org/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-    <!-- Ignore these rules in all test code always. -->
-    <suppress checks="LineLength" files="src/test/*"/>
-    <suppress checks="NewlineAtEndOfFile" files="src/test/*"/>
+  <!-- Ignore these rules in all test code always. -->
+  <suppress checks="LineLength" files="src/test/*"/>
+  <suppress checks="NewlineAtEndOfFile" files="src/test/*"/>
 
-    <suppress checks="UnusedImports" files="src/test/*"/>
-    <suppress checks="AvoidStarImport" files="src/test/*"/>
-    <suppress checks="CustomImportOrder" files="src/test/*"/>
+  <suppress checks="UnusedImports" files="src/test/*"/>
+  <suppress checks="AvoidStarImport" files="src/test/*"/>
+  <suppress checks="CustomImportOrder" files="src/test/*"/>
 
-    <!-- Remove the following rule when the test code clean up is completed. -->
-    <suppress checks="Indentation" files="src/test/*"/>
-    <suppress checks="RedundantModifier" files="src/test/*"/>
-    <suppress checks="ModifierOrder" files="src/test/*"/>
-    <suppress checks="UpperEll" files="src/test/*"/>
-    <suppress checks="NeedBraces" files="src/test/*"/>
-    <suppress checks="RegexpSingleline" files="src/test/*"/>
+  <!-- Remove the following rule when the test code clean up is completed. -->
+  <suppress checks="Indentation" files="src/test/*"/>
+  <suppress checks="RedundantModifier" files="src/test/*"/>
+  <suppress checks="ModifierOrder" files="src/test/*"/>
+  <suppress checks="UpperEll" files="src/test/*"/>
+  <suppress checks="NeedBraces" files="src/test/*"/>
+  <suppress checks="RegexpSingleline" files="src/test/*"/>
 </suppressions>
