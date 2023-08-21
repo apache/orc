@@ -15,6 +15,9 @@
 <!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.2//EN" "https://checkstyle.org/dtds/configuration_1_2.dtd">
 
 <module name="Checker">
+  <module name="SuppressionFilter">
+    <property name="file" value="checkstyle-suppressions.xml"/>
+  </module>
   <module name="FileTabCharacter">
     <property name="eachLine" value="true"/>
   </module>
