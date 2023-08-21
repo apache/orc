@@ -358,6 +358,9 @@ public class OrcFile {
       return this;
     }
 
+    /**
+     * @deprecated Use {@link #orcTail(OrcTail)} instead.
+     */
     public FileMetadata getFileMetadata() {
       return fileMetadata;
     }
