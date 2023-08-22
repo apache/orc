@@ -678,8 +678,7 @@ namespace orc {
     if (!std::filesystem::exists(std::filesystem::path(filename))) {
       std::stringstream ss;
       ss << "Time zone file " << filename << " does not exist."
-         << " Please install IANA time zone database and set TZDIR env"
-         << " if it is not installed at /usr/share/zoneinfo";
+         << " Please install IANA time zone database and set TZDIR env.";
       throw TimezoneError(ss.str());
     }
     try {
