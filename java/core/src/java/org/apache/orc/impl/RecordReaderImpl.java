@@ -695,8 +695,8 @@ public class RecordReaderImpl implements RecordReader {
                    " include ORC-517. Writer version: {}",
           predicate.getColumnName(), writerVersion);
       return TruthValue.YES_NO_NULL;
-    } else if (category == TypeDescription.Category.DOUBLE ||
-        category == TypeDescription.Category.FLOAT) {
+    } else if ((category == TypeDescription.Category.DOUBLE ||
+        category == TypeDescription.Category.FLOAT) && cs instanceof DoubleColumnStatistics) {
       DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
       if (Double.isNaN(dstas.getSum())) {
         LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
@@ -1707,5 +1707,13 @@ public class RecordReaderImpl implements RecordReader {
 
   public int getMaxDiskRangeChunkLimit() {
     return maxDiskRangeChunkLimit;
+  }
+
+  /**
+   * Get sargApplier for testing.
+   * @return sargApplier in record reader.
+   */
+  SargApplier getSargApp() {
+    return sargApp;
   }
 }
