@@ -564,4 +564,24 @@ public class TestReaderImpl {
       }
     }
   }
+
+  @Test
+  public void testReadWriterVersion() throws IOException {
+    // orc-file-no-set-writer-id.orc is a file that does not set the writer id.
+    // Test file source https://issues.apache.org/jira/projects/ORC/issues/ORC-1482
+    Path filePath = new Path(ClassLoader.getSystemResource("orc-file-no-set-writer-id.orc")
+        .getPath());
+
+    Configuration conf = new Configuration();
+    FileSystem fs = path.getFileSystem(conf);
+
+    ReaderImpl reader = (ReaderImpl) OrcFile.createReader(filePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+
+    OrcTail orcTail = reader.extractFileTail(fs, filePath, Long.MAX_VALUE);
+
+    OrcFile.WriterVersion writerVersion = orcTail.getWriterVersion();
+
+    assertEquals(OrcFile.WriterImplementation.UNKNOWN, writerVersion.getWriterImplementation());
+  }
 }

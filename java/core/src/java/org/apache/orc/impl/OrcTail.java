@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import static org.apache.orc.OrcFile.WriterImplementation.UNKNOWN;
 
 // TODO: Make OrcTail implement FileMetadata or Reader interface
 public final class OrcTail {
@@ -121,8 +122,10 @@ public final class OrcTail {
   public OrcFile.WriterVersion getWriterVersion() {
     OrcProto.PostScript ps = fileTail.getPostscript();
     OrcProto.Footer footer = fileTail.getFooter();
-    OrcFile.WriterImplementation writer =
-        OrcFile.WriterImplementation.from(footer.getWriter());
+    OrcFile.WriterImplementation writer = UNKNOWN;
+    if (footer.hasWriter()) {
+      writer = OrcFile.WriterImplementation.from(footer.getWriter());
+    }
     return OrcFile.WriterVersion.from(writer, ps.getWriterVersion());
   }
 
