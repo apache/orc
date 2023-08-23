@@ -1249,7 +1249,7 @@ public class RecordReaderImpl implements RecordReader {
      * Get the count of exceptions for testing.
      * @return
      */
-    long[] getExceptionCount() {
+    public long[] getExceptionCount() {
       return exceptionCount;
     }
   }
@@ -1707,5 +1707,13 @@ public class RecordReaderImpl implements RecordReader {
 
   public int getMaxDiskRangeChunkLimit() {
     return maxDiskRangeChunkLimit;
+  }
+
+  /**
+   * Get sargApplier for testing.
+   * @return sargApplier in record reader.
+   */
+  public SargApplier getSargApp() {
+    return sargApp;
   }
 }
