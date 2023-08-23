@@ -4133,7 +4133,7 @@ public class TestVectorOrcFile {
     assertEquals(0, reader.getStripes().size());
     assertEquals(0, reader.getStatistics().length);
     assertEquals(0, reader.getMetadataKeys().size());
-    assertEquals(OrcFile.CURRENT_WRITER, reader.getWriterVersion());
+    assertEquals(OrcFile.WriterVersion.FUTURE, reader.getWriterVersion());
     VectorizedRowBatch batch =
         TypeDescription.fromString("struct<>").createRowBatch();
     assertFalse(reader.rows().nextBatch(batch));
