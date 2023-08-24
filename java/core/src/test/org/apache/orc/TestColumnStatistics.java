@@ -25,14 +25,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.impl.ColumnStatisticsImpl;
-import org.apache.orc.impl.RecordReaderImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -701,43 +697,6 @@ public class TestColumnStatistics {
         "Incorrect maximum value");
     assertEquals(new BigDecimal("-88888.88"), statistics.getMaximum().bigDecimalValue(),
         "Incorrect minimum value");
-  }
-
-  @Test
-  public void testDoubleColumnWithoutDoubleStatistics() throws Exception {
-    // orc-file-no-double-statistic.orc is an orc file created by cudf with a schema of
-    // struct<x:double>, one row and a value of null.
-    // Test file source https://issues.apache.org/jira/projects/ORC/issues/ORC-1482
-    Path filePath = new Path(ClassLoader.getSystemResource("orc-file-no-double-statistic.orc")
-        .getPath());
-    Reader reader = OrcFile.createReader(filePath,
-        OrcFile.readerOptions(conf).filesystem(fs));
-
-    TypeDescription schema = TypeDescription.fromString("struct<x:double>");
-
-    assertEquals(schema, reader.getSchema());
-    assertFalse(reader.getStatistics()[0] instanceof DoubleColumnStatistics);
-
-    SearchArgument sarg = SearchArgumentFactory.newBuilder()
-        .isNull("x", PredicateLeaf.Type.FLOAT)
-        .build();
-
-    Reader.Options options = reader.options()
-        .searchArgument(sarg, new String[] {"x"})
-        .useSelected(true)
-        .allowSARGToFilter(true);
-
-    VectorizedRowBatch batch = schema.createRowBatch();
-    long rowCount = 0;
-    try (RecordReader rr = reader.rows(options)) {
-      assertTrue(rr.nextBatch(batch));
-      rowCount += batch.size;
-      assertFalse(rr.nextBatch(batch));
-      if (rr instanceof RecordReaderImpl) {
-        assertEquals(0, ((RecordReaderImpl) rr).getSargApp().getExceptionCount()[0]);
-      }
-    }
-    assertEquals(1, rowCount);
   }
 
 

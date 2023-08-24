@@ -1249,7 +1249,7 @@ public class RecordReaderImpl implements RecordReader {
      * Get the count of exceptions for testing.
      * @return
      */
-    public long[] getExceptionCount() {
+    long[] getExceptionCount() {
       return exceptionCount;
     }
   }
@@ -1713,7 +1713,7 @@ public class RecordReaderImpl implements RecordReader {
    * Get sargApplier for testing.
    * @return sargApplier in record reader.
    */
-  public SargApplier getSargApp() {
+  SargApplier getSargApp() {
     return sargApp;
   }
 }
