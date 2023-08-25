@@ -41,6 +41,7 @@ import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.DataReader;
+import org.apache.orc.DoubleColumnStatistics;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
@@ -2472,6 +2473,47 @@ public class TestRecordReaderImpl {
         CURRENT_WRITER, TypeDescription.createInt());
 
     assertEquals(TruthValue.YES_NO_NULL, truthValue);
+  }
+
+  @Test
+  public void testDoubleColumnWithoutDoubleStatistics() throws Exception {
+    // orc-file-no-double-statistic.orc is an orc file created by cudf with a schema of
+    // struct<x:double>, one row and a value of null.
+    // Test file source https://issues.apache.org/jira/projects/ORC/issues/ORC-1482
+    Path filePath = new Path(ClassLoader.getSystemResource("orc-file-no-double-statistic.orc")
+        .getPath());
+
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+
+    Reader reader = OrcFile.createReader(filePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+
+    TypeDescription schema = TypeDescription.fromString("struct<x:double>");
+
+    assertEquals(schema, reader.getSchema());
+    assertFalse(reader.getStatistics()[0] instanceof DoubleColumnStatistics);
+
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .isNull("x", PredicateLeaf.Type.FLOAT)
+        .build();
+
+    Reader.Options options = reader.options()
+        .searchArgument(sarg, new String[] {"x"})
+        .useSelected(true)
+        .allowSARGToFilter(true);
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = reader.rows(options)) {
+      assertTrue(rr.nextBatch(batch));
+      rowCount += batch.size;
+      assertFalse(rr.nextBatch(batch));
+      if (rr instanceof RecordReaderImpl) {
+        assertEquals(0, ((RecordReaderImpl) rr).getSargApp().getExceptionCount()[0]);
+      }
+    }
+    assertEquals(1, rowCount);
   }
 
   @Test
