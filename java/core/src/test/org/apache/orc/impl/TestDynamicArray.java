@@ -102,15 +102,15 @@ public class TestDynamicArray {
 
     byte[] bigVal = new byte[2048];
     RuntimeException exception = assertThrows(
-      RuntimeException.class,
-      // Need to construct a large array, limited by the heap limit of UT, may cause OOM.
-      // The add method does not check whether byte[] and length are consistent,
-      // so it is a bit hacky.
-      () -> dba.add(bigVal, 0, Integer.MAX_VALUE - 16));
+        RuntimeException.class,
+        // Need to construct a large array, limited by the heap limit of UT, may cause OOM.
+        // The add method does not check whether byte[] and length are consistent,
+        // so it is a bit hacky.
+        () -> dba.add(bigVal, 0, Integer.MAX_VALUE - 16));
 
     assertEquals("chunkIndex overflow:-65535. " +
-      "You can set orc.column.encoding.direct=columnName, " +
-      "or orc.dictionary.key.threshold=0 to turn off dictionary encoding.",
-      exception.getMessage());
+        "You can set orc.column.encoding.direct=columnName, " +
+        "or orc.dictionary.key.threshold=0 to turn off dictionary encoding.",
+        exception.getMessage());
   }
 }

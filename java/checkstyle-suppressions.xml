@@ -23,6 +23,22 @@
   <suppress checks="LineLength" files="src/test/*"/>
   <suppress checks="NewlineAtEndOfFile" files="src/test/*"/>
 
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestOrcFilterContext.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestOrcTimezone1.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestOrcTimezonePPD.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestRowFilteringSkip.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestRowFilteringIOSkip.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestRowFilteringComplexTypes.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestRowFilteringComplexTypesNulls.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/TestVectorOrcFile.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestDataReaderProperties.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestDynamicIntArray.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestRecordReaderImpl.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestRecordReaderUtils.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestSchemaEvolution.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestStringRedBlackTree.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/impl/filter/*"/>
+
   <suppress checks="UnusedImports" files="src/test/*"/>
   <suppress checks="AvoidStarImport" files="src/test/*"/>
   <suppress checks="CustomImportOrder" files="src/test/*"/>

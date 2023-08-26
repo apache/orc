@@ -362,8 +362,8 @@ public class TestRowFilteringComplexTypesNulls {
       ColumnVector[] f2Branch = b.findColumnVector("s2.f2");
       DecimalColumnVector f2 = (DecimalColumnVector) f2Branch[f2Branch.length - 1];
       for (int i = 0; i < b.getSelectedSize(); i++) {
-        if (!OrcFilterContext.isNull(f2Branch, i)
-            && ids.contains(f2.vector[i].getHiveDecimal())) {
+        if (!OrcFilterContext.isNull(f2Branch, i) &&
+            ids.contains(f2.vector[i].getHiveDecimal())) {
           b.getSelected()[newSize] = i;
           newSize += 1;
         }

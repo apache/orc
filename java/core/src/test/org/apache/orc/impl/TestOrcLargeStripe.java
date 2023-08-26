@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 public class TestOrcLargeStripe {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
-    + File.separator + "tmp"));
+      + File.separator + "tmp"));
 
   Configuration conf;
   FileSystem fs;
@@ -141,7 +141,7 @@ public class TestOrcLargeStripe {
     TypeDescription schema = TypeDescription.createTimestamp();
     fs.delete(testFilePath, false);
     Writer writer = OrcFile.createWriter(testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000)
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000)
         .version(OrcFile.Version.V_0_11).fileSystem(fs));
     writer.close();
 
@@ -168,9 +168,8 @@ public class TestOrcLargeStripe {
 
     conf.setDouble("hive.exec.orc.dictionary.key.size.threshold", 0.0);
     Writer writer = OrcFile.createWriter(
-      testFilePath,
-      OrcFile.writerOptions(conf).setSchema(schema)
-        .compress(CompressionKind.NONE));
+        testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).compress(CompressionKind.NONE));
     // 5000 is the lower bound for a stripe
     int size = 5000;
     int width = 500_000;
@@ -203,7 +202,7 @@ public class TestOrcLargeStripe {
 
     try {
       Reader reader = OrcFile.createReader(testFilePath,
-        OrcFile.readerOptions(conf).filesystem(fs));
+          OrcFile.readerOptions(conf).filesystem(fs));
       RecordReader rows = reader.rows();
       batch = reader.getSchema().createRowBatch();
       int rowsRead = 0;

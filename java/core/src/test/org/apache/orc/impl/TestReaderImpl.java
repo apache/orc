@@ -142,7 +142,7 @@ public class TestReaderImpl {
   private static final class SeekableByteArrayInputStream extends ByteArrayInputStream
           implements Seekable, PositionedReadable {
 
-    public SeekableByteArrayInputStream(byte[] buf) {
+    SeekableByteArrayInputStream(byte[] buf) {
       super(buf);
     }
 
@@ -217,7 +217,7 @@ public class TestReaderImpl {
         0x08, 0x36, 0x10, 0x00, 0x22, 0x02, 0x00, 0x0c, 0x28, 0x14, 0x30, 0x07, 0x82, 0xf4, 0x03, 0x03,
         0x4f, 0x52, 0x43, 0x13);
 
-    public MockInputStream(MockFileSystem fs) throws IOException {
+    MockInputStream(MockFileSystem fs) throws IOException {
       super(new SeekableByteArrayInputStream(SIMPLE_ORC));
       this.fs = fs;
     }
@@ -230,7 +230,7 @@ public class TestReaderImpl {
   static class MockFileSystem extends FileSystem {
     final List<MockInputStream> streams = new ArrayList<>();
 
-    public MockFileSystem(Configuration conf) {
+    MockFileSystem(Configuration conf) {
       setConf(conf);
     }
 
@@ -413,8 +413,8 @@ public class TestReaderImpl {
       }
       List<OrcProto.ColumnStatistics> stats = reader.getFileTail().getFooter().getStatisticsList();
       assertEquals(
-        ReaderImpl.getRawDataSizeFromColIndices(include, schema, stats),
-        ReaderImpl.getRawDataSizeFromColIndices(list, types, stats));
+          ReaderImpl.getRawDataSizeFromColIndices(include, schema, stats),
+          ReaderImpl.getRawDataSizeFromColIndices(list, types, stats));
     }
   }
 

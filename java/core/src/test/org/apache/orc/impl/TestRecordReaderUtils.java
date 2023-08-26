@@ -37,9 +37,9 @@ class TestRecordReaderUtils {
     .range(8000, 1000).build();
 
   private static void assertChunkEquals(BufferChunk expected, BufferChunk actual) {
-    assertTrue(Objects.equals(expected, actual)
-               && expected.getOffset() == actual.getOffset()
-               && expected.getLength() == actual.getLength());
+    assertTrue(Objects.equals(expected, actual) &&
+               expected.getOffset() == actual.getOffset() &&
+               expected.getLength() == actual.getLength());
   }
 
   @Test

@@ -116,7 +116,7 @@ public class TestInMemoryKeystore {
       assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08 0f " +
                               "7b 6c db 79 e5 51 ec 9c 9c c7 fc bd 60 ee 73",
           stringify(key256.getEncryptedKey()));
-       // used online aes/cbc calculator to encrypt key
+      // used online aes/cbc calculator to encrypt key
       assertEquals("00 b0 1c 24 d9 03 bc 02 63 87 b3 f9 65 4e e7 a8 b8" +
                               " 58 eb a0 81 06 b3 61 cf f8 06 ba 30 d4 c5 36",
           stringify(key256.getDecryptedKey().getEncoded()));

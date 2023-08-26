@@ -172,8 +172,7 @@ public class TestOrcNullOptimization {
     List<Boolean> got = Lists.newArrayList();
     // check if the strip footer contains PRESENT stream
     for (StripeInformation sinfo : reader.getStripes()) {
-      OrcProto.StripeFooter sf =
-        ((RecordReaderImpl) rows).readStripeFooter(sinfo);
+      OrcProto.StripeFooter sf = ((RecordReaderImpl) rows).readStripeFooter(sinfo);
       got.add(sf.toString().indexOf(OrcProto.Stream.Kind.PRESENT.toString())
               != -1);
     }
@@ -285,8 +284,7 @@ public class TestOrcNullOptimization {
     List<Boolean> got = Lists.newArrayList();
     // check if the strip footer contains PRESENT stream
     for (StripeInformation sinfo : reader.getStripes()) {
-      OrcProto.StripeFooter sf =
-        ((RecordReaderImpl) rows).readStripeFooter(sinfo);
+      OrcProto.StripeFooter sf = ((RecordReaderImpl) rows).readStripeFooter(sinfo);
       got.add(sf.toString().indexOf(OrcProto.Stream.Kind.PRESENT.toString())
               != -1);
     }
@@ -386,8 +384,7 @@ public class TestOrcNullOptimization {
     List<Boolean> got = Lists.newArrayList();
     // check if the strip footer contains PRESENT stream
     for (StripeInformation sinfo : reader.getStripes()) {
-      OrcProto.StripeFooter sf =
-        ((RecordReaderImpl) rows).readStripeFooter(sinfo);
+      OrcProto.StripeFooter sf = ((RecordReaderImpl) rows).readStripeFooter(sinfo);
       got.add(sf.toString().indexOf(OrcProto.Stream.Kind.PRESENT.toString())
               != -1);
     }

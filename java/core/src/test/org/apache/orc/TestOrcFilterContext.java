@@ -252,7 +252,7 @@ public class TestOrcFilterContext {
     assertTrue(OrcFilterContext.isNull(vectorBranch, 1));
     assertTrue(OrcFilterContext.isNull(vectorBranch, 2));
   }
-  
+
   @Test
   public void testACIDTable() {
     ColumnVector[] columnVector = filterContextACID.findColumnVector("string1");
@@ -268,7 +268,6 @@ public class TestOrcFilterContext {
     createAcidORCFile();
     readSingleRowWithFilter(new Random().nextInt(RowCount));
     fileSystem.delete(filePath, false);
-    
   }
 
   private void createAcidORCFile() throws IOException {
@@ -303,7 +302,7 @@ public class TestOrcFilterContext {
       }
     }
   }
-  
+
   private void populateColumnValues(TypeDescription typeDescription, ColumnVector[] columnVectors, int index, long value) {
     for (int columnId = 0; columnId < typeDescription.getChildren().size() ; columnId++) {
       switch (typeDescription.getChildren().get(columnId).getCategory()) {
@@ -319,13 +318,13 @@ public class TestOrcFilterContext {
           break;
         case STRUCT:
           populateColumnValues(typeDescription.getChildren().get(columnId), ((StructColumnVector)columnVectors[columnId]).fields, index, value);
-          break;           
+          break;
         default:
           throw new IllegalArgumentException();
       }
     }
   }
-  
+
   private void readSingleRowWithFilter(int id) throws IOException {
     Reader reader = OrcFile.createReader(filePath, OrcFile.readerOptions(configuration).filesystem(fileSystem));
     SearchArgument searchArgument = SearchArgumentFactory.newBuilder()

@@ -40,11 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestOrcFilterContextImpl {
 
   private final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createStruct()
-      .addField("f2a", TypeDescription.createLong())
-      .addField("f2b", TypeDescription.createString()))
-    .addField("f3", TypeDescription.createString());
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createStruct()
+          .addField("f2a", TypeDescription.createLong())
+          .addField("f2b", TypeDescription.createString()))
+      .addField("f3", TypeDescription.createString());
 
   @Test
   public void testSuccessfulRetrieval() {

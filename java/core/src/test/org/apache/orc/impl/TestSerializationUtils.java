@@ -80,7 +80,7 @@ public class TestSerializationUtils {
         SerializationUtils.readBigInteger(fromBuffer(buffer)).longValue());
     for(int i=-8192; i < 8192; ++i) {
       buffer.reset();
-        SerializationUtils.writeBigInteger(buffer, BigInteger.valueOf(i));
+      SerializationUtils.writeBigInteger(buffer, BigInteger.valueOf(i));
       assertEquals(i >= -64 && i < 64 ? 1 : 2, buffer.size(),
           "compare length for " + i);
       assertEquals(i, SerializationUtils.readBigInteger(fromBuffer(buffer)).intValue(),
