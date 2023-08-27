@@ -335,9 +335,9 @@ public class TestNewIntegerEncoding {
   public void testDeltaOverflow() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    long[] inp = new long[]{4513343538618202719l, 4513343538618202711l,
-        2911390882471569739l,
-        -9181829309989854913l};
+    long[] inp = new long[]{4513343538618202719L, 4513343538618202711L,
+        2911390882471569739L,
+        -9181829309989854913L};
     List<Long> input = Lists.newArrayList(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(
@@ -368,8 +368,8 @@ public class TestNewIntegerEncoding {
   public void testDeltaOverflow2() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    long[] inp = new long[]{Long.MAX_VALUE, 4513343538618202711l,
-        2911390882471569739l,
+    long[] inp = new long[]{Long.MAX_VALUE, 4513343538618202711L,
+        2911390882471569739L,
         Long.MIN_VALUE};
     List<Long> input = Lists.newArrayList(Longs.asList(inp));
 
@@ -401,7 +401,7 @@ public class TestNewIntegerEncoding {
   public void testDeltaOverflow3() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    long[] inp = new long[]{-4513343538618202711l, -2911390882471569739l, -2,
+    long[] inp = new long[]{-4513343538618202711L, -2911390882471569739L, -2,
         Long.MAX_VALUE};
     List<Long> input = Lists.newArrayList(Longs.asList(inp));
 

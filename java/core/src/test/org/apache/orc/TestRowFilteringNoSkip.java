@@ -85,10 +85,11 @@ public class TestRowFilteringNoSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
+          if ((row % 2) == 0) {
             col2.vector[row] = 100;
-          else
+          } else {
             col2.vector[row] = 999;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -117,8 +118,9 @@ public class TestRowFilteringNoSkip {
         // But since this Column type is not actually filtered there will be no nulls!
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
+          if (col2.vector[r] != 0) {
             noNullCnt ++;
+          }
         }
       }
       // For Int type ColumnVector filtering does not remove any data!
@@ -186,10 +188,9 @@ public class TestRowFilteringNoSkip {
         // But since this Column type is not actually filtered there will be no nulls!
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
+          if (col2.vector[r] != 0) {
             noNullCount++;
-
-
+          }
         }
       }
       // For Int type ColumnVector filtering does not remove any data!
@@ -224,10 +225,11 @@ public class TestRowFilteringNoSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = row*2+1;
-          else
+          } else {
             col2.vector[row] = -1 * row*2;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -256,8 +258,9 @@ public class TestRowFilteringNoSkip {
         // But since this Column type is not actually filtered there will be no nulls!
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
+          if (col2.vector[r] != 0) {
             noNullCnt ++;
+          }
         }
       }
       // For Short type ColumnVector filtering does not remove any data!
@@ -294,10 +297,11 @@ public class TestRowFilteringNoSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = Timestamp.valueOf("2020-04-01 12:34:56.9").toInstant().getEpochSecond();
-          else
+          } else {
             col2.vector[row] = Timestamp.valueOf("2019-04-01 12:34:56.9").toInstant().getEpochSecond();
+          }
         }
         col2.isRepeating = false;
         writer.addRowBatch(batch);
@@ -326,8 +330,9 @@ public class TestRowFilteringNoSkip {
         // But since this Column type is not actually filtered there will be no nulls!
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
+          if (col2.vector[r] != 0) {
             noNullCnt ++;
+          }
         }
       }
       // For Date type ColumnVector filtering does not remove any data!
@@ -366,10 +371,11 @@ public class TestRowFilteringNoSkip {
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.setVal(row, TestVectorOrcFile.bytesArray(0, 1, 2, 3, row));
-          else
+          } else {
             col2.setVal(row, TestVectorOrcFile.bytesArray(1, 2, 3, 4, row));
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -398,8 +404,9 @@ public class TestRowFilteringNoSkip {
         // But since this Column type is not actually filtered there will be no nulls!
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!TestVectorOrcFile.getBinary(col2, r).equals(TestVectorOrcFile.bytes()))
+          if (!TestVectorOrcFile.getBinary(col2, r).equals(TestVectorOrcFile.bytes())) {
             noNullCnt ++;
+          }
         }
       }
       // For Binary type ColumnVector filtering does not remove any data!

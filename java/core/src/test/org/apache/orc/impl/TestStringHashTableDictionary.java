@@ -89,7 +89,7 @@ public class TestStringHashTableDictionary {
    * just to save the effort of obtaining order sequence manually.
    */
   private static class SimpleHashDictionary extends StringHashTableDictionary {
-    public SimpleHashDictionary(int initialCapacity) {
+    SimpleHashDictionary(int initialCapacity) {
       super(initialCapacity);
     }
 

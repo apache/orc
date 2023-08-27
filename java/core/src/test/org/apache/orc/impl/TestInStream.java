@@ -960,7 +960,7 @@ public class TestInStream {
 
   private static final byte[] uncompressed = input(
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-  
+
   @Test
   public void testStreamResetWithIncreasedLength() throws IOException {
     // Set up an initial buffer of PREVIOUS_LENGTH followed by our stream

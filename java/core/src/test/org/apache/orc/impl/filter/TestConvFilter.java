@@ -171,8 +171,8 @@ public class TestConvFilter {
       v.noNulls = false;
       v.isNull[idx] = true;
     } else {
-      assert (HiveDecimalWritable.isPrecisionDecimal64(value.precision())
-              && value.scale() <= scale);
+      assert (HiveDecimalWritable.isPrecisionDecimal64(value.precision()) &&
+              value.scale() <= scale);
       v.isNull[idx] = false;
       v.vector[idx] = value.serialize64(scale);
     }
