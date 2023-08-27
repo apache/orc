@@ -77,8 +77,7 @@ public class TestMapReduceFiltering {
     TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
     FilterTestUtil.readStart();
     org.apache.hadoop.mapreduce.RecordReader<NullWritable, OrcStruct> r =
-      new OrcInputFormat<OrcStruct>().createRecordReader(split,
-                                                         attemptContext);
+        new OrcInputFormat<OrcStruct>().createRecordReader(split, attemptContext);
     long rowCount = validateFilteredRecordReader(r);
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
@@ -102,8 +101,7 @@ public class TestMapReduceFiltering {
     TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
     FilterTestUtil.readStart();
     org.apache.hadoop.mapreduce.RecordReader<NullWritable, OrcStruct> r =
-      new OrcInputFormat<OrcStruct>().createRecordReader(split,
-                                                         attemptContext);
+        new OrcInputFormat<OrcStruct>().createRecordReader(split, attemptContext);
     long rowCount = validateFilteredRecordReader(r);
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
@@ -140,8 +138,7 @@ public class TestMapReduceFiltering {
     TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
     FilterTestUtil.readStart();
     org.apache.hadoop.mapreduce.RecordReader<NullWritable, OrcStruct> r =
-      new OrcInputFormat<OrcStruct>().createRecordReader(split,
-                                                         attemptContext);
+        new OrcInputFormat<OrcStruct>().createRecordReader(split, attemptContext);
     long rowCount = 0;
     while (r.nextKeyValue()) {
       validateLimitedRow(r.getCurrentValue(), idx);
@@ -151,8 +148,8 @@ public class TestMapReduceFiltering {
     assertEquals(1, rowCount);
   }
 
-  private static long validateFilteredRecordReader(org.apache.hadoop.mapreduce.RecordReader<NullWritable
-    , OrcStruct> rr)
+  private static long validateFilteredRecordReader(
+      org.apache.hadoop.mapreduce.RecordReader<NullWritable, OrcStruct> rr)
     throws IOException, InterruptedException {
     long rowCount = 0;
     while (rr.nextKeyValue()) {
