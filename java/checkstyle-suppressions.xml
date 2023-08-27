@@ -38,16 +38,11 @@
   <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestSchemaEvolution.java"/>
   <suppress checks="Indentation" files="src/test/org/apache/orc/impl/TestStringRedBlackTree.java"/>
   <suppress checks="Indentation" files="src/test/org/apache/orc/impl/filter/*"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/mapred/TestOrcFileEvolution.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/tools/json/TestJsonSchemaFinder.java"/>
+  <suppress checks="Indentation" files="src/test/org/apache/orc/tools/convert/TestJsonReader.java"/>
 
   <suppress checks="UnusedImports" files="src/test/*"/>
   <suppress checks="AvoidStarImport" files="src/test/*"/>
   <suppress checks="CustomImportOrder" files="src/test/*"/>
-
-  <!-- Remove the following rule when the test code clean up is completed. -->
-  <suppress checks="Indentation" files="src/test/*"/>
-  <suppress checks="RedundantModifier" files="src/test/*"/>
-  <suppress checks="ModifierOrder" files="src/test/*"/>
-  <suppress checks="UpperEll" files="src/test/*"/>
-  <suppress checks="NeedBraces" files="src/test/*"/>
-  <suppress checks="RegexpSingleline" files="src/test/*"/>
 </suppressions>

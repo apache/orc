@@ -104,8 +104,8 @@ public class TestFilter {
           break;
         case "vector":
           Reader.Options options = new Reader.Options(conf)
-            .searchArgument(sArg, new String[0])
-            .allowSARGToFilter(true);
+              .searchArgument(sArg, new String[0])
+              .allowSARGToFilter(true);
           filter = FilterFactory.createBatchFilter(options,
                                                    FilterBenchUtil.schema,
                                                    false,

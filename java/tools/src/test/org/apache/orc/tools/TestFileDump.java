@@ -285,9 +285,9 @@ public class TestFileDump {
       writer.addRowBatch(batch);
     }
     writer.addUserMetadata("hive.acid.key.index",
-      StandardCharsets.UTF_8.encode("1,1,1;2,3,5;"));
+        StandardCharsets.UTF_8.encode("1,1,1;2,3,5;"));
     writer.addUserMetadata("some.user.property",
-      StandardCharsets.UTF_8.encode("foo#bar$baz&"));
+        StandardCharsets.UTF_8.encode("foo#bar$baz&"));
     writer.close();
     assertEquals(2079000, writer.getRawDataSize());
     assertEquals(21000, writer.getNumberOfRows());
@@ -334,7 +334,7 @@ public class TestFileDump {
             format.parse("2014-11-25 00:00:00").getTime())),
         "string",
         "hello",
-       "hello",
+        "hello",
         m,
         Arrays.asList(100, 200),
         10, "foo");

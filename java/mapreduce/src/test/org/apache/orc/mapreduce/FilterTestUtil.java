@@ -41,13 +41,13 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FilterTestUtil {
-  private final static Logger LOG = LoggerFactory.getLogger(FilterTestUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FilterTestUtil.class);
   public static final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
-    .addField("f3", TypeDescription.createLong())
-    .addField("f4", TypeDescription.createString())
-    .addField("ridx", TypeDescription.createLong());
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
+      .addField("f3", TypeDescription.createLong())
+      .addField("f4", TypeDescription.createString())
+      .addField("ridx", TypeDescription.createLong());
   public static final long RowCount = 4000000L;
   private static final int scale = 3;
 
