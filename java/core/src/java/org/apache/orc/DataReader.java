@@ -52,11 +52,11 @@ public interface DataReader extends AutoCloseable, Cloneable {
   boolean isTrackingDiskRanges();
 
   /**
-   * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
-   * incorrectly added and shouldn't be used anymore.
-   *
    * Releases buffers created by readFileData. See readFileData javadoc.
    * @param toRelease The buffer to release.
+   *
+   * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+   * incorrectly added and shouldn't be used anymore.
    */
   @Deprecated
   void releaseBuffer(ByteBuffer toRelease);

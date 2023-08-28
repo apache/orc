@@ -178,7 +178,7 @@ class TestRecordReaderUtils {
   }
 
   private static byte[] byteBufferToArray(ByteBuffer buf) {
-    byte resultArray[] = new byte[buf.remaining()];
+    byte[] resultArray = new byte[buf.remaining()];
     ByteBuffer buffer = buf.slice();
     buffer.get(resultArray);
     return resultArray;

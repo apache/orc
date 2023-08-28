@@ -52,6 +52,10 @@ class ZeroCopyShims {
         .noneOf(ReadOption.class);
     private static final EnumSet<ReadOption> NO_CHECK_SUM = EnumSet
         .of(ReadOption.SKIP_CHECKSUMS);
+
+    // Use IdentityHashMap like hadoop's IdentityHashStore.
+    // It compares keys using {@link System#identityHashCode(Object)} and the identity operator.
+    // This is useful for types like ByteBuffer which have expensive hashCode and equals operators.
     private final IdentityHashMap<ByteBuffer, Object> readBuffers = new IdentityHashMap<>(0);
 
     ZeroCopyAdapter(FSDataInputStream in,
