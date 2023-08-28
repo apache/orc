@@ -101,6 +101,7 @@ class ZeroCopyShims {
 
     @Override
     public void close() throws IOException {
+      releaseAllBuffers();
       this.in.close();
     }
   }
