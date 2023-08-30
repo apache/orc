@@ -414,6 +414,9 @@ public class OrcUtils {
       case 4:
         base = "Trino";
         break;
+      case 5:
+        base = "CUDF";
+        break;
       default:
         base = String.format("Unknown(%d)", writer);
         break;
