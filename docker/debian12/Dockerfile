@@ -32,7 +32,7 @@ RUN apt-get install -y \
   make \
   curl \
   maven \
-  openjdk-${jdk}-jdk; \
+  openjdk-${jdk}-jdk
 
 WORKDIR /root
 
