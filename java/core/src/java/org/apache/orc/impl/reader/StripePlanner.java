@@ -28,6 +28,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.BufferChunk;
 import org.apache.orc.impl.BufferChunkList;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.PhysicalFsWriter;
@@ -615,8 +616,10 @@ public class StripePlanner {
     }
 
     /**
-     * @deprecated Use {@link DataReader#releaseAllBuffers()} instead. This method was
-     * incorrectly added and shouldn't be used anymore.
+     * @deprecated The buffer returned by {@link BufferChunk#getData()} is not the original buffer
+     * from {@link HadoopShims.ZeroCopyReaderShim#readBuffer(int, boolean)}, it is the slice()
+     * or duplicate() of the original buffer. So this releaseBuffers() is incorrect and we should
+     * use {@link DataReader#releaseAllBuffers()} instead.
      */
     @Deprecated
     void releaseBuffers(DataReader reader) {

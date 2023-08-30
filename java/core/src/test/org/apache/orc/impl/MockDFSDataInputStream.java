@@ -63,7 +63,7 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
   public void releaseBuffer(ByteBuffer byteBuffer) {
     Object val = bufferStore.remove(byteBuffer);
     if (val == null) {
-      throw new IllegalArgumentException("tried to release a buffer " + "that was not created by this stream, " + byteBuffer);
+      throw new IllegalArgumentException("tried to release a buffer that was not created by this stream, " + byteBuffer);
     }
   }
 

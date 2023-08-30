@@ -133,7 +133,7 @@ public class RecordReaderUtils {
 
     /**
      * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
-     * incorrectly added and shouldn't be used anymore.
+     * incorrectly used by upper level code and shouldn't be used anymore.
      */
     @Deprecated
     @Override
