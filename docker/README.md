@@ -1,7 +1,7 @@
 ## Supported OSes
 
 * CentOS 7
-* Debian 10 and 11
+* Debian 10, 11, and 12
 * Fedora 37
 * Ubuntu 20 and 22
 
