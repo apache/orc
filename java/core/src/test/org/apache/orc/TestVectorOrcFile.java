@@ -3595,6 +3595,8 @@ public class TestVectorOrcFile {
         OrcFile.WriterImplementation.from(2));
     assertEquals(OrcFile.WriterImplementation.TRINO,
             OrcFile.WriterImplementation.from(4));
+    assertEquals(OrcFile.WriterImplementation.CUDF,
+        OrcFile.WriterImplementation.from(5));
     assertEquals(OrcFile.WriterImplementation.UNKNOWN,
         OrcFile.WriterImplementation.from(99));
 
@@ -3613,6 +3615,8 @@ public class TestVectorOrcFile {
         OrcFile.WriterVersion.from(OrcFile.WriterImplementation.PRESTO, 6));
     assertEquals(OrcFile.WriterVersion.TRINO_ORIGINAL,
             OrcFile.WriterVersion.from(OrcFile.WriterImplementation.TRINO, 6));
+    assertEquals(OrcFile.WriterVersion.CUDF_ORIGINAL,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.CUDF, 6));
     assertEquals(OrcFile.WriterVersion.FUTURE,
         OrcFile.WriterVersion.from(OrcFile.WriterImplementation.UNKNOWN, 0));
 
@@ -3631,6 +3635,8 @@ public class TestVectorOrcFile {
         OrcFile.WriterVersion.PRESTO_ORIGINAL));
     assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
         OrcFile.WriterVersion.TRINO_ORIGINAL));
+    assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
+        OrcFile.WriterVersion.CUDF_ORIGINAL));
   }
 
   @ParameterizedTest

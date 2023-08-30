@@ -72,6 +72,7 @@ namespace orc {
     PRESTO_WRITER = 2,
     SCRITCHLEY_GO = 3,
     TRINO_WRITER = 4,
+    CUDF_WRITER = 5,
     UNKNOWN_WRITER = INT32_MAX
   };
 
