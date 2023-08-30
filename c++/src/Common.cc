@@ -82,6 +82,8 @@ namespace orc {
         return "Scritchley Go";
       case TRINO_WRITER:
         return "Trino";
+      case CUDF_WRITER:
+        return "CUDF";
       default: {
         std::ostringstream buffer;
         buffer << "Unknown(" << id << ")";
