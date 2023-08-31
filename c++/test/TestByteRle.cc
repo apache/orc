@@ -50,8 +50,8 @@ TEST(ByteRle, nullTest) {
   char buffer[258];
   char notNull[266];
   char result[266];
-  buffer[0] = -128;
-  buffer[129] = -128;
+  buffer[0] = static_cast<char>(-128);
+  buffer[129] = static_cast<char>(-128);
   for(int i=0; i < 128; ++i) {
     buffer[1 + i] = static_cast<char>(i);
     buffer[130 + i] = static_cast<char>(128 + i);
@@ -186,7 +186,7 @@ TEST(ByteRle, testNulls) {
       createByteRleDecoder(
         std::unique_ptr<orc::SeekableInputStream>
 	(new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 3)));
-  std::vector<char> data(16, -1);
+  std::vector<char> data(16, static_cast<char>(-1));
   std::vector<char> notNull(data.size());
   for (size_t i = 0; i < data.size(); ++i) {
     notNull[i] = (i + 1) % 2;
@@ -198,17 +198,16 @@ TEST(ByteRle, testNulls) {
         EXPECT_EQ((i*data.size() + j)/2, data[j]) << "Output wrong at "
                                                   << (i * data.size() + j);
       } else {
-        EXPECT_EQ(-1, data[j]) << "Output wrong at "
-                               << (i * data.size() + j);
+        EXPECT_EQ(static_cast<char>(-1), data[j]) << "Output wrong at "
+                                                  << (i * data.size() + j);
       }
     }
   }
   for (size_t i = 0; i < 8; ++i) {
     rle->next(data.data(), data.size(), notNull.data());
     for (size_t j = 0; j < data.size(); ++j) {
-      EXPECT_EQ(j % 2 == 0 ? -36 : -1,
-                data[j])
-          << "Output wrong at " << (i * data.size() + j + 32);
+      EXPECT_EQ(j % 2 == 0 ? static_cast<char>(-36) : static_cast<char>(-1), data[j])
+        << "Output wrong at " << (i * data.size() + j + 32);
     }
   }
 }
@@ -221,26 +220,26 @@ TEST(ByteRle, testAllNulls) {
       createByteRleDecoder(
         std::unique_ptr<orc::SeekableInputStream>
 	(new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))));
-  std::vector<char> data(16, -1);
+  std::vector<char> data(16, static_cast<char>(-1));
   std::vector<char> allNull(data.size(), 0);
   std::vector<char> noNull(data.size(), 1);
   rle->next(data.data(), data.size(), allNull.data());
   for (size_t i = 0; i < data.size(); ++i) {
-    EXPECT_EQ(-1, data[i]) << "Output wrong at " << i;
+    EXPECT_EQ(static_cast<char>(-1), data[i]) << "Output wrong at " << i;
   }
   rle->next(data.data(), data.size(), noNull.data());
   for (size_t i = 0; i < data.size(); ++i) {
     EXPECT_EQ(i, data[i]) << "Output wrong at " << i;
-    data[i] = -1;
+    data[i] = static_cast<char>(-1);
   }
   rle->next(data.data(), data.size(), allNull.data());
   for (size_t i = 0; i < data.size(); ++i) {
-    EXPECT_EQ(-1, data[i]) << "Output wrong at " << i;
+    EXPECT_EQ(static_cast<char>(-1), data[i]) << "Output wrong at " << i;
   }
   for (size_t i = 0; i < 4; ++i) {
     rle->next(data.data(), data.size(), noNull.data());
     for (size_t j = 0; j < data.size(); ++j) {
-      EXPECT_EQ(-36, data[j]) << "Output wrong at " << i;
+      EXPECT_EQ(static_cast<char>(-36), data[j]) << "Output wrong at " << i;
     }
   }
   rle->next(data.data(), data.size(), allNull.data());
@@ -1107,7 +1106,7 @@ TEST(BooleanRle, skipTestWithNulls) {
   someNull[1] = 1;
   std::vector<char> allNull(data.size(), 0);
   for (size_t i = 0; i < 16384; i += 5) {
-    data.assign(data.size(), -1);
+    data.assign(data.size(), static_cast<char>(-1));
     rle->next(data.data(), data.size(), someNull.data());
     EXPECT_EQ(0, data[0]) << "Output wrong at " << i;
     EXPECT_EQ(0, data[2]) << "Output wrong at " << i;
@@ -1118,7 +1117,7 @@ TEST(BooleanRle, skipTestWithNulls) {
       rle->skip(4);
     }
     rle->skip(0);
-    data.assign(data.size(), -1);
+    data.assign(data.size(), static_cast<char>(-1));
     rle->next(data.data(), data.size(), allNull.data());
     for (size_t j = 0; j < data.size(); ++j) {
       EXPECT_EQ(0, data[j]) << "Output wrong at " << i << ", " << j;
@@ -1390,7 +1389,7 @@ TEST(BooleanRle, seekTestWithNulls) {
     EXPECT_EQ(i < 8192 ? i & 1 : (i / 3) & 1,
               data[i])
         << "Output wrong at " << i;
-    data[0] = -1;
+    data[0] = static_cast<char>(-1);
     rle->next(data.data(), 1, allNull.data());
     EXPECT_EQ(0, data[0]) << "Output wrong at " << i;
   } while (i != 0);
