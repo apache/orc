@@ -366,7 +366,7 @@ namespace orc {
     if (bufferStart == bufferEnd) {
       nextBuffer();
     }
-    return *(bufferStart++);
+    return static_cast<signed char>(*(bufferStart++));
   }
 
   void ByteRleDecoderImpl::readHeader() {
@@ -377,7 +377,7 @@ namespace orc {
     } else {
       remainingValues = static_cast<size_t>(ch) + MINIMUM_REPEAT;
       repeating = true;
-      value = readByte();
+      value = static_cast<char>(readByte());
     }
   }
 
@@ -466,7 +466,7 @@ namespace orc {
         if (notNull) {
           for(uint64_t i=0; i < count; ++i) {
             if (notNull[position + i]) {
-              data[position + i] = readByte();
+              data[position + i] = static_cast<char>(readByte());
               consumed += 1;
             }
           }

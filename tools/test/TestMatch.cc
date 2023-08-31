@@ -150,7 +150,7 @@ namespace orc {
         ASSERT_EQ(true, expected.nextLine(expectedLine));
         line.clear();
         printer->printRow(i);
-        EXPECT_EQ(expectedLine, line)
+        ASSERT_EQ(expectedLine, line)
           << "wrong output at row " << (rowCount + i);
       }
       rowCount += batch->numElements;

@@ -147,7 +147,7 @@ signed char RleDecoderV1::readByte() {
     bufferStart = static_cast<const char*>(bufferPointer);
     bufferEnd = bufferStart + bufferLength;
   }
-  return *(bufferStart++);
+  return static_cast<signed char>(*(bufferStart++));
 }
 
 uint64_t RleDecoderV1::readLong() {

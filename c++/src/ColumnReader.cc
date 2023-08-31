@@ -131,7 +131,7 @@ namespace orc {
    */
   void expandBytesToLongs(int64_t* buffer, uint64_t numValues) {
     for(size_t i=numValues - 1; i < numValues; --i) {
-      buffer[i] = reinterpret_cast<char *>(buffer)[i];
+      buffer[i] = reinterpret_cast<signed char *>(buffer)[i];
     }
   }
 
