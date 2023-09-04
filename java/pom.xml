@@ -76,7 +76,7 @@
     <!-- Build Properties -->
     <project.build.outputTimestamp>2023-05-15T16:29:49Z</project.build.outputTimestamp>
     <protoc.version>3.17.3</protoc.version>
-    <slf4j.version>2.0.7</slf4j.version>
+    <slf4j.version>2.0.9</slf4j.version>
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
