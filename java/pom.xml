@@ -70,7 +70,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
-    <maven.version>3.8.8</maven.version>
+    <maven.version>3.9.4</maven.version>
 
     <mockito.version>4.11.0</mockito.version>
     <!-- Build Properties -->
