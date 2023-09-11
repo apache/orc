@@ -148,8 +148,8 @@ jobs:
       run: |
         mkdir -p ~/.m2
         cd java
-        mvn install -DskipTests
-        mvn javadoc:javadoc
+        ./mvnw install -DskipTests
+        ./mvnw javadoc:javadoc
 
   formatting-check:
     name: "C++ format check"
