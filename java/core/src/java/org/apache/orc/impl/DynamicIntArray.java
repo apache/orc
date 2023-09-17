@@ -69,7 +69,7 @@ public final class DynamicIntArray {
   }
 
   public int get(int index) {
-    if (index >= length) {
+    if (index < 0 || index >= length) {
       throw new IndexOutOfBoundsException("Index " + index +
                                             " is outside of 0.." +
                                             (length - 1));
