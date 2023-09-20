@@ -75,6 +75,14 @@ public class TestDynamicIntArray {
     public void testInvalidGetIndex() {
         DynamicIntArray dynamicIntArray = new DynamicIntArray(10);
         dynamicIntArray.add(10);
-        assertThrows(IndexOutOfBoundsException.class, () -> dynamicIntArray.get(11));
+        dynamicIntArray.add(11);
+        IndexOutOfBoundsException indexOutOfBoundsException =
+            assertThrows(IndexOutOfBoundsException.class, () -> dynamicIntArray.get(11));
+        assertEquals("Index 11 is outside of 0..1", indexOutOfBoundsException.getMessage());
+
+        indexOutOfBoundsException =
+            assertThrows(IndexOutOfBoundsException.class, () -> dynamicIntArray.get(-1));
+        assertEquals("Index -1 is outside of 0..1", indexOutOfBoundsException.getMessage());
+
     }
 }

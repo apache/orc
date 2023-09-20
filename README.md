@@ -44,7 +44,7 @@ The subdirectories are:
 ### Building
 
 * Install java 1.8 or higher
-* Install maven 3.8.8 or higher
+* Install maven 3.9.4 or higher
 * Install cmake 3.12 or higher
 
 To build a release version with debug information:
