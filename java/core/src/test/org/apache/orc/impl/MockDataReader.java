@@ -98,9 +98,19 @@ public class MockDataReader implements DataReader {
     return true;
   }
 
+  /**
+   * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+   * incorrectly used by upper level code and shouldn't be used anymore.
+   */
+  @Deprecated
   @Override
   public void releaseBuffer(ByteBuffer toRelease) {
     outBuffers.remove(toRelease);
+  }
+
+  @Override
+  public void releaseAllBuffers() {
+    outBuffers.clear();
   }
 
   @Override

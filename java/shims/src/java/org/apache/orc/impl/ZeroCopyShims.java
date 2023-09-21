@@ -24,6 +24,7 @@ import org.apache.hadoop.io.ByteBufferPool;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 
 class ZeroCopyShims {
   private static final class ByteBufferPoolAdapter implements ByteBufferPool {
@@ -52,6 +53,11 @@ class ZeroCopyShims {
     private static final EnumSet<ReadOption> NO_CHECK_SUM = EnumSet
         .of(ReadOption.SKIP_CHECKSUMS);
 
+    // Use IdentityHashMap like hadoop's IdentityHashStore.
+    // It compares keys using {@link System#identityHashCode(Object)} and the identity operator.
+    // This is useful for types like ByteBuffer which have expensive hashCode and equals operators.
+    private final IdentityHashMap<ByteBuffer, Object> readBuffers = new IdentityHashMap<>(0);
+
     ZeroCopyAdapter(FSDataInputStream in,
                            HadoopShims.ByteBufferPoolShim poolshim) {
       this.in = in;
@@ -69,16 +75,33 @@ class ZeroCopyShims {
       if (verifyChecksums) {
         options = CHECK_SUM;
       }
-      return this.in.read(this.pool, maxLength, options);
+
+      ByteBuffer bb = this.in.read(this.pool, maxLength, options);
+      readBuffers.put(bb, null);
+      return bb;
     }
 
+    /**
+     * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+     * incorrectly used by upper level code and shouldn't be used anymore.
+     */
+    @Deprecated
     @Override
     public void releaseBuffer(ByteBuffer buffer) {
       this.in.releaseBuffer(buffer);
     }
 
     @Override
+    public void releaseAllBuffers() {
+      readBuffers.forEach((k, v) -> {
+        this.in.releaseBuffer(k);
+      });
+      readBuffers.clear();
+    }
+
+    @Override
     public void close() throws IOException {
+      releaseAllBuffers();
       this.in.close();
     }
   }

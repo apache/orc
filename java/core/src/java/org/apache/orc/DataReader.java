@@ -54,8 +54,17 @@ public interface DataReader extends AutoCloseable, Cloneable {
   /**
    * Releases buffers created by readFileData. See readFileData javadoc.
    * @param toRelease The buffer to release.
+   *
+   * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+   * incorrectly used by upper level code and shouldn't be used anymore.
    */
+  @Deprecated
   void releaseBuffer(ByteBuffer toRelease);
+
+  /**
+   * Releases all buffers created by readFileData. See readFileData javadoc.
+   */
+  void releaseAllBuffers();
 
   /**
    * Clone the entire state of the DataReader with the assumption that the

@@ -103,8 +103,18 @@ public interface HadoopShims {
     /**
      * Release a ByteBuffer obtained from a readBuffer on this
      * ZeroCopyReaderShim.
+     *
+     * @deprecated Use {@link #releaseAllBuffers()} instead. This method was
+     * incorrectly used by upper level code and shouldn't be used anymore.
      */
+    @Deprecated
     void releaseBuffer(ByteBuffer buffer);
+
+    /**
+     * Release all ByteBuffers obtained from readBuffer on this
+     * ZeroCopyReaderShim.
+     */
+    void releaseAllBuffers();
 
     /**
      * Close the underlying stream.

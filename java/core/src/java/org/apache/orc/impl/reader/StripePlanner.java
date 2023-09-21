@@ -28,6 +28,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.BufferChunk;
 import org.apache.orc.impl.BufferChunkList;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.PhysicalFsWriter;
@@ -214,12 +215,7 @@ public class StripePlanner {
    */
   public void clearStreams() {
     if (dataReader.isTrackingDiskRanges()) {
-      for (StreamInformation stream : indexStreams) {
-        stream.releaseBuffers(dataReader);
-      }
-      for (StreamInformation stream : dataStreams) {
-        stream.releaseBuffers(dataReader);
-      }
+      dataReader.releaseAllBuffers();
     }
     indexStreams.clear();
     dataStreams.clear();
@@ -619,6 +615,13 @@ public class StripePlanner {
       this.length = length;
     }
 
+    /**
+     * @deprecated The buffer returned by {@link BufferChunk#getData()} is not the original buffer
+     * from {@link HadoopShims.ZeroCopyReaderShim#readBuffer(int, boolean)}, it is the slice()
+     * or duplicate() of the original buffer. So this releaseBuffers() is incorrect and we should
+     * use {@link DataReader#releaseAllBuffers()} instead.
+     */
+    @Deprecated
     void releaseBuffers(DataReader reader) {
       long end = offset + length;
       BufferChunk ptr = firstChunk;
