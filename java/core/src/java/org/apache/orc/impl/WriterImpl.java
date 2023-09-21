@@ -612,7 +612,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     HadoopShims.KeyMetadata meta = key.getMetadata();
     result.setKeyName(meta.getKeyName());
     result.setKeyVersion(meta.getVersion());
-    result.setAlgorithm(OrcProto.EncryptionAlgorithm.valueOf(
+    result.setAlgorithm(OrcProto.EncryptionAlgorithm.forNumber(
         meta.getAlgorithm().getSerialization()));
     return result;
   }
@@ -646,7 +646,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     for(WriterEncryptionVariant variant: encryption) {
       encrypt.addVariants(writeEncryptionVariant(variant));
     }
-    encrypt.setKeyProvider(OrcProto.KeyProviderKind.valueOf(
+    encrypt.setKeyProvider(OrcProto.KeyProviderKind.forNumber(
         keyProvider.getKind().getValue()));
     return encrypt;
   }
