@@ -1,7 +1,6 @@
 ## Supported OSes
 
-* CentOS 7
-* Debian 10, 11, and 12
+* Debian 11 and 12
 * Fedora 37
 * Ubuntu 20 and 22
 
@@ -29,13 +28,12 @@ The scripts are:
 * `run-one.sh` *owner* *branch* *os* - test the owner's branch on one OS
 * `reinit.sh` - rebuild all of the base images without the image cache
 
-`run-all.sh`, `run-one.sh` and `reinit.sh` tests both on jdk8 and 11 across OSes
+`run-all.sh`, `run-one.sh` and `reinit.sh` tests both on jdk17 and 21 across OSes
 
 A base image for each OS is built using:
 
     cd docker/$os
-    FOR jdk8:  docker build -t "orc-$os-jdk8" --build-arg jdk=8 .
-    FOR jdk11: docker build -t "orc-$os-jdk11" --build-arg jdk=11 .
+    FOR jdk21: docker build -t "orc-$os-jdk21" --build-arg jdk=21 .
 
 ## Clean up
 
