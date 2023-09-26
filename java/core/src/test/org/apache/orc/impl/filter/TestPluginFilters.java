@@ -24,19 +24,12 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
-import org.apache.orc.OrcFilterContext;
 import org.apache.orc.Reader;
-import org.apache.orc.TypeDescription;
 import org.apache.orc.filter.BatchFilter;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.function.Consumer;
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPluginFilters extends ATestFilter {
