@@ -435,6 +435,13 @@ namespace orc {
     return buf.str();
   }
 
+  double Int128::toDouble() const {
+    if (fitsInLong()) {
+      return static_cast<double>(toLong());
+    }
+    return static_cast<double>(lowbits) + std::ldexp(static_cast<double>(highbits), 64);
+  }
+
   const static int32_t MAX_PRECISION_64 = 18;
   const static int32_t MAX_PRECISION_128 = 38;
   const static int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] = {1,

@@ -113,6 +113,25 @@ namespace orc {
       }
     }
 
+    // conversion from decimal to numeric
+    for (size_t i = 12; i <=13; i++) {
+      for (size_t j = 0; j <=6; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = true;
+      }
+    }
+
+    // conversion from decimal to decimal
+    for (size_t i = 12; i <=13; i++) {
+      for (size_t j = 12; j <=13; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = false;
+        if (i != j) {
+          needConvert[i][j] = true;
+        }
+      }
+    }
+
     for (size_t i = 0; i < typesSize; i++) {
       for (size_t j = 0; j < typesSize; j++) {
         testConvertReader(types[i], types[j], canConvert[i][j], needConvert[i][j]);

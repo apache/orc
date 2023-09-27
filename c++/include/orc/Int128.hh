@@ -300,6 +300,8 @@ namespace orc {
       throw std::range_error("Int128 too large to convert to long");
     }
 
+    double toDouble() const;
+
     /**
      * Return the base 10 string representation of the integer.
      */
