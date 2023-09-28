@@ -83,7 +83,7 @@ namespace orc {
         ret.isValid = readType.getMaximumLength() == fileType.getMaximumLength();
       } else if (fileType.getKind() == DECIMAL) {
         ret.needConvert = readType.getPrecision() != fileType.getPrecision() ||
-          readType.getScale() != fileType.getScale();
+                          readType.getScale() != fileType.getScale();
       }
     } else {
       switch (fileType.getKind()) {

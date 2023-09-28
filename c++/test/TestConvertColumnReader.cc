@@ -597,14 +597,14 @@ namespace orc {
     }
   }
 
-    TEST(ConvertColumnReader, TestConvertDecimalToDecimal) {
+  TEST(ConvertColumnReader, TestConvertDecimalToDecimal) {
     constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
     constexpr int TEST_CASES = 1024;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     std::unique_ptr<Type> fileType(Type::buildTypeFromString(
         "struct<c1:decimal(10,4),c2:decimal(10,4),c3:decimal(20,4),c4:decimal(20,4)>"));
-    std::shared_ptr<Type> readType(
-        Type::buildTypeFromString("struct<c1:decimal(9,5),c2:decimal(20,5),c3:decimal(10,3),c4:decimal(19,3)>"));
+    std::shared_ptr<Type> readType(Type::buildTypeFromString(
+        "struct<c1:decimal(9,5),c2:decimal(20,5),c3:decimal(10,3),c4:decimal(19,3)>"));
     WriterOptions options;
     options.setUseTightNumericVector(true);
     auto writer = createWriter(*fileType, &memStream, options);
@@ -671,6 +671,5 @@ namespace orc {
       EXPECT_FALSE(readC4.notNull[idx]) << i;
     }
   }
-
 
 }  // namespace orc
