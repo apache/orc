@@ -19,7 +19,7 @@
 
 FROM ubuntu:20.04
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
-ARG jdk=8
+ARG jdk=17
 ARG cc=gcc
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
