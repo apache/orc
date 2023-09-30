@@ -79,7 +79,7 @@ public class TestOutStream {
   public void testCompressWithoutEncryption() throws Exception {
     TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
     CompressionCodec codec = new TestZlibCodec();
-    StreamOptions options = new StreamOptions( 1024)
+    StreamOptions options = new StreamOptions(1024)
         .withCodec(codec, codec.getDefaultOptions());
 
     try (OutStream stream = new OutStream("test", options, receiver)) {
