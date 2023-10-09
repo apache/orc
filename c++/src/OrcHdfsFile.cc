@@ -115,17 +115,17 @@ namespace orc {
       }
 
       hdfs::FileHandle* file_raw = nullptr;
-      status = file_system->Open(uri.get_path(), &file_raw);
+      status = file_system->Open(uri.get_path(true), &file_raw);
       if (!status.ok()) {
-        throw ParseError("Can't open " + uri.get_path() + ". " + status.ToString());
+        throw ParseError("Can't open " + uri.get_path(true) + ". " + status.ToString());
       }
       // Wrapping file_raw into a unique pointer to guarantee deletion
       file.reset(file_raw);
 
       hdfs::StatInfo stat_info;
-      status = file_system->GetFileInfo(uri.get_path(), stat_info);
+      status = file_system->GetFileInfo(uri.get_path(true), stat_info);
       if (!status.ok()) {
-        throw ParseError("Can't stat " + uri.get_path() + ". " + status.ToString());
+        throw ParseError("Can't stat " + uri.get_path(true) + ". " + status.ToString());
       }
       totalLength = stat_info.length;
     }
