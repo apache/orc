@@ -501,20 +501,17 @@ namespace orc {
                                  const FileTypeBatch& srcBatch) {
       using FileType = decltype(srcBatch.values[idx]);
       Int128 result = scaleDownInt128ByPowerOfTen(srcBatch.values[idx], scale);
-      int64_t longValue = result.toLong();
       if (!result.fitsInLong()) {
         handleOverflow<FileType, ReadType>(dstBatch, idx, throwOnOverflow);
         return;
       }
-      convertNumericElement<ReadType, int64_t>(longValue, dstBatch.data[idx], dstBatch, idx,
+      convertNumericElement<ReadType, int64_t>(result.toLong(), dstBatch.data[idx], dstBatch, idx,
                                                throwOnOverflow);
     }
 
     void convertDecimalToDouble(ReadTypeBatch& dstBatch, uint64_t idx,
                                 const FileTypeBatch& srcBatch) {
-      double doubleValue = 0;
-      Int128 i128 = srcBatch.values[idx];
-      doubleValue = i128.toDouble();
+      double doubleValue = Int128(srcBatch.values[idx]).toDouble();
       dstBatch.data[idx] = static_cast<ReadType>(doubleValue) / static_cast<ReadType>(factor);
     }
 
