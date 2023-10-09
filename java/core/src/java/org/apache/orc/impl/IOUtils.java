@@ -125,7 +125,7 @@ public final class IOUtils {
     /*
      * N.B. no need to synchronize access to SKIP_BYTE_BUFFER: - we don't care if the buffer is created multiple
      * times (the data is ignored) - we always use the same size buffer, so if it is recreated it will still be
-     * OK (if the buffer size were variable, we would need to synch. to ensure some other thread did not create a
+     * OK (if the buffer size were variable, we would need to sync to ensure some other thread did not create a
      * smaller one)
      */
     long remain = toSkip;
