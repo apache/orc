@@ -291,7 +291,7 @@ namespace orc {
     }
 
     /**
-     * Convert the value to a long and
+     * Convert the value to a long and throw std::range_error on overflow.
      */
     int64_t toLong() const {
       if (fitsInLong()) {
@@ -299,6 +299,11 @@ namespace orc {
       }
       throw std::range_error("Int128 too large to convert to long");
     }
+
+    /**
+     * Convert the value to a double, the return value may not be precise.
+     */
+    double toDouble() const;
 
     /**
      * Return the base 10 string representation of the integer.

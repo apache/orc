@@ -522,4 +522,154 @@ namespace orc {
     }
   }
 
+  TEST(ConvertColumnReader, TestConvertDecimalToNumeric) {
+    constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
+    constexpr int TEST_CASES = 1024;
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Type> fileType(Type::buildTypeFromString(
+        "struct<c1:decimal(10,2),c2:decimal(10,4),c3:decimal(20,4),c4:decimal(20,4)>"));
+    std::shared_ptr<Type> readType(
+        Type::buildTypeFromString("struct<c1:boolean,c2:smallint,c3:int,c4:double>"));
+    WriterOptions options;
+    options.setUseTightNumericVector(true);
+    auto writer = createWriter(*fileType, &memStream, options);
+    auto batch = writer->createRowBatch(TEST_CASES);
+    auto structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    auto& c1 = dynamic_cast<Decimal64VectorBatch&>(*structBatch->fields[0]);
+    auto& c2 = dynamic_cast<Decimal64VectorBatch&>(*structBatch->fields[1]);
+    auto& c3 = dynamic_cast<Decimal128VectorBatch&>(*structBatch->fields[2]);
+    auto& c4 = dynamic_cast<Decimal128VectorBatch&>(*structBatch->fields[3]);
+
+    for (uint32_t i = 0; i < TEST_CASES / 2; i++) {
+      int64_t flag = i % 2 ? 1 : -1;
+      c1.values[i] = flag * (!(i % 2) ? static_cast<int64_t>(0) : static_cast<int64_t>(i * 123));
+      c2.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+      c3.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+      c4.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+    }
+    for (uint32_t i = TEST_CASES / 2; i < TEST_CASES; i++) {
+      c1.values[i] = 0;
+      c2.values[i] = (static_cast<int64_t>(std::numeric_limits<int16_t>::max()) + i) * 10000 + i;
+      c3.values[i] = (static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + i) * 10000 + i;
+      c4.values[i] = 0;
+    }
+
+    structBatch->numElements = c1.numElements = c2.numElements = c3.numElements = c4.numElements =
+        TEST_CASES;
+    writer->add(*batch);
+    writer->close();
+
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    auto pool = getDefaultPool();
+    auto reader = createReader(*pool, std::move(inStream));
+    RowReaderOptions rowReaderOptions;
+    rowReaderOptions.setUseTightNumericVector(true);
+    rowReaderOptions.setReadType(readType);
+    auto rowReader = reader->createRowReader(rowReaderOptions);
+    auto readBatch = rowReader->createRowBatch(TEST_CASES);
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+
+    auto& readStructBatch = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& readC1 = dynamic_cast<BooleanVectorBatch&>(*readStructBatch.fields[0]);
+    auto& readC2 = dynamic_cast<ShortVectorBatch&>(*readStructBatch.fields[1]);
+    auto& readC3 = dynamic_cast<IntVectorBatch&>(*readStructBatch.fields[2]);
+    auto& readC4 = dynamic_cast<DoubleVectorBatch&>(*readStructBatch.fields[3]);
+    EXPECT_EQ(TEST_CASES, readBatch->numElements);
+    for (int i = 0; i < TEST_CASES / 2; i++) {
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_TRUE(readC1.notNull[idx]) << i;
+      EXPECT_TRUE(readC2.notNull[idx]) << i;
+      EXPECT_TRUE(readC3.notNull[idx]) << i;
+      EXPECT_TRUE(readC4.notNull[idx]) << i;
+
+      int64_t flag = i % 2 ? 1 : -1;
+      EXPECT_EQ(!(i % 2) ? 0 : 1, readC1.data[idx]) << i;
+      EXPECT_EQ(flag * i, readC2.data[idx]) << i;
+      EXPECT_EQ(flag * i, readC3.data[idx]) << i;
+      EXPECT_DOUBLE_EQ(1.0001 * flag * i, readC4.data[idx]) << i;
+    }
+    for (int i = TEST_CASES / 2; i < TEST_CASES; i++) {
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_TRUE(readC1.notNull[idx]) << i;
+      EXPECT_FALSE(readC2.notNull[idx]) << i;
+      EXPECT_FALSE(readC3.notNull[idx]) << i;
+      EXPECT_TRUE(readC4.notNull[idx]) << i;
+    }
+  }
+
+  TEST(ConvertColumnReader, TestConvertDecimalToDecimal) {
+    constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
+    constexpr int TEST_CASES = 1024;
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Type> fileType(Type::buildTypeFromString(
+        "struct<c1:decimal(10,4),c2:decimal(10,4),c3:decimal(20,4),c4:decimal(20,4)>"));
+    std::shared_ptr<Type> readType(Type::buildTypeFromString(
+        "struct<c1:decimal(9,5),c2:decimal(20,5),c3:decimal(10,3),c4:decimal(19,3)>"));
+    WriterOptions options;
+    options.setUseTightNumericVector(true);
+    auto writer = createWriter(*fileType, &memStream, options);
+    auto batch = writer->createRowBatch(TEST_CASES);
+    auto structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    auto& c1 = dynamic_cast<Decimal64VectorBatch&>(*structBatch->fields[0]);
+    auto& c2 = dynamic_cast<Decimal64VectorBatch&>(*structBatch->fields[1]);
+    auto& c3 = dynamic_cast<Decimal128VectorBatch&>(*structBatch->fields[2]);
+    auto& c4 = dynamic_cast<Decimal128VectorBatch&>(*structBatch->fields[3]);
+
+    for (uint32_t i = 0; i < TEST_CASES / 2; i++) {
+      int64_t flag = i % 2 ? 1 : -1;
+      c1.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+      c2.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+      c3.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+      c4.values[i] = flag * (static_cast<int64_t>(i * 10000) + i);
+    }
+    for (uint32_t i = TEST_CASES / 2; i < TEST_CASES; i++) {
+      c1.values[i] = 100000000ll + i;
+      c2.values[i] = 100000000ll + i;
+      c3.values[i] = (Int128("100000000000") += i);
+      c4.values[i] = (Int128("100000000000000000000") += i);
+    }
+
+    structBatch->numElements = c1.numElements = c2.numElements = c3.numElements = c4.numElements =
+        TEST_CASES;
+    writer->add(*batch);
+    writer->close();
+
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    auto pool = getDefaultPool();
+    auto reader = createReader(*pool, std::move(inStream));
+    RowReaderOptions rowReaderOptions;
+    rowReaderOptions.setUseTightNumericVector(true);
+    rowReaderOptions.setReadType(readType);
+    auto rowReader = reader->createRowReader(rowReaderOptions);
+    auto readBatch = rowReader->createRowBatch(TEST_CASES);
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+
+    auto& readStructBatch = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& readC1 = dynamic_cast<Decimal64VectorBatch&>(*readStructBatch.fields[0]);
+    auto& readC2 = dynamic_cast<Decimal128VectorBatch&>(*readStructBatch.fields[1]);
+    auto& readC3 = dynamic_cast<Decimal64VectorBatch&>(*readStructBatch.fields[2]);
+    auto& readC4 = dynamic_cast<Decimal128VectorBatch&>(*readStructBatch.fields[3]);
+    EXPECT_EQ(TEST_CASES, readBatch->numElements);
+    for (int i = 0; i < TEST_CASES / 2; i++) {
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_TRUE(readC1.notNull[idx]) << i;
+      EXPECT_TRUE(readC2.notNull[idx]) << i;
+      EXPECT_TRUE(readC3.notNull[idx]) << i;
+      EXPECT_TRUE(readC4.notNull[idx]) << i;
+
+      int64_t flag = i % 2 ? 1 : -1;
+      EXPECT_EQ(readC1.values[idx], flag * (i * 100000 + i * 10));
+      EXPECT_EQ(readC2.values[idx].toLong(), flag * (i * 100000 + i * 10));
+      EXPECT_EQ(readC3.values[idx], flag * (i * 1000 + (i + 5) / 10));
+      EXPECT_EQ(readC4.values[idx].toLong(), flag * (i * 1000 + (i + 5) / 10));
+    }
+    for (int i = TEST_CASES / 2; i < TEST_CASES; i++) {
+      size_t idx = static_cast<size_t>(i);
+      EXPECT_FALSE(readC1.notNull[idx]) << i;
+      EXPECT_TRUE(readC2.notNull[idx]) << i;
+      EXPECT_FALSE(readC3.notNull[idx]) << i;
+      EXPECT_FALSE(readC4.notNull[idx]) << i;
+    }
+  }
+
 }  // namespace orc
