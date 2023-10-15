@@ -126,7 +126,8 @@ public class TestOrcStruct {
     recordWriter.write(NullWritable.get(), u4);
     recordWriter.close(null);
 
-    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(FileSystem.getLocal(conf)));
+    Reader reader =
+        OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(FileSystem.getLocal(conf)));
     Reader.Options options = reader.options().schema(unionWithMultipleStruct);
 
     OrcMapredRecordReader<OrcUnion> recordReader = new OrcMapredRecordReader<>(reader,options);

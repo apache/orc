@@ -498,7 +498,8 @@ public class TestReaderImpl {
       OrcTail tail = reader.extractFileTail(fs, path, Long.MAX_VALUE);
       ByteBuffer tailBuffer = tail.getSerializedTail();
 
-      OrcTail extractedTail = ReaderImpl.extractFileTail(tailBuffer, fileStatus.getLen(), fileStatus.getModificationTime());
+      OrcTail extractedTail =
+          ReaderImpl.extractFileTail(tailBuffer, fileStatus.getLen(), fileStatus.getModificationTime());
 
       assertEquals(tail.getFileLength(), extractedTail.getFileLength());
       assertEquals(tail.getFooter().getMetadataList(), extractedTail.getFooter().getMetadataList());

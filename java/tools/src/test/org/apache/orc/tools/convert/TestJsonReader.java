@@ -112,7 +112,8 @@ public class TestJsonReader {
 
     @Test
     public void testDateTimeTypeSupport() throws IOException {
-        String timestampFormat = "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[['.'][ ]][[SSSSSSSSS][SSSSSS][SSS]][[X][Z]['['VV']']]";
+        String timestampFormat =
+            "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[['.'][ ]][[SSSSSSSSS][SSSSSS][SSS]][[X][Z]['['VV']']]";
         LocalDateTime datetime1 = LocalDateTime.of(2021, 1, 18, 1, 2, 3, 4);
         LocalDateTime datetime2 = LocalDateTime.now();
         OffsetDateTime datetime3 = OffsetDateTime.of(datetime1, ZoneOffset.UTC);
@@ -123,12 +124,13 @@ public class TestJsonReader {
         String datetime4Str = datetime4.toString();
         datetime4Str = datetime4Str.substring(0, datetime4Str.length() - 5) + "0700";
 
-        String inputString = "{\"dt\": \"" + datetime1 + "\"}\n" +
-                             "{\"dt\": \"" + datetime2 + "\"}\n" +
-                             "{\"dt\": \"" + datetime3 + "\"}\n" +
-                             "{\"dt\": \"" + datetime4Str + "\"}\n" +
-                             "{\"dt\": \"" + datetime5.toLocalDateTime().toString() + "[" + datetime5.getZone() + "]\"}\n" +
-                             "{\"dt\": \"" + datetime6.toLocalDateTime().toString() + "[" + datetime6.getZone() + "]\"}\n";
+        String inputString =
+            "{\"dt\": \"" + datetime1 + "\"}\n" +
+            "{\"dt\": \"" + datetime2 + "\"}\n" +
+            "{\"dt\": \"" + datetime3 + "\"}\n" +
+            "{\"dt\": \"" + datetime4Str + "\"}\n" +
+            "{\"dt\": \"" + datetime5.toLocalDateTime().toString() + "[" + datetime5.getZone() + "]\"}\n" +
+            "{\"dt\": \"" + datetime6.toLocalDateTime().toString() + "[" + datetime6.getZone() + "]\"}\n";
 
         StringReader input = new StringReader(inputString);
 

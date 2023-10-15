@@ -196,7 +196,8 @@ public class TestColumnStatisticsImpl {
   @Test
   public void testCollectionColumnStats() {
     /* test List */
-    final ColumnStatisticsImpl statList = ColumnStatisticsImpl.create(TypeDescription.createList(TypeDescription.createInt()));
+    final ColumnStatisticsImpl statList =
+        ColumnStatisticsImpl.create(TypeDescription.createList(TypeDescription.createInt()));
 
     statList.increment();
     statList.updateCollectionLength(10);

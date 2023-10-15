@@ -112,9 +112,10 @@ public class TestConvertTreeReaderFactory {
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
   }
 
-  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(
-      TypeDescription schema, Class<TExpectedColumnVector> typeClass, boolean useDecimal64)
-      throws IOException, ParseException {
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector
+      createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(
+        TypeDescription schema, Class<TExpectedColumnVector> typeClass, boolean useDecimal64)
+        throws IOException, ParseException {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
@@ -431,7 +432,8 @@ public class TestConvertTreeReaderFactory {
     Class typeClass = DecimalColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
-    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
     try {
       testConvertToIntegerIncreasingSize();
       testConvertToDoubleIncreasingSize();

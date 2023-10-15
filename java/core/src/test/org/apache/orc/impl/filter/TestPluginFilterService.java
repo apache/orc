@@ -81,7 +81,8 @@ public class TestPluginFilterService {
     allowListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter =
+        (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, allowListHit);
 
     assertEquals(1, allowListFilter.size());
   }
@@ -94,7 +95,8 @@ public class TestPluginFilterService {
     allowListHit.add("*");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter =
+        (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, allowListHit);
 
     assertEquals(1, allowListFilter.size());
   }
@@ -104,8 +106,10 @@ public class TestPluginFilterService {
     conf.set("my.filter.name", "my_str_i_eq");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, new ArrayList<>());
-    List<BatchFilter> allowListFilterWithNull = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, null);
+    List<BatchFilter> allowListFilter =
+        (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, new ArrayList<>());
+    List<BatchFilter> allowListFilterWithNull =
+        (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, null);
 
     assertEquals(0, allowListFilter.size());
     assertEquals(0, allowListFilterWithNull.size());

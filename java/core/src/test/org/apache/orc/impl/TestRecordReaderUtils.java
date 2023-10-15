@@ -161,9 +161,15 @@ class TestRecordReaderUtils {
             .range(7000, 500).build();
     RecordReaderUtils.zeroCopyReadRanges(fis, zrc, rangeList.get(0), rangeList.get(2), false);
 
-    assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 5000 - blockStartPosition, 5000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(0).getData()));
-    assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 6000 - blockStartPosition, 6000 - blockStartPosition + 1000), byteBufferToArray(rangeList.get(1).getData()));
-    assertArrayEquals(Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 7000 - blockStartPosition, 7000 - blockStartPosition + 500), byteBufferToArray(rangeList.get(2).getData()));
+    assertArrayEquals(
+        Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 5000 - blockStartPosition, 5000 - blockStartPosition + 1000),
+                      byteBufferToArray(rangeList.get(0).getData()));
+    assertArrayEquals(
+        Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 6000 - blockStartPosition, 6000 - blockStartPosition + 1000),
+                      byteBufferToArray(rangeList.get(1).getData()));
+    assertArrayEquals(
+        Arrays.copyOfRange(hdfsBlockMMapBuffer.array(), 7000 - blockStartPosition, 7000 - blockStartPosition + 500),
+                      byteBufferToArray(rangeList.get(2).getData()));
 
     assertThrowsExactly(IllegalArgumentException.class, new Executable() {
       @Override

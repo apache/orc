@@ -256,10 +256,12 @@ public class TestOrcFilterContext {
   public void testACIDTable() {
     ColumnVector[] columnVector = filterContextACID.findColumnVector("string1");
     assertEquals(1, columnVector.length);
-    assertTrue(columnVector[0] instanceof BytesColumnVector, "Expected a  BytesColumnVector, but found "+ columnVector[0].getClass());
+    assertTrue(columnVector[0] instanceof BytesColumnVector,
+              "Expected a  BytesColumnVector, but found "+ columnVector[0].getClass());
     columnVector = filterContextACID.findColumnVector("int1");
     assertEquals(1, columnVector.length);
-    assertTrue(columnVector[0] instanceof LongColumnVector, "Expected a  LongColumnVector, but found "+ columnVector[0].getClass());
+    assertTrue(columnVector[0] instanceof LongColumnVector,
+                "Expected a  LongColumnVector, but found "+ columnVector[0].getClass());
   }
 
   @Test
@@ -302,7 +304,8 @@ public class TestOrcFilterContext {
     }
   }
 
-  private void populateColumnValues(TypeDescription typeDescription, ColumnVector[] columnVectors, int index, long value) {
+  private void populateColumnValues(TypeDescription typeDescription, ColumnVector[] columnVectors,
+                                    int index, long value) {
     for (int columnId = 0; columnId < typeDescription.getChildren().size() ; columnId++) {
       switch (typeDescription.getChildren().get(columnId).getCategory()) {
         case INT:
@@ -316,7 +319,8 @@ public class TestOrcFilterContext {
                   ("String-"+ index).getBytes(StandardCharsets.UTF_8));
           break;
         case STRUCT:
-          populateColumnValues(typeDescription.getChildren().get(columnId), ((StructColumnVector)columnVectors[columnId]).fields, index, value);
+          populateColumnValues(typeDescription.getChildren().get(columnId),
+              ((StructColumnVector)columnVectors[columnId]).fields, index, value);
           break;
         default:
           throw new IllegalArgumentException();
@@ -342,7 +346,9 @@ public class TestOrcFilterContext {
       assertTrue(vectorizedRowBatch.cols[5] instanceof StructColumnVector);
       assertTrue(((StructColumnVector) vectorizedRowBatch.cols[5]).fields[0] instanceof LongColumnVector);
       assertTrue(((StructColumnVector) vectorizedRowBatch.cols[5]).fields[1] instanceof BytesColumnVector);
-      assertEquals(id, ((LongColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[0]).vector[vectorizedRowBatch.selected[0]]);
+      assertEquals(id,
+          ((LongColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[0]).
+              vector[vectorizedRowBatch.selected[0]]);
       checkStringColumn(id, vectorizedRowBatch);
       assertFalse(recordReader.nextBatch(vectorizedRowBatch));
     }
@@ -350,7 +356,8 @@ public class TestOrcFilterContext {
   }
 
   private static void checkStringColumn(int id, VectorizedRowBatch vectorizedRowBatch) {
-    BytesColumnVector bytesColumnVector = (BytesColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[1];
+    BytesColumnVector bytesColumnVector =
+        (BytesColumnVector) ((StructColumnVector) vectorizedRowBatch.cols[5]).fields[1];
     assertEquals("String-"+ id, bytesColumnVector.toString(id));
   }
 }

@@ -20,9 +20,10 @@
 
 <suppressions>
   <!-- Ignore these rules in all test code always. -->
-  <suppress checks="LineLength" files="src/test/*"/>
   <suppress checks="NewlineAtEndOfFile" files="src/test/*"/>
 
+  <!-- TestFileDump exclusion is added till we find a way to have large json without breaking line limit -->
+  <suppress checks="LineLength" files="src/test/org/apache/orc/tools/TestFileDump.java" />
   <suppress checks="Indentation" files="src/test/org/apache/orc/TestOrcFilterContext.java"/>
   <suppress checks="Indentation" files="src/test/org/apache/orc/TestOrcTimezone1.java"/>
   <suppress checks="Indentation" files="src/test/org/apache/orc/TestOrcTimezonePPD.java"/>
@@ -42,6 +43,5 @@
   <suppress checks="Indentation" files="src/test/org/apache/orc/tools/convert/TestJsonReader.java"/>
   <suppress checks="Indentation" files="src/test/org/apache/orc/tools/json/TestJsonSchemaFinder.java"/>
 
-  <suppress checks="AvoidStarImport" files="src/test/*"/>
   <suppress checks="CustomImportOrder" files="src/test/*"/>
 </suppressions>

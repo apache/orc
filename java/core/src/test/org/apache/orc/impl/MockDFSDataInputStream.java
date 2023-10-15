@@ -30,7 +30,8 @@ import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.IdentityHashMap;
 
-public class MockDFSDataInputStream extends InputStream implements Seekable, PositionedReadable, HasEnhancedByteBufferAccess {
+public class MockDFSDataInputStream extends InputStream
+    implements Seekable, PositionedReadable, HasEnhancedByteBufferAccess {
 
   private ByteBuffer hdfsBlockBuffer;
   private int startPosition;
@@ -50,7 +51,8 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
   }
 
   @Override
-  public ByteBuffer read(ByteBufferPool byteBufferPool, int i, EnumSet<ReadOption> enumSet) throws IOException, UnsupportedOperationException {
+  public ByteBuffer read(ByteBufferPool byteBufferPool, int i, EnumSet<ReadOption> enumSet)
+      throws IOException, UnsupportedOperationException {
     ByteBuffer copy = hdfsBlockBuffer.duplicate();
     copy.limit(copy.position() + i);
     currentPosition += i;
