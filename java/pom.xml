@@ -67,10 +67,10 @@
     <junit.version>5.10.0</junit.version>
     <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.5.0</maven-shade-plugin.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
     <maven.version>3.9.4</maven.version>
+    <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
 
     <mockito.version>4.11.0</mockito.version>
     <!-- Build Properties -->
@@ -445,7 +445,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.1.2</version>
+          <version>${maven-dependency-plugin.version}</version>
           <configuration>
             <failOnWarning>true</failOnWarning>
             <ignoreNonCompile>true</ignoreNonCompile>
@@ -800,15 +800,6 @@
       <modules>
         <module>bench</module>
       </modules>
-    </profile>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-      <properties>
-        <checkstyle.version>9.3</checkstyle.version>
-      </properties>
     </profile>
   </profiles>
 </project>
