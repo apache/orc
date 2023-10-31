@@ -2121,7 +2121,7 @@ namespace orc {
 
     // [1-998000): notNull, value is equal to index
     // [998000-999000): null
-    // [999000-1000000]: notNoll, value equal index
+    // [999000-1000000]: notNoll, value is equal to index
     size_t rowCount = 1000000;
     size_t nullBeginCount = 998000;
     size_t nullEndCount = 999000;
