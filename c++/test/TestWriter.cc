@@ -2113,8 +2113,8 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  // first stripe has no null value adn second stripe has null value
-  // make sure no dirty data leave by present in first stripe
+  // first stripe has no null value and second stripe has null value.
+  // make sure stripes do not have dirty data in the present streams.
   TEST_P(WriterTest, testSuppressPresentStreamInPreStripe) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
