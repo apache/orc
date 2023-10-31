@@ -2147,7 +2147,7 @@ namespace orc {
         longBatch.numElements = batchSize;
         longBatch.hasNulls = false;
         for (uint64_t row = 0; row < batchSize; ++row) {
-          size_t rowIndex = rowsWrite + row + (size_t) 1;
+          size_t rowIndex = rowsWrite + row + 1;
           if (rowIndex < nullBeginCount || rowIndex >= nullEndCount) {
             longBatch.data[row] = static_cast<int64_t>(rowIndex);
           } else {
