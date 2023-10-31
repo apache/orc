@@ -2119,7 +2119,7 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
 
-    // [1-998000): notNll, value equal index
+    // [1-998000): notNull, value is equal to index
     // [998000-999000): null
     // [999000-1000000]: notNoll, value equal index
     size_t rowCount = 1000000;
