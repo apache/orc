@@ -87,7 +87,7 @@ namespace orc {
     uint64_t dataSize = dataBuffer->size();
     // flush data buffer into outputStream
     if (dataSize > 0) {
-      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, nullptr);
+      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       dataBuffer->writeTo(outputStream, metrics);
     }
     dataBuffer->resize(0);
