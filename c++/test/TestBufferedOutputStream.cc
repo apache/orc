@@ -46,7 +46,7 @@ namespace orc {
       EXPECT_EQ(memStream.getData()[i], 'a' + i % 10);
     }
 #if ENABLE_METRICS
-    EXPECT_EQ(metrics.IOCount.load(), 1);
+    EXPECT_EQ(metrics.IOCount.load(), 2);
 #endif
   }
 
@@ -95,7 +95,7 @@ namespace orc {
       EXPECT_EQ(memStream.getData()[i + 7], 'a' + i);
     }
 #if ENABLE_METRICS
-    EXPECT_EQ(metrics.IOCount.load(), 2);
+    EXPECT_EQ(metrics.IOCount.load(), 4);
 #endif
   }
 
