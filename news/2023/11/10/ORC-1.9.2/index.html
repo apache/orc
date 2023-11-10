@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.4.2 Released</title>
+  <title>ORC 1.9.2 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -293,8 +293,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.4.2 Released
-    <a href="/news/2018/01/23/ORC-1.4.2/" class="permalink" title="Permalink">∞</a>
+    ORC 1.9.2 Released
+    <a href="/news/2023/11/10/ORC-1.9.2/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -303,50 +303,63 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      23 Jan 2018
+      10 Nov 2023
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
            width="24" height="24">
-      omalley
+      dongjoon
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.4.2.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.9.2.</p>
 
 <ul>
-  <li>Released: 23 January 2018</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.4.2/orc-1.4.2.tar.gz">orc-1.4.2.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.4.2/orc-1.4.2.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.4.2">rel/release-1.4.2</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.4.2%22">ORC 1.4.2</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.4.2/orc-1.4.2.tar.gz.sha256">4c32e30a2b93953c…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.4.2%22&amp;tempMax=500">ORC-1.4.2</a></li>
+  <li>Released: 10 November 2023</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.2/orc-1.9.2.tar.gz">orc-1.9.2.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.2/orc-1.9.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.2">rel/release-1.9.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.2%22">ORC 1.9.2</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.2/orc-1.9.2.tar.gz.sha256">7f46f2c184ecefd6…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.2%22&amp;tempMax=500">ORC-1.9.2</a></li>
 </ul>
 
-<p>The new features of ORC 1.4:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-72">ORC-72</a> Add benchmark code for file formats.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-87">ORC-87</a> Fix timestamp statistics in C++.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-150">ORC-150</a> Add tool to convert from JSON.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-151">ORC-151</a> Reduce the size of tools.jar.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-174">ORC-174</a> Create a nohive variant of the jars.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1475">ORC-1475</a> [C++] Fix the failure of UT when char is unsigned</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1480">ORC-1480</a> [C++] Fix build break w/ BUILD_CPP_ENABLE_METRICS=ON</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1482">ORC-1482</a> Adaptation to read ORC files created by CUDF</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1489">ORC-1489</a> Assign a writer id to CUDF</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1525">ORC-1525</a> Fix bad read in RleDecoderV2::readByte</li>
 </ul>
 
-<p>Known issues:</p>
-
+<p>The test changes:</p>
 <ul>
-  <li>
-    <p><a href="/security/CVE-2018-8015">CVE-2018-8015</a> ORC files with malformed types cause stack overflow.</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-285">ORC-285</a> Empty vector batches of floats or doubles cause EOFException</p>
-  </li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1431">ORC-1431</a> Use parquet to 1.13.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1454">ORC-1454</a> Update Spark to 3.4.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1487">ORC-1487</a> Enable checkstyle on src/test with checkstyle-suppressions.xml</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1498">ORC-1498</a> Add Debian 12 Docker test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1502">ORC-1502</a> Upgrade Maven to 3.9.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1505">ORC-1505</a> Upgrade Spark to 3.5.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1511">ORC-1511</a> Bump Avro to 1.11.3 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1513">ORC-1513</a> Upgrade snappy-java to 1.1.10.4 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1517">ORC-1517</a> Bump snappy-java to 1.1.10.5 in bench module</li>
 </ul>
 
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1497">ORC-1497</a> Bump maven-enforcer-plugin to 3.4.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1499">ORC-1499</a> Add MacOS 13 and 14 to building.md</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1507">ORC-1507</a> Use Zulu JDK distribution and switch from 21-ea to 21</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1518">ORC-1518</a> Remove findbugs folders</li>
+</ul>
+
+<p>Documentation:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1503">ORC-1503</a> Updated README.md with Maven version 3.9.4</li>
+</ul>
 
   </div>
 </article>
@@ -366,7 +379,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2023/11/10/ORC-1.9.2/">Version 1.9.2</a>
       </li>
       
