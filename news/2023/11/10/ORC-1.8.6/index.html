@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.5.2 Released</title>
+  <title>ORC 1.8.6 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -291,8 +291,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.5.2 Released
-    <a href="/news/2018/06/29/ORC-1.5.2/" class="permalink" title="Permalink">∞</a>
+    ORC 1.8.6 Released
+    <a href="/news/2023/11/10/ORC-1.8.6/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -301,56 +301,43 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      29 Jun 2018
+      10 Nov 2023
     </span>
-    <a href="https://people.apache.org/~prasanthj" class="post-author">
-      <img src="https://people.apache.org/~prasanthj/prasanthj.png"
-           class="avatar" alt="prasanthj avatar"
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
            width="24" height="24">
-      prasanthj
+      dongjoon
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.5.2.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.8.6.</p>
 
 <ul>
-  <li>Released: 29 June 2018</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.5.2/orc-1.5.2.tar.gz">orc-1.5.2.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.5.2/orc-1.5.2.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Prasanth Jayachandran (65C468A3)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.2">rel/release-1.5.2</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.2%22">ORC 1.5.2</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.5.2/orc-1.5.2.tar.gz.sha256">4b73de720f54448d…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.2%22&amp;tempMax=500">ORC-1.5.2</a></li>
+  <li>Released: 10 November 2023</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.6/orc-1.8.6.tar.gz">orc-1.8.6.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.8.6/orc-1.8.6.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.6">rel/release-1.8.6</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.6%22">ORC 1.8.6</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.6/orc-1.8.6.tar.gz.sha256">5675b18118df4dd7…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.6%22&amp;tempMax=500">ORC-1.8.6</a></li>
 </ul>
 
-<p>The new features of ORC 1.5:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1525">ORC-1525</a> Fix bad read in RleDecoderV2::readByte</li>
 </ul>
 
-<p>Known issues:</p>
-
+<p>The test changes:</p>
 <ul>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-414">ORC-414</a> ORC files with malformed protobuf objects can crash C++ reader</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-562">ORC-562</a> Don’t wrap the readerSchema with ACID fields, if it already is</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-569">ORC-569</a> The first index entry may have empty positions</p>
-  </li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1432">ORC-1432</a> Add MacOS 13 GitHub Action Job</li>
 </ul>
 
+<p>Documentations:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1499">ORC-1499</a> Add MacOS 13 and 14 to building.md</li>
+</ul>
 
   </div>
 </article>
@@ -370,7 +357,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Prasanth Jayachandran 
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2023/11/10/ORC-1.8.6/">Version 1.8.6</a>
       </li>
       
