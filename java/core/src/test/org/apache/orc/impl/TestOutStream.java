@@ -35,6 +35,7 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -57,6 +58,56 @@ public class TestOutStream {
       Mockito.verify(receiver).output(Mockito.any(ByteBuffer.class));
       assertEquals(0L, stream.getBufferSize());
     }
+  }
+
+  /**
+   * Creates randomness into whether a compression should be committed or aborted (so that
+   * the isOriginal bits is set to true and data being flushed as uncompressed).
+   * This class should be used for testing purpose only.
+   */
+  private static class TestZlibCodec extends ZlibCodec {
+    private Random rand = new Random();
+
+    @Override
+    public boolean compress(ByteBuffer in, ByteBuffer out, ByteBuffer overflow, Options options) {
+      super.compress(in, out, overflow, options);
+      return rand.nextBoolean();
+    }
+  }
+
+  @Test
+  public void testCompressWithoutEncryption() throws Exception {
+    TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
+    CompressionCodec codec = new TestZlibCodec();
+    StreamOptions options = new StreamOptions(1024)
+        .withCodec(codec, codec.getDefaultOptions());
+
+    try (OutStream stream = new OutStream("test", options, receiver)) {
+      for (int i = 0; i < 20000; ++i) {
+        stream.write(("The Cheesy Poofs " + i + "\n")
+            .getBytes(StandardCharsets.UTF_8));
+      }
+      stream.flush();
+    }
+
+    byte[] compressed = receiver.buffer.get();
+
+    // use InStream to decompress it
+    BufferChunkList ranges = new BufferChunkList();
+    ranges.add(new BufferChunk(ByteBuffer.wrap(compressed), 0));
+    try (InStream decompressedStream = InStream.create("test", ranges.get(), 0,
+        compressed.length,
+        InStream.options().withCodec(new TestZlibCodec()).withBufferSize(1024));
+        BufferedReader reader
+            = new BufferedReader(new InputStreamReader(decompressedStream,
+            StandardCharsets.UTF_8))) {
+      // check the contents of the decompressed stream
+      for (int i = 0; i < 20000; ++i) {
+        assertEquals("The Cheesy Poofs " + i, reader.readLine(), "i = " + i);
+      }
+      assertNull(reader.readLine());
+    }
+
   }
 
   @Test
