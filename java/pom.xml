@@ -64,7 +64,7 @@
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.3.6</hadoop.version>
     <java.version>17</java.version>
-    <junit.version>5.10.0</junit.version>
+    <junit.version>5.10.1</junit.version>
     <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
     <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
