@@ -770,32 +770,32 @@ public class RecordReaderUtils {
     }
 
     static ChunkReader create(BufferChunk from, BufferChunk to) {
-      long start = Long.MAX_VALUE;
-      long end = Long.MIN_VALUE;
+      long f = Long.MAX_VALUE;
+      long e = Long.MIN_VALUE;
 
-      long currentStart = Long.MAX_VALUE;
-      long currentEnd = Long.MIN_VALUE;
+      long cf = Long.MAX_VALUE;
+      long ef = Long.MIN_VALUE;
       long reqBytes = 0L;
 
       BufferChunk current = from;
       while (current != to.next) {
-        start = Math.min(start, current.getOffset());
-        end = Math.max(end, current.getEnd());
-        if (currentEnd == Long.MIN_VALUE || current.getOffset() <= currentEnd) {
-          currentStart = Math.min(currentStart, current.getOffset());
-          currentEnd = Math.max(currentEnd, current.getEnd());
+        f = Math.min(f, current.getOffset());
+        e = Math.max(e, current.getEnd());
+        if (ef == Long.MIN_VALUE || current.getOffset() <= ef) {
+          cf = Math.min(cf, current.getOffset());
+          ef = Math.max(ef, current.getEnd());
         } else {
-          reqBytes += currentEnd - currentStart;
-          currentStart = current.getOffset();
-          currentEnd = current.getEnd();
+          reqBytes += ef - cf;
+          cf = current.getOffset();
+          ef = current.getEnd();
         }
         current = (BufferChunk) current.next;
       }
-      reqBytes += currentEnd - currentStart;
+      reqBytes += ef - cf;
       if (reqBytes >= Integer.MAX_VALUE) {
         throw new IllegalArgumentException("invalid reqBytes value " + reqBytes + ",out of bounds " + Integer.MAX_VALUE);
       }
-      long readBytes = end - start;
+      long readBytes = e - f;
       if (readBytes >= Integer.MAX_VALUE) {
         throw new IllegalArgumentException("invalid readBytes value " + readBytes + ",out of bounds " + Integer.MAX_VALUE);
       }
