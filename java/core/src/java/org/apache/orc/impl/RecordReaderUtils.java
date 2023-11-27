@@ -792,12 +792,12 @@ public class RecordReaderUtils {
         current = (BufferChunk) current.next;
       }
       reqBytes += ef - cf;
-      if (reqBytes >= Integer.MAX_VALUE) {
-        throw new IllegalArgumentException("invalid reqBytes value " + reqBytes + ",out of bounds " + Integer.MAX_VALUE);
+      if (reqBytes >= IOUtils.MAX_ARRAY_SIZE) {
+        throw new IllegalArgumentException("invalid reqBytes value " + reqBytes + ",out of bounds " + IOUtils.MAX_ARRAY_SIZE);
       }
       long readBytes = e - f;
-      if (readBytes >= Integer.MAX_VALUE) {
-        throw new IllegalArgumentException("invalid readBytes value " + readBytes + ",out of bounds " + Integer.MAX_VALUE);
+      if (readBytes >= IOUtils.MAX_ARRAY_SIZE) {
+        throw new IllegalArgumentException("invalid readBytes value " + readBytes + ",out of bounds " + IOUtils.MAX_ARRAY_SIZE);
       }
       return new ChunkReader(from, to, (int) readBytes, (int) reqBytes);
     }
