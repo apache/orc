@@ -179,7 +179,7 @@ class TestRecordReaderUtils {
   }
 
   @Test
-  public void testBufferChunkOffsetExceedsMaxInt() {
+  public void testChunkReaderCreateOffsetExceedsMaxInt() {
     List<long[]> mockData = Arrays.asList(
       new long[]{15032282586L, 15032298848L},
       new long[]{15032298848L, 15032299844L},
@@ -208,7 +208,7 @@ class TestRecordReaderUtils {
   }
 
   @Test
-  public void testBufferChunkCreateReqBytesReadBytesValidation() {
+  public void testChunkReaderCreateReqBytesAndReadBytesValidation() {
     BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
       .range(0, IOUtils.MAX_ARRAY_SIZE)
       .range(1L + IOUtils.MAX_ARRAY_SIZE, IOUtils.MAX_ARRAY_SIZE + 1)
