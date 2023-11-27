@@ -181,28 +181,27 @@ class TestRecordReaderUtils {
   @Test
   public void testBufferChunkOffsetExceedsMaxInt() {
     List<long[]> mockData = Arrays.asList(
-            new long[]{15032282586L, 15032298848L}
-            , new long[]{15032298848L, 15032299844L}
-            , new long[]{15032299844L, 15032377804L}
-            , new long[]{15058260587L, 15058261632L}
-            , new long[]{15058261632L, 15058288409L}
-            , new long[]{15058288409L, 15058288862L}
-            , new long[]{15058339730L, 15058340775L}
-            , new long[]{15058340775L, 15058342439L}
-            , new long[]{15058449794L, 15058449982L}
-            , new long[]{15058449982L, 15058451700L}
-            , new long[]{15058451700L, 15058451749L}
-            , new long[]{15058484358L, 15058484422L}
-            , new long[]{15058484422L, 15058484862L}
-            , new long[]{15058484862L, 15058484878L}
+        new long[]{15032282586L, 15032298848L},
+        new long[]{15032298848L, 15032299844L},
+        new long[]{15032299844L, 15032377804L},
+        new long[]{15058260587L, 15058261632L},
+        new long[]{15058261632L, 15058288409L},
+        new long[]{15058288409L, 15058288862L},
+        new long[]{15058339730L, 15058340775L},
+        new long[]{15058340775L, 15058342439L},
+        new long[]{15058449794L, 15058449982L},
+        new long[]{15058449982L, 15058451700L},
+        new long[]{15058451700L, 15058451749L},
+        new long[]{15058484358L, 15058484422L},
+        new long[]{15058484422L, 15058484862L},
+        new long[]{15058484862L, 15058484878L}
     );
     TestOrcLargeStripe.RangeBuilder rangeBuilder = new TestOrcLargeStripe.RangeBuilder();
     mockData.forEach(e -> rangeBuilder.range(e[0], (int) (e[1] - e[0])));
     BufferChunkList rangeList = rangeBuilder.build();
 
     RecordReaderUtils.ChunkReader chunkReader =
-            RecordReaderUtils.ChunkReader.create(rangeList.get(),
-                    134217728);
+        RecordReaderUtils.ChunkReader.create(rangeList.get(), 134217728);
     long readBytes = mockData.get(mockData.size() - 1)[1] - mockData.get(0)[0];
     long reqBytes = mockData.stream().mapToLong(e -> (int) (e[1] - e[0])).sum();
     assertEquals(chunkReader.getReadBytes(), readBytes);
