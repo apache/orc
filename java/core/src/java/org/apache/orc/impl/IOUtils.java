@@ -31,6 +31,11 @@ public final class IOUtils {
   public static final int DEFAULT_BUFFER_SIZE = 8192;
 
   /**
+   * The maximum size of array to allocate, value being the same as {@link java.util.Hashtable}
+   */
+  public static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+  /**
    * Returns a new byte array of size {@link #DEFAULT_BUFFER_SIZE}.
    *
    * @return a new byte array of size {@link #DEFAULT_BUFFER_SIZE}.
