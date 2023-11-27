@@ -181,31 +181,59 @@ class TestRecordReaderUtils {
   @Test
   public void testBufferChunkOffsetExceedsMaxInt() {
     List<long[]> mockData = Arrays.asList(
-        new long[]{15032282586L, 15032298848L},
-        new long[]{15032298848L, 15032299844L},
-        new long[]{15032299844L, 15032377804L},
-        new long[]{15058260587L, 15058261632L},
-        new long[]{15058261632L, 15058288409L},
-        new long[]{15058288409L, 15058288862L},
-        new long[]{15058339730L, 15058340775L},
-        new long[]{15058340775L, 15058342439L},
-        new long[]{15058449794L, 15058449982L},
-        new long[]{15058449982L, 15058451700L},
-        new long[]{15058451700L, 15058451749L},
-        new long[]{15058484358L, 15058484422L},
-        new long[]{15058484422L, 15058484862L},
-        new long[]{15058484862L, 15058484878L}
+      new long[]{15032282586L, 15032298848L},
+      new long[]{15032298848L, 15032299844L},
+      new long[]{15032299844L, 15032377804L},
+      new long[]{15058260587L, 15058261632L},
+      new long[]{15058261632L, 15058288409L},
+      new long[]{15058288409L, 15058288862L},
+      new long[]{15058339730L, 15058340775L},
+      new long[]{15058340775L, 15058342439L},
+      new long[]{15058449794L, 15058449982L},
+      new long[]{15058449982L, 15058451700L},
+      new long[]{15058451700L, 15058451749L},
+      new long[]{15058484358L, 15058484422L},
+      new long[]{15058484422L, 15058484862L},
+      new long[]{15058484862L, 15058484878L}
     );
     TestOrcLargeStripe.RangeBuilder rangeBuilder = new TestOrcLargeStripe.RangeBuilder();
     mockData.forEach(e -> rangeBuilder.range(e[0], (int) (e[1] - e[0])));
     BufferChunkList rangeList = rangeBuilder.build();
 
-    RecordReaderUtils.ChunkReader chunkReader =
-        RecordReaderUtils.ChunkReader.create(rangeList.get(), 134217728);
+    RecordReaderUtils.ChunkReader chunkReader = RecordReaderUtils.ChunkReader.create(rangeList.get(), 134217728);
     long readBytes = mockData.get(mockData.size() - 1)[1] - mockData.get(0)[0];
     long reqBytes = mockData.stream().mapToLong(e -> (int) (e[1] - e[0])).sum();
     assertEquals(chunkReader.getReadBytes(), readBytes);
     assertEquals(chunkReader.getReqBytes(), reqBytes);
+  }
+
+  @Test
+  public void testBufferChunkCreateReqBytesReadBytesValidation() {
+    BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
+      .range(0, IOUtils.MAX_ARRAY_SIZE)
+      .range(1L + IOUtils.MAX_ARRAY_SIZE, IOUtils.MAX_ARRAY_SIZE + 1)
+      .range(2L * IOUtils.MAX_ARRAY_SIZE, IOUtils.MAX_ARRAY_SIZE - 4)
+      .range(3L * IOUtils.MAX_ARRAY_SIZE, 2)
+      .build();
+
+    // reqBytes,readBytes boundary value
+    RecordReaderUtils.ChunkReader chunkReader = RecordReaderUtils.ChunkReader.create(rangeList.get(0), 0);
+    assertEquals(chunkReader.getReadBytes(), IOUtils.MAX_ARRAY_SIZE);
+    assertEquals(chunkReader.getReqBytes(), IOUtils.MAX_ARRAY_SIZE);
+
+    // reqBytes > IOUtils.MAX_ARRAY_SIZE validation
+    assertThrowsExactly(IllegalArgumentException.class,
+      () -> RecordReaderUtils.ChunkReader.create(rangeList.get(1), 0),
+      () -> String.format("invalid reqBytes value %d,out of bounds %d",
+                          rangeList.get(1).getLength(), IOUtils.MAX_ARRAY_SIZE)
+    );
+
+    // readBytes > IOUtils.MAX_ARRAY_SIZE validation
+    assertThrowsExactly(IllegalArgumentException.class,
+      () -> RecordReaderUtils.ChunkReader.create(rangeList.get(2), 100),
+      () -> String.format("invalid readBytes value %d,out of bounds %d",
+                          rangeList.get(3).getEnd() - rangeList.get(2).getOffset(), IOUtils.MAX_ARRAY_SIZE)
+    );
   }
 
   private static byte[] byteBufferToArray(ByteBuffer buf) {
