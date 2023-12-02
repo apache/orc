@@ -64,6 +64,7 @@
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.3.6</hadoop.version>
     <java.version>17</java.version>
+    <javadoc.location>${project.basedir}/../target/javadoc</javadoc.location>
     <junit.version>5.10.1</junit.version>
     <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
@@ -658,18 +659,18 @@
           <offlineLinks>
             <offlineLink>
               <url>https://orc.apache.org/api/hive-storage-api</url>
-              <location>${project.basedir}/../../site/api/hive-storage-api</location>
+              <location>${javadoc.location}/api/hive-storage-api</location>
             </offlineLink>
             <offlineLink>
               <url>https://orc.apache.org/api/orc-core</url>
-              <location>${project.basedir}/../../site/api/orc-core</location>
+              <location>${javadoc.location}/api/orc-core</location>
             </offlineLink>
             <offlineLink>
               <url>https://orc.apache.org/api/orc-mapreduce</url>
-              <location>${project.basedir}/../../site/api/orc-mapreduce</location>
+              <location>${javadoc.location}/api/orc-mapreduce</location>
             </offlineLink>
           </offlineLinks>
-          <reportOutputDirectory>${project.basedir}/../../site/api</reportOutputDirectory>
+          <reportOutputDirectory>${javadoc.location}/api</reportOutputDirectory>
           <notimestamp>true</notimestamp>
         </configuration>
       </plugin>
