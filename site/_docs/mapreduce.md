@@ -49,8 +49,8 @@ the key and a value based on the table below expanded recursively.
 | bigint | org.apache.hadoop.io.LongWritable |
 | boolean | org.apache.hadoop.io.BooleanWritable |
 | char | org.apache.hadoop.io.Text |
-| date | [org.apache.hadoop.hive.serde2.io.DateWritable](/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/DateWritable.html) |
-| decimal | [org.apache.hadoop.hive.serde2.io.HiveDecimalWritable](/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html) |
+| date | [org.apache.hadoop.hive.serde2.io.DateWritable](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/serde2/io/DateWritable.html) |
+| decimal | [org.apache.hadoop.hive.serde2.io.HiveDecimalWritable](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html) |
 | double | org.apache.hadoop.io.DoubleWritable |
 | float | org.apache.hadoop.io.FloatWritable |
 | int | org.apache.hadoop.io.IntWritable |
