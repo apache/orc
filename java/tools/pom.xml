@@ -29,6 +29,10 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.orc</groupId>
+      <artifactId>orc-format</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.orc</groupId>
       <artifactId>orc-shims</artifactId>
     </dependency>
     <dependency>

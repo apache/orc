@@ -77,8 +77,8 @@
     <!-- Build Properties -->
     <project.build.outputTimestamp>2023-05-15T16:29:49Z</project.build.outputTimestamp>
     <protobuf.version>3.25.1</protobuf.version>
-    <protoc.version>3.17.3</protoc.version>
     <slf4j.version>2.0.9</slf4j.version>
+    <orc-format.version>1.0.0-SNAPSHOT</orc-format.version>
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
@@ -87,6 +87,11 @@
   <dependencyManagement>
     <dependencies>
       <!-- intra-project dependencies -->
+      <dependency>
+        <groupId>org.apache.orc</groupId>
+        <artifactId>orc-format</artifactId>
+        <version>${orc-format.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-shims</artifactId>
@@ -476,30 +481,6 @@
                 <sources>
                   <source>${project.build.directory}/generated-sources</source>
                 </sources>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>com.github.os72</groupId>
-          <artifactId>protoc-jar-maven-plugin</artifactId>
-          <version>3.11.4</version>
-          <executions>
-            <execution>
-              <goals>
-                <goal>run</goal>
-              </goals>
-              <phase>generate-sources</phase>
-              <configuration>
-                <protocVersion>${protoc.version}</protocVersion>
-                <protocArtifact>com.google.protobuf:protoc:${protoc.version}</protocArtifact>
-                <addSources>none</addSources>
-                <includeDirectories>
-                  <include>../../proto</include>
-                </includeDirectories>
-                <inputDirectories>
-                  <include>../../proto</include>
-                </inputDirectories>
               </configuration>
             </execution>
           </executions>
