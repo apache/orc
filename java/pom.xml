@@ -842,16 +842,11 @@
         <configuration>
           <links>
             <link>https://hadoop.apache.org/docs/r${hadoop.version}/api</link>
-            <link>https://orc.apache.org/api/hive-storage-api</link>
             <link>https://orc.apache.org/api/orc-core</link>
             <link>https://orc.apache.org/api/orc-mapreduce</link>
             <link>https://orc.apache.org/api/orc-tools</link>
           </links>
           <offlineLinks>
-            <offlineLink>
-              <url>https://orc.apache.org/api/hive-storage-api</url>
-              <location>${project.basedir}/../../site/api/hive-storage-api</location>
-            </offlineLink>
             <offlineLink>
               <url>https://orc.apache.org/api/orc-core</url>
               <location>${project.basedir}/../../site/api/orc-core</location>

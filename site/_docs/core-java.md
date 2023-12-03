@@ -11,10 +11,10 @@ read and write the data.
 ## Vectorized Row Batch
 
 Data is passed to ORC as instances of
-[VectorizedRowBatch](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html)
+[VectorizedRowBatch](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html)
 that contain the data for 1024 rows. The focus is on speed and
 accessing the data fields directly. `cols` is an array of
-[ColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html)
+[ColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html)
 and `size` is the number of rows.
 
 ~~~ java
@@ -27,7 +27,7 @@ public class VectorizedRowBatch {
 }
 ~~~
 
-[ColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html)
+[ColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html)
 is the parent type of the different kinds of columns and has some
 fields that are shared across all of the column types. In particular,
 the `noNulls` flag if there are no nulls in this column for this batch
@@ -58,26 +58,26 @@ The subtypes of ColumnVector are:
 
 | ORC Type | ColumnVector |
 | -------- | ------------- |
-| array | [ListColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html) |
-| binary | [BytesColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
-| bigint | [LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
-| boolean | [LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
-| char | [BytesColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
-| date | [LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
-| decimal | [DecimalColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html) |
-| double | [DoubleColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html) |
-| float | [DoubleColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html) |
-| int | [LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
-| map | [MapColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html) |
-| smallint | [LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
-| string | [BytesColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
-| struct | [StructColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html) |
-| timestamp | [TimestampColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html) |
-| tinyint | [LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
-| uniontype | [UnionColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html) |
-| varchar | [BytesColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| array | [ListColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html) |
+| binary | [BytesColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| bigint | [LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| boolean | [LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| char | [BytesColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| date | [LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| decimal | [DecimalColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html) |
+| double | [DoubleColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html) |
+| float | [DoubleColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html) |
+| int | [LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| map | [MapColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html) |
+| smallint | [LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| string | [BytesColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| struct | [StructColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html) |
+| timestamp | [TimestampColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html) |
+| tinyint | [LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| uniontype | [UnionColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html) |
+| varchar | [BytesColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
 
-[LongColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) handles all of the integer types (boolean, bigint,
+[LongColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) handles all of the integer types (boolean, bigint,
 date, int, smallint, and tinyint). The data is represented as an array of
 longs where each value is sign-extended as necessary.
 
@@ -88,7 +88,7 @@ public class LongColumnVector extends ColumnVector {
 }
 ~~~
 
-[TimestampColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html)
+[TimestampColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html)
 handles timestamp values. The data is represented as an array of longs
 and an array of ints.
 
@@ -104,7 +104,7 @@ public class TimestampColumnVector extends ColumnVector {
 }
 ~~~
 
-[DoubleColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html)
+[DoubleColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html)
 handles all of the floating point types (double, and float). The data
 is represented as an array of doubles.
 
@@ -115,7 +115,7 @@ public class DoubleColumnVector extends ColumnVector {
 }
 ~~~
 
-[DecimalColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html)
+[DecimalColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html)
 handles decimal columns. The data is represented as an array of
 HiveDecimalWritable. Note that this implementation is not performant
 and will likely be replaced.
@@ -127,7 +127,7 @@ public class DecimalColumnVector extends ColumnVector {
 }
 ~~~
 
-[BytesColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html)
+[BytesColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html)
 handles all of the binary types (binary, char, string, and
 varchar). The data is represented as a byte array, offset, and
 length. The byte arrays may or may not be shared between values.
@@ -141,7 +141,7 @@ public class BytesColumnVector extends ColumnVector {
 }
 ~~~
 
-[StructColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html)
+[StructColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html)
 handles the struct columns and represents the data as an array of
 `ColumnVector`. The value for row 5 consists of the fifth value from
 each of the `fields` values.
@@ -153,7 +153,7 @@ public class StructColumnVector extends ColumnVector {
 }
 ~~~
 
-[UnionColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html)
+[UnionColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html)
 handles the union columns and represents the data as an array of
 integers that pick the subtype and a `fields` array one per a
 subtype. Only the value of the `fields` that corresponds to
@@ -167,7 +167,7 @@ public class UnionColumnVector extends ColumnVector {
 }
 ~~~
 
-[ListColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html)
+[ListColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html)
 handles the array columns and represents the data as two arrays of
 integers for the offset and lengths and a `ColumnVector` for the
 children values.
@@ -187,7 +187,7 @@ public class ListColumnVector extends ColumnVector {
 }
 ~~~
 
-[MapColumnVector](/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html)
+[MapColumnVector](https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html)
 handles the map columns and represents the data as two arrays of
 integers for the offset and lengths and two `ColumnVector`s for the
 keys and values.
