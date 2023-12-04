@@ -923,10 +923,10 @@ read and write the data.</p>
 <h2 id="vectorized-row-batch">Vectorized Row Batch</h2>
 
 <p>Data is passed to ORC as instances of
-<a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html">VectorizedRowBatch</a>
+<a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html">VectorizedRowBatch</a>
 that contain the data for 1024 rows. The focus is on speed and
 accessing the data fields directly. <code class="highlighter-rouge">cols</code> is an array of
-<a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
+<a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
 and <code class="highlighter-rouge">size</code> is the number of rows.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">org.apache.hadoop.hive.ql.exec.vector</span><span class="o">;</span>
@@ -938,7 +938,7 @@ and <code class="highlighter-rouge">size</code> is the number of rows.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
 is the parent type of the different kinds of columns and has some
 fields that are shared across all of the column types. In particular,
 the <code class="highlighter-rouge">noNulls</code> flag if there are no nulls in this column for this batch
@@ -976,80 +976,80 @@ true if that value is null.</p>
   <tbody>
     <tr>
       <td>array</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a></td>
     </tr>
     <tr>
       <td>binary</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>bigint</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>boolean</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>char</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>date</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>decimal</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a></td>
     </tr>
     <tr>
       <td>double</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
     </tr>
     <tr>
       <td>float</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
     </tr>
     <tr>
       <td>int</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>map</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a></td>
     </tr>
     <tr>
       <td>smallint</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>string</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>struct</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a></td>
     </tr>
     <tr>
       <td>timestamp</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a></td>
     </tr>
     <tr>
       <td>tinyint</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>uniontype</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a></td>
     </tr>
     <tr>
       <td>varchar</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
   </tbody>
 </table>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a> handles all of the integer types (boolean, bigint,
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a> handles all of the integer types (boolean, bigint,
 date, int, smallint, and tinyint). The data is represented as an array of
 longs where each value is sign-extended as necessary.</p>
 
@@ -1059,7 +1059,7 @@ longs where each value is sign-extended as necessary.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a>
 handles timestamp values. The data is represented as an array of longs
 and an array of ints.</p>
 
@@ -1074,7 +1074,7 @@ and an array of ints.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a>
 handles all of the floating point types (double, and float). The data
 is represented as an array of doubles.</p>
 
@@ -1084,7 +1084,7 @@ is represented as an array of doubles.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a>
 handles decimal columns. The data is represented as an array of
 HiveDecimalWritable. Note that this implementation is not performant
 and will likely be replaced.</p>
@@ -1095,7 +1095,7 @@ and will likely be replaced.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a>
 handles all of the binary types (binary, char, string, and
 varchar). The data is represented as a byte array, offset, and
 length. The byte arrays may or may not be shared between values.</p>
@@ -1108,7 +1108,7 @@ length. The byte arrays may or may not be shared between values.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a>
 handles the struct columns and represents the data as an array of
 <code class="highlighter-rouge">ColumnVector</code>. The value for row 5 consists of the fifth value from
 each of the <code class="highlighter-rouge">fields</code> values.</p>
@@ -1119,7 +1119,7 @@ each of the <code class="highlighter-rouge">fields</code> values.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a>
 handles the union columns and represents the data as an array of
 integers that pick the subtype and a <code class="highlighter-rouge">fields</code> array one per a
 subtype. Only the value of the <code class="highlighter-rouge">fields</code> that corresponds to
@@ -1132,7 +1132,7 @@ subtype. Only the value of the <code class="highlighter-rouge">fields</code> tha
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a>
 handles the array columns and represents the data as two arrays of
 integers for the offset and lengths and a <code class="highlighter-rouge">ColumnVector</code> for the
 children values.</p>
@@ -1151,7 +1151,7 @@ children values.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a>
+<p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a>
 handles the map columns and represents the data as two arrays of
 integers for the offset and lengths and two <code class="highlighter-rouge">ColumnVector</code>s for the
 keys and values.</p>
