@@ -11,7 +11,7 @@ The C++ library is supported on the following operating systems:
 
 * CentOS 7
 * Debian 10 to 11
-* MacOS 11.6 and 12.5
+* MacOS 12
 * Ubuntu 18.04 to 22.04
 
 You'll want to install the usual set of developer tools, but at least:
