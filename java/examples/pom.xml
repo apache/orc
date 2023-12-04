@@ -24,9 +24,6 @@
   <artifactId>orc-examples</artifactId>
   <packaging>jar</packaging>
   <name>ORC Examples</name>
-  <description>
-
-  </description>
 
   <dependencies>
     <!-- intra-project -->

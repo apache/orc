@@ -24,9 +24,6 @@
   <artifactId>orc-tools</artifactId>
   <packaging>jar</packaging>
   <name>ORC Tools</name>
-  <description>
-
-  </description>
 
   <dependencies>
     <!-- intra-project -->

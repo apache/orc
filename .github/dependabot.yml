@@ -47,6 +47,3 @@ updates:
       # Pin byte-buddy to 1.12.x aline with mockito
       - dependency-name: "net.bytebuddy"
         versions: "[1.13.0,)"
-      # Pin spotless to 2.30.0 due to Java 8 support
-      - dependency-name: "com.diffplug.spotless:spotless-maven-plugin"
-        versions: "[2.31.0,)"
