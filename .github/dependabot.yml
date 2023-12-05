@@ -29,9 +29,6 @@ updates:
       # Pin scala-library to 2.12.15
       - dependency-name: "org.scala-lang:scala-library"
         versions: "[2.12.16,)"
-      # Pin protobuf-java to 3.22.3
-      - dependency-name: "com.google.protobuf:protobuf-java"
-        versions: "[3.22.4,)"
       # Pin jodd-core to 3.5.2
       - dependency-name: "org.jodd:jodd-core"
         versions: "[3.5.3,)"
