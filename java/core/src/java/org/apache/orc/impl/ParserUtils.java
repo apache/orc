@@ -450,8 +450,7 @@ public class ParserUtils {
         return ((StructColumnVector) parent).fields[posn];
       } else if (parent instanceof UnionColumnVector) {
         return ((UnionColumnVector) parent).fields[posn];
-      } else if (parent instanceof MapColumnVector) {
-        MapColumnVector m = (MapColumnVector) parent;
+      } else if (parent instanceof MapColumnVector m) {
         return posn == 0 ? m.keys : m.values;
       }
       throw new IllegalArgumentException("Unknown complex column vector " + parent.getClass());

@@ -118,8 +118,7 @@ public class HadoopShimsCurrent implements HadoopShims {
 
   @Override
   public boolean endVariableLengthBlock(OutputStream output) throws IOException {
-    if (output instanceof HdfsDataOutputStream) {
-      HdfsDataOutputStream hdfs = (HdfsDataOutputStream) output;
+    if (output instanceof HdfsDataOutputStream hdfs) {
       hdfs.hsync(EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
       return true;
     }

@@ -696,8 +696,7 @@ public class RecordReaderImpl implements RecordReader {
           predicate.getColumnName(), writerVersion);
       return TruthValue.YES_NO_NULL;
     } else if ((category == TypeDescription.Category.DOUBLE ||
-        category == TypeDescription.Category.FLOAT) && cs instanceof DoubleColumnStatistics) {
-      DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
+        category == TypeDescription.Category.FLOAT) && cs instanceof DoubleColumnStatistics dstas) {
       if (Double.isNaN(dstas.getSum())) {
         LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
                 predicate.getColumnName());
@@ -1048,8 +1047,7 @@ public class RecordReaderImpl implements RecordReader {
         }
         break;
       case STRING:
-        if (obj instanceof ChronoLocalDate) {
-          ChronoLocalDate date = (ChronoLocalDate) obj;
+        if (obj instanceof ChronoLocalDate date) {
           return date.format(DateTimeFormatter.ISO_LOCAL_DATE
               .withChronology(date.getChronology()));
         }

@@ -411,13 +411,12 @@ public class TypeDescription
    *         argument; {@code false} otherwise.
    */
   public boolean equals(Object other, boolean checkAttributes) {
-    if (other == null || !(other instanceof TypeDescription)) {
+    if (other == null || !(other instanceof TypeDescription castOther)) {
       return false;
     }
     if (other == this) {
       return true;
     }
-    TypeDescription castOther = (TypeDescription) other;
     if (category != castOther.category ||
         maxLength != castOther.maxLength ||
         scale != castOther.scale ||
