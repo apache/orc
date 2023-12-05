@@ -523,8 +523,7 @@ public final class HybridDate
     if (this == obj) {
       return true;
     }
-    if (obj instanceof HybridDate) {
-      HybridDate otherDate = (HybridDate) obj;
+    if (obj instanceof HybridDate otherDate) {
       return this.isoDate.equals(otherDate.isoDate);
     }
     return false;

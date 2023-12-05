@@ -179,8 +179,7 @@ public final class FileDump {
     final boolean sideFileExists = fs.exists(sideFile);
     boolean openDataFile = false;
     boolean openSideFile = false;
-    if (fs instanceof DistributedFileSystem) {
-      DistributedFileSystem dfs = (DistributedFileSystem) fs;
+    if (fs instanceof DistributedFileSystem dfs) {
       openDataFile = !dfs.isFileClosed(path);
       openSideFile = sideFileExists && !dfs.isFileClosed(sideFile);
     }

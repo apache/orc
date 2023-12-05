@@ -49,8 +49,7 @@ public class StreamName implements Comparable<StreamName> {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof  StreamName) {
-      StreamName other = (StreamName) obj;
+    if (obj instanceof StreamName other) {
       return other.column == column && other.kind == kind &&
                  encryption == other.encryption;
     } else {

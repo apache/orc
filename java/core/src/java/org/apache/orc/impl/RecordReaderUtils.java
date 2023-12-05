@@ -583,8 +583,7 @@ public class RecordReaderUtils {
 
       @Override
       public boolean equals(Object rhs) {
-        if (rhs instanceof Key) {
-          Key o = (Key) rhs;
+        if (rhs instanceof Key o) {
           return 0 == compareTo(o);
         }
         return false;

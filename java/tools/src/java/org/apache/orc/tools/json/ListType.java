@@ -63,8 +63,7 @@ class ListType extends HiveType {
 
   @Override
   public void merge(HiveType other) {
-    if (other instanceof ListType) {
-      ListType otherList = (ListType) other;
+    if (other instanceof ListType otherList) {
       if (elementType.subsumes(otherList.elementType)) {
         elementType.merge(otherList.elementType);
       } else if (otherList.elementType.subsumes(elementType)) {
