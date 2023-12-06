@@ -146,9 +146,9 @@ include_directories (
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
    COMMAND ${PROTOBUF_EXECUTABLE}
-        -I ${PROJECT_SOURCE_DIR}/proto
+        -I ../../orc-format_ep-prefix/src/orc-format_ep/src/main/proto
         --cpp_out="${CMAKE_CURRENT_BINARY_DIR}"
-        "${PROJECT_SOURCE_DIR}/proto/orc_proto.proto"
+        ../../orc-format_ep-prefix/src/orc-format_ep/src/main/proto/orc_proto.proto
 )
 
 set(SOURCE_FILES
