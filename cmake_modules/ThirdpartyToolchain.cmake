@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set(ORC_FORMAT_VERSION "1.0.0-alpha")
 set(LZ4_VERSION "1.9.3")
 set(SNAPPY_VERSION "1.1.7")
 set(ZLIB_VERSION "1.2.11")
@@ -67,6 +68,17 @@ endif ()
 if (DEFINED ENV{GTEST_HOME})
   set (GTEST_HOME "$ENV{GTEST_HOME}")
 endif ()
+
+# ----------------------------------------------------------------------
+# ORC Format
+ExternalProject_Add (orc-format_ep
+  URL "https://github.com/apache/orc-format/archive/refs/tags/v${ORC_FORMAT_VERSION}.tar.gz"
+  URL_HASH SHA256=d04e878feec01dd9a3ce20553c0bfc70e856a319fe8693725a699bb077d0d286
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND     ""
+  INSTALL_COMMAND     ""
+  TEST_COMMAND     ""
+)
 
 # ----------------------------------------------------------------------
 # Snappy
