@@ -40,6 +40,9 @@ jobs:
           - os: ubuntu-22.04
             java: 17
             cxx: g++
+          - os: ubuntu-22.04
+            java: 17
+            cxx: g++-13
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
