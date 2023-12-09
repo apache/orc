@@ -18,9 +18,9 @@ lists, maps, and unions.
 This project includes both a Java library and a C++ library for reading and writing the _Optimized Row Columnar_ (ORC) file format. The C++ and Java libraries are completely independent of each other and will each read all versions of ORC files.
 
 Releases:
-* Latest: <a href="http://orc.apache.org/releases">Apache ORC releases</a>
-* Maven Central: <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)</a>
-* Downloads: <a href="http://orc.apache.org/downloads">Apache ORC downloads</a>
+* Latest: <a href="https://orc.apache.org/releases">Apache ORC releases</a>
+* Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)</a>
+* Downloads: <a href="https://orc.apache.org/downloads">Apache ORC downloads</a>
 * Release tags: <a href="https://github.com/apache/orc/releases">Apache ORC release tags</a>
 * Plan: <a href="https://github.com/apache/orc/milestones">Apache ORC future release plan</a>
 
@@ -28,7 +28,7 @@ The current build status:
 * Main branch <a href="https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain">
 ![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)</a>
 
-Bug tracking: <a href="http://orc.apache.org/bugs">Apache Jira</a>
+Bug tracking: <a href="https://orc.apache.org/bugs">Apache Jira</a>
 
 
 The subdirectories are:
