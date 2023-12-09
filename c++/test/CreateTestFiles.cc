@@ -42,14 +42,14 @@ void writeCustomOrcFile(const std::string& filename, const orc::proto::Metadata&
     exit(1);
   }
   orc::proto::PostScript ps;
-  ps.set_footerlength(static_cast<uint64_t>(footer.ByteSizeLong()));
+  ps.set_footer_length(static_cast<uint64_t>(footer.ByteSizeLong()));
   ps.set_compression(orc::proto::NONE);
-  ps.set_compressionblocksize(64 * 1024);
+  ps.set_compression_block_size(64 * 1024);
   for (size_t i = 0; i < version.size(); ++i) {
     ps.add_version(version[i]);
   }
-  ps.set_metadatalength(static_cast<uint64_t>(metadata.ByteSizeLong()));
-  ps.set_writerversion(writerVersion);
+  ps.set_metadata_length(static_cast<uint64_t>(metadata.ByteSizeLong()));
+  ps.set_writer_version(writerVersion);
   ps.set_magic("ORC");
   if (!ps.SerializeToOstream(&output)) {
     std::cerr << "Failed to write postscript for " << filename << "\n";
@@ -64,15 +64,15 @@ void writeCustomOrcFile(const std::string& filename, const orc::proto::Metadata&
 void writeVersion1999() {
   orc::proto::Metadata meta;
   orc::proto::Footer footer;
-  footer.set_headerlength(3);
-  footer.set_contentlength(3);
+  footer.set_header_length(3);
+  footer.set_content_length(3);
   orc::proto::Type* type = footer.add_types();
   type->set_kind(orc::proto::Type_Kind_STRUCT);
-  footer.set_numberofrows(0);
-  footer.set_rowindexstride(10000);
+  footer.set_number_of_rows(0);
+  footer.set_row_index_stride(10000);
   orc::proto::ColumnStatistics* stats = footer.add_statistics();
-  stats->set_numberofvalues(0);
-  stats->set_hasnull(false);
+  stats->set_number_of_values(0);
+  stats->set_has_null(false);
   std::vector<std::uint32_t> version;
   version.push_back(19);
   version.push_back(99);

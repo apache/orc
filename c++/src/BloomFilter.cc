@@ -175,7 +175,7 @@ namespace orc {
   // caller should make sure input proto::BloomFilter is valid since
   // no check will be performed in the following constructor
   BloomFilterImpl::BloomFilterImpl(const proto::BloomFilter& bloomFilter) {
-    mNumHashFunctions = static_cast<int32_t>(bloomFilter.numhashfunctions());
+    mNumHashFunctions = static_cast<int32_t>(bloomFilter.num_hash_functions());
 
     const std::string& bitsetStr = bloomFilter.utf8bitset();
     mNumBits = bitsetStr.size() << SHIFT_3_BITS;
@@ -263,7 +263,7 @@ namespace orc {
   }
 
   void BloomFilterImpl::serialize(proto::BloomFilter& bloomFilter) const {
-    bloomFilter.set_numhashfunctions(static_cast<uint32_t>(mNumHashFunctions));
+    bloomFilter.set_num_hash_functions(static_cast<uint32_t>(mNumHashFunctions));
 
     // According to ORC standard, the encoding is a sequence of bytes with
     // a little endian encoding in the utf8bitset field.
@@ -304,12 +304,12 @@ namespace orc {
     }
 
     // make sure we don't use unknown encodings or original timestamp encodings
-    if (!encoding.has_bloomencoding() || encoding.bloomencoding() != 1) {
+    if (!encoding.has_bloom_encoding() || encoding.bloom_encoding() != 1) {
       return nullptr;
     }
 
     // make sure all required fields exist
-    if (!bloomFilter.has_numhashfunctions() || !bloomFilter.has_utf8bitset()) {
+    if (!bloomFilter.has_num_hash_functions() || !bloomFilter.has_utf8bitset()) {
       return nullptr;
     }
 

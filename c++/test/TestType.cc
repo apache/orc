@@ -393,14 +393,14 @@ namespace orc {
     illStructType.set_kind(proto::Type_Kind_STRUCT);
     structType.set_kind(proto::Type_Kind_STRUCT);
     structType.add_subtypes(0);  // construct a loop back to root
-    structType.add_fieldnames("root");
+    structType.add_field_names("root");
     illStructType.add_subtypes(1);
-    illStructType.add_fieldnames("f1");
+    illStructType.add_field_names("f1");
     illStructType.add_subtypes(2);
     *(footer.add_types()) = illStructType;
     *(footer.add_types()) = structType;
     testCorruptHelper(illStructType, footer,
-                      "Illegal STRUCT type that contains less fieldnames than subtypes");
+                      "Illegal STRUCT type that contains less field_names than subtypes");
   }
 
   void expectParseError(const proto::Footer& footer, const char* errMsg) {
@@ -421,33 +421,33 @@ namespace orc {
 
     rootType.set_kind(proto::Type_Kind_STRUCT);
     rootType.add_subtypes(1);  // add a non existent type id
-    rootType.add_fieldnames("f1");
+    rootType.add_field_names("f1");
     *(footer.add_types()) = rootType;
     expectParseError(footer, "Footer is corrupt: types(1) not exists");
 
     footer.clear_types();
     rootType.clear_subtypes();
-    rootType.clear_fieldnames();
+    rootType.clear_field_names();
     proto::Type structType;
     structType.set_kind(proto::Type_Kind_STRUCT);
     structType.add_subtypes(0);  // construct a loop back to root
-    structType.add_fieldnames("root");
+    structType.add_field_names("root");
     rootType.add_subtypes(1);
-    rootType.add_fieldnames("f1");
+    rootType.add_field_names("f1");
     *(footer.add_types()) = rootType;
     *(footer.add_types()) = structType;
     expectParseError(footer, "Footer is corrupt: malformed link from type 1 to 0");
 
     footer.clear_types();
     rootType.clear_subtypes();
-    rootType.clear_fieldnames();
+    rootType.clear_field_names();
     proto::Type listType;
     listType.set_kind(proto::Type_Kind_LIST);
     proto::Type mapType;
     mapType.set_kind(proto::Type_Kind_MAP);
     proto::Type unionType;
     unionType.set_kind(proto::Type_Kind_UNION);
-    rootType.add_fieldnames("f1");
+    rootType.add_field_names("f1");
     rootType.add_subtypes(1);           // 0 -> 1
     listType.add_subtypes(2);           // 1 -> 2
     mapType.add_subtypes(3);            // 2 -> 3
@@ -460,15 +460,15 @@ namespace orc {
 
     footer.clear_types();
     rootType.clear_subtypes();
-    rootType.clear_fieldnames();
+    rootType.clear_field_names();
     proto::Type intType;
     intType.set_kind(proto::Type_Kind_INT);
     proto::Type strType;
     strType.set_kind(proto::Type_Kind_STRING);
     rootType.add_subtypes(2);
-    rootType.add_fieldnames("f2");
+    rootType.add_field_names("f2");
     rootType.add_subtypes(1);
-    rootType.add_fieldnames("f1");
+    rootType.add_field_names("f1");
     *(footer.add_types()) = rootType;
     *(footer.add_types()) = intType;
     *(footer.add_types()) = strType;
@@ -476,7 +476,7 @@ namespace orc {
 
     footer.clear_types();
     rootType.clear_subtypes();
-    rootType.clear_fieldnames();
+    rootType.clear_field_names();
     rootType.set_kind(proto::Type_Kind_STRUCT);
     rootType.add_subtypes(1);
     *(footer.add_types()) = rootType;
@@ -485,7 +485,7 @@ namespace orc {
                      "Footer is corrupt: STRUCT type 0 has 1 subTypes, but has 0 fieldNames");
     // Should pass the check after adding the field name
     footer.clear_types();
-    rootType.add_fieldnames("f1");
+    rootType.add_field_names("f1");
     *(footer.add_types()) = rootType;
     *(footer.add_types()) = intType;
     checkProtoTypes(footer);

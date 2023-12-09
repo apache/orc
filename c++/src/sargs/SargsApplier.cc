@@ -155,11 +155,11 @@ namespace orc {
 
   bool SargsApplier::evaluateStripeStatistics(const proto::StripeStatistics& stripeStats,
                                               uint64_t stripeRowGroupCount) {
-    if (stripeStats.colstats_size() == 0) {
+    if (stripeStats.col_stats_size() == 0) {
       return true;
     }
 
-    bool ret = evaluateColumnStatistics(stripeStats.colstats());
+    bool ret = evaluateColumnStatistics(stripeStats.col_stats());
     if (!ret) {
       // reset mNextSkippedRows when the current stripe does not satisfy the PPD
       mNextSkippedRows.clear();

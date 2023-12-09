@@ -198,12 +198,12 @@ namespace orc {
     uint64_t getDictionarySize(uint64_t colId) const override {
       ensureStripeFooterLoaded();
       return static_cast<ColumnEncodingKind>(
-          stripeFooter->columns(static_cast<int>(colId)).dictionarysize());
+          stripeFooter->columns(static_cast<int>(colId)).dictionary_size());
     }
 
     const std::string& getWriterTimezone() const override {
       ensureStripeFooterLoaded();
-      return stripeFooter->writertimezone();
+      return stripeFooter->writer_timezone();
     }
   };
 

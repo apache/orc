@@ -74,20 +74,20 @@ namespace orc {
   static proto::ColumnStatistics createBooleanStats(uint64_t n, uint64_t trueCount,
                                                     bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(n);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(n);
 
-    proto::BucketStatistics* boolStats = colStats.mutable_bucketstatistics();
+    proto::BucketStatistics* boolStats = colStats.mutable_bucket_statistics();
     boolStats->add_count(trueCount);
     return colStats;
   }
 
   static proto::ColumnStatistics createIntStats(int64_t min, int64_t max, bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::IntegerStatistics* intStats = colStats.mutable_intstatistics();
+    proto::IntegerStatistics* intStats = colStats.mutable_int_statistics();
     intStats->set_minimum(min);
     intStats->set_maximum(max);
     return colStats;
@@ -95,10 +95,10 @@ namespace orc {
 
   static proto::ColumnStatistics createDoubleStats(double min, double max, bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::DoubleStatistics* doubleStats = colStats.mutable_doublestatistics();
+    proto::DoubleStatistics* doubleStats = colStats.mutable_double_statistics();
     const auto& curr_sum = min + max;
     doubleStats->set_minimum(min);
     doubleStats->set_maximum(max);
@@ -109,10 +109,10 @@ namespace orc {
   static proto::ColumnStatistics createDecimalStats(Decimal min, Decimal max,
                                                     bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::DecimalStatistics* decimalStats = colStats.mutable_decimalstatistics();
+    proto::DecimalStatistics* decimalStats = colStats.mutable_decimal_statistics();
     decimalStats->set_minimum(min.toString(true));
     decimalStats->set_maximum(max.toString(true));
     return colStats;
@@ -120,10 +120,10 @@ namespace orc {
 
   static proto::ColumnStatistics createDateStats(int32_t min, int32_t max, bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::DateStatistics* dateStats = colStats.mutable_datestatistics();
+    proto::DateStatistics* dateStats = colStats.mutable_date_statistics();
     dateStats->set_minimum(min);
     dateStats->set_maximum(max);
     return colStats;
@@ -132,12 +132,12 @@ namespace orc {
   static proto::ColumnStatistics createTimestampStats(int64_t min, int64_t max,
                                                       bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::TimestampStatistics* tsStats = colStats.mutable_timestampstatistics();
-    tsStats->set_minimumutc(min);
-    tsStats->set_maximumutc(max);
+    proto::TimestampStatistics* tsStats = colStats.mutable_timestamp_statistics();
+    tsStats->set_minimum_utc(min);
+    tsStats->set_maximum_utc(max);
     return colStats;
   }
 
@@ -145,24 +145,24 @@ namespace orc {
                                                       int64_t maxSecond, int32_t maxNano,
                                                       bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::TimestampStatistics* tsStats = colStats.mutable_timestampstatistics();
-    tsStats->set_minimumutc(minSecond * 1000 + minNano / 1000000);
-    tsStats->set_maximumutc(maxSecond * 1000 + maxNano / 1000000);
-    tsStats->set_minimumnanos((minNano % 1000000) + 1);
-    tsStats->set_maximumnanos((maxNano % 1000000) + 1);
+    proto::TimestampStatistics* tsStats = colStats.mutable_timestamp_statistics();
+    tsStats->set_minimum_utc(minSecond * 1000 + minNano / 1000000);
+    tsStats->set_maximum_utc(maxSecond * 1000 + maxNano / 1000000);
+    tsStats->set_minimum_nanos((minNano % 1000000) + 1);
+    tsStats->set_maximum_nanos((maxNano % 1000000) + 1);
     return colStats;
   }
 
   static proto::ColumnStatistics createStringStats(std::string min, std::string max,
                                                    bool hasNull = false) {
     proto::ColumnStatistics colStats;
-    colStats.set_hasnull(hasNull);
-    colStats.set_numberofvalues(10);
+    colStats.set_has_null(hasNull);
+    colStats.set_number_of_values(10);
 
-    proto::StringStatistics* strStats = colStats.mutable_stringstatistics();
+    proto::StringStatistics* strStats = colStats.mutable_string_statistics();
     strStats->set_minimum(min);
     strStats->set_maximum(max);
     return colStats;

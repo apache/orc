@@ -26,23 +26,23 @@ namespace orc {
 
   ColumnStatistics* convertColumnStatistics(const proto::ColumnStatistics& s,
                                             const StatContext& statContext) {
-    if (s.has_intstatistics()) {
+    if (s.has_int_statistics()) {
       return new IntegerColumnStatisticsImpl(s);
-    } else if (s.has_doublestatistics()) {
+    } else if (s.has_double_statistics()) {
       return new DoubleColumnStatisticsImpl(s);
-    } else if (s.has_collectionstatistics()) {
+    } else if (s.has_collection_statistics()) {
       return new CollectionColumnStatisticsImpl(s);
-    } else if (s.has_stringstatistics()) {
+    } else if (s.has_string_statistics()) {
       return new StringColumnStatisticsImpl(s, statContext);
-    } else if (s.has_bucketstatistics()) {
+    } else if (s.has_bucket_statistics()) {
       return new BooleanColumnStatisticsImpl(s, statContext);
-    } else if (s.has_decimalstatistics()) {
+    } else if (s.has_decimal_statistics()) {
       return new DecimalColumnStatisticsImpl(s, statContext);
-    } else if (s.has_timestampstatistics()) {
+    } else if (s.has_timestamp_statistics()) {
       return new TimestampColumnStatisticsImpl(s, statContext);
-    } else if (s.has_datestatistics()) {
+    } else if (s.has_date_statistics()) {
       return new DateColumnStatisticsImpl(s, statContext);
-    } else if (s.has_binarystatistics()) {
+    } else if (s.has_binary_statistics()) {
       return new BinaryColumnStatisticsImpl(s, statContext);
     } else {
       return new ColumnStatisticsImpl(s);
@@ -51,8 +51,8 @@ namespace orc {
 
   StatisticsImpl::StatisticsImpl(const proto::StripeStatistics& stripeStats,
                                  const StatContext& statContext) {
-    for (int i = 0; i < stripeStats.colstats_size(); i++) {
-      colStats.push_back(convertColumnStatistics(stripeStats.colstats(i), statContext));
+    for (int i = 0; i < stripeStats.col_stats_size(); i++) {
+      colStats.push_back(convertColumnStatistics(stripeStats.col_stats(i), statContext));
     }
   }
 
@@ -180,27 +180,27 @@ namespace orc {
   }
 
   ColumnStatisticsImpl::ColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
   }
 
   BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                          const StatContext& statContext) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (pb.has_binarystatistics() && statContext.correctStats) {
-      _stats.setHasTotalLength(pb.binarystatistics().has_sum());
-      _stats.setTotalLength(static_cast<uint64_t>(pb.binarystatistics().sum()));
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (pb.has_binary_statistics() && statContext.correctStats) {
+      _stats.setHasTotalLength(pb.binary_statistics().has_sum());
+      _stats.setTotalLength(static_cast<uint64_t>(pb.binary_statistics().sum()));
     }
   }
 
   BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                            const StatContext& statContext) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (pb.has_bucketstatistics() && statContext.correctStats) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (pb.has_bucket_statistics() && statContext.correctStats) {
       _hasCount = true;
-      _trueCount = pb.bucketstatistics().count(0);
+      _trueCount = pb.bucket_statistics().count(0);
     } else {
       _hasCount = false;
       _trueCount = 0;
@@ -209,27 +209,27 @@ namespace orc {
 
   DateColumnStatisticsImpl::DateColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                      const StatContext& statContext) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (!pb.has_datestatistics() || !statContext.correctStats) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (!pb.has_date_statistics() || !statContext.correctStats) {
       // hasMinimum_ is false by default;
       // hasMaximum_ is false by default;
       _stats.setMinimum(0);
       _stats.setMaximum(0);
     } else {
-      _stats.setHasMinimum(pb.datestatistics().has_minimum());
-      _stats.setHasMaximum(pb.datestatistics().has_maximum());
-      _stats.setMinimum(pb.datestatistics().minimum());
-      _stats.setMaximum(pb.datestatistics().maximum());
+      _stats.setHasMinimum(pb.date_statistics().has_minimum());
+      _stats.setHasMaximum(pb.date_statistics().has_maximum());
+      _stats.setMinimum(pb.date_statistics().minimum());
+      _stats.setMaximum(pb.date_statistics().maximum());
     }
   }
 
   DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                            const StatContext& statContext) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (pb.has_decimalstatistics() && statContext.correctStats) {
-      const proto::DecimalStatistics& stats = pb.decimalstatistics();
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (pb.has_decimal_statistics() && statContext.correctStats) {
+      const proto::DecimalStatistics& stats = pb.decimal_statistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
       _stats.setHasSum(stats.has_sum());
@@ -241,14 +241,14 @@ namespace orc {
   }
 
   DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (!pb.has_doublestatistics()) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (!pb.has_double_statistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
       _stats.setSum(0);
     } else {
-      const proto::DoubleStatistics& stats = pb.doublestatistics();
+      const proto::DoubleStatistics& stats = pb.double_statistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
       _stats.setHasSum(stats.has_sum());
@@ -260,14 +260,14 @@ namespace orc {
   }
 
   IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (!pb.has_intstatistics()) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (!pb.has_int_statistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
       _stats.setSum(0);
     } else {
-      const proto::IntegerStatistics& stats = pb.intstatistics();
+      const proto::IntegerStatistics& stats = pb.int_statistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
       _stats.setHasSum(stats.has_sum());
@@ -280,12 +280,12 @@ namespace orc {
 
   StringColumnStatisticsImpl::StringColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                          const StatContext& statContext) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (!pb.has_stringstatistics() || !statContext.correctStats) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (!pb.has_string_statistics() || !statContext.correctStats) {
       _stats.setTotalLength(0);
     } else {
-      const proto::StringStatistics& stats = pb.stringstatistics();
+      const proto::StringStatistics& stats = pb.string_statistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
       _stats.setHasTotalLength(stats.has_sum());
@@ -298,9 +298,9 @@ namespace orc {
 
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                                const StatContext& statContext) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (!pb.has_timestampstatistics() || !statContext.correctStats) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (!pb.has_timestamp_statistics() || !statContext.correctStats) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
       _lowerBound = 0;
@@ -308,21 +308,21 @@ namespace orc {
       _minimumNanos = DEFAULT_MIN_NANOS;
       _maximumNanos = DEFAULT_MAX_NANOS;
     } else {
-      const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      _stats.setHasMinimum(stats.has_minimumutc() ||
+      const proto::TimestampStatistics& stats = pb.timestamp_statistics();
+      _stats.setHasMinimum(stats.has_minimum_utc() ||
                            (stats.has_minimum() && (statContext.writerTimezone != nullptr)));
-      _stats.setHasMaximum(stats.has_maximumutc() ||
+      _stats.setHasMaximum(stats.has_maximum_utc() ||
                            (stats.has_maximum() && (statContext.writerTimezone != nullptr)));
-      _hasLowerBound = stats.has_minimumutc() || stats.has_minimum();
-      _hasUpperBound = stats.has_maximumutc() || stats.has_maximum();
-      // to be consistent with java side, non-default minimumnanos and maximumnanos
+      _hasLowerBound = stats.has_minimum_utc() || stats.has_minimum();
+      _hasUpperBound = stats.has_maximum_utc() || stats.has_maximum();
+      // to be consistent with java side, non-default minimum_nanos and maximum_nanos
       // are added by one in their serialized form.
-      _minimumNanos = stats.has_minimumnanos() ? stats.minimumnanos() - 1 : DEFAULT_MIN_NANOS;
-      _maximumNanos = stats.has_maximumnanos() ? stats.maximumnanos() - 1 : DEFAULT_MAX_NANOS;
+      _minimumNanos = stats.has_minimum_nanos() ? stats.minimum_nanos() - 1 : DEFAULT_MIN_NANOS;
+      _maximumNanos = stats.has_maximum_nanos() ? stats.maximum_nanos() - 1 : DEFAULT_MAX_NANOS;
 
       // Timestamp stats are stored in milliseconds
-      if (stats.has_minimumutc()) {
-        int64_t minimum = stats.minimumutc();
+      if (stats.has_minimum_utc()) {
+        int64_t minimum = stats.minimum_utc();
         _stats.setMinimum(minimum);
         _lowerBound = minimum;
       } else if (statContext.writerTimezone) {
@@ -340,8 +340,8 @@ namespace orc {
       }
 
       // Timestamp stats are stored in milliseconds
-      if (stats.has_maximumutc()) {
-        int64_t maximum = stats.maximumutc();
+      if (stats.has_maximum_utc()) {
+        int64_t maximum = stats.maximum_utc();
         _stats.setMaximum(maximum);
         _upperBound = maximum;
       } else if (statContext.writerTimezone) {
@@ -364,21 +364,21 @@ namespace orc {
 
   CollectionColumnStatisticsImpl::CollectionColumnStatisticsImpl(
       const proto::ColumnStatistics& pb) {
-    _stats.setNumberOfValues(pb.numberofvalues());
-    _stats.setHasNull(pb.hasnull());
-    if (!pb.has_collectionstatistics()) {
+    _stats.setNumberOfValues(pb.number_of_values());
+    _stats.setHasNull(pb.has_null());
+    if (!pb.has_collection_statistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
       _stats.setSum(0);
     } else {
-      const proto::CollectionStatistics& stats = pb.collectionstatistics();
-      _stats.setHasMinimum(stats.has_minchildren());
-      _stats.setHasMaximum(stats.has_maxchildren());
-      _stats.setHasSum(stats.has_totalchildren());
+      const proto::CollectionStatistics& stats = pb.collection_statistics();
+      _stats.setHasMinimum(stats.has_min_children());
+      _stats.setHasMaximum(stats.has_max_children());
+      _stats.setHasSum(stats.has_total_children());
 
-      _stats.setMinimum(stats.minchildren());
-      _stats.setMaximum(stats.maxchildren());
-      _stats.setSum(stats.totalchildren());
+      _stats.setMinimum(stats.min_children());
+      _stats.setMaximum(stats.max_children());
+      _stats.setSum(stats.total_children());
     }
   }
 

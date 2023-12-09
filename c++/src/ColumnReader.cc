@@ -567,7 +567,7 @@ namespace orc {
                                                              StripeStreams& stripe)
       : ColumnReader(type, stripe), dictionary(new StringDictionary(stripe.getMemoryPool())) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId).kind());
-    uint32_t dictSize = stripe.getEncoding(columnId).dictionarysize();
+    uint32_t dictSize = stripe.getEncoding(columnId).dictionary_size();
     std::unique_ptr<SeekableInputStream> stream =
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (stream == nullptr) {

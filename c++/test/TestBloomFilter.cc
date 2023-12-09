@@ -242,7 +242,7 @@ namespace orc {
 
     proto::BloomFilter pbBloomFilter;
     proto::ColumnEncoding encoding;
-    encoding.set_bloomencoding(1);
+    encoding.set_bloom_encoding(1);
 
     // serialize
     BloomFilterUTF8Utils::serialize(srcBloomFilter, pbBloomFilter);

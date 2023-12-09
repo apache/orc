@@ -440,7 +440,7 @@ namespace orc {
 
       case proto::Type_Kind_CHAR:
       case proto::Type_Kind_VARCHAR:
-        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()), type.maximumlength());
+        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()), type.maximum_length());
         break;
 
       case proto::Type_Kind_DECIMAL:
@@ -465,11 +465,11 @@ namespace orc {
 
       case proto::Type_Kind_STRUCT: {
         ret = std::make_unique<TypeImpl>(STRUCT);
-        if (type.subtypes_size() > type.fieldnames_size())
-          throw ParseError("Illegal STRUCT type that contains less fieldnames than subtypes");
+        if (type.subtypes_size() > type.field_names_size())
+          throw ParseError("Illegal STRUCT type that contains less field_names than subtypes");
         for (int i = 0; i < type.subtypes_size(); ++i) {
           ret->addStructField(
-              type.fieldnames(i),
+              type.field_names(i),
               convertType(footer.types(static_cast<int>(type.subtypes(i))), footer));
         }
         break;
