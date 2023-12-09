@@ -4157,9 +4157,9 @@ public class TestVectorOrcFile {
       String m = e.getMessage();
       assertTrue(m.contains("version1999.orc was written by a future ORC version 19.99."));
       assertTrue(m.contains("This file is not readable by this version of ORC."));
-      assertTrue(m.contains("Postscript: footerLength: 19 compression: NONE " +
-          "compressionBlockSize: 65536 version: 19 version: 99 metadataLength: 0 " +
-          "writerVersion: 1"));
+      assertTrue(m.contains("Postscript: footer_length: 19 compression: NONE " +
+          "compression_block_size: 65536 version: 19 version: 99 metadata_length: 0 " +
+          "writer_version: 1"));
     }
   }
 

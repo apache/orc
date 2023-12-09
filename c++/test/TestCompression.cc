@@ -195,10 +195,10 @@ namespace orc {
     uint64_t block = 256;
 
     proto::PostScript ps;
-    ps.set_footerlength(197934);
+    ps.set_footer_length(197934);
     ps.set_compression(protoKind);
-    ps.set_metadatalength(100);
-    ps.set_writerversion(789);
+    ps.set_metadata_length(100);
+    ps.set_writer_version(789);
     ps.set_magic("protobuff_serialization");
     for (uint32_t i = 0; i < 1024; ++i) {
       ps.add_version(static_cast<uint32_t>(std::rand()));
@@ -219,10 +219,10 @@ namespace orc {
     proto::PostScript ps2;
     ps2.ParseFromZeroCopyStream(decompressStream.get());
 
-    EXPECT_EQ(ps.footerlength(), ps2.footerlength());
+    EXPECT_EQ(ps.footer_length(), ps2.footer_length());
     EXPECT_EQ(ps.compression(), ps2.compression());
-    EXPECT_EQ(ps.metadatalength(), ps2.metadatalength());
-    EXPECT_EQ(ps.writerversion(), ps2.writerversion());
+    EXPECT_EQ(ps.metadata_length(), ps2.metadata_length());
+    EXPECT_EQ(ps.writer_version(), ps2.writer_version());
     EXPECT_EQ(ps.magic(), ps2.magic());
     for (int i = 0; i < 1024; ++i) {
       EXPECT_EQ(ps.version(i), ps2.version(i));

@@ -449,10 +449,10 @@ namespace orc {
 
     proto::ColumnStatistics pbStats;
     tsStats->toProtoBuf(pbStats);
-    EXPECT_EQ(100, pbStats.timestampstatistics().minimumutc());
-    EXPECT_EQ(200, pbStats.timestampstatistics().maximumutc());
-    EXPECT_FALSE(pbStats.timestampstatistics().has_minimumnanos());
-    EXPECT_FALSE(pbStats.timestampstatistics().has_maximumnanos());
+    EXPECT_EQ(100, pbStats.timestamp_statistics().minimum_utc());
+    EXPECT_EQ(200, pbStats.timestamp_statistics().maximum_utc());
+    EXPECT_FALSE(pbStats.timestamp_statistics().has_minimum_nanos());
+    EXPECT_FALSE(pbStats.timestamp_statistics().has_maximum_nanos());
 
     StatContext ctx(true, nullptr);
     auto tsStatsFromPb = std::make_unique<TimestampColumnStatisticsImpl>(pbStats, ctx);
@@ -465,12 +465,12 @@ namespace orc {
     tsStats->update(500, 9999);
     pbStats.Clear();
     tsStats->toProtoBuf(pbStats);
-    EXPECT_EQ(50, pbStats.timestampstatistics().minimumutc());
-    EXPECT_EQ(500, pbStats.timestampstatistics().maximumutc());
-    EXPECT_TRUE(pbStats.timestampstatistics().has_minimumnanos());
-    EXPECT_TRUE(pbStats.timestampstatistics().has_maximumnanos());
-    EXPECT_EQ(5555 + 1, pbStats.timestampstatistics().minimumnanos());
-    EXPECT_EQ(9999 + 1, pbStats.timestampstatistics().maximumnanos());
+    EXPECT_EQ(50, pbStats.timestamp_statistics().minimum_utc());
+    EXPECT_EQ(500, pbStats.timestamp_statistics().maximum_utc());
+    EXPECT_TRUE(pbStats.timestamp_statistics().has_minimum_nanos());
+    EXPECT_TRUE(pbStats.timestamp_statistics().has_maximum_nanos());
+    EXPECT_EQ(5555 + 1, pbStats.timestamp_statistics().minimum_nanos());
+    EXPECT_EQ(9999 + 1, pbStats.timestamp_statistics().maximum_nanos());
 
     tsStatsFromPb.reset(new TimestampColumnStatisticsImpl(pbStats, ctx));
     EXPECT_EQ(50, tsStatsFromPb->getMinimum());

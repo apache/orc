@@ -278,8 +278,8 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
     }
 
     std::string toString() const override {
@@ -355,10 +355,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::BinaryStatistics* binStats = pbStats.mutable_binarystatistics();
+      proto::BinaryStatistics* binStats = pbStats.mutable_binary_statistics();
       binStats->set_sum(static_cast<int64_t>(_stats.getTotalLength()));
     }
 
@@ -457,10 +457,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::BucketStatistics* bucketStats = pbStats.mutable_bucketstatistics();
+      proto::BucketStatistics* bucketStats = pbStats.mutable_bucket_statistics();
       if (_hasCount) {
         bucketStats->add_count(_trueCount);
       } else {
@@ -563,10 +563,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::DateStatistics* dateStatistics = pbStats.mutable_datestatistics();
+      proto::DateStatistics* dateStatistics = pbStats.mutable_date_statistics();
       if (_stats.hasMinimum()) {
         dateStatistics->set_maximum(_stats.getMaximum());
         dateStatistics->set_minimum(_stats.getMinimum());
@@ -706,10 +706,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::DecimalStatistics* decStats = pbStats.mutable_decimalstatistics();
+      proto::DecimalStatistics* decStats = pbStats.mutable_decimal_statistics();
       if (_stats.hasMinimum()) {
         decStats->set_minimum(_stats.getMinimum().toString(true));
         decStats->set_maximum(_stats.getMaximum().toString(true));
@@ -883,10 +883,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::DoubleStatistics* doubleStats = pbStats.mutable_doublestatistics();
+      proto::DoubleStatistics* doubleStats = pbStats.mutable_double_statistics();
       if (_stats.hasMinimum()) {
         doubleStats->set_minimum(_stats.getMinimum());
         doubleStats->set_maximum(_stats.getMaximum());
@@ -1051,10 +1051,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::IntegerStatistics* intStats = pbStats.mutable_intstatistics();
+      proto::IntegerStatistics* intStats = pbStats.mutable_int_statistics();
       if (_stats.hasMinimum()) {
         intStats->set_minimum(_stats.getMinimum());
         intStats->set_maximum(_stats.getMaximum());
@@ -1220,10 +1220,10 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::StringStatistics* strStats = pbStats.mutable_stringstatistics();
+      proto::StringStatistics* strStats = pbStats.mutable_string_statistics();
       if (_stats.hasMinimum()) {
         strStats->set_minimum(_stats.getMinimum());
         strStats->set_maximum(_stats.getMaximum());
@@ -1408,24 +1408,24 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::TimestampStatistics* tsStats = pbStats.mutable_timestampstatistics();
+      proto::TimestampStatistics* tsStats = pbStats.mutable_timestamp_statistics();
       if (_stats.hasMinimum()) {
-        tsStats->set_minimumutc(_stats.getMinimum());
-        tsStats->set_maximumutc(_stats.getMaximum());
+        tsStats->set_minimum_utc(_stats.getMinimum());
+        tsStats->set_maximum_utc(_stats.getMaximum());
         if (_minimumNanos != DEFAULT_MIN_NANOS) {
-          tsStats->set_minimumnanos(_minimumNanos + 1);
+          tsStats->set_minimum_nanos(_minimumNanos + 1);
         }
         if (_maximumNanos != DEFAULT_MAX_NANOS) {
-          tsStats->set_maximumnanos(_maximumNanos + 1);
+          tsStats->set_maximum_nanos(_maximumNanos + 1);
         }
       } else {
-        tsStats->clear_minimumutc();
-        tsStats->clear_maximumutc();
-        tsStats->clear_minimumnanos();
-        tsStats->clear_maximumnanos();
+        tsStats->clear_minimum_utc();
+        tsStats->clear_maximum_utc();
+        tsStats->clear_minimum_nanos();
+        tsStats->clear_maximum_nanos();
       }
     }
 
@@ -1639,21 +1639,21 @@ namespace orc {
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
-      pbStats.set_hasnull(_stats.hasNull());
-      pbStats.set_numberofvalues(_stats.getNumberOfValues());
+      pbStats.set_has_null(_stats.hasNull());
+      pbStats.set_number_of_values(_stats.getNumberOfValues());
 
-      proto::CollectionStatistics* collectionStats = pbStats.mutable_collectionstatistics();
+      proto::CollectionStatistics* collectionStats = pbStats.mutable_collection_statistics();
       if (_stats.hasMinimum()) {
-        collectionStats->set_minchildren(_stats.getMinimum());
-        collectionStats->set_maxchildren(_stats.getMaximum());
+        collectionStats->set_min_children(_stats.getMinimum());
+        collectionStats->set_max_children(_stats.getMaximum());
       } else {
-        collectionStats->clear_minchildren();
-        collectionStats->clear_maxchildren();
+        collectionStats->clear_min_children();
+        collectionStats->clear_max_children();
       }
       if (_stats.hasSum()) {
-        collectionStats->set_totalchildren(_stats.getSum());
+        collectionStats->set_total_children(_stats.getSum());
       } else {
-        collectionStats->clear_totalchildren();
+        collectionStats->clear_total_children();
       }
     }
 

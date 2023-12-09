@@ -184,7 +184,7 @@ namespace orc {
 
   void ColumnWriter::addBloomFilterEntry() {
     if (enableBloomFilter) {
-      BloomFilterUTF8Utils::serialize(*bloomFilter, *bloomFilterIndex->add_bloomfilter());
+      BloomFilterUTF8Utils::serialize(*bloomFilter, *bloomFilterIndex->add_bloom_filter());
       bloomFilter->reset();
     }
   }
@@ -244,7 +244,7 @@ namespace orc {
 
     if (enableBloomFilter) {
       bloomFilter->reset();
-      bloomFilterIndex->clear_bloomfilter();
+      bloomFilterIndex->clear_bloom_filter();
     }
   }
 
@@ -353,7 +353,7 @@ namespace orc {
   void StructColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     encodings.push_back(encoding);
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->getColumnEncoding(encodings);
@@ -513,9 +513,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -622,9 +622,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -735,9 +735,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -863,9 +863,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -1201,9 +1201,9 @@ namespace orc {
       encoding.set_kind(rleVersion == RleVersion_1 ? proto::ColumnEncoding_Kind_DICTIONARY
                                                    : proto::ColumnEncoding_Kind_DICTIONARY_V2);
     }
-    encoding.set_dictionarysize(static_cast<uint32_t>(dictionary.size()));
+    encoding.set_dictionary_size(static_cast<uint32_t>(dictionary.size()));
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -1765,9 +1765,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -1952,9 +1952,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -2059,9 +2059,9 @@ namespace orc {
       std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(RleVersion_2));
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
   }
@@ -2299,9 +2299,9 @@ namespace orc {
   void ListColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
     if (child.get()) {
@@ -2525,9 +2525,9 @@ namespace orc {
   void MapColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
     if (keyWriter.get()) {
@@ -2752,9 +2752,9 @@ namespace orc {
   void UnionColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-    encoding.set_dictionarysize(0);
+    encoding.set_dictionary_size(0);
     if (enableBloomFilter) {
-      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+      encoding.set_bloom_encoding(BloomFilterVersion::UTF8);
     }
     encodings.push_back(encoding);
     for (uint32_t i = 0; i < children.size(); ++i) {

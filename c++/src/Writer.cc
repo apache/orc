@@ -440,25 +440,25 @@ namespace orc {
     currentOffset += magicIdLength;
 
     // Initialize file footer
-    fileFooter.set_headerlength(currentOffset);
-    fileFooter.set_contentlength(0);
-    fileFooter.set_numberofrows(0);
-    fileFooter.set_rowindexstride(static_cast<uint32_t>(options.getRowIndexStride()));
+    fileFooter.set_header_length(currentOffset);
+    fileFooter.set_content_length(0);
+    fileFooter.set_number_of_rows(0);
+    fileFooter.set_row_index_stride(static_cast<uint32_t>(options.getRowIndexStride()));
     fileFooter.set_writer(writerId);
-    fileFooter.set_softwareversion(ORC_VERSION);
+    fileFooter.set_software_version(ORC_VERSION);
 
     uint32_t index = 0;
     buildFooterType(type, fileFooter, index);
 
     // Initialize post script
-    postScript.set_footerlength(0);
+    postScript.set_footer_length(0);
     postScript.set_compression(WriterImpl::convertCompressionKind(options.getCompression()));
-    postScript.set_compressionblocksize(options.getCompressionBlockSize());
+    postScript.set_compression_block_size(options.getCompressionBlockSize());
 
     postScript.add_version(options.getFileVersion().getMajor());
     postScript.add_version(options.getFileVersion().getMinor());
 
-    postScript.set_writerversion(WriterVersion_ORC_135);
+    postScript.set_writer_version(WriterVersion_ORC_135);
     postScript.set_magic("ORC");
 
     // Initialize first stripe
@@ -467,10 +467,10 @@ namespace orc {
 
   void WriterImpl::initStripe() {
     stripeInfo.set_offset(currentOffset);
-    stripeInfo.set_indexlength(0);
-    stripeInfo.set_datalength(0);
-    stripeInfo.set_footerlength(0);
-    stripeInfo.set_numberofrows(0);
+    stripeInfo.set_index_length(0);
+    stripeInfo.set_data_length(0);
+    stripeInfo.set_footer_length(0);
+    stripeInfo.set_number_of_rows(0);
 
     stripeRows = indexRows = 0;
   }
@@ -507,14 +507,14 @@ namespace orc {
       *stripeFooter.add_columns() = encodings[i];
     }
 
-    stripeFooter.set_writertimezone(options.getTimezoneName());
+    stripeFooter.set_writer_timezone(options.getTimezoneName());
 
     // add stripe statistics to metadata
-    proto::StripeStatistics* stripeStats = metadata.add_stripestats();
+    proto::StripeStatistics* stripeStats = metadata.add_stripe_stats();
     std::vector<proto::ColumnStatistics> colStats;
     columnWriter->getStripeStatistics(colStats);
     for (uint32_t i = 0; i != colStats.size(); ++i) {
-      *stripeStats->add_colstats() = colStats[i];
+      *stripeStats->add_col_stats() = colStats[i];
     }
     // merge stripe stats into file stats and clear stripe stats
     columnWriter->mergeStripeStatsIntoFileStats();
@@ -537,10 +537,10 @@ namespace orc {
     }
 
     // update stripe info
-    stripeInfo.set_indexlength(indexLength);
-    stripeInfo.set_datalength(dataLength);
-    stripeInfo.set_footerlength(footerLength);
-    stripeInfo.set_numberofrows(stripeRows);
+    stripeInfo.set_index_length(indexLength);
+    stripeInfo.set_data_length(dataLength);
+    stripeInfo.set_footer_length(footerLength);
+    stripeInfo.set_number_of_rows(stripeRows);
 
     *fileFooter.add_stripes() = stripeInfo;
 
@@ -556,12 +556,12 @@ namespace orc {
     if (!metadata.SerializeToZeroCopyStream(compressionStream.get())) {
       throw std::logic_error("Failed to write metadata.");
     }
-    postScript.set_metadatalength(compressionStream.get()->flush());
+    postScript.set_metadata_length(compressionStream.get()->flush());
   }
 
   void WriterImpl::writeFileFooter() {
-    fileFooter.set_contentlength(currentOffset - fileFooter.headerlength());
-    fileFooter.set_numberofrows(totalRows);
+    fileFooter.set_content_length(currentOffset - fileFooter.header_length());
+    fileFooter.set_number_of_rows(totalRows);
 
     // update file statistics
     std::vector<proto::ColumnStatistics> colStats;
@@ -574,7 +574,7 @@ namespace orc {
     if (!fileFooter.SerializeToZeroCopyStream(compressionStream.get())) {
       throw std::logic_error("Failed to write file footer.");
     }
-    postScript.set_footerlength(compressionStream->flush());
+    postScript.set_footer_length(compressionStream->flush());
   }
 
   void WriterImpl::writePostscript() {
@@ -588,7 +588,7 @@ namespace orc {
 
   void WriterImpl::buildFooterType(const Type& t, proto::Footer& footer, uint32_t& index) {
     proto::Type protoType;
-    protoType.set_maximumlength(static_cast<uint32_t>(t.getMaximumLength()));
+    protoType.set_maximum_length(static_cast<uint32_t>(t.getMaximumLength()));
     protoType.set_precision(static_cast<uint32_t>(t.getPrecision()));
     protoType.set_scale(static_cast<uint32_t>(t.getScale()));
 
@@ -686,7 +686,7 @@ namespace orc {
     for (uint64_t i = 0; i < t.getSubtypeCount(); ++i) {
       // only add subtypes' field names if this type is STRUCT
       if (t.getKind() == STRUCT) {
-        footer.mutable_types(pos)->add_fieldnames(t.getFieldName(i));
+        footer.mutable_types(pos)->add_field_names(t.getFieldName(i));
       }
       footer.mutable_types(pos)->add_subtypes(++index);
       buildFooterType(*t.getSubtype(i), footer, index);

@@ -81,7 +81,7 @@ namespace orc {
                                                                     proto::Stream_Kind kind,
                                                                     bool shouldStream) const {
     uint64_t offset = stripeStart;
-    uint64_t dataEnd = stripeInfo.offset() + stripeInfo.indexlength() + stripeInfo.datalength();
+    uint64_t dataEnd = stripeInfo.offset() + stripeInfo.index_length() + stripeInfo.data_length();
     MemoryPool* pool = reader.getFileContents().pool;
     for (int i = 0; i < footer.streams_size(); ++i) {
       const proto::Stream& stream = footer.streams(i);
@@ -94,8 +94,8 @@ namespace orc {
           msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex
               << ": streamOffset=" << offset << ", streamLength=" << streamLength
               << ", stripeOffset=" << stripeInfo.offset()
-              << ", stripeIndexLength=" << stripeInfo.indexlength()
-              << ", stripeDataLength=" << stripeInfo.datalength();
+              << ", stripeIndexLength=" << stripeInfo.index_length()
+              << ", stripeDataLength=" << stripeInfo.data_length();
           throw ParseError(msg.str());
         }
         return createDecompressor(reader.getCompression(),

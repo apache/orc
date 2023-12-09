@@ -109,12 +109,12 @@ namespace orc {
     BufferedOutputStream bufStream(*pool, &memStream, capacity, block, &metrics);
 
     proto::PostScript ps;
-    ps.set_footerlength(197934);
+    ps.set_footer_length(197934);
     ps.set_compression(proto::ZLIB);
     ps.add_version(6);
     ps.add_version(20);
-    ps.set_metadatalength(100);
-    ps.set_writerversion(789);
+    ps.set_metadata_length(100);
+    ps.set_writer_version(789);
     ps.set_magic("protobuff_serialization");
 
     EXPECT_TRUE(ps.SerializeToZeroCopyStream(&bufStream));
@@ -124,12 +124,12 @@ namespace orc {
     proto::PostScript ps2;
     ps2.ParseFromArray(memStream.getData(), static_cast<int>(memStream.getLength()));
 
-    EXPECT_EQ(ps.footerlength(), ps2.footerlength());
+    EXPECT_EQ(ps.footer_length(), ps2.footer_length());
     EXPECT_EQ(ps.compression(), ps2.compression());
     EXPECT_EQ(ps.version(0), ps2.version(0));
     EXPECT_EQ(ps.version(1), ps2.version(1));
-    EXPECT_EQ(ps.metadatalength(), ps2.metadatalength());
-    EXPECT_EQ(ps.writerversion(), ps2.writerversion());
+    EXPECT_EQ(ps.metadata_length(), ps2.metadata_length());
+    EXPECT_EQ(ps.writer_version(), ps2.writer_version());
     EXPECT_EQ(ps.magic(), ps2.magic());
   }
 }  // namespace orc

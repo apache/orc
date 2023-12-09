@@ -56,8 +56,8 @@ namespace orc {
 
   static proto::ColumnStatistics createIntStats(int64_t min, int64_t max, bool hasNull = false) {
     proto::ColumnStatistics statistics;
-    statistics.set_hasnull(hasNull);
-    auto intStats = statistics.mutable_intstatistics();
+    statistics.set_has_null(hasNull);
+    auto intStats = statistics.mutable_int_statistics();
     intStats->set_minimum(min);
     intStats->set_maximum(max);
     return statistics;
@@ -117,10 +117,10 @@ namespace orc {
     {
       orc::proto::StripeStatistics stripeStats;
       proto::ColumnStatistics structStatistics;
-      structStatistics.set_hasnull(false);
-      *stripeStats.add_colstats() = structStatistics;
-      *stripeStats.add_colstats() = createIntStats(0L, 10L);
-      *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      structStatistics.set_has_null(false);
+      *stripeStats.add_col_stats() = structStatistics;
+      *stripeStats.add_col_stats() = createIntStats(0L, 10L);
+      *stripeStats.add_col_stats() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats, 1));
@@ -131,10 +131,10 @@ namespace orc {
     {
       orc::proto::StripeStatistics stripeStats;
       proto::ColumnStatistics structStatistics;
-      structStatistics.set_hasnull(false);
-      *stripeStats.add_colstats() = structStatistics;
-      *stripeStats.add_colstats() = createIntStats(0L, 50L);
-      *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      structStatistics.set_has_null(false);
+      *stripeStats.add_col_stats() = structStatistics;
+      *stripeStats.add_col_stats() = createIntStats(0L, 50L);
+      *stripeStats.add_col_stats() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats, 1));
@@ -145,7 +145,7 @@ namespace orc {
     {
       orc::proto::Footer footer;
       proto::ColumnStatistics structStatistics;
-      structStatistics.set_hasnull(false);
+      structStatistics.set_has_null(false);
       *footer.add_statistics() = structStatistics;
       *footer.add_statistics() = createIntStats(0L, 10L);
       *footer.add_statistics() = createIntStats(0L, 50L);
@@ -159,7 +159,7 @@ namespace orc {
     {
       orc::proto::Footer footer;
       proto::ColumnStatistics structStatistics;
-      structStatistics.set_hasnull(false);
+      structStatistics.set_has_null(false);
       *footer.add_statistics() = structStatistics;
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 30L);
@@ -173,7 +173,7 @@ namespace orc {
     {
       orc::proto::Footer footer;
       proto::ColumnStatistics structStatistics;
-      structStatistics.set_hasnull(false);
+      structStatistics.set_has_null(false);
       *footer.add_statistics() = structStatistics;
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 50L);

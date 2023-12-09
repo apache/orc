@@ -339,7 +339,7 @@ namespace orc {
     EXPECT_CALL(streams, getEncoding(0)).WillRepeatedly(testing::Return(directEncoding));
     proto::ColumnEncoding dictionaryEncoding;
     dictionaryEncoding.set_kind(proto::ColumnEncoding_Kind_DICTIONARY);
-    dictionaryEncoding.set_dictionarysize(2);
+    dictionaryEncoding.set_dictionary_size(2);
     EXPECT_CALL(streams, getEncoding(1)).WillRepeatedly(testing::Return(dictionaryEncoding));
 
     // set getStream
@@ -438,12 +438,12 @@ namespace orc {
 
     proto::ColumnEncoding dictionary2Encoding;
     dictionary2Encoding.set_kind(proto::ColumnEncoding_Kind_DICTIONARY);
-    dictionary2Encoding.set_dictionarysize(2);
+    dictionary2Encoding.set_dictionary_size(2);
     EXPECT_CALL(streams, getEncoding(1)).WillRepeatedly(testing::Return(dictionary2Encoding));
 
     proto::ColumnEncoding dictionary0Encoding;
     dictionary0Encoding.set_kind(proto::ColumnEncoding_Kind_DICTIONARY);
-    dictionary0Encoding.set_dictionarysize(0);
+    dictionary0Encoding.set_dictionary_size(0);
     EXPECT_CALL(streams, getEncoding(testing::Ge(2)))
         .WillRepeatedly(testing::Return(dictionary0Encoding));
 
@@ -645,7 +645,7 @@ namespace orc {
     EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
     proto::ColumnEncoding dictionaryEncoding;
     dictionaryEncoding.set_kind(proto::ColumnEncoding_Kind_DICTIONARY);
-    dictionaryEncoding.set_dictionarysize(100);
+    dictionaryEncoding.set_dictionary_size(100);
     EXPECT_CALL(streams, getEncoding(2)).WillRepeatedly(testing::Return(dictionaryEncoding));
 
     // set getStream
@@ -4091,7 +4091,7 @@ namespace orc {
     EXPECT_CALL(streams, getEncoding(0)).WillRepeatedly(testing::Return(directEncoding));
     proto::ColumnEncoding dictionaryEncoding;
     dictionaryEncoding.set_kind(proto::ColumnEncoding_Kind_DICTIONARY);
-    dictionaryEncoding.set_dictionarysize(2);
+    dictionaryEncoding.set_dictionary_size(2);
     EXPECT_CALL(streams, getEncoding(1)).WillRepeatedly(testing::Return(dictionaryEncoding));
 
     // set getStream
