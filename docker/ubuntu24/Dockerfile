@@ -22,7 +22,6 @@ LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 ARG jdk=21
 ARG cc=gcc
 
-RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
 RUN apt-get install -y \
   cmake \
@@ -51,6 +50,9 @@ RUN update-alternatives --set java $(update-alternatives --list java | grep ${jd
 ENV CC=cc
 ENV CXX=c++
 
+RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+RUN mkdir -p /usr/share/zoneinfo/US
+RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /usr/share/zoneinfo/US/Pacific
 WORKDIR /root
 VOLUME /root/.m2/repository
 
