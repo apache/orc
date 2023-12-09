@@ -12,7 +12,7 @@ The C++ library is supported on the following operating systems:
 * CentOS 7
 * Debian 10 to 12
 * MacOS 12 to 14
-* Ubuntu 20.04 to 22.04
+* Ubuntu 20.04 to 24.04
 
 You'll want to install the usual set of developer tools, but at least:
 
