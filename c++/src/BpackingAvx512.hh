@@ -16,6 +16,46 @@
  * limitations under the License.
  */
 
+/*******************************************************************************
+ * Copyright (C) 2022 Intel Corporation
+ *
+ * SPDX-License-Identifier: MIT
+ ******************************************************************************/
+
+/**
+ * @brief Contains implementation of functions for unpacking 1..32-bit data to bytes
+ *
+ * @details Function list:
+ *          - @ref vectorUnpack1
+ *          - @ref vectorUnpack2
+ *          - @ref vectorUnpack3
+ *          - @ref vectorUnpack4
+ *          - @ref vectorUnpack5
+ *          - @ref vectorUnpack6
+ *          - @ref vectorUnpack7
+ *          - @ref vectorUnpack9
+ *          - @ref vectorUnpack10
+ *          - @ref vectorUnpack11
+ *          - @ref vectorUnpack12
+ *          - @ref vectorUnpack13
+ *          - @ref vectorUnpack14
+ *          - @ref vectorUnpack15
+ *          - @ref vectorUnpack16
+ *          - @ref vectorUnpack17
+ *          - @ref vectorUnpack18
+ *          - @ref vectorUnpack19
+ *          - @ref vectorUnpack20
+ *          - @ref vectorUnpack21
+ *          - @ref vectorUnpack22
+ *          - @ref vectorUnpack23
+ *          - @ref vectorUnpack24
+ *          - @ref vectorUnpack26
+ *          - @ref vectorUnpack28
+ *          - @ref vectorUnpack30
+ *          - @ref vectorUnpack32
+ *
+ */
+
 #ifndef ORC_BPACKINGAVX512_HH
 #define ORC_BPACKINGAVX512_HH
 
