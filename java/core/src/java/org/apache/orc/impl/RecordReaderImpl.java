@@ -702,6 +702,11 @@ public class RecordReaderImpl implements RecordReader {
                 predicate.getColumnName());
         return dstas.hasNull() ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
       }
+    } else if (statsProto == EMPTY_COLUMN_STATISTICS) {
+      // When statsProto is EMPTY_COLUMN_STATISTICS
+      // this column does not actually provide statistics
+      // we cannot make any assumptions, so we return YES_NO_NULL.
+      return TruthValue.YES_NO_NULL;
     }
     return evaluatePredicateRange(predicate, range,
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type.getCategory(),
@@ -747,8 +752,10 @@ public class RecordReaderImpl implements RecordReader {
                                            ValueRange range,
                                            BloomFilter bloomFilter,
                                            boolean useUTCTimestamp) {
+    // If range is invalid, that means that no value (including null) is written to this column
+    // we should return TruthValue.NO for any predicate.
     if (!range.isValid()) {
-      return TruthValue.YES_NO_NULL;
+      return TruthValue.NO;
     }
 
     // if we didn't have any values, everything must have been null

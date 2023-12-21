@@ -29,6 +29,7 @@ import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
@@ -2473,6 +2474,57 @@ public class TestRecordReaderImpl {
         CURRENT_WRITER, TypeDescription.createInt());
 
     assertEquals(TruthValue.YES_NO_NULL, truthValue);
+  }
+
+  @Test
+  public void testStatisticsWithNoWrites() throws Exception {
+    Path testFilePath = new Path(workDir, "rowIndexStrideNegative.orc");
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+    fs.delete(testFilePath, true);
+
+    TypeDescription schema = TypeDescription.fromString("struct<x:struct<z:double>,y:int>");
+    Writer writer = OrcFile.createWriter(
+        testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    StructColumnVector structColumnVector = (StructColumnVector) batch.cols[0];
+    LongColumnVector longColumnVector = (LongColumnVector) batch.cols[1];
+    structColumnVector.ensureSize(1024, false);
+    structColumnVector.noNulls = false;
+    for (int i = 0; i < 1024; i++) {
+      structColumnVector.isNull[i] = true;
+      longColumnVector.vector[i] = i;
+    }
+    batch.size = 1024;
+    writer.addRowBatch(batch);
+    batch.reset();
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+
+    try (RecordReader rr = reader.rows()) {
+      RecordReaderImpl rri = (RecordReaderImpl) rr;
+      // x.z id is 2, We just need to read this column
+      OrcIndex orcIndex = rri.readRowIndex(0,
+          new boolean[] { false, false, true, false },
+          new boolean[] { false, false, true, false });
+      OrcProto.RowIndex[] rowGroupIndex = orcIndex.getRowGroupIndex();
+      OrcProto.ColumnStatistics statistics = rowGroupIndex[2].getEntry(0).getStatistics();
+      OrcProto.ColumnEncoding encoding = OrcProto.ColumnEncoding.newBuilder()
+          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT)
+          .build();
+      PredicateLeaf pred = createPredicateLeaf(
+          PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.FLOAT, "x.z", 1.0, null);
+
+      TruthValue truthValue = RecordReaderImpl.evaluatePredicateProto(
+          statistics,
+          pred, null, encoding, null,
+          CURRENT_WRITER, TypeDescription.createInt());
+
+      assertEquals(TruthValue.NO, truthValue);
+    }
   }
 
   @Test
