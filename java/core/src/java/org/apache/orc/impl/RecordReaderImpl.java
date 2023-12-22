@@ -667,6 +667,14 @@ public class RecordReaderImpl implements RecordReader {
                                            TypeDescription type,
                                            boolean writerUsedProlepticGregorian,
                                            boolean useUTCTimestamp) {
+
+    // When statsProto is EMPTY_COLUMN_STATISTICS
+    // this column does not actually provide statistics
+    // we cannot make any assumptions, so we return YES_NO_NULL.
+    if (statsProto == EMPTY_COLUMN_STATISTICS) {
+      return TruthValue.YES_NO_NULL;
+    }
+
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(
         null, statsProto, writerUsedProlepticGregorian, true);
     ValueRange range = getValueRange(cs, predicate, useUTCTimestamp);
@@ -702,11 +710,6 @@ public class RecordReaderImpl implements RecordReader {
                 predicate.getColumnName());
         return dstas.hasNull() ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
       }
-    } else if (statsProto == EMPTY_COLUMN_STATISTICS) {
-      // When statsProto is EMPTY_COLUMN_STATISTICS
-      // this column does not actually provide statistics
-      // we cannot make any assumptions, so we return YES_NO_NULL.
-      return TruthValue.YES_NO_NULL;
     }
     return evaluatePredicateRange(predicate, range,
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type.getCategory(),
