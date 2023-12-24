@@ -3,13 +3,11 @@ name: Build and test
 on:
   push:
     paths-ignore:
-    - 'docker'
     - 'site/**'
     branches:
     - branch-1.9
   pull_request:
     paths-ignore:
-    - 'docker'
     - 'site/**'
     branches:
     - branch-1.9
@@ -20,6 +18,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  docker:
+    name: "Docker ${{ matrix.os }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - centos7
+          - debian10
+          - debian11
+          - debian12
+          - fedora37
+          - rocky9
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: "Test"
+      run: |
+        cd docker
+        ./run-one.sh local branch-1.9 ${{ matrix.os }}
+
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
