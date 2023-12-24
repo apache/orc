@@ -6,3 +6,4 @@ ubuntu24
 fedora37
 ubuntu22_jdk=21
 ubuntu22_jdk=21_cc=clang
+rocky9
