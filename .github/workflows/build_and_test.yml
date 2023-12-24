@@ -20,7 +20,7 @@ concurrency:
 jobs:
   docker:
     name: "Docker ${{ matrix.os }}"
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
