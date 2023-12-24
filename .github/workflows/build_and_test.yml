@@ -9,6 +9,25 @@ on:
     - branch-1.7
 
 jobs:
+  docker:
+    name: "Docker ${{ matrix.os }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - centos7
+          - debian10
+          - debian11
+          - ubuntu18
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: "Test"
+      run: |
+        cd docker
+        ./run-one.sh local branch-1.7 ${{ matrix.os }}
+
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
