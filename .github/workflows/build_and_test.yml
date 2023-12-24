@@ -25,6 +25,7 @@ jobs:
           - debian11
           - ubuntu18
           - fedora37
+          - rocky9
     steps:
     - name: Checkout
       uses: actions/checkout@v2
