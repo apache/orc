@@ -26,7 +26,7 @@ jobs:
     - name: "Test"
       run: |
         cd docker
-        ./run-one.sh local branch-1.8 ${{ matrix.os }}
+        ./run-one.sh local branch-1.7 ${{ matrix.os }}
 
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
