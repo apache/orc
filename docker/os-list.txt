@@ -8,3 +8,4 @@ fedora37
 debian11_jdk=11
 ubuntu22_jdk=11
 ubuntu22_jdk=11_cc=clang
+rocky9
