@@ -3,6 +3,7 @@
 * CentOS 7
 * Debian 10 and 11
 * Ubuntu 18, 20 and 22
+* Rocky 9
 
 ## Pre-built Images
 

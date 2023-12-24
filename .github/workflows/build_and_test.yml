@@ -20,6 +20,7 @@ jobs:
           - debian10
           - debian11
           - ubuntu18
+          - rocky9
     steps:
     - name: Checkout
       uses: actions/checkout@v2

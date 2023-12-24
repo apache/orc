@@ -4,3 +4,4 @@ debian11
 ubuntu18
 ubuntu20
 ubuntu22
+rocky9
