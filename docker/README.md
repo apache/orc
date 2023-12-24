@@ -3,6 +3,7 @@
 * Debian 11 and 12
 * Fedora 37
 * Ubuntu 20, 22, 24
+* Rocky 9
 
 ## Pre-built Images
 
