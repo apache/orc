@@ -564,8 +564,8 @@ public class RecordReaderUtils {
       boolean doForceDirect) throws IOException {
     if (range == null) return;
 
-    IntFunction<ByteBuffer> allocate = 
-      doForceDirect ? ByteBuffer::allocateDirect : ByteBuffer::allocate;
+    IntFunction<ByteBuffer> allocate =
+        doForceDirect ? ByteBuffer::allocateDirect : ByteBuffer::allocate;
 
     var fileRanges = new ArrayList<FileRange>();
     BufferChunk cur = range.get();
