@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileRange;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
@@ -37,6 +38,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -103,8 +106,7 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect, minSeekSize,
-                                       minSeekSizeTolerance);
+      RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
       return range;
     }
 
@@ -550,6 +552,43 @@ public class RecordReaderUtils {
         chunkReader.readRanges(file, doForceDirect, minSeekSizeTolerance);
         current = (BufferChunk) chunkReader.to.next;
       }
+    }
+  }
+
+  /**
+   * Read the list of ranges from the file by updating each range in the list
+   */
+  private static void readDiskRangesVectored(
+      FSDataInputStream fileInputStream,
+      BufferChunkList range,
+      boolean doForceDirect) throws IOException {
+    if (range == null) return;
+
+    IntFunction<ByteBuffer> allocate = doForceDirect ? ByteBuffer::allocateDirect : ByteBuffer::allocate;
+
+    var fileRanges = new ArrayList<FileRange>();
+    BufferChunk cur = range.get();
+    while (cur != null) {
+      if (!cur.hasData()) {
+        fileRanges.add(FileRange.createFileRange(cur.getOffset(), cur.getLength()));
+      }
+      cur = (BufferChunk) cur.next;
+    }
+    fileInputStream.readVectored(fileRanges, allocate);
+
+    int index = 0;
+    for (BufferChunk current = range.get(); current != null; index++) {
+      while (current.hasData()) {
+        current = (BufferChunk) current.next;
+        index++;
+      }
+      try {
+        ByteBuffer data = fileRanges.get(index).getData().get();
+        current.setChunk(data);
+      } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException(e);
+      }
+      current = (BufferChunk) current.next;
     }
   }
 

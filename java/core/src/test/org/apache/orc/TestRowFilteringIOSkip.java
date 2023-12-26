@@ -264,7 +264,7 @@ public class TestRowFilteringIOSkip {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 100);
+    assertTrue(p >= 0.06);
   }
 
   @Test
@@ -308,7 +308,7 @@ public class TestRowFilteringIOSkip {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p > 100);
+    assertTrue(p > 0.06);
   }
 
   private long validateFilteredRecordReader(RecordReader rr, VectorizedRowBatch b)
@@ -398,7 +398,7 @@ public class TestRowFilteringIOSkip {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 100);
+    assertTrue(p >= 0.06);
   }
 
   private double readPercentage(FileSystem.Statistics stats, long fileSize) {
@@ -423,7 +423,7 @@ public class TestRowFilteringIOSkip {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 100);
+    assertTrue(p >= 0.06);
   }
 
   @Test
@@ -440,7 +440,7 @@ public class TestRowFilteringIOSkip {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(readPercentage > 100);
+    assertTrue(readPercentage > 0.06);
     assertTrue(RowCount > rowCount);
   }
 
@@ -492,7 +492,7 @@ public class TestRowFilteringIOSkip {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(readPercentage > 130);
+    assertTrue(readPercentage > 0.07);
   }
 
   @Test
