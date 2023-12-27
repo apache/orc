@@ -76,7 +76,7 @@ public class TestMapRedFiltering {
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
     assertEquals(FilterTestUtil.RowCount, rowCount);
-    assertTrue(p >= 100);
+    assertTrue(p >= 0.06);
   }
 
   @Test

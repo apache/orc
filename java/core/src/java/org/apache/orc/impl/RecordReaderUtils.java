@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileRange;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
@@ -33,10 +34,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -103,8 +107,7 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect, minSeekSize,
-                                       minSeekSizeTolerance);
+      RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
       return range;
     }
 
@@ -549,6 +552,41 @@ public class RecordReaderUtils {
         ChunkReader chunkReader = ChunkReader.create(current, minSeekSize);
         chunkReader.readRanges(file, doForceDirect, minSeekSizeTolerance);
         current = (BufferChunk) chunkReader.to.next;
+      }
+    }
+  }
+
+  /**
+   * Read the list of ranges from the file by updating each range in the list
+   */
+  private static void readDiskRangesVectored(
+      FSDataInputStream fileInputStream,
+      BufferChunkList range,
+      boolean doForceDirect) throws IOException {
+    if (range == null) return;
+
+    IntFunction<ByteBuffer> allocate =
+        doForceDirect ? ByteBuffer::allocateDirect : ByteBuffer::allocate;
+
+    var fileRanges = new ArrayList<FileRange>();
+    var map = new HashMap<FileRange, BufferChunk>();
+    var cur = range.get();
+    while (cur != null) {
+      if (!cur.hasData()) {
+        var fileRange = FileRange.createFileRange(cur.getOffset(), cur.getLength());
+        fileRanges.add(fileRange);
+        map.put(fileRange, cur);
+      }
+      cur = (BufferChunk) cur.next;
+    }
+    fileInputStream.readVectored(fileRanges, allocate);
+
+    for (FileRange r : fileRanges) {
+      cur = map.get(r);
+      try {
+        cur.setChunk(r.getData().get());
+      } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException(e);
       }
     }
   }

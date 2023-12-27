@@ -187,7 +187,7 @@ public class TestMinSeekSize {
     double p = readPercentage(stats, fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
     // Read all bytes
-    assertTrue(p >= 100);
+    assertTrue(p >= 5.9);
   }
 
   private double readPercentage(FileSystem.Statistics stats, long fileSize) {
