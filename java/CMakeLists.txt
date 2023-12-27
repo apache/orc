@@ -70,11 +70,10 @@ add_test(
            -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-# TOOD(ORC-1003)
-# add_test(
-#   NAME java-examples-test
-#   COMMAND java -jar examples/orc-examples-${ORC_VERSION}-uber.jar write
-#   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(
+  NAME java-examples-test
+  COMMAND java -jar examples/orc-examples-${ORC_VERSION}-uber.jar write
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_test(
   NAME java-tools-test
