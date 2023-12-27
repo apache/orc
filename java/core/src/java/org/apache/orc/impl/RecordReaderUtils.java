@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -568,28 +569,25 @@ public class RecordReaderUtils {
         doForceDirect ? ByteBuffer::allocateDirect : ByteBuffer::allocate;
 
     var fileRanges = new ArrayList<FileRange>();
-    BufferChunk cur = range.get();
+    var map = new HashMap<FileRange, BufferChunk>();
+    var cur = range.get();
     while (cur != null) {
       if (!cur.hasData()) {
-        fileRanges.add(FileRange.createFileRange(cur.getOffset(), cur.getLength()));
+        var fileRange = FileRange.createFileRange(cur.getOffset(), cur.getLength());
+        fileRanges.add(fileRange);
+        map.put(fileRange, cur);
       }
       cur = (BufferChunk) cur.next;
     }
     fileInputStream.readVectored(fileRanges, allocate);
 
-    int index = 0;
-    for (BufferChunk current = range.get(); current != null; index++) {
-      while (current.hasData()) {
-        current = (BufferChunk) current.next;
-        index++;
-      }
+    for (FileRange r : fileRanges) {
+      cur = map.get(r);
       try {
-        ByteBuffer data = fileRanges.get(index).getData().get();
-        current.setChunk(data);
+        cur.setChunk(r.getData().get());
       } catch (InterruptedException | ExecutionException e) {
         throw new RuntimeException(e);
       }
-      current = (BufferChunk) current.next;
     }
   }
 
