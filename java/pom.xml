@@ -60,6 +60,7 @@
   </modules>
 
   <properties>
+    <brotli4j.version>1.14.0</brotli4j.version>
     <checkstyle.version>10.12.0</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.3.6</hadoop.version>
@@ -201,6 +202,11 @@
         <groupId>org.threeten</groupId>
         <artifactId>threeten-extra</artifactId>
         <version>1.7.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aayushatharva.brotli4j</groupId>
+        <artifactId>brotli4j</artifactId>
+        <version>${brotli4j.version}</version>
       </dependency>
 
       <!-- test inter-project -->
