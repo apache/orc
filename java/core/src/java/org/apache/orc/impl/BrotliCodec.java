@@ -196,12 +196,12 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
 
   @Override
   public void directDecompress(ByteBuffer in, ByteBuffer out) throws IOException {
+    // decompress work well for both direct and heap.
     decompress(in, out);
   }
 
   @Override
   public void reset() {
-
   }
 
   @Override
