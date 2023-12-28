@@ -25,131 +25,131 @@ import java.nio.ByteBuffer;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBrotli {
-    @Test
-    public void testOutputLargerThanBefore() {
-        ByteBuffer in = ByteBuffer.allocate(10);
-        ByteBuffer out = ByteBuffer.allocate(10);
-        in.put(new byte[]{1,2,3,4,5,6,7,10});
-        in.flip();
-        try (BrotliCodec brotliCodec = new BrotliCodec()) {
-            // The compressed data length is larger than the original data.
-            assertFalse(brotliCodec.compress(in, out, null,
-                    brotliCodec.getDefaultOptions()));
-        } catch (Exception e) {
-            fail(e);
-        }
+  @Test
+  public void testOutputLargerThanBefore() {
+    ByteBuffer in = ByteBuffer.allocate(10);
+    ByteBuffer out = ByteBuffer.allocate(10);
+    in.put(new byte[]{1, 2, 3, 4, 5, 6, 7, 10});
+    in.flip();
+    try (BrotliCodec brotliCodec = new BrotliCodec()) {
+      // The compressed data length is larger than the original data.
+      assertFalse(brotliCodec.compress(in, out, null,
+              brotliCodec.getDefaultOptions()));
+    } catch (Exception e) {
+      fail(e);
     }
+  }
 
-    @Test
-    public void testCompress() {
-        ByteBuffer in = ByteBuffer.allocate(10000);
-        ByteBuffer out = ByteBuffer.allocate(500);
-        ByteBuffer result = ByteBuffer.allocate(10000);
-        for (int i = 0; i < 10000; i++) {
-            in.put((byte)i);
-        }
-        in.flip();
-        try (BrotliCodec brotliCodec = new BrotliCodec()) {
-            assertTrue(brotliCodec.compress(in, out, null,
-                    brotliCodec.getDefaultOptions()));
-            out.flip();
-            brotliCodec.decompress(out, result);
-            assertArrayEquals(result.array(), in.array());
-        } catch (Exception e) {
-            fail(e);
-        }
+  @Test
+  public void testCompress() {
+    ByteBuffer in = ByteBuffer.allocate(10000);
+    ByteBuffer out = ByteBuffer.allocate(500);
+    ByteBuffer result = ByteBuffer.allocate(10000);
+    for (int i = 0; i < 10000; i++) {
+      in.put((byte) i);
     }
-
-    @Test
-    public void testCompressNotFromStart() {
-        ByteBuffer in = ByteBuffer.allocate(10000);
-        ByteBuffer out = ByteBuffer.allocate(10000);
-        ByteBuffer result = ByteBuffer.allocate(10000);
-        for (int i = 0; i < 10000; i++) {
-            in.put((byte)i);
-        }
-        in.flip();
-        in.get();
-
-        ByteBuffer slice = in.slice();
-        byte[] originalBytes = new byte[slice.remaining()];
-        slice.get(originalBytes);
-
-        try (BrotliCodec brotliCodec = new BrotliCodec()) {
-            // The compressed data length is larger than the original data.
-            assertTrue(brotliCodec.compress(in, out, null,
-                    brotliCodec.getDefaultOptions()));
-
-            out.flip();
-            brotliCodec.decompress(out, result);
-
-            byte[] resultArray = new byte[result.remaining()];
-            result.get(resultArray);
-            assertArrayEquals(resultArray, originalBytes);
-        } catch (Exception e) {
-            fail(e);
-        }
+    in.flip();
+    try (BrotliCodec brotliCodec = new BrotliCodec()) {
+      assertTrue(brotliCodec.compress(in, out, null,
+              brotliCodec.getDefaultOptions()));
+      out.flip();
+      brotliCodec.decompress(out, result);
+      assertArrayEquals(result.array(), in.array());
+    } catch (Exception e) {
+      fail(e);
     }
+  }
 
-    @Test
-    public void testCompressWithOverflow() {
-        ByteBuffer in = ByteBuffer.allocate(10000);
-        ByteBuffer out = ByteBuffer.allocate(1);
-        ByteBuffer overflow = ByteBuffer.allocate(10000);
-        ByteBuffer result = ByteBuffer.allocate(10000);
-        for (int i = 0; i < 10000; i++) {
-            in.put((byte)i);
-        }
-        in.flip();
-        try (BrotliCodec brotliCodec = new BrotliCodec()) {
-            assertTrue(brotliCodec.compress(in, out, overflow,
-                    brotliCodec.getDefaultOptions()));
-            out.flip();
-            overflow.flip();
-
-            // copy out, overflow to compressed
-            byte[] compressed = new byte[out.remaining() + overflow.remaining()];
-            System.arraycopy(out.array(), out.arrayOffset() + out.position(), compressed, 0, out.remaining());
-            System.arraycopy(overflow.array(), overflow.arrayOffset() + overflow.position(), compressed, out.remaining(), overflow.remaining());
-            // decompress compressedBuffer and check the result.
-            ByteBuffer compressedBuffer = ByteBuffer.allocate(compressed.length);
-            compressedBuffer.put(compressed);
-            compressedBuffer.flip();
-            brotliCodec.decompress(compressedBuffer, result);
-            assertArrayEquals(result.array(), in.array());
-        } catch (Exception e) {
-            fail(e);
-        }
+  @Test
+  public void testCompressNotFromStart() {
+    ByteBuffer in = ByteBuffer.allocate(10000);
+    ByteBuffer out = ByteBuffer.allocate(10000);
+    ByteBuffer result = ByteBuffer.allocate(10000);
+    for (int i = 0; i < 10000; i++) {
+      in.put((byte) i);
     }
+    in.flip();
+    in.get();
 
-    @Test
-    public void testDirectDecompress() {
-        ByteBuffer in = ByteBuffer.allocate(10000);
-        ByteBuffer out = ByteBuffer.allocate(10000);
-        ByteBuffer directOut = ByteBuffer.allocateDirect(10000);
-        ByteBuffer directResult = ByteBuffer.allocateDirect(10000);
-        for (int i = 0; i < 10000; i++) {
-            in.put((byte)i);
-        }
-        in.flip();
-        try (BrotliCodec brotliCodec = new BrotliCodec()) {
-            // write bytes to heap buffer.
-            assertTrue(brotliCodec.compress(in, out, null,
-                    brotliCodec.getDefaultOptions()));
-            out.flip();
-            // copy heap buffer to direct buffer.
-            directOut.put(out.array());
-            directOut.flip();
+    ByteBuffer slice = in.slice();
+    byte[] originalBytes = new byte[slice.remaining()];
+    slice.get(originalBytes);
 
-            brotliCodec.decompress(directOut, directResult);
+    try (BrotliCodec brotliCodec = new BrotliCodec()) {
+      // The compressed data length is larger than the original data.
+      assertTrue(brotliCodec.compress(in, out, null,
+              brotliCodec.getDefaultOptions()));
 
-            // copy result from direct buffer to heap.
-            byte[] heapBytes = new byte[in.array().length];
-            directResult.get(heapBytes, 0, directResult.limit());
+      out.flip();
+      brotliCodec.decompress(out, result);
 
-            assertArrayEquals(in.array(), heapBytes);
-        } catch (Exception e) {
-            fail(e);
-        }
+      byte[] resultArray = new byte[result.remaining()];
+      result.get(resultArray);
+      assertArrayEquals(resultArray, originalBytes);
+    } catch (Exception e) {
+      fail(e);
     }
+  }
+
+  @Test
+  public void testCompressWithOverflow() {
+    ByteBuffer in = ByteBuffer.allocate(10000);
+    ByteBuffer out = ByteBuffer.allocate(1);
+    ByteBuffer overflow = ByteBuffer.allocate(10000);
+    ByteBuffer result = ByteBuffer.allocate(10000);
+    for (int i = 0; i < 10000; i++) {
+      in.put((byte) i);
+    }
+    in.flip();
+    try (BrotliCodec brotliCodec = new BrotliCodec()) {
+      assertTrue(brotliCodec.compress(in, out, overflow,
+              brotliCodec.getDefaultOptions()));
+      out.flip();
+      overflow.flip();
+
+      // copy out, overflow to compressed
+      byte[] compressed = new byte[out.remaining() + overflow.remaining()];
+      System.arraycopy(out.array(), out.arrayOffset() + out.position(), compressed, 0, out.remaining());
+      System.arraycopy(overflow.array(), overflow.arrayOffset() + overflow.position(), compressed, out.remaining(), overflow.remaining());
+      // decompress compressedBuffer and check the result.
+      ByteBuffer compressedBuffer = ByteBuffer.allocate(compressed.length);
+      compressedBuffer.put(compressed);
+      compressedBuffer.flip();
+      brotliCodec.decompress(compressedBuffer, result);
+      assertArrayEquals(result.array(), in.array());
+    } catch (Exception e) {
+      fail(e);
+    }
+  }
+
+  @Test
+  public void testDirectDecompress() {
+    ByteBuffer in = ByteBuffer.allocate(10000);
+    ByteBuffer out = ByteBuffer.allocate(10000);
+    ByteBuffer directOut = ByteBuffer.allocateDirect(10000);
+    ByteBuffer directResult = ByteBuffer.allocateDirect(10000);
+    for (int i = 0; i < 10000; i++) {
+      in.put((byte) i);
+    }
+    in.flip();
+    try (BrotliCodec brotliCodec = new BrotliCodec()) {
+      // write bytes to heap buffer.
+      assertTrue(brotliCodec.compress(in, out, null,
+              brotliCodec.getDefaultOptions()));
+      out.flip();
+      // copy heap buffer to direct buffer.
+      directOut.put(out.array());
+      directOut.flip();
+
+      brotliCodec.decompress(directOut, directResult);
+
+      // copy result from direct buffer to heap.
+      byte[] heapBytes = new byte[in.array().length];
+      directResult.get(heapBytes, 0, directResult.limit());
+
+      assertArrayEquals(in.array(), heapBytes);
+    } catch (Exception e) {
+      fail(e);
+    }
+  }
 }
