@@ -163,7 +163,7 @@ public enum OrcConf {
       "Hive 2.1."),
   FORCE_POSITIONAL_EVOLUTION_LEVEL("orc.force.positional.evolution.level",
       "orc.force.positional.evolution.level", 1,
-      "Require schema evolution to match the the defined no. of level columns using position\n" +
+      "Require schema evolution to match the defined no. of level columns using position\n" +
           "rather than column names. This provides backwards compatibility with Hive 2.1."),
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
@@ -219,7 +219,7 @@ public enum OrcConf {
                          + "optimization"),
   ORC_MIN_DISK_SEEK_SIZE_TOLERANCE("orc.min.disk.seek.size.tolerance",
                           "orc.min.disk.seek.size.tolerance", 0.00,
-                          "Define the tolerance for for extra bytes read as a result of "
+                          "Define the tolerance for extra bytes read as a result of "
                           + "orc.min.disk.seek.size. If the "
                           + "(bytesRead - bytesNeeded) / bytesNeeded is greater than this "
                           + "threshold then extra work is performed to drop the extra bytes from "
