@@ -114,17 +114,8 @@ public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
       Options options) throws IOException {
     BrotliOptions brotliOptions = (BrotliOptions) options;
     int inBytes = in.remaining();
-    // TODO Make EncoderJNI and EncoderJNI.Wrapper public and then we can avoid data copy. See:https://github.com/hyperxpro/Brotli4j/issues/123
-    byte[] compressed = null;
-    if (in.arrayOffset() + in.position() == 0) {
-      compressed = Encoder.compress(
-          in.array(), in.arrayOffset() + in.position(), inBytes, brotliOptions.brotli4jParameter());
-    } else {
-      byte[] input = new byte[in.remaining()];
-      ByteBuffer slice = in.slice();
-      slice.get(0, input);
-      compressed = Encoder.compress(input, 0, inBytes, brotliOptions.brotli4jParameter());
-    }
+    byte[] compressed = Encoder.compress(
+        in.array(), in.arrayOffset() + in.position(), inBytes, brotliOptions.brotli4jParameter());
     int outBytes = compressed.length;
     if (outBytes < inBytes) {
       int remaining = out.remaining();
