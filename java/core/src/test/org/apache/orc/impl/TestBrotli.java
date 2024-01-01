@@ -34,7 +34,7 @@ public class TestBrotli {
     try (BrotliCodec brotliCodec = new BrotliCodec()) {
       // The compressed data length is larger than the original data.
       assertFalse(brotliCodec.compress(in, out, null,
-              brotliCodec.getDefaultOptions()));
+          brotliCodec.getDefaultOptions()));
     } catch (Exception e) {
       fail(e);
     }
@@ -51,7 +51,7 @@ public class TestBrotli {
     in.flip();
     try (BrotliCodec brotliCodec = new BrotliCodec()) {
       assertTrue(brotliCodec.compress(in, out, null,
-              brotliCodec.getDefaultOptions()));
+          brotliCodec.getDefaultOptions()));
       out.flip();
       brotliCodec.decompress(out, result);
       assertArrayEquals(result.array(), in.array());
@@ -78,7 +78,7 @@ public class TestBrotli {
     try (BrotliCodec brotliCodec = new BrotliCodec()) {
       // The compressed data length is larger than the original data.
       assertTrue(brotliCodec.compress(in, out, null,
-              brotliCodec.getDefaultOptions()));
+          brotliCodec.getDefaultOptions()));
 
       out.flip();
       brotliCodec.decompress(out, result);
@@ -103,7 +103,7 @@ public class TestBrotli {
     in.flip();
     try (BrotliCodec brotliCodec = new BrotliCodec()) {
       assertTrue(brotliCodec.compress(in, out, overflow,
-              brotliCodec.getDefaultOptions()));
+          brotliCodec.getDefaultOptions()));
       out.flip();
       overflow.flip();
 
@@ -135,7 +135,7 @@ public class TestBrotli {
     try (BrotliCodec brotliCodec = new BrotliCodec()) {
       // write bytes to heap buffer.
       assertTrue(brotliCodec.compress(in, out, null,
-              brotliCodec.getDefaultOptions()));
+          brotliCodec.getDefaultOptions()));
       out.flip();
       // copy heap buffer to direct buffer.
       directOut.put(out.array());
