@@ -830,7 +830,7 @@ namespace orc {
     std::vector<std::unique_ptr<ColumnReader>> children;
 
    public:
-    StructColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false,
+    StructColumnReader(const Type& type, StripeStreams& stripe, bool useTightNumericVector = false,
                        bool throwOnSchemaEvolutionOverflow = false);
 
     uint64_t skip(uint64_t numValues) override;
