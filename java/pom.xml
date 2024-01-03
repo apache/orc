@@ -207,6 +207,7 @@
         <groupId>com.aayushatharva.brotli4j</groupId>
         <artifactId>brotli4j</artifactId>
         <version>${brotli4j.version}</version>
+        <optional>true</optional>
       </dependency>
 
       <!-- test inter-project -->
