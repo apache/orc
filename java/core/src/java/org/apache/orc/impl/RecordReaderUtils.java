@@ -107,7 +107,12 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
+      if (zcr == null) {
+        RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
+      } else {
+        RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect,
+                                         minSeekSize, minSeekSizeTolerance);
+      }
       return range;
     }
 
