@@ -32,11 +32,6 @@ public class HadoopShimsFactory {
 
   private static final String CURRENT_SHIM_NAME =
       "org.apache.orc.impl.HadoopShimsCurrent";
-  private static final String PRE_2_6_SHIM_NAME =
-      "org.apache.orc.impl.HadoopShimsPre2_6";
-  private static final String PRE_2_7_SHIM_NAME =
-      "org.apache.orc.impl.HadoopShimsPre2_7";
-
   private static HadoopShims SHIMS = null;
 
   private static HadoopShims createShimByName(String name) {
@@ -57,18 +52,9 @@ public class HadoopShimsFactory {
       int major = Integer.parseInt(versionParts[0]);
       int minor = Integer.parseInt(versionParts[1]);
       if (major < 2 || (major == 2 && minor < 7)) {
-        LOG.warn("Hadoop " + VersionInfo.getVersion() + " support is deprecated. " +
-            "Please upgrade to Hadoop 2.7.3 or above.");
+        LOG.warn("Hadoop " + VersionInfo.getVersion() + " support is dropped.");
       }
-      if (major < 2 || (major == 2 && minor < 3)) {
-        SHIMS = new HadoopShimsPre2_3();
-      } else if (major == 2 && minor < 6) {
-        SHIMS = createShimByName(PRE_2_6_SHIM_NAME);
-      } else if (major == 2 && minor < 7) {
-        SHIMS = createShimByName(PRE_2_7_SHIM_NAME);
-      } else {
-        SHIMS = createShimByName(CURRENT_SHIM_NAME);
-      }
+      SHIMS = createShimByName(CURRENT_SHIM_NAME);
     }
     return SHIMS;
   }
