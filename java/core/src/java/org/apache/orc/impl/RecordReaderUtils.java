@@ -48,6 +48,7 @@ import java.util.function.Supplier;
  */
 public class RecordReaderUtils {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
+  private static final boolean supportVectoredIO = SHIMS.supportVectoredIO();
   private static final Logger LOG = LoggerFactory.getLogger(RecordReaderUtils.class);
 
   private static class DefaultDataReader implements DataReader {
@@ -107,7 +108,7 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      if (zcr == null) {
+      if (supportVectoredIO && zcr == null) {
         RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
       } else {
         RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect,
