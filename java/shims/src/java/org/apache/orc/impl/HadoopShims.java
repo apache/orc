@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.util.VersionInfo;
 import org.apache.orc.EncryptionAlgorithm;
 
 import java.io.Closeable;
@@ -130,6 +131,15 @@ public interface HadoopShims {
    * @return was a variable length block created?
    */
   boolean endVariableLengthBlock(OutputStream output) throws IOException;
+
+  default boolean supportVectoredIO() {
+    // HADOOP-18103 is available since Apache Hadoop 3.3.5+
+    String[] versionParts = VersionInfo.getVersion().split("[.]");
+    int major = Integer.parseInt(versionParts[0]);
+    int minor = Integer.parseInt(versionParts[1]);
+    int patch = Integer.parseInt(versionParts[2]);
+    return major == 3 && (minor > 3 || (minor == 3 && patch > 4));
+  }
 
   /**
    * The known KeyProviders for column encryption.
