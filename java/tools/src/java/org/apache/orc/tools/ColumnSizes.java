@@ -18,6 +18,11 @@
 
 package org.apache.orc.tools;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -155,15 +160,25 @@ public class ColumnSizes {
     }
   }
 
-  public static void main(Configuration conf, String[] args) throws IOException {
+  public static void main(Configuration conf, String[] args) throws Exception {
+    Options opts = createOptions();
+    CommandLine cli = new DefaultParser().parse(opts, args);
+    if (cli.hasOption('h')) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("sizes", opts);
+      return;
+    }
+    boolean ignoreExtension = cli.hasOption("ignoreExtension");
+    String[] files = cli.getArgs();
+
     ColumnSizes result = null;
     int badFiles = 0;
-    for(String root: args) {
+    for(String root: files) {
       Path rootPath = new Path(root);
       FileSystem fs = rootPath.getFileSystem(conf);
       for(RemoteIterator<LocatedFileStatus> itr = fs.listFiles(rootPath, true); itr.hasNext(); ) {
         LocatedFileStatus status = itr.next();
-        if (status.isFile() && status.getPath().getName().endsWith(".orc")) {
+        if (status.isFile() && (ignoreExtension || status.getPath().getName().endsWith(".orc"))) {
           try {
             if (result == null) {
               result = new ColumnSizes(conf, status);
@@ -190,7 +205,22 @@ public class ColumnSizes {
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws Exception {
     main(new Configuration(), args);
+  }
+
+  private static Options createOptions() {
+    Options result = new Options();
+
+    result.addOption(Option.builder()
+            .longOpt("ignoreExtension")
+            .desc("Ignore ORC file extension")
+            .build());
+
+    result.addOption(Option.builder("h")
+            .longOpt("help")
+            .desc("Print help message")
+            .build());
+    return result;
   }
 }
