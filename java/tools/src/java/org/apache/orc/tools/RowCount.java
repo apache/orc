@@ -76,15 +76,15 @@ public class RowCount {
   private static Options createOptions() {
     Options result = new Options();
 
-    result.addOption(Option.builder()
-            .longOpt("ignoreExtension")
-            .desc("Ignore ORC file extension")
-            .build());
+    result.addOption(Option.builder("i")
+        .longOpt("ignoreExtension")
+        .desc("Ignore ORC file extension")
+        .build());
 
     result.addOption(Option.builder("h")
-            .longOpt("help")
-            .desc("Print help message")
-            .build());
+        .longOpt("help")
+        .desc("Print help message")
+        .build());
     return result;
   }
 }
