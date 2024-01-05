@@ -179,6 +179,7 @@ Stripes:
       Stripe level merge: numHashFunctions: 7 bitCount: 9600 popCount: 238 loadFactor: 0.0248 expectedFpp: 5.7562566E-12
 
 File length: 275025 bytes
+File raw data size: 2163000 bytes
 Padding length: 0 bytes
 Padding ratio: 0%
 ________________________________________________________________________________________________________________________
