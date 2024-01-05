@@ -207,10 +207,12 @@ public class JsonFileDump {
 
         FileSystem fs = path.getFileSystem(conf);
         long fileLen = fs.getContentSummary(path).getLength();
+        long rawDataSize = reader.getRawDataSize();
         long paddedBytes = FileDump.getTotalPaddingSize(reader);
         // empty ORC file is ~45 bytes. Assumption here is file length always >0
         double percentPadding = ((double) paddedBytes / (double) fileLen) * 100;
         writer.name("fileLength").value(fileLen);
+        writer.name("rawDataSize").value(rawDataSize);
         writer.name("paddingLength").value(paddedBytes);
         writer.name("paddingRatio").value(percentPadding);
         AcidStats acidStats = OrcAcidUtils.parseAcidStats(reader);

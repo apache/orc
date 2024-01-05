@@ -79,13 +79,13 @@ public final class FileDump {
   }
 
   public static void main(Configuration conf, String[] args) throws Exception {
-    List<Integer> rowIndexCols = new ArrayList<Integer>(0);
+    List<Integer> rowIndexCols = new ArrayList<>(0);
     Options opts = createOptions();
     CommandLine cli = new DefaultParser().parse(opts, args);
 
     if (cli.hasOption('h')) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("orcfiledump", opts);
+      formatter.printHelp("meta", opts);
       return;
     }
 
@@ -103,7 +103,7 @@ public final class FileDump {
         rowIndexCols = null; // All the columns
       } else {
         String[] colStrs = cli.getOptionValue("r").split(",");
-        rowIndexCols = new ArrayList<Integer>(colStrs.length);
+        rowIndexCols = new ArrayList<>(colStrs.length);
         for (String colStr : colStrs) {
           rowIndexCols.add(Integer.parseInt(colStr));
         }
@@ -437,10 +437,12 @@ public final class FileDump {
 
     FileSystem fs = file.getFileSystem(conf);
     long fileLen = fs.getFileStatus(file).getLen();
+    long rawDataSize = reader.getRawDataSize();
     long paddedBytes = getTotalPaddingSize(reader);
     double percentPadding = (fileLen == 0) ? 0.0d : 100.0d * paddedBytes / fileLen;
     DecimalFormat format = new DecimalFormat("##.##");
     System.out.println("\nFile length: " + fileLen + " bytes");
+    System.out.println("File raw data size: " + rawDataSize + " bytes");
     System.out.println("Padding length: " + paddedBytes + " bytes");
     System.out.println("Padding ratio: " + format.format(percentPadding) + "%");
     //print out any user metadata properties
