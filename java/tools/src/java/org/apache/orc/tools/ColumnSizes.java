@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Given a set of paths, finds all of the orc files under them and
+ * Given a set of paths, finds all of the "*.orc" files under them and
  * prints the sizes of each column, both as a percentage and the number of
  * bytes per a row.
  */
@@ -163,7 +163,7 @@ public class ColumnSizes {
       FileSystem fs = rootPath.getFileSystem(conf);
       for(RemoteIterator<LocatedFileStatus> itr = fs.listFiles(rootPath, true); itr.hasNext(); ) {
         LocatedFileStatus status = itr.next();
-        if (status.isFile()) {
+        if (status.isFile() && status.getPath().getName().endsWith(".orc")) {
           try {
             if (result == null) {
               result = new ColumnSizes(conf, status);
