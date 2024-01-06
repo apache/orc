@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set(ORC_FORMAT_VERSION "1.0.0-beta")
+set(ORC_FORMAT_VERSION "1.0.0")
 set(LZ4_VERSION "1.9.3")
 set(SNAPPY_VERSION "1.1.7")
 set(ZLIB_VERSION "1.2.11")
@@ -72,8 +72,8 @@ endif ()
 # ----------------------------------------------------------------------
 # ORC Format
 ExternalProject_Add (orc-format_ep
-  URL "https://github.com/apache/orc-format/archive/refs/tags/v${ORC_FORMAT_VERSION}.tar.gz"
-  URL_HASH SHA256=28184fac3f182be5ead6e31972222b57754532ae94a89c13e9b9733378b60149
+  URL "https://downloads.apache.org/orc/orc-format-${ORC_FORMAT_VERSION}/orc-format-${ORC_FORMAT_VERSION}.tar.gz"
+  URL_HASH SHA256=739fae5ff94b1f812b413077280361045bf92e510ef04b34a610e23a945d8cd5
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
   INSTALL_COMMAND     ""
