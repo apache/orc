@@ -75,7 +75,7 @@
     <maven.version>3.9.6</maven.version>
 
     <mockito.version>4.11.0</mockito.version>
-    <orc-format.version>1.0.0-SNAPSHOT</orc-format.version>
+    <orc-format.version>1.0.0</orc-format.version>
     <!-- Build Properties -->
     <project.build.outputTimestamp>2023-05-15T16:29:49Z</project.build.outputTimestamp>
     <protobuf.version>3.25.1</protobuf.version>
