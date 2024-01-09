@@ -51,7 +51,7 @@ namespace orc {
       stripeSize = 64 * 1024 * 1024;                               // 64M
       compressionBlockSize = 64 * 1024;                            // 64K
       rowIndexStride = 10000;
-      compression = CompressionKind_ZLIB;
+      compression = CompressionKind_ZSTD;
       compressionStrategy = CompressionStrategy_SPEED;
       memoryPool = getDefaultPool();
       paddingTolerance = 0.0;
