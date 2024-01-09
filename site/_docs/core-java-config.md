@@ -69,7 +69,7 @@ permalink: /docs/core-java-config.html
 </tr>
 <tr>
   <td><code>orc.compress</code></td>
-  <td>ZLIB</td>
+  <td>ZSTD</td>
   <td>
     Define the default compression codec for ORC file
   </td>
