@@ -122,6 +122,7 @@ public class SparkBenchmark implements OrcBenchmark {
     public void setup() {
       session = SparkSession.builder().appName("benchmark")
           .config("spark.master", "local[4]")
+          .config("spark.log.level", "ERROR")
           .config("spark.sql.orc.filterPushdown", true)
           .config("spark.sql.orc.impl", "native")
           .getOrCreate();
@@ -189,6 +190,9 @@ public class SparkBenchmark implements OrcBenchmark {
       case "json":
         options.add(new Tuple2<>("timestampFormat", "yyyy-MM-dd HH:mm:ss.SSS"));
         break;
+      case "orc":
+        options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
+        break;
       default:
         break;
     }
@@ -218,6 +222,9 @@ public class SparkBenchmark implements OrcBenchmark {
       case "json":
       case "avro":
         throw new IllegalArgumentException(source.format + " can't handle projection");
+      case "orc":
+        options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
+        break;
       default:
         break;
     }
@@ -289,6 +296,9 @@ public class SparkBenchmark implements OrcBenchmark {
       case "json":
       case "avro":
         throw new IllegalArgumentException(source.format + " can't handle pushdown");
+      case "orc":
+        options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
+        break;
       default:
         break;
     }
