@@ -30,3 +30,11 @@ If tests were added, say they were added here. Please make sure to add some test
 If it was tested in a way different from regular unit tests, please clarify how you tested step by step, ideally copy and paste-able, so that other reviewers can test and check, and descendants can verify in the future.
 If tests were not added, please describe why they were not added and/or why it was difficult to add.
 -->
+
+### Was this patch authored or co-authored using generative AI tooling?
+<!--
+If generative AI tooling has been used in the process of authoring this patch, please include the
+phrase: 'Generated-by: ' followed by the name of the tool and its version.
+If no, write 'No'.
+Please refer to the [ASF Generative Tooling Guidance](https://www.apache.org/legal/generative-tooling.html) for details.
+-->
