@@ -538,7 +538,7 @@ public class TestVectorOrcFile {
 
     assertEquals(3, stats[1].getNumberOfValues());
     assertEquals(15, ((BinaryColumnStatistics) stats[1]).getSum());
-    assertEquals("count: 3 hasNull: true bytesOnDisk: 28 sum: 15", stats[1].toString());
+    assertEquals("count: 3 hasNull: true bytesOnDisk: 30 sum: 15", stats[1].toString());
 
     assertEquals(3, stats[2].getNumberOfValues());
     assertEquals("bar", ((StringColumnStatistics) stats[2]).getMinimum());
@@ -1255,7 +1255,7 @@ public class TestVectorOrcFile {
     assertEquals(-15.0, ((DoubleColumnStatistics) stats[7]).getMinimum(), 0.0001);
     assertEquals(-5.0, ((DoubleColumnStatistics) stats[7]).getMaximum(), 0.0001);
     assertEquals(-20.0, ((DoubleColumnStatistics) stats[7]).getSum(), 0.00001);
-    assertEquals("count: 2 hasNull: false bytesOnDisk: 15 min: -15.0 max: -5.0 sum: -20.0",
+    assertEquals("count: 2 hasNull: false bytesOnDisk: 19 min: -15.0 max: -5.0 sum: -20.0",
         stats[7].toString());
 
     assertEquals("count: 2 hasNull: false bytesOnDisk: " +
@@ -3961,7 +3961,7 @@ public class TestVectorOrcFile {
     // test reading with no keys
     Reader reader = OrcFile.createReader(merge1, OrcFile.readerOptions(conf));
     assertEquals(9 * 1024, reader.getNumberOfRows());
-    assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
+    assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
     assertEquals(1000, reader.getRowIndexStride());
     assertEquals(0xc00, reader.getCompressionSize());
     assertEquals(fileFormat, reader.getFileVersion());
@@ -4107,7 +4107,7 @@ public class TestVectorOrcFile {
 
     reader = OrcFile.createReader(merge2, OrcFile.readerOptions(conf));
     assertEquals(2 * 3 * 1024, reader.getNumberOfRows());
-    assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
+    assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
     assertEquals(0x800, reader.getCompressionSize());
     assertEquals(1000, reader.getRowIndexStride());
     assertEquals(fileFormat, reader.getFileVersion());
