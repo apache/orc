@@ -588,6 +588,7 @@ public class TestFileDump {
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .setSchema(schema)
+            .compress(CompressionKind.ZLIB)
             .rowIndexStride(1000)
             .stripeSize(10000)
             .bufferSize(10000));

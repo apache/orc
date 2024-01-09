@@ -12,7 +12,7 @@ with the same options.
 
 Key                      | Default     | Notes
 :----------------------- | :---------- | :------------------------
-orc.compress             | ZLIB        | high level compression = {NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD}
+orc.compress             | ZSTD        | high level compression = {NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD}
 orc.compress.size        | 262,144     | compression chunk size
 orc.stripe.size          | 67,108,864  | memory buffer in bytes for writing
 orc.row.index.stride     | 10,000      | number of rows between index entries
