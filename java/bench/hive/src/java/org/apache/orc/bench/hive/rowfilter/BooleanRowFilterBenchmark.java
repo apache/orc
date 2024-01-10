@@ -91,10 +91,14 @@ public class BooleanRowFilterBenchmark extends org.openjdk.jmh.Main {
    * Run this test:
    *  java -cp hive/target/orc-benchmarks-hive-*-uber.jar org.apache.orc.bench.hive.rowfilter.BooleanRowFilterBenchmark
    */
-  public static void main(String[] args) throws RunnerException {
-    new Runner(new OptionsBuilder()
-        .include(BooleanRowFilterBenchmark.class.getSimpleName())
-        .forks(1)
-        .build()).run();
+  public static void main(String[] args) {
+    try {
+      new Runner(new OptionsBuilder()
+          .include(BooleanRowFilterBenchmark.class.getSimpleName())
+          .forks(1)
+          .build()).run();
+    } catch (RunnerException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
