@@ -30,7 +30,7 @@ namespace orc {
   ColumnVectorBatch::ColumnVectorBatch(uint64_t cap, MemoryPool& pool)
       : capacity(cap),
         numElements(0),
-        notNull(pool, cap),
+        notNull(pool, cap, /*noMemSet=*/true),
         hasNulls(false),
         isEncoded(false),
         memoryPool(pool) {
@@ -66,7 +66,9 @@ namespace orc {
   }
 
   EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : StringVectorBatch(_capacity, pool), dictionary(), index(pool, _capacity) {
+      : StringVectorBatch(_capacity, pool),
+        dictionary(),
+        index(pool, _capacity, /*noMemSet=*/true) {
     // PASS
   }
 
@@ -89,8 +91,8 @@ namespace orc {
 
   StringVectorBatch::StringVectorBatch(uint64_t _capacity, MemoryPool& pool)
       : ColumnVectorBatch(_capacity, pool),
-        data(pool, _capacity),
-        length(pool, _capacity),
+        data(pool, _capacity, /*noMemSet=*/true),
+        length(pool, _capacity, /*noMemSet=*/true),
         blob(pool) {
     // PASS
   }
@@ -174,7 +176,7 @@ namespace orc {
   }
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool)
-      : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
+      : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1, /*noMemSet=*/true) {
     // PASS
   }
 
@@ -251,7 +253,9 @@ namespace orc {
   }
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool)
-      : ColumnVectorBatch(cap, pool), tags(pool, cap), offsets(pool, cap) {
+      : ColumnVectorBatch(cap, pool),
+        tags(pool, cap, /*noMemSet=*/true),
+        offsets(pool, cap, /*noMemSet=*/true) {
     // PASS
   }
 
@@ -312,8 +316,8 @@ namespace orc {
       : ColumnVectorBatch(cap, pool),
         precision(0),
         scale(0),
-        values(pool, cap),
-        readScales(pool, cap) {
+        values(pool, cap, /*noMemSet=*/true),
+        readScales(pool, cap, /*noMemSet=*/true) {
     // PASS
   }
 
@@ -348,8 +352,8 @@ namespace orc {
       : ColumnVectorBatch(cap, pool),
         precision(0),
         scale(0),
-        values(pool, cap),
-        readScales(pool, cap) {
+        values(pool, cap, /*noMemSet=*/true),
+        readScales(pool, cap, /*noMemSet=*/true) {
     // PASS
   }
 
@@ -407,7 +411,9 @@ namespace orc {
   }
 
   TimestampVectorBatch::TimestampVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : ColumnVectorBatch(_capacity, pool), data(pool, _capacity), nanoseconds(pool, _capacity) {
+      : ColumnVectorBatch(_capacity, pool),
+        data(pool, _capacity, /*noMemSet=*/true),
+        nanoseconds(pool, _capacity, /*noMemSet=*/true) {
     // PASS
   }
 

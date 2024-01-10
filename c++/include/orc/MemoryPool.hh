@@ -51,6 +51,7 @@ namespace orc {
 
    public:
     DataBuffer(MemoryPool& pool, uint64_t _size = 0);
+    DataBuffer(MemoryPool& pool, uint64_t _size, bool noMemSet);
 
     DataBuffer(DataBuffer<T>&& buffer) noexcept;
 

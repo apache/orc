@@ -105,7 +105,7 @@ namespace orc {
                                                uint64_t capacity, uint64_t blockSize,
                                                MemoryPool& pool, WriterMetrics* metrics)
       : BufferedOutputStream(pool, outStream, capacity, blockSize, metrics),
-        rawInputBuffer(pool, blockSize),
+        rawInputBuffer(pool, blockSize, /*noMemSet*/ true),
         level(compressionLevel),
         outputBuffer(nullptr),
         bufferSize(0),
@@ -403,7 +403,7 @@ namespace orc {
                                            ReaderMetrics* _metrics)
       : pool(_pool),
         input(std::move(inStream)),
-        outputDataBuffer(pool, bufferSize),
+        outputDataBuffer(pool, bufferSize, /*noMemSet*/ true),
         state(DECOMPRESS_HEADER),
         outputBufferStart(nullptr),
         outputBuffer(nullptr),
