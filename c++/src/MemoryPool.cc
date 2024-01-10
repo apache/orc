@@ -58,9 +58,9 @@ namespace orc {
   }
 
   // This constructor is used to create a DataBuffer that does not need to be memset to 0.
-  // bool noMemSet is not used in the code, but is kept here to avoid run-time branching.
+  // memset_tag is not used in the code, but is kept here to avoid run-time branching.
   template <class T>
-  DataBuffer<T>::DataBuffer(MemoryPool& pool, uint64_t newSize, [[maybe_unused]] bool noMemSet)
+  DataBuffer<T>::DataBuffer(MemoryPool& pool, uint64_t newSize, no_memset_tag_t no_memset_tag)
       : memoryPool(pool), buf(nullptr), currentSize(0), currentCapacity(0) {
     reserve(newSize);
     currentSize = newSize;

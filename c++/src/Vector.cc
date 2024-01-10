@@ -20,6 +20,7 @@
 
 #include "Adaptor.hh"
 #include "orc/Exceptions.hh"
+#include "orc/MemoryPool.hh"
 
 #include <cstdlib>
 #include <iostream>
@@ -30,7 +31,7 @@ namespace orc {
   ColumnVectorBatch::ColumnVectorBatch(uint64_t cap, MemoryPool& pool)
       : capacity(cap),
         numElements(0),
-        notNull(pool, cap, /*noMemSet=*/true),
+        notNull(pool, cap, no_memset_tag),
         hasNulls(false),
         isEncoded(false),
         memoryPool(pool) {
@@ -66,9 +67,7 @@ namespace orc {
   }
 
   EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : StringVectorBatch(_capacity, pool),
-        dictionary(),
-        index(pool, _capacity, /*noMemSet=*/true) {
+      : StringVectorBatch(_capacity, pool), dictionary(), index(pool, _capacity, no_memset_tag) {
     // PASS
   }
 
@@ -91,8 +90,8 @@ namespace orc {
 
   StringVectorBatch::StringVectorBatch(uint64_t _capacity, MemoryPool& pool)
       : ColumnVectorBatch(_capacity, pool),
-        data(pool, _capacity, /*noMemSet=*/true),
-        length(pool, _capacity, /*noMemSet=*/true),
+        data(pool, _capacity, no_memset_tag),
+        length(pool, _capacity, no_memset_tag),
         blob(pool) {
     // PASS
   }
@@ -314,8 +313,8 @@ namespace orc {
       : ColumnVectorBatch(cap, pool),
         precision(0),
         scale(0),
-        values(pool, cap, /*noMemSet=*/true),
-        readScales(pool, cap, /*noMemSet=*/true) {
+        values(pool, cap, no_memset_tag),
+        readScales(pool, cap, no_memset_tag) {
     // PASS
   }
 
@@ -350,8 +349,8 @@ namespace orc {
       : ColumnVectorBatch(cap, pool),
         precision(0),
         scale(0),
-        values(pool, cap, /*noMemSet=*/true),
-        readScales(pool, cap, /*noMemSet=*/true) {
+        values(pool, cap, no_memset_tag),
+        readScales(pool, cap, no_memset_tag) {
     // PASS
   }
 
@@ -410,8 +409,8 @@ namespace orc {
 
   TimestampVectorBatch::TimestampVectorBatch(uint64_t _capacity, MemoryPool& pool)
       : ColumnVectorBatch(_capacity, pool),
-        data(pool, _capacity, /*noMemSet=*/true),
-        nanoseconds(pool, _capacity, /*noMemSet=*/true) {
+        data(pool, _capacity, no_memset_tag),
+        nanoseconds(pool, _capacity, no_memset_tag) {
     // PASS
   }
 

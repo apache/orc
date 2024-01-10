@@ -35,6 +35,11 @@ namespace orc {
   };
   MemoryPool* getDefaultPool();
 
+  struct no_memset_tag_t {
+    explicit no_memset_tag_t() = default;
+  };
+  inline constexpr no_memset_tag_t no_memset_tag{};
+
   template <class T>
   class DataBuffer {
    private:
@@ -51,7 +56,7 @@ namespace orc {
 
    public:
     DataBuffer(MemoryPool& pool, uint64_t _size = 0);
-    DataBuffer(MemoryPool& pool, uint64_t _size, bool noMemSet);
+    DataBuffer(MemoryPool& pool, uint64_t _size, no_memset_tag_t no_memset_tag);
 
     DataBuffer(DataBuffer<T>&& buffer) noexcept;
 
