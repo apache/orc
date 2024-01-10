@@ -253,9 +253,7 @@ namespace orc {
   }
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool)
-      : ColumnVectorBatch(cap, pool),
-        tags(pool, cap, /*noMemSet=*/true),
-        offsets(pool, cap, /*noMemSet=*/true) {
+      : ColumnVectorBatch(cap, pool), tags(pool, cap), offsets(pool, cap) {
     // PASS
   }
 
