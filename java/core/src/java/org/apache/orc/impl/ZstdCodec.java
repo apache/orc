@@ -41,6 +41,10 @@ public class ZstdCodec implements CompressionCodec {
     this(3, 0);
   }
 
+  public ZstdOptions getZstdOptions() {
+    return zstdOptions;
+  }
+
   // Thread local buffer
   private static final ThreadLocal<byte[]> threadBuffer =
           ThreadLocal.withInitial(() -> null);
