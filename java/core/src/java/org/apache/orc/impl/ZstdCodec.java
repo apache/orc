@@ -100,8 +100,7 @@ public class ZstdCodec implements CompressionCodec {
      * @return ZstdOptions
      */
     public ZstdOptions setWindowLog(int newValue) {
-      if ((newValue < Zstd.windowLogMin() || newValue > Zstd.windowLogMax())
-          && newValue != 0) {
+      if ((newValue < Zstd.windowLogMin() || newValue > Zstd.windowLogMax()) && newValue != 0) {
         throw new IllegalArgumentException(
             String.format(
                 "Zstd compression window size should be in the range %d to %d,"
@@ -138,8 +137,7 @@ public class ZstdCodec implements CompressionCodec {
      * @return ZstdOptions
      */
     public ZstdOptions setLevel(int newValue) {
-      if (newValue < Zstd.minCompressionLevel()
-          || newValue > Zstd.maxCompressionLevel()) {
+      if (newValue < Zstd.minCompressionLevel() || newValue > Zstd.maxCompressionLevel()) {
         throw new IllegalArgumentException(
             String.format(
                 "Zstd compression level should be in the range %d to %d",

@@ -46,7 +46,8 @@ public final class OrcCodecPool {
     return getCodec(kind, OrcFile.CompressionZstdImpl.JAVA);
   }
 
-  public static CompressionCodec getCodec(CompressionKind kind, OrcFile.CompressionZstdImpl zstdImpl) {
+  public static CompressionCodec getCodec(CompressionKind kind,
+                                          OrcFile.CompressionZstdImpl zstdImpl) {
     if (kind == CompressionKind.NONE) return null;
     CompressionCodec codec = null;
     List<CompressionCodec> codecList = POOL.get(kind);
