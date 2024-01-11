@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Replace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -332,11 +333,7 @@ public class TestRowFilteringComplexTypesNulls {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-<<<<<<< HEAD
-    assertTrue(readPercentage > 0.07);
-=======
     assertTrue(readPercentage > 120);
->>>>>>> b73cc5e9c (ORC-817: Replace aircompressor ZStandard compression with zstd-jni)
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {

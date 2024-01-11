@@ -382,7 +382,6 @@ public class OutStream extends PositionedOutputStream {
       outputBuffer(current);
       getNewInputBuffer();
     } else {
-<<<<<<< HEAD
       compressedBuffer.init();
       int currentPosn = compressedBuffer.getCurrentPosn();
       compressedBuffer.advanceTo(currentPosn + HEADER_SIZE);
@@ -390,19 +389,6 @@ public class OutStream extends PositionedOutputStream {
       // Worth compression
       if (codec.compress(current, compressedBuffer.compressed,
           compressedBuffer.overflow, options)) {
-=======
-      // Make sure both compressed and overflow are not null before passing to compress
-      if (compressed == null) {
-        compressed = getNewOutputBuffer();
-      }
-      if (overflow == null) {
-        overflow = getNewOutputBuffer();
-      }
-      int sizePosn = compressed.position();
-      compressed.position(compressed.position() + HEADER_SIZE);
-      if (codec.compress(current, compressed, overflow, options)) {
-        uncompressedBytes = 0;
->>>>>>> b73cc5e9c (ORC-817: Replace aircompressor ZStandard compression with zstd-jni)
         // move position back to after the header
         uncompressedBytes = 0;
 
