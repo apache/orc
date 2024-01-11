@@ -19,23 +19,15 @@ package org.apache.orc.impl;
 
 import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdCompressCtx;
-import com.github.luben.zstd.ZstdDecompressCtx;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class ZstdCodec implements CompressionCodec {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ZstdCodec.class);
-
   private ZstdOptions zstdOptions = null;
-  private Boolean direct = null;
   private ZstdCompressCtx zstdCompressCtx = null;
-  private ZstdDecompressCtx zstdDecompressCtx = null;
 
   public ZstdCodec(int level, int windowLog, boolean longMode, boolean fixed) {
     this.zstdOptions = new ZstdOptions(level, windowLog, longMode, fixed);
@@ -51,12 +43,7 @@ public class ZstdCodec implements CompressionCodec {
 
   // Thread local buffer
   private static final ThreadLocal<byte[]> threadBuffer =
-      new ThreadLocal<byte[]>() {
-        @Override
-        protected byte[] initialValue() {
-          return null;
-        }
-      };
+          ThreadLocal.withInitial(() -> null);
 
   protected static byte[] getBuffer(int size) {
     byte[] result = threadBuffer.get();
@@ -211,9 +198,6 @@ public class ZstdCodec implements CompressionCodec {
     }
   }
 
-  /**
-   *
-   */
   private static final ZstdOptions DEFAULT_OPTIONS =
       new ZstdOptions(3, 0, false, false);
 
@@ -238,73 +222,47 @@ public class ZstdCodec implements CompressionCodec {
   public boolean compress(ByteBuffer in, ByteBuffer out,
       ByteBuffer overflow,
       Options options) throws IOException {
-    ZstdOptions zlo = (ZstdOptions) options;
-    // TODO(@dchristle): Add case for when ByteBuffers are direct.
+    ZstdOptions zso = (ZstdOptions) options;
 
     zstdCompressCtx = new ZstdCompressCtx();
-    zstdCompressCtx.setLevel(zlo.level);
-    zstdCompressCtx.setLong(zlo.windowLog);
+    zstdCompressCtx.setLevel(zso.level);
+    zstdCompressCtx.setLong(zso.windowLog);
     zstdCompressCtx.setChecksum(false);
 
-    int inBytes = in.remaining();
-    int srcOffset = in.arrayOffset() + in.position();
-    int dstOffset = out.arrayOffset() + out.position();
-    int compressBound = (int) Zstd.compressBound(inBytes);
-    int dstSize = out.limit() - out.position();
-    long compressOutput;
+    try {
+      int inBytes = in.remaining();
+      byte[] compressed = getBuffer((int) Zstd.compressBound(inBytes));
 
-    if (dstSize < compressBound) {
-      // The detected output ByteBuffer is too small, based on the maximum
-      // compression estimate. Allocate a temporary buffer of the appropriate
-      // size.
-      byte[] compressed = new byte[compressBound];
-      int remaining = out.remaining();
-
-      compressOutput =
-          zstdCompressCtx.compressByteArray(compressed, 0, compressBound,
-              in.array(), srcOffset, inBytes);
-      if (Zstd.isError(compressOutput)) {
-        throw new IOException(String.format("Error code %s!", compressOutput));
+      int outBytes = zstdCompressCtx.compressByteArray(compressed, 0, compressed.length,
+              in.array(), in.arrayOffset() + in.position(), inBytes);
+      if (Zstd.isError(outBytes)) {
+        throw new IOException(String.format("Error code %s!", outBytes));
       }
-
-      if ((int) compressOutput <= remaining) {
-        // Single copy ok, no need for overflow
-        System.arraycopy(compressed, 0, out.array(), out.arrayOffset() +
-            out.position(), (int) compressOutput);
-        out.position(out.position() + (int) compressOutput);
+      if (outBytes < inBytes) {
+        int remaining = out.remaining();
+        if (remaining >= outBytes) {
+          System.arraycopy(compressed, 0, out.array(), out.arrayOffset() +
+                  out.position(), outBytes);
+          out.position(out.position() + outBytes);
+        } else {
+          System.arraycopy(compressed, 0, out.array(), out.arrayOffset() +
+                  out.position(), remaining);
+          out.position(out.limit());
+          System.arraycopy(compressed, remaining, overflow.array(),
+                  overflow.arrayOffset(), outBytes - remaining);
+          overflow.position(outBytes - remaining);
+        }
+        return true;
       } else {
-        // Single copy not OK, need to copy to both out and overflow
-        System.arraycopy(compressed, 0, out.array(), out.arrayOffset() +
-            out.position(), remaining);
-        out.position(out.limit());
-
-        System.arraycopy(compressed, remaining, overflow.array(),
-            overflow.arrayOffset(), (int) compressOutput - remaining);
-        overflow.position((int) compressOutput - remaining);
+        return false;
       }
-    } else {
-      // Copy directly to output buffer
-      compressOutput =
-          Zstd.compressByteArray(out.array(), dstOffset, dstSize, in.array(),
-              srcOffset, inBytes, zlo.level);
-      if (Zstd.isError(compressOutput)) {
-        throw new IOException(String.format("Error code %s!", compressOutput));
-      }
-      out.position(dstOffset + (int) compressOutput);
+    } finally {
+      zstdCompressCtx.close();
     }
-    zstdCompressCtx.close();
-    return inBytes > (int) compressOutput;
   }
 
-  //  TODO(dchristle): Do we need to add loops similar to ZlibCodec, e.g.
-  //  "while (!deflater.finished() && (length > outSize)) { ..."
   @Override
   public void decompress(ByteBuffer in, ByteBuffer out) throws IOException {
-
-    if (zstdDecompressCtx == null) {
-      zstdDecompressCtx = new ZstdDecompressCtx();
-    }
-
     int srcOffset = in.arrayOffset() + in.position();
     int srcSize = in.remaining();
     int dstOffset = out.arrayOffset() + out.position();
@@ -314,7 +272,7 @@ public class ZstdCodec implements CompressionCodec {
         Zstd.decompressByteArray(out.array(), dstOffset, dstSize, in.array(),
             srcOffset, srcSize);
     if (Zstd.isError(decompressOut)) {
-      LOG.error("Error code {}!", decompressOut);
+      throw new IOException(String.format("Error code %s!", decompressOut));
     }
     in.position(in.limit());
     out.position(dstOffset + (int) decompressOut);
@@ -330,9 +288,6 @@ public class ZstdCodec implements CompressionCodec {
   public void destroy() {
     if (zstdCompressCtx != null) {
       zstdCompressCtx.close();
-    }
-    if (zstdDecompressCtx != null) {
-      zstdDecompressCtx.close();
     }
   }
 
