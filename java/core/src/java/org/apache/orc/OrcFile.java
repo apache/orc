@@ -276,6 +276,10 @@ public class OrcFile {
     SPEED, COMPRESSION
   }
 
+  public enum CompressionZstdImpl {
+    JAVA, JNI
+  }
+
   // unused
   protected OrcFile() {}
 
@@ -447,6 +451,7 @@ public class OrcFile {
     private WriterCallback callback;
     private EncodingStrategy encodingStrategy;
     private CompressionStrategy compressionStrategy;
+    private CompressionZstdImpl compressionZstdImpl;
     private int compressionZstdLevel;
     private int compressionZstdWindowLog;
     private boolean compressionZstdLongMode;
@@ -496,6 +501,9 @@ public class OrcFile {
           OrcConf.COMPRESSION_STRATEGY.getString(tableProperties, conf);
       compressionStrategy = CompressionStrategy.valueOf(compString);
 
+      compressionZstdImpl =
+          CompressionZstdImpl.valueOf(
+              OrcConf.COMPRESSION_ZSTD_IMPL.getString(tableProperties, conf).toUpperCase());
       compressionZstdLevel =
               OrcConf.COMPRESSION_ZSTD_LEVEL.getInt(tableProperties, conf);
       compressionZstdWindowLog =
@@ -942,6 +950,10 @@ public class OrcFile {
 
     public CompressionStrategy getCompressionStrategy() {
       return compressionStrategy;
+    }
+
+    public CompressionZstdImpl getCompressionZstdImpl() {
+      return compressionZstdImpl;
     }
 
     public int getCompressionZstdLevel() {

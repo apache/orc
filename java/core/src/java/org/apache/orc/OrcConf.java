@@ -72,6 +72,9 @@ public enum OrcConf {
       "Define the compression strategy to use while writing data.\n" +
           "This changes the compression level of higher level compression\n" +
           "codec (like ZLIB)."),
+  COMPRESSION_ZSTD_IMPL("orc.compression.zstd.impl",
+          "hive.exec.orc.compression.zstd.impl", "java",
+          "Define the implementation used with the ZStandard codec, java or jni."),
   COMPRESSION_ZSTD_LEVEL("orc.compression.zstd.level",
           "hive.exec.orc.compression.zstd.level", 3,
           "Define the compression level to use with ZStandard codec "

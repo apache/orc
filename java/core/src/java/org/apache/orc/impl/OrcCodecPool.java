@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,10 @@ public final class OrcCodecPool {
   private static final int MAX_PER_KIND = 32;
 
   public static CompressionCodec getCodec(CompressionKind kind) {
+    return getCodec(kind, OrcFile.CompressionZstdImpl.JAVA);
+  }
+
+  public static CompressionCodec getCodec(CompressionKind kind, OrcFile.CompressionZstdImpl zstdImpl) {
     if (kind == CompressionKind.NONE) return null;
     CompressionCodec codec = null;
     List<CompressionCodec> codecList = POOL.get(kind);
@@ -53,7 +58,7 @@ public final class OrcCodecPool {
       }
     }
     if (codec == null) {
-      codec = WriterImpl.createCodec(kind);
+      codec = WriterImpl.createCodec(kind, zstdImpl);
       LOG.debug("Got brand-new codec {}", kind);
     } else {
       LOG.debug("Got recycled codec");
