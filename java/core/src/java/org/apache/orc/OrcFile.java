@@ -498,10 +498,8 @@ public class OrcFile {
 
       compressionZstdLevel =
               OrcConf.COMPRESSION_ZSTD_LEVEL.getInt(tableProperties, conf);
-
       compressionZstdWindowLog =
               OrcConf.COMPRESSION_ZSTD_WINDOWLOG.getInt(tableProperties, conf);
-
       compressionZstdLongMode =
           OrcConf.COMPRESSION_ZSTD_LONGMODE.getBoolean(tableProperties, conf);
 

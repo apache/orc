@@ -19,7 +19,6 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Objects;
 
 import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdCompressCtx;
@@ -27,8 +26,13 @@ import com.github.luben.zstd.ZstdDecompressCtx;
 
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZstdCodec implements CompressionCodec {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ZstdCodec.class);
+
   private ZstdOptions zstdOptions = null;
   private Boolean direct = null;
   private ZstdCompressCtx zstdCompressCtx = null;
@@ -85,16 +89,16 @@ public class ZstdCodec implements CompressionCodec {
     /**
      * Sets the Zstandard long mode maximum back-reference distance, expressed
      * as a power of 2.
-     *
+     * <p>
      * The value must be between ZSTD_WINDOWLOG_MIN (10) and ZSTD_WINDOWLOG_MAX
      * (30 and 31 on 32/64-bit architectures, respectively).
-     *
+     * <p>
      * A value of 0 is a special value indicating to use the default
      * ZSTD_WINDOWLOG_LIMIT_DEFAULT of 27, which corresponds to back-reference
      * window size of 128MiB.
      *
      * @param newValue The desired power-of-2 value back-reference distance.
-     * @return
+     * @return ZstdOptions
      */
     public ZstdOptions setWindowLog(int newValue) {
       if ((newValue < Zstd.windowLogMin() || newValue > Zstd.windowLogMax())
@@ -116,7 +120,7 @@ public class ZstdCodec implements CompressionCodec {
      * compression level is 16+ (compression strategy >= ZSTD_btopt).
      *
      * @param newValue A boolean indicating whether to explicitly use long mode.
-     * @return
+     * @return ZstdOptions
      */
     public ZstdOptions setLongMode(boolean newValue) {
       longMode = newValue;
@@ -132,7 +136,7 @@ public class ZstdCodec implements CompressionCodec {
      * so that users can select a specific level.
      *
      * @param newValue The level value of compression to set.
-     * @return
+     * @return ZstdOptions
      */
     public ZstdOptions setLevel(int newValue) {
       if (newValue < Zstd.minCompressionLevel()
@@ -155,7 +159,7 @@ public class ZstdCodec implements CompressionCodec {
      * Alternatively, the compression level can be set directly with setLevel.
      *
      * @param newValue An Enum specifying how aggressively to compress.
-     * @return
+     * @return ZstdOptions
      */
     @Override
     public ZstdOptions setSpeed(SpeedModifier newValue) {
@@ -188,21 +192,25 @@ public class ZstdCodec implements CompressionCodec {
     }
 
     @Override
-    public boolean equals(Object other) {
-      if (other == null || getClass() != other.getClass()) {
-        return false;
-      } else if (this == other) {
-        return true;
-      } else {
-        ZstdOptions otherOpts = (ZstdOptions) other;
-        return (level == otherOpts.level) &&
-            (windowLog == otherOpts.windowLog);
-      }
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      ZstdOptions that = (ZstdOptions) o;
+
+      if (level != that.level) return false;
+      if (windowLog != that.windowLog) return false;
+      if (longMode != that.longMode) return false;
+      return FIXED == that.FIXED;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(level, windowLog, FIXED);
+      int result = level;
+      result = 31 * result + windowLog;
+      result = 31 * result + (longMode ? 1 : 0);
+      result = 31 * result + (FIXED ? 1 : 0);
+      return result;
     }
   }
 
@@ -227,7 +235,7 @@ public class ZstdCodec implements CompressionCodec {
    * @param out      the compressed bytes
    * @param overflow put any additional bytes here
    * @param options  the options to control compression
-   * @return
+   * @return ZstdOptions
    */
   @Override
   public boolean compress(ByteBuffer in, ByteBuffer out,
@@ -309,7 +317,7 @@ public class ZstdCodec implements CompressionCodec {
         Zstd.decompressByteArray(out.array(), dstOffset, dstSize, in.array(),
             srcOffset, srcSize);
     if (Zstd.isError(decompressOut)) {
-      System.out.format("Error code %s!", decompressOut);
+      LOG.error("Error code {}!", decompressOut);
     }
     in.position(in.limit());
     out.position(dstOffset + (int) decompressOut);
