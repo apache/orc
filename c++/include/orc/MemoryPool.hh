@@ -19,11 +19,9 @@
 #ifndef MEMORYPOOL_HH_
 #define MEMORYPOOL_HH_
 
+#include <memory>
 #include "orc/Int128.hh"
 #include "orc/orc-config.hh"
-
-#include <memory>
-
 namespace orc {
 
   class MemoryPool {
@@ -56,7 +54,7 @@ namespace orc {
 
    public:
     DataBuffer(MemoryPool& pool, uint64_t _size = 0);
-    DataBuffer(MemoryPool& pool, uint64_t _size, no_memset_tag_t no_memset_tag);
+    DataBuffer(MemoryPool& pool, uint64_t _size, no_memset_tag_t);
 
     DataBuffer(DataBuffer<T>&& buffer) noexcept;
 
