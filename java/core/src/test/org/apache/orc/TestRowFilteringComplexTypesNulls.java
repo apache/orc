@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Replace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

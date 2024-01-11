@@ -308,13 +308,13 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case ZSTD:
         if (zstdImpl == OrcFile.CompressionZstdImpl.JAVA) {
           return new AircompressorCodec(kind, new ZstdCompressor(),
-            new ZstdDecompressor());
+              new ZstdDecompressor());
         } else {
           if (com.github.luben.zstd.util.Native.isLoaded()) {
             return new ZstdCodec();
           } else {
             return new AircompressorCodec(kind, new ZstdCompressor(),
-              new ZstdDecompressor());
+                new ZstdDecompressor());
           }
         }
       case BROTLI:

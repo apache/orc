@@ -17,17 +17,16 @@
  */
 package org.apache.orc.impl;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdCompressCtx;
 import com.github.luben.zstd.ZstdDecompressCtx;
-
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class ZstdCodec implements CompressionCodec {
 
