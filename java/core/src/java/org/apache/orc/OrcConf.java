@@ -73,13 +73,13 @@ public enum OrcConf {
           "This changes the compression level of higher level compression\n" +
           "codec (like ZLIB)."),
   COMPRESSION_ZSTD_LEVEL("orc.compression.zstd.level",
-          "hive.exec.orc.compression.zstd.level", 3,
-          "Define the compression level to use with ZStandard codec "
-              + "while writing data."),
+      "hive.exec.orc.compression.zstd.level", 3,
+      "Define the compression level to use with ZStandard codec "
+          + "while writing data."),
   COMPRESSION_ZSTD_WINDOWLOG("orc.compression.zstd.windowlog",
-          "hive.exec.orc.compression.zstd.windowlog", 0,
-          "Set the maximum allowed back-reference distance for "
-              + "ZStandard codec, expressed as power of 2."),
+      "hive.exec.orc.compression.zstd.windowlog", 0,
+      "Set the maximum allowed back-reference distance for "
+          + "ZStandard codec, expressed as power of 2."),
   COMPRESSION_ZSTD_LONGMODE("orc.compression.zstd.longmode",
       "hive.exec.orc.compression.zstd.longmode", false,
       "If enabled, the Zstandard codec will employ long mode during "
