@@ -188,3 +188,52 @@ Update ORC's jira to reflect the released version.
 * Mark the version as released and set the date [here](https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page).
 
 It usually take up to 24 hours for the apache dist mirrors and maven central to update with the new release.
+
+## To release ORC in vcpkg.
+We could release the latest ORC version in [vcpkg](https://vcpkg.io/en/packages).
+
+1.Download the source code of vcpkg:
+~~~
+% git clone git@github.com:microsoft/vcpkg.git
+~~~
+
+2.Compile vcpkg
+
+Configure your vcpkg based on operating system versions. See [Getting Started
+](https://github.com/microsoft/vcpkg?tab=readme-ov-file#getting-started)
+
+3.Update ORC version
+
+Update the **version** field of [vcpkg.json](https://github.com/microsoft/vcpkg/blob/master/ports/orc/vcpkg.json). Run the following command to rebuild ORC:
+```
+% ./vcpkg build  orc
+```
+
+You will receive an error, which contains a SHA512 value, updating it to the [portfile.cmake](https://github.com/microsoft/vcpkg/blob/master/ports/orc/portfile.cmake) file.
+
+> Expected hash: 141afbd6d83b8c8032df071838e7da61eedb3d22289642f76669b6efd167d7550b200bd3542f012d0b63c9ae2572d83fcb1b7f76537b6fa6f980aebf37e2cde2
+
+> Actual hash (you should update): 7b9d6f9613f48b41843618465c0c71ed70e5695b4fc4b3db15d0bbfe4c5126e0c6c8f1114d6c450a56b4ddf0357d89bd40cb03c0964275c59761cc0f8fec1291
+
+4.Commit current changes
+```
+% git commit -m ""
+```
+
+Run ./vcpkg x-add-version --all to auto generate version item in version database.
+```
+% ./vcpkg x-add-version --all
+```
+
+Test changes with the following command:
+```
+% ./vcpkg build orc
+```
+
+If anything is ok, re-commit changes and send a PR to [vcpkg repo](https://github.com/microsoft/vcpkg).
+
+This is an [example](https://github.com/microsoft/vcpkg/pull/36098/files) of updating to ORC 1.9.2
+
+> Note: You will not immediately find the merged PR version on the official website of vcpkg. check [vcpkg release](https://github.com/microsoft/vcpkg/releases) to know the latest release progress.
+
+
