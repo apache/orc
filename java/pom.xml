@@ -61,6 +61,7 @@
 
   <properties>
     <brotli4j.version>1.15.0</brotli4j.version>
+    <zstd-jni.version>1.5.5-11</zstd-jni.version>
     <checkstyle.version>10.12.0</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.3.6</hadoop.version>
@@ -158,7 +159,7 @@
       <dependency>
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
-        <version>1.5.5-11</version>
+        <version>${zstd-jni.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
