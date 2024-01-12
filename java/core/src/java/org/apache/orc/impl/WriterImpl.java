@@ -305,7 +305,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           return new ZstdCodec();
         } else {
           return new AircompressorCodec(kind, new ZstdCompressor(),
-            new ZstdDecompressor());
+              new ZstdDecompressor());
         }
       case BROTLI:
         return new BrotliCodec();
