@@ -217,4 +217,6 @@ target_link_libraries (orc
   ${LIBHDFSPP_LIBRARIES}
   )
 
+add_dependencies(orc orc-format_ep)
+
 install(TARGETS orc DESTINATION lib)
