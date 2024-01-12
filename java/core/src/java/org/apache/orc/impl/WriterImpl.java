@@ -281,8 +281,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     try {
       com.github.luben.zstd.util.Native.load();
     } catch (UnsatisfiedLinkError | ExceptionInInitializerError e) {
-      LOG.warn("Unable to load zstd-jni library for your platform... " +
-            "using builtin-java classes where applicable");
+      LOG.warn("Unable to load zstd-jni library for your platform. " +
+            "Using builtin-java classes where applicable");
     }
   }
 
