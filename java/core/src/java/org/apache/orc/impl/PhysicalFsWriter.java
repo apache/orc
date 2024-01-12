@@ -118,10 +118,11 @@ public class PhysicalFsWriter implements PhysicalWriter {
       // HACK: Fetch Zstd-specific options and set them here -- need to find a
       // better way before merging.
       CompressionCodec.Options tempOptions = codec.getDefaultOptions();
-      if (codec instanceof ZstdCodec) {
-        ((ZstdCodec.ZstdOptions) tempOptions).setLevel(opts.getCompressionZstdLevel());
-        ((ZstdCodec.ZstdOptions) tempOptions).setWindowLog(opts.getCompressionZstdWindowLog());
-        ((ZstdCodec.ZstdOptions) tempOptions).setLongMode(opts.getCompressionZstdLongMode());
+      if (codec instanceof ZstdCodec &&
+              codec.getDefaultOptions() instanceof ZstdCodec.ZstdOptions options) {
+        options.setLevel(opts.getCompressionZstdLevel());
+        options.setWindowLog(opts.getCompressionZstdWindowLog());
+        options.setLongMode(opts.getCompressionZstdLongMode());
       }
       compress.withCodec(codec, tempOptions);
     }
