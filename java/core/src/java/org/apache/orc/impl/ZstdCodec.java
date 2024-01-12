@@ -29,12 +29,12 @@ public class ZstdCodec implements CompressionCodec {
   private ZstdOptions zstdOptions = null;
   private ZstdCompressCtx zstdCompressCtx = null;
 
-  public ZstdCodec(int level, int windowLog, boolean longMode, boolean fixed) {
-    this.zstdOptions = new ZstdOptions(level, windowLog, longMode, fixed);
+  public ZstdCodec(int level, int windowLog, boolean fixed) {
+    this.zstdOptions = new ZstdOptions(level, windowLog, fixed);
   }
 
   public ZstdCodec(int level, int windowLog) {
-    this(level, windowLog, false, false);
+    this(level, windowLog, false);
   }
 
   public ZstdCodec() {
@@ -61,19 +61,17 @@ public class ZstdCodec implements CompressionCodec {
   static class ZstdOptions implements Options {
     private int level;
     private int windowLog;
-    private boolean longMode;
     private final boolean FIXED;
 
-    ZstdOptions(int level, int windowLog, boolean longMode, boolean FIXED) {
+    ZstdOptions(int level, int windowLog, boolean FIXED) {
       this.level = level;
       this.windowLog = windowLog;
-      this.longMode = longMode;
       this.FIXED = FIXED;
     }
 
     @Override
     public ZstdOptions copy() {
-      return new ZstdOptions(level, windowLog, longMode, FIXED);
+      return new ZstdOptions(level, windowLog, FIXED);
     }
 
     /**
@@ -100,19 +98,6 @@ public class ZstdCodec implements CompressionCodec {
                 Zstd.windowLogMax()));
       }
       windowLog = newValue;
-      return this;
-    }
-
-    /**
-     * Sets explicitly whether long mode is used. Note that long mode will be
-     * enabled by default in the underlying library if windowLog >= 128 MB and
-     * compression level is 16+ (compression strategy >= ZSTD_btopt).
-     *
-     * @param newValue A boolean indicating whether to explicitly use long mode.
-     * @return ZstdOptions
-     */
-    public ZstdOptions setLongMode(boolean newValue) {
-      longMode = newValue;
       return this;
     }
 
@@ -188,7 +173,6 @@ public class ZstdCodec implements CompressionCodec {
 
       if (level != that.level) return false;
       if (windowLog != that.windowLog) return false;
-      if (longMode != that.longMode) return false;
       return FIXED == that.FIXED;
     }
 
@@ -196,14 +180,13 @@ public class ZstdCodec implements CompressionCodec {
     public int hashCode() {
       int result = level;
       result = 31 * result + windowLog;
-      result = 31 * result + (longMode ? 1 : 0);
       result = 31 * result + (FIXED ? 1 : 0);
       return result;
     }
   }
 
   private static final ZstdOptions DEFAULT_OPTIONS =
-      new ZstdOptions(3, 0, false, false);
+      new ZstdOptions(3, 0, false);
 
   @Override
   public Options getDefaultOptions() {

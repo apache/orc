@@ -122,7 +122,6 @@ public class PhysicalFsWriter implements PhysicalWriter {
               codec.getDefaultOptions() instanceof ZstdCodec.ZstdOptions options) {
         options.setLevel(opts.getCompressionZstdLevel());
         options.setWindowLog(opts.getCompressionZstdWindowLog());
-        options.setLongMode(opts.getCompressionZstdLongMode());
       }
       compress.withCodec(codec, tempOptions);
     }

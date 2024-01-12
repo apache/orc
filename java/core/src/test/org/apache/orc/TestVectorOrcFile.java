@@ -2294,7 +2294,6 @@ public class TestVectorOrcFile {
         for (Boolean longMode : new ArrayList<>(Arrays.asList(false, true))) {
           OrcConf.COMPRESSION_ZSTD_LEVEL.setInt(conf, level);
           OrcConf.COMPRESSION_ZSTD_WINDOWLOG.setInt(conf, windowLog);
-          OrcConf.COMPRESSION_ZSTD_LONGMODE.setBoolean(conf, longMode);
           try (Writer writer = OrcFile.createWriter(testFilePath,
               OrcFile.writerOptions(conf)
                   .setSchema(schema)
