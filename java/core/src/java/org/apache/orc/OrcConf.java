@@ -75,7 +75,7 @@ public enum OrcConf {
   COMPRESSION_ZSTD_LEVEL("orc.compression.zstd.level",
       "hive.exec.orc.compression.zstd.level", 3,
       "Define the compression level to use with ZStandard codec "
-          + "while writing data."),
+          + "while writing data. The valid range is 1~22"),
   COMPRESSION_ZSTD_WINDOWLOG("orc.compression.zstd.windowlog",
       "hive.exec.orc.compression.zstd.windowlog", 0,
       "Set the maximum allowed back-reference distance for "
