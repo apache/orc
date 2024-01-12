@@ -199,8 +199,7 @@ We could release the latest ORC version in [vcpkg](https://vcpkg.io/en/packages)
 
 2.Compile vcpkg
 
-Configure your vcpkg based on operating system versions. See [Getting Started
-](https://github.com/microsoft/vcpkg?tab=readme-ov-file#getting-started)
+Configure your vcpkg based on operating system versions. See [Getting Started](https://github.com/microsoft/vcpkg?tab=readme-ov-file#getting-started)
 
 3.Update ORC version
 
