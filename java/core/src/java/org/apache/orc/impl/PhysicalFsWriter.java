@@ -113,8 +113,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
           opts.getSchema().getMaximumId() + 1,
           opts.getBufferSize()));
     }
-    CompressionCodec codec = OrcCodecPool.getCodec(opts.getCompress(),
-          opts.getCompressionZstdImpl());
+    CompressionCodec codec = OrcCodecPool.getCodec(opts.getCompress());
     if (codec != null){
       // HACK: Fetch Zstd-specific options and set them here -- need to find a
       // better way before merging.

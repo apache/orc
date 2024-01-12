@@ -287,11 +287,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   }
 
   public static CompressionCodec createCodec(CompressionKind kind) {
-    return createCodec(kind, OrcFile.CompressionZstdImpl.JAVA);
-  }
-
-  public static CompressionCodec createCodec(CompressionKind kind,
-                                           OrcFile.CompressionZstdImpl zstdImpl) {
     switch (kind) {
       case NONE:
         return null;
@@ -306,16 +301,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         return new AircompressorCodec(kind, new Lz4Compressor(),
             new Lz4Decompressor());
       case ZSTD:
-        if (zstdImpl == OrcFile.CompressionZstdImpl.JAVA) {
-          return new AircompressorCodec(kind, new ZstdCompressor(),
-              new ZstdDecompressor());
+        if (com.github.luben.zstd.util.Native.isLoaded()) {
+          return new ZstdCodec();
         } else {
-          if (com.github.luben.zstd.util.Native.isLoaded()) {
-            return new ZstdCodec();
-          } else {
-            return new AircompressorCodec(kind, new ZstdCompressor(),
-                new ZstdDecompressor());
-          }
+          return new AircompressorCodec(kind, new ZstdCompressor(),
+            new ZstdDecompressor());
         }
       case BROTLI:
         return new BrotliCodec();
