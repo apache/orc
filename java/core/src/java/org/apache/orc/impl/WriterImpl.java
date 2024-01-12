@@ -127,8 +127,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final boolean[] directEncodingColumns;
   private final List<OrcProto.ColumnEncoding> unencryptedEncodings =
       new ArrayList<>();
-  private final int compressionZstdLevel;
-  private final int compressionZstdWindowLog;
 
   // the list of maskDescriptions, keys, and variants
   private SortedMap<String, MaskDescriptionImpl> maskDescriptions = new TreeMap<>();
@@ -184,8 +182,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
-    this.compressionZstdLevel = opts.getCompressionZstdLevel();
-    this.compressionZstdWindowLog = opts.getCompressionZstdWindowLog();
 
     // ORC-1362: if isBuildIndex=false, then rowIndexStride will be set to 0.
     if (opts.getRowIndexStride() >= 0 && opts.isBuildIndex()) {
