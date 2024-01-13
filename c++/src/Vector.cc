@@ -31,7 +31,7 @@ namespace orc {
   ColumnVectorBatch::ColumnVectorBatch(uint64_t cap, MemoryPool& pool)
       : capacity(cap),
         numElements(0),
-        notNull(pool, cap, no_memset_tag),
+        notNull(pool, cap),
         hasNulls(false),
         isEncoded(false),
         memoryPool(pool) {
@@ -67,7 +67,7 @@ namespace orc {
   }
 
   EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : StringVectorBatch(_capacity, pool), dictionary(), index(pool, _capacity, no_memset_tag) {
+      : StringVectorBatch(_capacity, pool), dictionary(), index(pool, _capacity) {
     // PASS
   }
 
@@ -90,8 +90,8 @@ namespace orc {
 
   StringVectorBatch::StringVectorBatch(uint64_t _capacity, MemoryPool& pool)
       : ColumnVectorBatch(_capacity, pool),
-        data(pool, _capacity, no_memset_tag),
-        length(pool, _capacity, no_memset_tag),
+        data(pool, _capacity),
+        length(pool, _capacity),
         blob(pool) {
     // PASS
   }
@@ -177,6 +177,7 @@ namespace orc {
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
     // PASS
+    offsets.zeroOut();
   }
 
   ListVectorBatch::~ListVectorBatch() {
@@ -213,7 +214,7 @@ namespace orc {
 
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
-    // PASS
+    offsets.zeroOut();
   }
 
   MapVectorBatch::~MapVectorBatch() {
@@ -253,7 +254,8 @@ namespace orc {
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), tags(pool, cap), offsets(pool, cap) {
-    // PASS
+    tags.zeroOut();
+    offsets.zeroOut();
   }
 
   UnionVectorBatch::~UnionVectorBatch() {
@@ -313,8 +315,8 @@ namespace orc {
       : ColumnVectorBatch(cap, pool),
         precision(0),
         scale(0),
-        values(pool, cap, no_memset_tag),
-        readScales(pool, cap, no_memset_tag) {
+        values(pool, cap),
+        readScales(pool, cap) {
     // PASS
   }
 
@@ -349,8 +351,8 @@ namespace orc {
       : ColumnVectorBatch(cap, pool),
         precision(0),
         scale(0),
-        values(pool, cap, no_memset_tag),
-        readScales(pool, cap, no_memset_tag) {
+        values(pool, cap),
+        readScales(pool, cap) {
     // PASS
   }
 
@@ -408,9 +410,7 @@ namespace orc {
   }
 
   TimestampVectorBatch::TimestampVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : ColumnVectorBatch(_capacity, pool),
-        data(pool, _capacity, no_memset_tag),
-        nanoseconds(pool, _capacity, no_memset_tag) {
+      : ColumnVectorBatch(_capacity, pool), data(pool, _capacity), nanoseconds(pool, _capacity) {
     // PASS
   }
 

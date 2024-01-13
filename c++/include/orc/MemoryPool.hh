@@ -33,11 +33,6 @@ namespace orc {
   };
   MemoryPool* getDefaultPool();
 
-  struct no_memset_tag_t {
-    explicit no_memset_tag_t() = default;
-  };
-  inline constexpr no_memset_tag_t no_memset_tag{};
-
   template <class T>
   class DataBuffer {
    private:
@@ -54,7 +49,6 @@ namespace orc {
 
    public:
     DataBuffer(MemoryPool& pool, uint64_t _size = 0);
-    DataBuffer(MemoryPool& pool, uint64_t _size, no_memset_tag_t);
 
     DataBuffer(DataBuffer<T>&& buffer) noexcept;
 
@@ -86,6 +80,7 @@ namespace orc {
 
     void reserve(uint64_t _size);
     void resize(uint64_t _size);
+    void zeroOut();
   };
 
   // Specializations for char
@@ -167,6 +162,11 @@ namespace orc {
 
   template <>
   void DataBuffer<unsigned char>::resize(uint64_t newSize);
+
+  // Specializations for Int128
+
+  template <>
+  void DataBuffer<Int128>::zeroOut();
 
 #ifdef __clang__
 #pragma clang diagnostic push

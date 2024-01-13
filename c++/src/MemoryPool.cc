@@ -54,14 +54,6 @@ namespace orc {
   template <class T>
   DataBuffer<T>::DataBuffer(MemoryPool& pool, uint64_t newSize)
       : memoryPool(pool), buf(nullptr), currentSize(0), currentCapacity(0) {
-    resize(newSize);
-  }
-
-  // This constructor is used to create a DataBuffer that does not need to be memset to 0.
-  // memset_tag is not used in the code, but is kept here to avoid run-time branching.
-  template <class T>
-  DataBuffer<T>::DataBuffer(MemoryPool& pool, uint64_t newSize, no_memset_tag_t)
-      : memoryPool(pool), buf(nullptr), currentSize(0), currentCapacity(0) {
     reserve(newSize);
     currentSize = newSize;
   }
@@ -114,6 +106,19 @@ namespace orc {
         buf = reinterpret_cast<T*>(memoryPool.malloc(sizeof(T) * newCapacity));
       }
       currentCapacity = newCapacity;
+    }
+  }
+
+  template <class T>
+  void DataBuffer<T>::zeroOut() {
+    memset(buf, 0, sizeof(T) * currentCapacity);
+  }
+
+  // Specializations for Int128
+  template <>
+  void DataBuffer<Int128>::zeroOut() {
+    for (uint64_t i = 0; i < currentCapacity; ++i) {
+      new (buf + i) Int128();
     }
   }
 

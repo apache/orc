@@ -96,7 +96,7 @@ namespace orc {
   template <typename ValueType>
   struct IntegerVectorBatch : public ColumnVectorBatch {
     IntegerVectorBatch(uint64_t cap, MemoryPool& pool)
-        : ColumnVectorBatch(cap, pool), data(pool, cap, no_memset_tag) {
+        : ColumnVectorBatch(cap, pool), data(pool, cap) {
       // PASS
     }
 
@@ -159,7 +159,7 @@ namespace orc {
   template <typename FloatType>
   struct FloatingVectorBatch : public ColumnVectorBatch {
     FloatingVectorBatch(uint64_t cap, MemoryPool& pool)
-        : ColumnVectorBatch(cap, pool), data(pool, cap, no_memset_tag) {
+        : ColumnVectorBatch(cap, pool), data(pool, cap) {
       // PASS
     }
 
