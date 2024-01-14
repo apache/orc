@@ -97,7 +97,7 @@ add_test(
 
 add_test(
   NAME java-bench-spark-test
-  COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/spark/orc-benchmarks-spark-${ORC_VERSION}.jar spark data -d sales -c zstd -f orc
+  COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/spark/orc-benchmarks-spark-${ORC_VERSION}-shaded.jar spark data -d sales -c zstd -f orc
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 install(
