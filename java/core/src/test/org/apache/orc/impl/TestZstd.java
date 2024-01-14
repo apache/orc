@@ -22,10 +22,7 @@ import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdException;
 import io.airlift.compress.zstd.ZstdCompressor;
 import io.airlift.compress.zstd.ZstdDecompressor;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
@@ -37,39 +34,20 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestZstd {
 
-  /**
-   * Test that Zstandard compression does not overflow nor throw an
-   * exception when the allocated output array matches
-   * the estimated upper bound ZSTD_compressBound. Random byte inputs are
-   * used, which are a worst-case for output
-   * compression sizes.
-   */
   @Test
-  public void testZstdCodecNoOverflow() {
-    Random rd = new Random();
-    ArrayList<Integer> testInputDataSizes =
-        new ArrayList<>(Arrays.asList(8, 27, 182, 818, 28459));
-
-    testInputDataSizes.forEach(inputSize -> {
-          ByteBuffer in = ByteBuffer.allocate(inputSize);
-          ByteBuffer out =
-              ByteBuffer.allocate((int) Zstd.compressBound((long) inputSize));
-
-          byte[] arr = new byte[inputSize];
-          rd.nextBytes(arr);
-
-          in.put(arr);
-          in.flip();
-          CompressionCodec codec = new ZstdCodec();
-          boolean overflow;
-          try {
-            overflow = codec.compress(in, out, null, codec.getDefaultOptions());
-          } catch (IOException e) {
-            overflow = true;
-          }
-          assertFalse(overflow);
-        }
-    );
+  public void testNoOverflow() throws Exception {
+    ByteBuffer in = ByteBuffer.allocate(10);
+    ByteBuffer out = ByteBuffer.allocate(10);
+    ByteBuffer jniOut = ByteBuffer.allocate(10);
+    in.put(new byte[]{1, 2, 3, 4, 5, 6, 7, 10});
+    in.flip();
+    CompressionCodec codec = new AircompressorCodec(
+            CompressionKind.ZSTD, new ZstdCompressor(), new ZstdDecompressor());
+    assertFalse(codec.compress(in, out, null,
+            codec.getDefaultOptions()));
+    CompressionCodec zstdCodec = new ZstdCodec();
+    assertFalse(zstdCodec.compress(in, jniOut, null,
+            zstdCodec.getDefaultOptions()));
   }
 
   @Test
@@ -118,9 +96,6 @@ public class TestZstd {
 
     // Verify that input -> aircompressor compresson -> zstd-jni
     // decompression returns the input.
-    // Note: This function returns false if the bytes get larger. But why is
-    // that a problem? sourceCompressorOut has the
-    // capacity.
     zstdAircompressorCodec.compress(sourceCompressorIn, sourceCompressorOut,
         null, zstdAircompressorCodec.getDefaultOptions());
     sourceCompressorOut.flip();

@@ -2274,12 +2274,11 @@ public class TestVectorOrcFile {
   /**
    * Write a randomly generated zstd-compressed file, read it back, and check
    * that the output matches the input.
-   *
+   * <p>
    * Checks correctness across a variety of valid settings:
-   *
+   * <p>
    *  * Negative, low, moderate, and high compression levels
    *  * Valid window sizes in [10-31], and default value of 0.
-   *  * Long mode explicitly enabled and disabled.
    *
    * @throws Exception
    */
@@ -2291,50 +2290,48 @@ public class TestVectorOrcFile {
 
     for (Integer level : new ArrayList<>(Arrays.asList(-4, -1, 0, 1, 3, 8, 12, 17, 22))) {
       for (Integer windowLog : new ArrayList<>(Arrays.asList(0, 10, 20, 31))) {
-        for (Boolean longMode : new ArrayList<>(Arrays.asList(false, true))) {
-          OrcConf.COMPRESSION_ZSTD_LEVEL.setInt(conf, level);
-          OrcConf.COMPRESSION_ZSTD_WINDOWLOG.setInt(conf, windowLog);
-          try (Writer writer = OrcFile.createWriter(testFilePath,
-              OrcFile.writerOptions(conf)
-                  .setSchema(schema)
-                  .compress(CompressionKind.ZSTD)
-                  .bufferSize(1000)
-                  .version(fileFormat))) {
-            VectorizedRowBatch batch = schema.createRowBatch();
-            Random rand = new Random(27182);
-            batch.size = 1000;
-            for (int b = 0; b < 10; ++b) {
-              for (int r = 0; r < 1000; ++r) {
-                ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
-                ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
-                ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
-              }
-              writer.addRowBatch(batch);
+        OrcConf.COMPRESSION_ZSTD_LEVEL.setInt(conf, level);
+        OrcConf.COMPRESSION_ZSTD_WINDOWLOG.setInt(conf, windowLog);
+        try (Writer writer = OrcFile.createWriter(testFilePath,
+                OrcFile.writerOptions(conf)
+                        .setSchema(schema)
+                        .compress(CompressionKind.ZSTD)
+                        .bufferSize(1000)
+                        .version(fileFormat))) {
+          VectorizedRowBatch batch = schema.createRowBatch();
+          Random rand = new Random(3);
+          batch.size = 1000;
+          for (int b = 0; b < 10; ++b) {
+            for (int r = 0; r < 1000; ++r) {
+              ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
+              ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
+              ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
             }
+            writer.addRowBatch(batch);
           }
-          try (Reader reader = OrcFile.createReader(testFilePath,
-              OrcFile.readerOptions(conf).filesystem(fs));
-               RecordReader rows = reader.rows()) {
-            assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
-            VectorizedRowBatch batch = reader.getSchema().createRowBatch(1000);
-            Random rand = new Random(27182);
-            for (int b = 0; b < 10; ++b) {
-              rows.nextBatch(batch);
-              assertEquals(1000, batch.size);
-              for (int r = 0; r < batch.size; ++r) {
-                assertEquals(rand.nextInt(),
-                    ((LongColumnVector) batch.cols[0]).vector[r]);
-                assertEquals(b * 1000 + r,
-                    ((LongColumnVector) batch.cols[1]).vector[r]);
-                assertEquals(rand.nextLong(),
-                    ((LongColumnVector) batch.cols[2]).vector[r]);
-              }
-            }
-            rows.nextBatch(batch);
-            assertEquals(0, batch.size);
-          }
-          fs.delete(testFilePath, false);
         }
+        try (Reader reader = OrcFile.createReader(testFilePath,
+                OrcFile.readerOptions(conf).filesystem(fs));
+             RecordReader rows = reader.rows()) {
+          assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
+          VectorizedRowBatch batch = reader.getSchema().createRowBatch(1000);
+          Random rand = new Random(3);
+          for (int b = 0; b < 10; ++b) {
+            rows.nextBatch(batch);
+            assertEquals(1000, batch.size);
+            for (int r = 0; r < batch.size; ++r) {
+              assertEquals(rand.nextInt(),
+                      ((LongColumnVector) batch.cols[0]).vector[r]);
+              assertEquals(b * 1000 + r,
+                      ((LongColumnVector) batch.cols[1]).vector[r]);
+              assertEquals(rand.nextLong(),
+                      ((LongColumnVector) batch.cols[2]).vector[r]);
+            }
+          }
+          rows.nextBatch(batch);
+          assertEquals(0, batch.size);
+        }
+        fs.delete(testFilePath, false);
       }
     }
   }
