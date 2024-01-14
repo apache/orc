@@ -29,12 +29,8 @@ public class ZstdCodec implements CompressionCodec {
   private ZstdOptions zstdOptions = null;
   private ZstdCompressCtx zstdCompressCtx = null;
 
-  public ZstdCodec(int level, int windowLog, boolean fixed) {
-    this.zstdOptions = new ZstdOptions(level, windowLog, fixed);
-  }
-
   public ZstdCodec(int level, int windowLog) {
-    this(level, windowLog, false);
+    this.zstdOptions = new ZstdOptions(level, windowLog);
   }
 
   public ZstdCodec() {
@@ -61,17 +57,20 @@ public class ZstdCodec implements CompressionCodec {
   static class ZstdOptions implements Options {
     private int level;
     private int windowLog;
-    private final boolean FIXED;
 
-    ZstdOptions(int level, int windowLog, boolean FIXED) {
+    ZstdOptions(int level, int windowLog) {
       this.level = level;
       this.windowLog = windowLog;
-      this.FIXED = FIXED;
     }
 
     @Override
     public ZstdOptions copy() {
-      return new ZstdOptions(level, windowLog, FIXED);
+      return new ZstdOptions(level, windowLog);
+    }
+
+    @Override
+    public Options setSpeed(SpeedModifier newValue) {
+      return this;
     }
 
     /**
@@ -124,41 +123,6 @@ public class ZstdCodec implements CompressionCodec {
       return this;
     }
 
-    /**
-     * Sets the Zstandard compression codec compression level via the Enum
-     * (FASTEST, FAST, DEFAULT). The default value of 3 is the
-     * ZSTD_CLEVEL_DEFAULT level.
-     * <p>
-     * Alternatively, the compression level can be set directly with setLevel.
-     *
-     * @param newValue An Enum specifying how aggressively to compress.
-     * @return ZstdOptions
-     */
-    @Override
-    public ZstdOptions setSpeed(SpeedModifier newValue) {
-      if (FIXED) {
-        throw new IllegalStateException(
-            "Attempt to modify the default options");
-      }
-      switch (newValue) {
-        case FAST:
-          setLevel(2);
-          break;
-        case DEFAULT:
-          // zstd level 3 achieves good ratio/speed tradeoffs, and is the
-          // ZSTD_CLEVEL_DEFAULT level.
-          setLevel(3);
-          break;
-        case FASTEST:
-          // zstd level 1 is the fastest level.
-          setLevel(1);
-          break;
-        default:
-          break;
-      }
-      return this;
-    }
-
     @Override
     public ZstdOptions setData(DataKind newValue) {
       return this; // We don't support setting DataKind in ZstdCodec.
@@ -172,21 +136,19 @@ public class ZstdCodec implements CompressionCodec {
       ZstdOptions that = (ZstdOptions) o;
 
       if (level != that.level) return false;
-      if (windowLog != that.windowLog) return false;
-      return FIXED == that.FIXED;
+      return windowLog == that.windowLog;
     }
 
     @Override
     public int hashCode() {
       int result = level;
       result = 31 * result + windowLog;
-      result = 31 * result + (FIXED ? 1 : 0);
       return result;
     }
   }
 
   private static final ZstdOptions DEFAULT_OPTIONS =
-      new ZstdOptions(3, 0, false);
+      new ZstdOptions(3, 0);
 
   @Override
   public Options getDefaultOptions() {
