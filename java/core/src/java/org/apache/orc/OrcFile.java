@@ -941,16 +941,16 @@ public class OrcFile {
       return compressionStrategy;
     }
 
+    public EncodingStrategy getEncodingStrategy() {
+      return encodingStrategy;
+    }
+
     public int getCompressionZstdLevel() {
       return compressionZstdLevel;
     }
 
     public int getCompressionZstdWindowLog() {
       return compressionZstdWindowLog;
-    }
-
-    public EncodingStrategy getEncodingStrategy() {
-      return encodingStrategy;
     }
 
     public double getPaddingTolerance() {
