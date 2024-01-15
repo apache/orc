@@ -176,7 +176,6 @@ namespace orc {
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
-    // PASS
     offsets.zeroOut();
   }
 
