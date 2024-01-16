@@ -115,8 +115,18 @@ public class PhysicalFsWriter implements PhysicalWriter {
     }
     CompressionCodec codec = OrcCodecPool.getCodec(opts.getCompress());
     if (codec != null){
-      compress.withCodec(codec, codec.getDefaultOptions());
+      CompressionCodec.Options tempOptions = codec.getDefaultOptions();
+      if (codec instanceof ZstdCodec &&
+              codec.getDefaultOptions() instanceof ZstdCodec.ZstdOptions options) {
+        OrcFile.ZstdCompressOptions zstdCompressOptions = opts.getZstdCompressOptions();
+        if (zstdCompressOptions != null) {
+          options.setLevel(zstdCompressOptions.getCompressionZstdLevel());
+          options.setWindowLog(zstdCompressOptions.getCompressionZstdWindowLog());
+        }
+      }
+      compress.withCodec(codec, tempOptions);
     }
+
     this.compressionStrategy = opts.getCompressionStrategy();
     this.maxPadding = (int) (opts.getPaddingTolerance() * defaultStripeSize);
     this.blockSize = opts.getBlockSize();
