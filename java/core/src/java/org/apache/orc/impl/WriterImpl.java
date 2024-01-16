@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl;
 
+import com.github.luben.zstd.util.Native;
 import com.google.protobuf.ByteString;
 import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
@@ -273,6 +274,17 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     return Math.min(kb256, Math.max(kb4, pow2));
   }
 
+  static {
+    try {
+      if (!"java".equalsIgnoreCase(System.getProperty("orc.compression.zstd.impl"))) {
+        Native.load();
+      }
+    } catch (UnsatisfiedLinkError | ExceptionInInitializerError e) {
+      LOG.warn("Unable to load zstd-jni library for your platform. " +
+            "Using builtin-java classes where applicable");
+    }
+  }
+
   public static CompressionCodec createCodec(CompressionKind kind) {
     switch (kind) {
       case NONE:
@@ -288,8 +300,16 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         return new AircompressorCodec(kind, new Lz4Compressor(),
             new Lz4Decompressor());
       case ZSTD:
-        return new AircompressorCodec(kind, new ZstdCompressor(),
-            new ZstdDecompressor());
+        if ("java".equalsIgnoreCase(System.getProperty("orc.compression.zstd.impl"))) {
+          return new AircompressorCodec(kind, new ZstdCompressor(),
+                  new ZstdDecompressor());
+        }
+        if (Native.isLoaded()) {
+          return new ZstdCodec();
+        } else {
+          return new AircompressorCodec(kind, new ZstdCompressor(),
+              new ZstdDecompressor());
+        }
       case BROTLI:
         return new BrotliCodec();
       default:
