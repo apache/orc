@@ -34,7 +34,7 @@ public class ZstdCodec implements CompressionCodec {
   }
 
   public ZstdCodec() {
-    this(3, 0);
+    this(1, 0);
   }
 
   public ZstdOptions getZstdOptions() {
@@ -148,7 +148,7 @@ public class ZstdCodec implements CompressionCodec {
   }
 
   private static final ZstdOptions DEFAULT_OPTIONS =
-      new ZstdOptions(3, 0);
+      new ZstdOptions(1, 0);
 
   @Override
   public Options getDefaultOptions() {
