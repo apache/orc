@@ -207,7 +207,7 @@ public class RecordReaderImpl implements RecordReader {
     OrcFile.WriterVersion writerVersion = fileReader.getWriterVersion();
     SchemaEvolution evolution;
     if (options.getSchema() == null) {
-      LOG.info("Reader schema not provided -- using file schema " +
+      LOG.debug("Reader schema not provided -- using file schema " +
           fileReader.getSchema());
       evolution = new SchemaEvolution(fileReader.getSchema(), null, options);
     } else {
