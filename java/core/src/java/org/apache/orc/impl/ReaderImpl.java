@@ -890,7 +890,7 @@ public class ReaderImpl implements Reader {
 
   @Override
   public RecordReader rows(Options options) throws IOException {
-    LOG.info("Reading ORC rows from " + path + " with " + options);
+    LOG.debug("Reading ORC rows from " + path + " with " + options);
     return new RecordReaderImpl(this, options);
   }
 

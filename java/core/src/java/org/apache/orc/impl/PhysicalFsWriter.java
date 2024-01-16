@@ -94,7 +94,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
     this(fs.create(path, opts.getOverwrite(), HDFS_BUFFER_SIZE,
             fs.getDefaultReplication(path), opts.getBlockSize()), opts, encryption);
     this.path = path;
-    LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
+    LOG.debug("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
             " compression: {}", path, opts.getStripeSize(), blockSize, compress);
   }
 
@@ -509,7 +509,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
     if (length < blockSize && length > availBlockSpace &&
         addBlockPadding) {
       byte[] pad = new byte[(int) Math.min(HDFS_BUFFER_SIZE, availBlockSpace)];
-      LOG.info("Padding ORC by {} bytes while merging", availBlockSpace);
+      LOG.debug("Padding ORC by {} bytes while merging", availBlockSpace);
       start += availBlockSpace;
       while (availBlockSpace > 0) {
         int writeLen = (int) Math.min(availBlockSpace, pad.length);

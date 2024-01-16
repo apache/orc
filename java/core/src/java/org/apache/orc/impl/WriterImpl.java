@@ -236,7 +236,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
     treeWriter = TreeWriter.Factory.create(schema, null, new StreamFactory());
 
-    LOG.info("ORC writer created for path: {} with stripeSize: {} options: {}",
+    LOG.debug("ORC writer created for path: {} with stripeSize: {} options: {}",
         path, stripeSize, unencryptedOptions);
   }
 
