@@ -46,6 +46,7 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.vectorized.ColumnarBatch;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -73,6 +74,7 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @AutoService(OrcBenchmark.class)
+@Fork(jvmArgsAppend = "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 public class SparkBenchmark implements OrcBenchmark {
 
   private static final Path root = Utilities.getBenchmarkRoot();
