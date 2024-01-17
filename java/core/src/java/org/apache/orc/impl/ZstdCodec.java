@@ -29,12 +29,12 @@ public class ZstdCodec implements CompressionCodec {
   private ZstdOptions zstdOptions = null;
   private ZstdCompressCtx zstdCompressCtx = null;
 
-  public ZstdCodec(int level, int windowLog) {
-    this.zstdOptions = new ZstdOptions(level, windowLog);
+  public ZstdCodec(int level, int windowLog, int workers) {
+    this.zstdOptions = new ZstdOptions(level, windowLog, workers);
   }
 
   public ZstdCodec() {
-    this(1, 0);
+    this(1, 0, 0);
   }
 
   public ZstdOptions getZstdOptions() {
@@ -58,14 +58,17 @@ public class ZstdCodec implements CompressionCodec {
     private int level;
     private int windowLog;
 
-    ZstdOptions(int level, int windowLog) {
+    private int workers;
+
+    ZstdOptions(int level, int windowLog, int workers) {
       this.level = level;
       this.windowLog = windowLog;
+      this.workers = workers;
     }
 
     @Override
     public ZstdOptions copy() {
-      return new ZstdOptions(level, windowLog);
+      return new ZstdOptions(level, windowLog, workers);
     }
 
     @Override
@@ -123,6 +126,14 @@ public class ZstdCodec implements CompressionCodec {
       return this;
     }
 
+    public ZstdOptions setWorkers(int newValue) {
+      if (newValue < 0) {
+        throw new IllegalArgumentException("The number of workers should be non-negative.");
+      }
+      workers = newValue;
+      return this;
+    }
+
     @Override
     public ZstdOptions setData(DataKind newValue) {
       return this; // We don't support setting DataKind in ZstdCodec.
@@ -148,7 +159,7 @@ public class ZstdCodec implements CompressionCodec {
   }
 
   private static final ZstdOptions DEFAULT_OPTIONS =
-      new ZstdOptions(1, 0);
+      new ZstdOptions(1, 0, 0);
 
   @Override
   public Options getDefaultOptions() {
@@ -177,6 +188,7 @@ public class ZstdCodec implements CompressionCodec {
     zstdCompressCtx.setLevel(zso.level);
     zstdCompressCtx.setLong(zso.windowLog);
     zstdCompressCtx.setChecksum(false);
+    zstdCompressCtx.setWorkers(zso.workers);
 
     try {
       int inBytes = in.remaining();
