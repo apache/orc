@@ -73,7 +73,7 @@ public enum OrcConf {
           "This changes the compression level of higher level compression\n" +
           "codec (like ZLIB)."),
   COMPRESSION_ZSTD_LEVEL("orc.compression.zstd.level",
-      "hive.exec.orc.compression.zstd.level", 1,
+      "hive.exec.orc.compression.zstd.level", 3,
       "Define the compression level to use with ZStandard codec "
           + "while writing data. The valid range is 1~22"),
   COMPRESSION_ZSTD_WINDOWLOG("orc.compression.zstd.windowlog",
