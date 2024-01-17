@@ -19,11 +19,9 @@
 #ifndef MEMORYPOOL_HH_
 #define MEMORYPOOL_HH_
 
+#include <memory>
 #include "orc/Int128.hh"
 #include "orc/orc-config.hh"
-
-#include <memory>
-
 namespace orc {
 
   class MemoryPool {
@@ -82,6 +80,7 @@ namespace orc {
 
     void reserve(uint64_t _size);
     void resize(uint64_t _size);
+    void zeroOut();
   };
 
   // Specializations for char
@@ -163,6 +162,11 @@ namespace orc {
 
   template <>
   void DataBuffer<unsigned char>::resize(uint64_t newSize);
+
+  // Specializations for Int128
+
+  template <>
+  void DataBuffer<Int128>::zeroOut();
 
 #ifdef __clang__
 #pragma clang diagnostic push
