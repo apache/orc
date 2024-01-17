@@ -159,7 +159,7 @@ public class LeafFilterFactory {
       case DECIMAL:
         HiveDecimalWritable dLow = (HiveDecimalWritable) low;
         HiveDecimalWritable dHigh = (HiveDecimalWritable) high;
-        assert dLow.scale() <= colType.getScale() && dLow.scale() <= colType.getScale();
+        assert dLow.scale() <= colType.getScale() && dHigh.getScale() <= colType.getScale();
         if (isDecimalAsLong(version, colType.getPrecision())) {
           return new LongFilters.LongBetween(colName, dLow.serialize64(colType.getScale()),
                                              dHigh.serialize64(colType.getScale()), negated);

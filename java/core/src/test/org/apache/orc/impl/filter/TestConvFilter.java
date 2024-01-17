@@ -34,6 +34,8 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class TestConvFilter {
   private final int scale = 4;
   private final TypeDescription schema = TypeDescription.createStruct()
@@ -152,6 +154,16 @@ public class TestConvFilter {
 
     FilterUtils.createVectorFilter(sArg, schema).accept(fc);
     ATestFilter.validateSelected(fc, 1, 2, 3);
+
+    SearchArgument sArg2 = SearchArgumentFactory.newBuilder()
+      .startOr()
+      .between("f3", PredicateLeaf.Type.DECIMAL, decimal(0),
+         new HiveDecimalWritable(HiveDecimal.create(Long.MAX_VALUE / 18, scale + scale)))
+      .end()
+      .build();
+    assertThrows(AssertionError.class, () -> {
+      FilterUtils.createVectorFilter(sArg2, schema).accept(fc);
+    });
   }
 
   protected void setBatch(Boolean[] f1Values, Date[] f2Values, HiveDecimalWritable[] f3Values) {
