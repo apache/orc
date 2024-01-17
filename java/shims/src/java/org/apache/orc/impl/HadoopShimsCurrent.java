@@ -96,7 +96,7 @@ public class HadoopShimsCurrent implements HadoopShims {
     List<org.apache.hadoop.crypto.key.KeyProvider> result =
         KeyProviderFactory.getProviders(conf);
     if (result.size() == 0) {
-      LOG.info("Can't get KeyProvider for ORC encryption from" +
+      LOG.debug("Can't get KeyProvider for ORC encryption from" +
           " hadoop.security.key.provider.path.");
       return new NullKeyProvider();
     } else {
