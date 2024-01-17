@@ -156,7 +156,7 @@
                   <include>*:*</include>
                 </includes>
               </artifactSet>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedArtifactAttached>false</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <filters>
                 <filter>

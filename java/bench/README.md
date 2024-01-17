@@ -56,5 +56,5 @@ To run row-filter benchmark:
 
 To run spark benchmark:
 
-```% java -jar spark/target/orc-benchmarks-spark-*-shaded.jar spark data```
+```% java -jar spark/target/orc-benchmarks-spark-${ORC_VERSION}.jar spark data```
 
