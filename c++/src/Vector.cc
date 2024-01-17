@@ -20,6 +20,7 @@
 
 #include "Adaptor.hh"
 #include "orc/Exceptions.hh"
+#include "orc/MemoryPool.hh"
 
 #include <cstdlib>
 #include <iostream>
@@ -175,7 +176,7 @@ namespace orc {
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
-    // PASS
+    offsets.zeroOut();
   }
 
   ListVectorBatch::~ListVectorBatch() {
@@ -212,7 +213,7 @@ namespace orc {
 
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
-    // PASS
+    offsets.zeroOut();
   }
 
   MapVectorBatch::~MapVectorBatch() {
@@ -252,7 +253,8 @@ namespace orc {
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), tags(pool, cap), offsets(pool, cap) {
-    // PASS
+    tags.zeroOut();
+    offsets.zeroOut();
   }
 
   UnionVectorBatch::~UnionVectorBatch() {

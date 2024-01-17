@@ -54,7 +54,8 @@ namespace orc {
   template <class T>
   DataBuffer<T>::DataBuffer(MemoryPool& pool, uint64_t newSize)
       : memoryPool(pool), buf(nullptr), currentSize(0), currentCapacity(0) {
-    resize(newSize);
+    reserve(newSize);
+    currentSize = newSize;
   }
 
   template <class T>
@@ -105,6 +106,19 @@ namespace orc {
         buf = reinterpret_cast<T*>(memoryPool.malloc(sizeof(T) * newCapacity));
       }
       currentCapacity = newCapacity;
+    }
+  }
+
+  template <class T>
+  void DataBuffer<T>::zeroOut() {
+    memset(buf, 0, sizeof(T) * currentCapacity);
+  }
+
+  // Specializations for Int128
+  template <>
+  void DataBuffer<Int128>::zeroOut() {
+    for (uint64_t i = 0; i < currentCapacity; ++i) {
+      new (buf + i) Int128();
     }
   }
 
