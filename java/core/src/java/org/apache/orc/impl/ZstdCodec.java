@@ -171,6 +171,12 @@ public class ZstdCodec implements CompressionCodec {
   public boolean compress(ByteBuffer in, ByteBuffer out,
       ByteBuffer overflow,
       Options options) throws IOException {
+    int inBytes = in.remaining();
+    // Skip with minimum ZStandard format size:
+    // https://datatracker.ietf.org/doc/html/rfc8878#name-zstandard-frames
+    // Magic Number (4 bytes) + Frame Header (2 bytes) + Data Block Header (3 bytes)
+    if (inBytes < 10) return false;
+
     ZstdOptions zso = (ZstdOptions) options;
 
     zstdCompressCtx = new ZstdCompressCtx();
@@ -179,7 +185,6 @@ public class ZstdCodec implements CompressionCodec {
     zstdCompressCtx.setChecksum(false);
 
     try {
-      int inBytes = in.remaining();
       byte[] compressed = getBuffer((int) Zstd.compressBound(inBytes));
 
       int outBytes = zstdCompressCtx.compressByteArray(compressed, 0, compressed.length,
