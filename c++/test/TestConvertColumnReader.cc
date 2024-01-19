@@ -815,9 +815,9 @@ namespace orc {
       } else if (i >= 10 && i < 100) {
         EXPECT_EQ(std::to_string(i) + ".12", std::string(readC1.data[i], readC1.length[i]));
         EXPECT_EQ(std::to_string(i) + ".45", std::string(readC2.data[i], readC2.length[i]));
-      } else if (i >= 100 && i <= 1000) {
-        EXPECT_EQ(std::to_string(i) + ".12", std::string(readC1.data[i], readC1.length[i]));
-        EXPECT_EQ(std::to_string(i) + ".45", std::string(readC2.data[i], readC2.length[i]));
+      } else if (i >= 100 && i < 1000) {
+        EXPECT_EQ(std::to_string(i) + ".1", std::string(readC1.data[i], readC1.length[i]));
+        EXPECT_EQ(std::to_string(i) + ".4", std::string(readC2.data[i], readC2.length[i]));
       } else {
         EXPECT_EQ(std::to_string(i) + ".", std::string(readC1.data[i], readC1.length[i]));
         EXPECT_EQ(std::to_string(i) + ".", std::string(readC2.data[i], readC2.length[i]));
