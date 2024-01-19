@@ -189,9 +189,6 @@ public class ZstdCodec implements CompressionCodec {
 
       int outBytes = zstdCompressCtx.compressByteArray(compressed, 0, compressed.length,
               in.array(), in.arrayOffset() + in.position(), inBytes);
-      if (Zstd.isError(outBytes)) {
-        throw new IOException(String.format("Error code %s!", outBytes));
-      }
       if (outBytes < inBytes) {
         int remaining = out.remaining();
         if (remaining >= outBytes) {
@@ -225,9 +222,6 @@ public class ZstdCodec implements CompressionCodec {
     long decompressOut =
         Zstd.decompressByteArray(out.array(), dstOffset, dstSize, in.array(),
             srcOffset, srcSize);
-    if (Zstd.isError(decompressOut)) {
-      throw new IOException(String.format("Error code %s!", decompressOut));
-    }
     in.position(in.limit());
     out.position(dstOffset + (int) decompressOut);
     out.flip();
