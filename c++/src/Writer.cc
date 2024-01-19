@@ -58,7 +58,7 @@ namespace orc {
       errorStream = &std::cerr;
       dictionaryKeySizeThreshold = 0.0;
       enableIndex = true;
-      bloomFilterFalsePositiveProb = 0.05;
+      bloomFilterFalsePositiveProb = 0.01;
       bloomFilterVersion = UTF8;
       // Writer timezone uses "GMT" by default to get rid of potential issues
       // introduced by moving timestamps between different timezones.
