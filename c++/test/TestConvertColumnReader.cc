@@ -749,7 +749,7 @@ namespace orc {
       EXPECT_TRUE(readC2.notNull[idx]) << i;
       EXPECT_EQ(getTimezoneByName(readerTimezoneName).convertToUTC(readC1.data[i]), ts[0][i]);
       EXPECT_TRUE(readC1.nanoseconds[i] == 123400000);
-      EXPECT_EQ(getTimezoneByName(writerTimezoneName).convertToUTC(readC2.data[i]), ts[1][i]);
+      EXPECT_EQ(readC2.data[i], ts[1][i]);
       if (readC2.data[i] < 0) {
         EXPECT_EQ(readC2.nanoseconds[i], 123456790) << timeStrings[i];
       } else {
