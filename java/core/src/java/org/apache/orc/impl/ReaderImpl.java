@@ -48,6 +48,7 @@ import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.ReaderEncryptionVariant;
+import org.apache.orc.util.OrcInputStreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -784,12 +785,20 @@ public class ReaderImpl implements Reader {
       // figure out the size of the file using the option or filesystem
       long size;
       if (maxFileLength == Long.MAX_VALUE) {
-        FileStatus fileStatus = fs.getFileStatus(path);
-        size = fileStatus.getLen();
-        modificationTime = fileStatus.getModificationTime();
+        boolean fileLengthFast = conf.getBoolean(OrcConf.FILE_LENGTH_FAST.getAttribute(),
+            (boolean)OrcConf.FILE_LENGTH_FAST.getDefaultValue());
+        long fileLength = fileLengthFast ? OrcInputStreamUtil.getFileLength(file) : -1L;
+        if (fileLength > 0) {
+          size = fileLength;
+          modificationTime = -1L;
+        } else {
+          FileStatus fileStatus = fs.getFileStatus(path);
+          size = fileStatus.getLen();
+          modificationTime = fileStatus.getModificationTime();
+        }
       } else {
         size = maxFileLength;
-        modificationTime = -1;
+        modificationTime = -1L;
       }
       if (size == 0) {
         // Hive often creates empty files (including ORC) and has an

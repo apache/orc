@@ -251,7 +251,10 @@ public enum OrcConf {
   ROW_BATCH_CHILD_LIMIT("orc.row.child.limit", "orc.row.child.limit",
       1024 * 32, "The maximum number of child elements to buffer before "+
       "the ORC row writer writes the batch to the file."
-      )
+      ),
+  FILE_LENGTH_FAST("orc.file.length.fast", "orc.file.length.fast",
+      false, "A boolean flag to enable reduce file length RPC. "
+  )
   ;
 
   private final String attribute;
