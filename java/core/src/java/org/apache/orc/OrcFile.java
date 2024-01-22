@@ -1044,11 +1044,15 @@ public class OrcFile {
     return new WriterOptions(tableProperties, conf);
   }
 
-  private static MemoryManager memoryManager = null;
+  private static volatile MemoryManager memoryManager = null;
 
-  private static synchronized MemoryManager getStaticMemoryManager(Configuration conf) {
+  private static MemoryManager getStaticMemoryManager(Configuration conf) {
     if (memoryManager == null) {
-      memoryManager = new MemoryManagerImpl(conf);
+      synchronized (OrcFile.class) {
+        if (memoryManager == null) {
+          memoryManager = new MemoryManagerImpl(conf);
+        }
+      }
     }
     return memoryManager;
   }
