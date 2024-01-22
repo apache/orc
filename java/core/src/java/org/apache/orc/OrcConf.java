@@ -253,7 +253,7 @@ public enum OrcConf {
       "the ORC row writer writes the batch to the file."
       ),
   FILE_LENGTH_FAST("orc.file.length.fast", "orc.file.length.fast",
-      false, "A boolean flag to enable reduce file length RPC. "
+      true, "A boolean flag to enable reduce file length RPC. "
   )
   ;
 
