@@ -60,6 +60,7 @@ public class CoreReader {
       }
     }
     rowIterator.close();
+    reader.close();
   }
 
   public static void main(String[] args) throws IOException {
