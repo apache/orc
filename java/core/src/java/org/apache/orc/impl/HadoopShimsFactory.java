@@ -32,7 +32,7 @@ public class HadoopShimsFactory {
 
   private static final String CURRENT_SHIM_NAME =
       "org.apache.orc.impl.HadoopShimsCurrent";
-  private static HadoopShims SHIMS = null;
+  private static volatile HadoopShims SHIMS = null;
 
   private static HadoopShims createShimByName(String name) {
     try {
@@ -46,15 +46,19 @@ public class HadoopShimsFactory {
     }
   }
 
-  public static synchronized HadoopShims get() {
+  public static HadoopShims get() {
     if (SHIMS == null) {
-      String[] versionParts = VersionInfo.getVersion().split("[.]");
-      int major = Integer.parseInt(versionParts[0]);
-      int minor = Integer.parseInt(versionParts[1]);
-      if (major < 2 || (major == 2 && minor < 7)) {
-        LOG.warn("Hadoop " + VersionInfo.getVersion() + " support is dropped.");
+      synchronized (HadoopShimsFactory.class) {
+        if (SHIMS == null) {
+          String[] versionParts = VersionInfo.getVersion().split("[.]");
+          int major = Integer.parseInt(versionParts[0]);
+          int minor = Integer.parseInt(versionParts[1]);
+          if (major < 2 || (major == 2 && minor < 7)) {
+            LOG.warn("Hadoop " + VersionInfo.getVersion() + " support is dropped.");
+          }
+          SHIMS = createShimByName(CURRENT_SHIM_NAME);
+        }
       }
-      SHIMS = createShimByName(CURRENT_SHIM_NAME);
     }
     return SHIMS;
   }
