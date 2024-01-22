@@ -83,6 +83,7 @@ public class AdvancedReader {
       }
     }
     rowIterator.close();
+    reader.close();
   }
 
   public static void main(String[] args) throws IOException {

@@ -60,6 +60,7 @@ public class InMemoryEncryptionReader {
       }
     }
     rowIterator.close();
+    reader.close();
   }
 
   public static void main(String[] args) throws IOException {
