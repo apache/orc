@@ -103,6 +103,20 @@ permalink: /docs/core-java-config.html
   </td>
 </tr>
 <tr>
+  <td><code>orc.compression.zstd.level</code></td>
+  <td>3</td>
+  <td>
+    Define the compression level to use with ZStandard codec while writing data. The valid range is 1~22.
+  </td>
+</tr>
+<tr>
+  <td><code>orc.compression.zstd.windowlog</code></td>
+  <td>0</td>
+  <td>
+    Set the maximum allowed back-reference distance for ZStandard codec, expressed as power of 2.
+  </td>
+</tr>
+<tr>
   <td><code>orc.block.padding.tolerance</code></td>
   <td>0.05</td>
   <td>
