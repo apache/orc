@@ -19,6 +19,7 @@
 package org.apache.orc.util;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.hdfs.DFSInputStream;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -27,10 +28,8 @@ import java.lang.reflect.Method;
 public class OrcInputStreamUtil {
 
   private static final String DFS_CLASS = "org.apache.hadoop.hdfs.DFSInputStream";
-  private static final String DFS_STRIPED_CLASS = "org.apache.hadoop.hdfs.DFSStripedInputStream";
 
   private static Method shortCircuitForbiddenMethod;
-  private static Method getFileLengthMethod;
 
   static {
     init();
@@ -45,9 +44,9 @@ public class OrcInputStreamUtil {
 
   private static void initInt() throws ClassNotFoundException, NoSuchMethodException {
     Class<?> dfsClass = Class.forName(DFS_CLASS);
+    // org.apache.hadoop.hdfs.DFSInputStream.shortCircuitForbidden Method is not public
     shortCircuitForbiddenMethod = dfsClass.getDeclaredMethod("shortCircuitForbidden");
     shortCircuitForbiddenMethod.setAccessible(true);
-    getFileLengthMethod = dfsClass.getMethod("getFileLength");
   }
 
   public static long getFileLength(FSDataInputStream file) {
@@ -60,19 +59,16 @@ public class OrcInputStreamUtil {
 
   private static long getFileLengthInt(FSDataInputStream file)
           throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    if (shortCircuitForbiddenMethod == null || getFileLengthMethod == null) {
+    if (shortCircuitForbiddenMethod == null) {
       return -1L;
     }
     InputStream wrappedStream = file.getWrappedStream();
-    Class<? extends InputStream> wrappedStreamClass = wrappedStream.getClass();
-    String className = wrappedStreamClass.getName();
-    if (!className.equals(DFS_CLASS) && !className.equals(DFS_STRIPED_CLASS)) {
-      return -1L;
-    }
-    boolean isUnderConstruction = (boolean) shortCircuitForbiddenMethod.invoke(wrappedStream);
-    // If file are under construction, we need to get the file length from NameNode.
-    if (!isUnderConstruction) {
-      return (long) getFileLengthMethod.invoke(wrappedStream);
+    if (wrappedStream instanceof DFSInputStream dfsInputStream) {
+      boolean isUnderConstruction = (boolean) shortCircuitForbiddenMethod.invoke(wrappedStream);
+      // If file are under construction, we need to get the file length from NameNode.
+      if (!isUnderConstruction) {
+        return dfsInputStream.getFileLength();
+      }
     }
     return -1L;
   }
