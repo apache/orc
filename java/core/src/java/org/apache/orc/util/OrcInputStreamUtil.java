@@ -27,8 +27,6 @@ import java.lang.reflect.Method;
 
 public class OrcInputStreamUtil {
 
-  private static final String DFS_CLASS = "org.apache.hadoop.hdfs.DFSInputStream";
-
   private static Method shortCircuitForbiddenMethod;
 
   static {
@@ -43,9 +41,8 @@ public class OrcInputStreamUtil {
   }
 
   private static void initInt() throws ClassNotFoundException, NoSuchMethodException {
-    Class<?> dfsClass = Class.forName(DFS_CLASS);
     // org.apache.hadoop.hdfs.DFSInputStream.shortCircuitForbidden Method is not public
-    shortCircuitForbiddenMethod = dfsClass.getDeclaredMethod("shortCircuitForbidden");
+    shortCircuitForbiddenMethod = DFSInputStream.class.getDeclaredMethod("shortCircuitForbidden");
     shortCircuitForbiddenMethod.setAccessible(true);
   }
 
