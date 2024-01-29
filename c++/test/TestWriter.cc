@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "gtest/gtest.h"
 #include "orc/ColumnPrinter.hh"
 #include "orc/OrcFile.hh"
 
@@ -29,6 +30,7 @@
 #include <cmath>
 #include <ctime>
 #include <sstream>
+#include <stdexcept>
 
 #ifdef __clang__
 DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
@@ -2189,6 +2191,24 @@ namespace orc {
         rowsRead += batch->numElements;
       }
     }
+  }
+
+  TEST_P(WriterTest, testValidateOptions) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+
+    uint64_t stripeSize = 16 * 1024;  // 16K
+    auto compressionKind = CompressionKind_NONE;
+
+    EXPECT_NO_THROW(createWriter(stripeSize, /* compressionBlockSize*/ (1 << 23) - 1,
+                                 compressionKind, *type, pool, &memStream, fileVersion));
+    EXPECT_THROW(createWriter(stripeSize, /* compressionBlockSize*/ (1 << 23), compressionKind,
+                              *type, pool, &memStream, fileVersion),
+                 std::invalid_argument);
+    EXPECT_THROW(createWriter(stripeSize, /* compressionBlockSize*/ (1 << 23) + 1, compressionKind,
+                              *type, pool, &memStream, fileVersion),
+                 std::invalid_argument);
   }
 
   INSTANTIATE_TEST_SUITE_P(OrcTest, WriterTest,

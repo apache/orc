@@ -77,6 +77,8 @@ namespace orc {
 
     /**
      * Set the data compression block size.
+     * Should less then 1 << 23 bytes (8M) which is limited by the
+     * 3 bytes size of compression block header (1 bit for isOriginal and 23 bits for length)
      */
     WriterOptions& setCompressionBlockSize(uint64_t size);
 

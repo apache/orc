@@ -338,6 +338,12 @@ namespace orc {
 
   const WriterId WriterImpl::writerId = WriterId::ORC_CPP_WRITER;
 
+  static void validateOptions(const WriterOptions& opts) {
+    if (opts.getCompressionBlockSize() >= (1 << 23)) {
+      throw std::invalid_argument("Compression block size cannot be greater or equal than 8M");
+    }
+  }
+
   WriterImpl::WriterImpl(const Type& t, OutputStream* stream, const WriterOptions& opts)
       : outStream(stream), options(opts), type(t) {
     streamsFactory = createStreamsFactory(options, outStream);
@@ -346,6 +352,8 @@ namespace orc {
     currentOffset = 0;
     stripesAtLastFlush = 0;
     lastFlushOffset = 0;
+
+    validateOptions(opts);
 
     useTightNumericVector = opts.getUseTightNumericVector();
 
