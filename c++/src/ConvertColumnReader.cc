@@ -617,14 +617,15 @@ namespace orc {
     void convertDecimalToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx,
                                    const FileTypeBatch& srcBatch) {
       constexpr int SecondToNanoFactor = 9;
+      // Following constant comes from java.time.Instant
       // '-1000000000-01-01T00:00Z'
       constexpr int64_t MIN_EPOCH_SECONDS = -31557014167219200L;
       // '1000000000-12-31T23:59:59.999999999Z'
       constexpr int64_t MAX_EPOCH_SECONDS = 31556889864403199L;
       // dummy variable, there's no risk of overflow
+      bool overflow = false;
 
       Int128 i128(srcBatch.values[idx]);
-      bool overflow = false;
       Int128 integerPortion = scaleDownInt128ByPowerOfTen(i128, scale);
       if (integerPortion < MIN_EPOCH_SECONDS || integerPortion > MAX_EPOCH_SECONDS) {
         handleOverflow<Decimal, int64_t>(dstBatch, idx, throwOnOverflow);
@@ -642,6 +643,7 @@ namespace orc {
         fractionPortion += 1e9;
         integerPortion -= 1;
       }
+      // line 630 has guaranteed toLong() will not overflow
       dstBatch.data[idx] = integerPortion.toLong();
       dstBatch.nanoseconds[idx] = fractionPortion.toLong();
 
