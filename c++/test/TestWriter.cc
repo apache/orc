@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <_types/_uint64_t.h>
 #include "gtest/gtest.h"
 #include "orc/ColumnPrinter.hh"
 #include "orc/OrcFile.hh"
@@ -24,6 +25,7 @@
 #include "MemoryOutputStream.hh"
 #include "Reader.hh"
 
+#include "orc/Writer.hh"
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
@@ -2194,20 +2196,12 @@ namespace orc {
   }
 
   TEST_P(WriterTest, testValidateOptions) {
-    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool* pool = getDefaultPool();
-    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
-
-    uint64_t stripeSize = 16 * 1024;  // 16K
-    auto compressionKind = CompressionKind_NONE;
-
-    EXPECT_NO_THROW(createWriter(stripeSize, /* compressionBlockSize*/ (1 << 23) - 1,
-                                 compressionKind, *type, pool, &memStream, fileVersion));
-    EXPECT_THROW(createWriter(stripeSize, /* compressionBlockSize*/ (1 << 23), compressionKind,
-                              *type, pool, &memStream, fileVersion),
+    WriterOptions options;
+    constexpr uint64_t compressionBlockSizeThreshold = (1 << 23) - 1;
+    EXPECT_NO_THROW(options.setCompressionBlockSize(compressionBlockSizeThreshold));
+    EXPECT_THROW(options.setCompressionBlockSize(compressionBlockSizeThreshold + 1),
                  std::invalid_argument);
-    EXPECT_THROW(createWriter(stripeSize, /* compressionBlockSize*/ (1 << 23) + 1, compressionKind,
-                              *type, pool, &memStream, fileVersion),
+    EXPECT_THROW(options.setCompressionBlockSize(compressionBlockSizeThreshold + 2),
                  std::invalid_argument);
   }
 
