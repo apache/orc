@@ -61,7 +61,7 @@
 
   <properties>
     <brotli4j.version>1.15.0</brotli4j.version>
-    <checkstyle.version>10.12.0</checkstyle.version>
+    <checkstyle.version>10.13.0</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.3.6</hadoop.version>
     <java.version>17</java.version>
