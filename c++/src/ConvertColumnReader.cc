@@ -593,6 +593,107 @@ namespace orc {
     int32_t toScale;
   };
 
+  template <typename FileTypeBatch>
+  class DecimalToTimestampColumnReader : public ConvertToTimestampColumnReader {
+   public:
+    DecimalToTimestampColumnReader(const Type& _readType, const Type& fileType,
+                                   StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertToTimestampColumnReader(_readType, fileType, stripe, _throwOnOverflow),
+          precision(static_cast<int32_t>(fileType.getPrecision())),
+          scale(static_cast<int32_t>(fileType.getScale())) {}
+
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ConvertColumnReader::next(rowBatch, numValues, notNull);
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      auto& dstBatch = *SafeCastBatchTo<TimestampVectorBatch*>(&rowBatch);
+      for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          convertDecimalToTimestamp(dstBatch, i, srcBatch);
+        }
+      }
+    }
+
+   private:
+    void convertDecimalToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx,
+                                   const FileTypeBatch& srcBatch) {
+      constexpr int SecondToNanoFactor = 9;
+      // Following constant comes from java.time.Instant
+      // '-1000000000-01-01T00:00Z'
+      constexpr int64_t MIN_EPOCH_SECONDS = -31557014167219200L;
+      // '1000000000-12-31T23:59:59.999999999Z'
+      constexpr int64_t MAX_EPOCH_SECONDS = 31556889864403199L;
+      // dummy variable, there's no risk of overflow
+      bool overflow = false;
+
+      Int128 i128(srcBatch.values[idx]);
+      Int128 integerPortion = scaleDownInt128ByPowerOfTen(i128, scale);
+      if (integerPortion < MIN_EPOCH_SECONDS || integerPortion > MAX_EPOCH_SECONDS) {
+        handleOverflow<Decimal, int64_t>(dstBatch, idx, throwOnOverflow);
+        return;
+      }
+      i128 -= scaleUpInt128ByPowerOfTen(integerPortion, scale, overflow);
+      Int128 fractionPortion = std::move(i128);
+      if (scale < SecondToNanoFactor) {
+        fractionPortion =
+            scaleUpInt128ByPowerOfTen(fractionPortion, SecondToNanoFactor - scale, overflow);
+      } else {
+        fractionPortion = scaleDownInt128ByPowerOfTen(fractionPortion, scale - SecondToNanoFactor);
+      }
+      if (fractionPortion < 0) {
+        fractionPortion += 1e9;
+        integerPortion -= 1;
+      }
+      // line 630 has guaranteed toLong() will not overflow
+      dstBatch.data[idx] = integerPortion.toLong();
+      dstBatch.nanoseconds[idx] = fractionPortion.toLong();
+
+      if (needConvertTimezone) {
+        dstBatch.data[idx] = readerTimezone.convertFromUTC(dstBatch.data[idx]);
+      }
+    }
+
+    const int32_t precision;
+    const int32_t scale;
+  };
+
+  template <typename FileTypeBatch>
+  class DecimalToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
+   public:
+    DecimalToStringVariantColumnReader(const Type& _readType, const Type& fileType,
+                                       StripeStreams& stripe, bool _throwOnOverflow)
+        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow),
+          scale(fileType.getScale()) {}
+
+    uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override {
+      uint64_t size = 0;
+      strBuffer.resize(numValues);
+      const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
+      if (readType.getKind() == STRING) {
+        for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            strBuffer[i] = Int128(srcBatch.values[i]).toDecimalString(scale, true);
+            size += strBuffer[i].size();
+          }
+        }
+      } else {
+        const auto maxLength = readType.getMaximumLength();
+        for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            strBuffer[i] = Int128(srcBatch.values[i]).toDecimalString(scale, true);
+          }
+          if (strBuffer[i].size() > maxLength) {
+            strBuffer[i].resize(maxLength);
+          }
+          size += strBuffer[i].size();
+        }
+      }
+      return size;
+    }
+
+   private:
+    const int32_t scale;
+  };
+
 #define DEFINE_NUMERIC_CONVERT_READER(FROM, TO, TYPE) \
   using FROM##To##TO##ColumnReader =                  \
       NumericConvertColumnReader<FROM##VectorBatch, TO##VectorBatch, TYPE>;
@@ -620,6 +721,14 @@ namespace orc {
       DecimalConvertColumnReader<Decimal64VectorBatch, TO##VectorBatch>; \
   using Decimal128##To##TO##ColumnReader =                               \
       DecimalConvertColumnReader<Decimal128VectorBatch, TO##VectorBatch>;
+
+#define DEFINE_DECIMAL_CONVERT_TO_TIMESTAMP_READER                                               \
+  using Decimal64ToTimestampColumnReader = DecimalToTimestampColumnReader<Decimal64VectorBatch>; \
+  using Decimal128ToTimestampColumnReader = DecimalToTimestampColumnReader<Decimal128VectorBatch>;
+
+#define DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(TO)                                        \
+  using Decimal64To##TO##ColumnReader = DecimalToStringVariantColumnReader<Decimal64VectorBatch>; \
+  using Decimal128To##TO##ColumnReader = DecimalToStringVariantColumnReader<Decimal128VectorBatch>;
 
   DEFINE_NUMERIC_CONVERT_READER(Boolean, Byte, int8_t)
   DEFINE_NUMERIC_CONVERT_READER(Boolean, Short, int16_t)
@@ -719,6 +828,11 @@ namespace orc {
   // Decimal to Decimal
   DEFINE_DECIMAL_CONVERT_TO_DECIMAL_READER(Decimal64)
   DEFINE_DECIMAL_CONVERT_TO_DECIMAL_READER(Decimal128)
+
+  DEFINE_DECIMAL_CONVERT_TO_TIMESTAMP_READER
+  DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(String)
+  DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(Char)
+  DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(Varchar)
 
 #define CREATE_READER(NAME) \
   return std::make_unique<NAME>(_readType, fileType, stripe, throwOnOverflow);
@@ -935,13 +1049,6 @@ namespace orc {
             CASE_EXCEPTION
         }
       }
-      case STRING:
-      case BINARY:
-      case TIMESTAMP:
-      case LIST:
-      case MAP:
-      case STRUCT:
-      case UNION:
       case DECIMAL: {
         switch (_readType.getKind()) {
           CASE_CREATE_FROM_DECIMAL_READER(BOOLEAN, Boolean)
@@ -951,6 +1058,11 @@ namespace orc {
           CASE_CREATE_FROM_DECIMAL_READER(LONG, Long)
           CASE_CREATE_FROM_DECIMAL_READER(FLOAT, Float)
           CASE_CREATE_FROM_DECIMAL_READER(DOUBLE, Double)
+          CASE_CREATE_FROM_DECIMAL_READER(STRING, String)
+          CASE_CREATE_FROM_DECIMAL_READER(CHAR, Char)
+          CASE_CREATE_FROM_DECIMAL_READER(VARCHAR, Varchar)
+          CASE_CREATE_FROM_DECIMAL_READER(TIMESTAMP, Timestamp)
+          CASE_CREATE_FROM_DECIMAL_READER(TIMESTAMP_INSTANT, Timestamp)
           case DECIMAL: {
             if (isDecimal64(fileType)) {
               if (isDecimal64(_readType)) {
@@ -966,11 +1078,6 @@ namespace orc {
               }
             }
           }
-          case STRING:
-          case CHAR:
-          case VARCHAR:
-          case TIMESTAMP:
-          case TIMESTAMP_INSTANT:
           case BINARY:
           case LIST:
           case MAP:
@@ -980,6 +1087,13 @@ namespace orc {
             CASE_EXCEPTION
         }
       }
+      case STRING:
+      case BINARY:
+      case TIMESTAMP:
+      case LIST:
+      case MAP:
+      case STRUCT:
+      case UNION:
       case DATE:
       case VARCHAR:
       case CHAR:

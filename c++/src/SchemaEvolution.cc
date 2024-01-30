@@ -99,7 +99,8 @@ namespace orc {
           break;
         }
         case DECIMAL: {
-          ret.isValid = ret.needConvert = isNumeric(readType);
+          ret.isValid = ret.needConvert =
+              isNumeric(readType) || isStringVariant(readType) || isTimestamp(readType);
           break;
         }
         case STRING:
