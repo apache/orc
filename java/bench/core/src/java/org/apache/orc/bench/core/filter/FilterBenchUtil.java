@@ -77,8 +77,8 @@ class FilterBenchUtil {
         .end()
         .build();
     int[] s = sel.stream()
-      .mapToInt(Integer::intValue)
-      .toArray();
+        .mapToInt(Integer::intValue)
+        .toArray();
     Arrays.sort(s);
     return new AbstractMap.SimpleImmutableEntry<>(sArg, s);
   }
@@ -115,8 +115,8 @@ class FilterBenchUtil {
     builder.end();
 
     int[] s = sel.stream()
-      .mapToInt(Integer::intValue)
-      .toArray();
+        .mapToInt(Integer::intValue)
+        .toArray();
     Arrays.sort(s);
     return new AbstractMap.SimpleImmutableEntry<>(builder.build(), s);
   }
