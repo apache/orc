@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include <_types/_uint64_t.h>
-#include "gtest/gtest.h"
 #include "orc/ColumnPrinter.hh"
 #include "orc/OrcFile.hh"
 
@@ -25,14 +23,12 @@
 #include "MemoryOutputStream.hh"
 #include "Reader.hh"
 
-#include "orc/Writer.hh"
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
 #include <cmath>
 #include <ctime>
 #include <sstream>
-#include <stdexcept>
 
 #ifdef __clang__
 DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
