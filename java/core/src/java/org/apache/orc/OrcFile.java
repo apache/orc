@@ -472,7 +472,6 @@ public class OrcFile {
     private double paddingTolerance;
     private String bloomFilterColumns;
     private double bloomFilterFpp;
-    private BloomFilterVersion bloomFilterVersion;
     private PhysicalWriter physicalWriter;
     private WriterVersion writerVersion = CURRENT_WRITER;
     private boolean useUTCTimestamp;
@@ -528,10 +527,6 @@ public class OrcFile {
           conf);
       bloomFilterFpp = OrcConf.BLOOM_FILTER_FPP.getDouble(tableProperties,
           conf);
-      bloomFilterVersion =
-          BloomFilterVersion.fromString(
-              OrcConf.BLOOM_FILTER_WRITE_VERSION.getString(tableProperties,
-                  conf));
       shims = HadoopShimsFactory.get();
       writeVariableLengthBlocks =
           OrcConf.WRITE_VARIABLE_LENGTH_BLOCKS.getBoolean(tableProperties,conf);
@@ -717,14 +712,6 @@ public class OrcFile {
      */
     public WriterOptions callback(WriterCallback callback) {
       this.callback = callback;
-      return this;
-    }
-
-    /**
-     * Set the version of the bloom filters to write.
-     */
-    public WriterOptions bloomFilterVersion(BloomFilterVersion version) {
-      this.bloomFilterVersion = version;
       return this;
     }
 
@@ -976,10 +963,6 @@ public class OrcFile {
 
     public double getBloomFilterFpp() {
       return bloomFilterFpp;
-    }
-
-    public BloomFilterVersion getBloomFilterVersion() {
-      return bloomFilterVersion;
     }
 
     public PhysicalWriter getPhysicalWriter() {

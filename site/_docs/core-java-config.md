@@ -187,13 +187,6 @@ permalink: /docs/core-java-config.html
   </td>
 </tr>
 <tr>
-  <td><code>orc.bloom.filter.write.version</code></td>
-  <td>utf8</td>
-  <td>
-    Which version of the bloom filters should we write. The choices are:   original - writes two versions of the bloom filters for use by              both old and new readers.   utf8 - writes just the new bloom filters.
-  </td>
-</tr>
-<tr>
   <td><code>orc.bloom.filter.ignore.non-utf8</code></td>
   <td>false</td>
   <td>

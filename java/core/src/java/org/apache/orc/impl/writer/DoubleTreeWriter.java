@@ -57,9 +57,6 @@ public class DoubleTreeWriter extends TreeWriterBase {
         double value = vec.vector[0];
         indexStatistics.updateDouble(value);
         if (createBloomFilter) {
-          if (bloomFilter != null) {
-            bloomFilter.addDouble(value);
-          }
           bloomFilterUtf8.addDouble(value);
         }
         for (int i = 0; i < length; ++i) {
@@ -73,9 +70,6 @@ public class DoubleTreeWriter extends TreeWriterBase {
           utils.writeDouble(stream, value);
           indexStatistics.updateDouble(value);
           if (createBloomFilter) {
-            if (bloomFilter != null) {
-              bloomFilter.addDouble(value);
-            }
             bloomFilterUtf8.addDouble(value);
           }
         }

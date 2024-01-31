@@ -35,7 +35,6 @@ import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.RunLengthIntegerWriter;
 import org.apache.orc.impl.RunLengthIntegerWriterV2;
 import org.apache.orc.impl.StreamName;
-import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.util.BloomFilterUtf8;
 
@@ -60,10 +59,8 @@ public abstract class TreeWriterBase implements TreeWriter {
   protected final RowIndexPositionRecorder rowIndexPosition;
   private final OrcProto.RowIndex.Builder rowIndex;
   private final OrcProto.RowIndexEntry.Builder rowIndexEntry;
-  protected final BloomFilter bloomFilter;
   protected final BloomFilterUtf8 bloomFilterUtf8;
   protected final boolean createBloomFilter;
-  private final OrcProto.BloomFilterIndex.Builder bloomFilterIndex;
   private final OrcProto.BloomFilterIndex.Builder bloomFilterIndexUtf8;
   protected final OrcProto.BloomFilter.Builder bloomFilterEntry;
   private boolean foundNulls;
@@ -104,22 +101,12 @@ public abstract class TreeWriterBase implements TreeWriter {
     }
     if (createBloomFilter) {
       bloomFilterEntry = OrcProto.BloomFilter.newBuilder();
-      if (context.getBloomFilterVersion() == OrcFile.BloomFilterVersion.ORIGINAL) {
-        bloomFilter = new BloomFilter(context.getRowIndexStride(),
-            context.getBloomFilterFPP());
-        bloomFilterIndex = OrcProto.BloomFilterIndex.newBuilder();
-      } else {
-        bloomFilter = null;
-        bloomFilterIndex = null;
-      }
       bloomFilterUtf8 = new BloomFilterUtf8(context.getRowIndexStride(),
           context.getBloomFilterFPP());
       bloomFilterIndexUtf8 = OrcProto.BloomFilterIndex.newBuilder();
     } else {
       bloomFilterEntry = null;
-      bloomFilterIndex = null;
       bloomFilterIndexUtf8 = null;
-      bloomFilter = null;
       bloomFilterUtf8 = null;
     }
   }
@@ -285,12 +272,6 @@ public abstract class TreeWriterBase implements TreeWriter {
     }
 
     // write the bloom filter to out stream
-    if (bloomFilterIndex != null) {
-      context.writeBloomFilter(new StreamName(id,
-          OrcProto.Stream.Kind.BLOOM_FILTER), bloomFilterIndex);
-      bloomFilterIndex.clear();
-    }
-    // write the bloom filter to out stream
     if (bloomFilterIndexUtf8 != null) {
       context.writeBloomFilter(new StreamName(id,
           OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), bloomFilterIndexUtf8);
@@ -331,11 +312,6 @@ public abstract class TreeWriterBase implements TreeWriter {
 
   void addBloomFilterEntry() {
     if (createBloomFilter) {
-      if (bloomFilter != null) {
-        BloomFilterIO.serialize(bloomFilterEntry, bloomFilter);
-        bloomFilterIndex.addBloomFilter(bloomFilterEntry.build());
-        bloomFilter.reset();
-      }
       if (bloomFilterUtf8 != null) {
         BloomFilterIO.serialize(bloomFilterEntry, bloomFilterUtf8);
         bloomFilterIndexUtf8.addBloomFilter(bloomFilterEntry.build());

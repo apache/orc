@@ -83,8 +83,6 @@ public interface WriterContext {
    */
   OrcFile.Version getVersion();
 
-  OrcFile.BloomFilterVersion getBloomFilterVersion();
-
   void writeIndex(StreamName name,
                   OrcProto.RowIndex.Builder index) throws IOException;
 

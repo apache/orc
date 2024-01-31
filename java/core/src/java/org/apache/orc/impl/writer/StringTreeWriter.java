@@ -23,7 +23,6 @@ import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.TypeDescription;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 public class StringTreeWriter extends StringBaseTreeWriter {
   StringTreeWriter(TypeDescription schema,
@@ -54,11 +53,6 @@ public class StringTreeWriter extends StringBaseTreeWriter {
         indexStatistics.updateString(vec.vector[0], vec.start[0],
             vec.length[0], length);
         if (createBloomFilter) {
-          if (bloomFilter != null) {
-            // translate from UTF-8 to the default charset
-            bloomFilter.addString(new String(vec.vector[0], vec.start[0],
-                vec.length[0], StandardCharsets.UTF_8));
-          }
           bloomFilterUtf8.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
         }
       }
@@ -76,12 +70,6 @@ public class StringTreeWriter extends StringBaseTreeWriter {
           indexStatistics.updateString(vec.vector[offset + i],
               vec.start[offset + i], vec.length[offset + i], 1);
           if (createBloomFilter) {
-            if (bloomFilter != null) {
-              // translate from UTF-8 to the default charset
-              bloomFilter.addString(new String(vec.vector[offset + i],
-                  vec.start[offset + i], vec.length[offset + i],
-                  StandardCharsets.UTF_8));
-            }
             bloomFilterUtf8.addBytes(vec.vector[offset + i],
                 vec.start[offset + i], vec.length[offset + i]);
           }

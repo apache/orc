@@ -84,9 +84,6 @@ public class ListTreeWriter extends TreeWriterBase {
           childWriter.writeBatch(vec.child, childOffset, childLength);
         }
         if (createBloomFilter) {
-          if (bloomFilter != null) {
-            bloomFilter.addLong(childLength);
-          }
           bloomFilterUtf8.addLong(childLength);
         }
       }
@@ -111,9 +108,6 @@ public class ListTreeWriter extends TreeWriterBase {
             currentLength += nextLength;
           }
           if (createBloomFilter) {
-            if (bloomFilter != null) {
-              bloomFilter.addLong(nextLength);
-            }
             bloomFilterUtf8.addLong(nextLength);
           }
         }

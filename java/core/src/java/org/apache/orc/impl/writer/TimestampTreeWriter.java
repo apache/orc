@@ -113,9 +113,6 @@ public class TimestampTreeWriter extends TreeWriterBase {
             millis : SerializationUtils.convertToUtc(localTimezone, millis);
         indexStatistics.updateTimestamp(utc, newNanos % 1_000_000);
         if (createBloomFilter) {
-          if (bloomFilter != null) {
-            bloomFilter.addLong(millis);
-          }
           bloomFilterUtf8.addLong(utc);
         }
         final long nano = formatNanos(vec.nanos[0]);
@@ -141,9 +138,6 @@ public class TimestampTreeWriter extends TreeWriterBase {
           nanos.write(formatNanos(newNanos));
           indexStatistics.updateTimestamp(utc, newNanos % 1_000_000);
           if (createBloomFilter) {
-            if (bloomFilter != null) {
-              bloomFilter.addLong(millis);
-            }
             bloomFilterUtf8.addLong(utc);
           }
         }

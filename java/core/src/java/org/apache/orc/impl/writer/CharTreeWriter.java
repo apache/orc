@@ -24,7 +24,6 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.Utf8Utils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -95,10 +94,6 @@ public class CharTreeWriter extends StringBaseTreeWriter {
     }
     indexStatistics.updateString(ptr, ptrOffset, ptrLength, repeats);
     if (createBloomFilter) {
-      if (bloomFilter != null) {
-        // translate from UTF-8 to the default charset
-        bloomFilter.addString(new String(ptr, ptrOffset, ptrLength, StandardCharsets.UTF_8));
-      }
       bloomFilterUtf8.addBytes(ptr, ptrOffset, ptrLength);
     }
   }

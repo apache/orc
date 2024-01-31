@@ -511,8 +511,7 @@ public class TestFileDump {
         .bufferSize(10000)
         .rowIndexStride(1000)
         .bloomFilterColumns("l,s")
-        .bloomFilterFpp(0.01)
-        .bloomFilterVersion(OrcFile.BloomFilterVersion.ORIGINAL);
+        .bloomFilterFpp(0.01);
     VectorizedRowBatch batch = schema.createRowBatch(1000);
     Writer writer = OrcFile.createWriter(testFilePath, options);
     Random r1 = new Random(1);

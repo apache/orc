@@ -83,9 +83,6 @@ public class DecimalTreeWriter extends TreeWriterBase {
         indexStatistics.updateDecimal(value);
         if (createBloomFilter) {
           String str = value.toString(scratchBuffer);
-          if (bloomFilter != null) {
-            bloomFilter.addString(str);
-          }
           bloomFilterUtf8.addString(str);
         }
         for (int i = 0; i < length; ++i) {
@@ -103,9 +100,6 @@ public class DecimalTreeWriter extends TreeWriterBase {
           indexStatistics.updateDecimal(value);
           if (createBloomFilter) {
             String str = value.toString(scratchBuffer);
-            if (bloomFilter != null) {
-              bloomFilter.addString(str);
-            }
             bloomFilterUtf8.addString(str);
           }
         }
@@ -122,9 +116,6 @@ public class DecimalTreeWriter extends TreeWriterBase {
           HiveDecimalWritable value = vector.getScratchWritable();
           value.setFromLongAndScale(vector.vector[0], vector.scale);
           String str = value.toString(scratchBuffer);
-          if (bloomFilter != null) {
-            bloomFilter.addString(str);
-          }
           bloomFilterUtf8.addString(str);
         }
         for (int i = 0; i < length; ++i) {
@@ -143,9 +134,6 @@ public class DecimalTreeWriter extends TreeWriterBase {
           if (createBloomFilter) {
             value.setFromLongAndScale(num, vector.scale);
             String str = value.toString(scratchBuffer);
-            if (bloomFilter != null) {
-              bloomFilter.addString(str);
-            }
             bloomFilterUtf8.addString(str);
           }
         }

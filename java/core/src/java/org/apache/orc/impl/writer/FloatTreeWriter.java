@@ -57,9 +57,6 @@ public class FloatTreeWriter extends TreeWriterBase {
         float value = (float) vec.vector[0];
         indexStatistics.updateDouble(value);
         if (createBloomFilter) {
-          if (bloomFilter != null) {
-            bloomFilter.addDouble(value);
-          }
           bloomFilterUtf8.addDouble(value);
         }
         for (int i = 0; i < length; ++i) {
@@ -73,9 +70,6 @@ public class FloatTreeWriter extends TreeWriterBase {
           utils.writeFloat(stream, value);
           indexStatistics.updateDouble(value);
           if (createBloomFilter) {
-            if (bloomFilter != null) {
-              bloomFilter.addDouble(value);
-            }
             bloomFilterUtf8.addDouble(value);
           }
         }
