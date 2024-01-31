@@ -790,6 +790,42 @@ public class TestFileDump {
     }
   }
 
+  @Test
+  public void testDoubleNaNAndInfinite() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("struct<x:double>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .fileSystem(fs)
+            .setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    DoubleColumnVector x = (DoubleColumnVector) batch.cols[0];
+    int row = batch.size++;
+    x.vector[row] = Double.NaN;
+    row = batch.size++;
+    x.vector[row] = Double.POSITIVE_INFINITY;
+    row = batch.size++;
+    x.vector[row] = 12.34D;
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    assertEquals(3, writer.getNumberOfRows());
+
+    PrintStream origOut = System.out;
+    ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+
+    // replace stdout and run command
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
+    FileDump.main(new String[]{testFilePath.toString(), "-d"});
+    System.out.flush();
+    System.setOut(origOut);
+    String[] lines = myOut.toString(StandardCharsets.UTF_8.toString()).split("\n");
+    assertEquals("{\"x\":NaN}", lines[0]);
+    assertEquals("{\"x\":Infinity}", lines[1]);
+    assertEquals("{\"x\":12.34}", lines[2]);
+  }
+
   private static boolean contentEquals(String filePath, String otherFilePath) throws IOException {
     try (InputStream is = new BufferedInputStream(new FileInputStream(filePath));
          InputStream otherIs = new BufferedInputStream(new FileInputStream(otherFilePath))) {

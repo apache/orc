@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionKind;
@@ -32,18 +33,15 @@ import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TestJsonFileDump {
 
@@ -133,5 +131,39 @@ public class TestJsonFileDump {
 
 
     TestFileDump.checkOutput(outputFilename, workDir + File.separator + outputFilename);
+  }
+
+  @Test
+  public void testDoubleNaNAndInfinite() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("struct<x:double>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .fileSystem(fs)
+            .setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    DoubleColumnVector x = (DoubleColumnVector) batch.cols[0];
+    int row = batch.size++;
+    x.vector[row] = Double.NaN;
+    row = batch.size++;
+    x.vector[row] = Double.POSITIVE_INFINITY;
+    row = batch.size++;
+    x.vector[row] = 12.34D;
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    assertEquals(3, writer.getNumberOfRows());
+
+    PrintStream origOut = System.out;
+    ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+
+    // replace stdout and run command
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
+    FileDump.main(new String[]{testFilePath.toString(), "-j"});
+    System.out.flush();
+    System.setOut(origOut);
+    String[] lines = myOut.toString(StandardCharsets.UTF_8.toString()).split("\n");
+    assertEquals("{\"fileName\":\"TestFileDump.testDump.orc\",\"fileVersion\":\"0.12\",\"writerVersion\":\"ORC_14\",\"softwareVersion\":\"ORC Java unknown\",\"numberOfRows\":3,\"compression\":\"ZLIB\",\"compressionBufferSize\":262144,\"schemaString\":\"struct<x:double>\",\"schema\":{\"columnId\":0,\"columnType\":\"STRUCT\",\"children\":{\"x\":{\"columnId\":1,\"columnType\":\"DOUBLE\"}}},\"calendar\":\"Julian/Gregorian\",\"stripeStatistics\":[{\"stripeNumber\":1,\"columnStatistics\":[{\"columnId\":0,\"count\":3,\"hasNull\":false},{\"columnId\":1,\"count\":3,\"hasNull\":false,\"bytesOnDisk\":23,\"min\":NaN,\"max\":NaN,\"sum\":NaN,\"type\":\"DOUBLE\"}]}],\"fileStatistics\":[{\"columnId\":0,\"count\":3,\"hasNull\":false},{\"columnId\":1,\"count\":3,\"hasNull\":false,\"bytesOnDisk\":23,\"min\":NaN,\"max\":NaN,\"sum\":NaN,\"type\":\"DOUBLE\"}],\"stripes\":[{\"stripeNumber\":1,\"stripeInformation\":{\"offset\":3,\"indexLength\":41,\"dataLength\":23,\"footerLength\":29,\"rowCount\":3},\"streams\":[{\"columnId\":0,\"section\":\"ROW_INDEX\",\"startOffset\":3,\"length\":11},{\"columnId\":1,\"section\":\"ROW_INDEX\",\"startOffset\":14,\"length\":30},{\"columnId\":1,\"section\":\"DATA\",\"startOffset\":44,\"length\":23}],\"encodings\":[{\"columnId\":0,\"kind\":\"DIRECT\"},{\"columnId\":1,\"kind\":\"DIRECT\"}]}],\"fileLength\":234,\"paddingLength\":0,\"paddingRatio\":0.0,\"status\":\"OK\"}", lines[0]);
   }
 }
