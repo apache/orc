@@ -211,6 +211,7 @@ public class PrintData {
         }
         for (int r=0; r < batch.size; ++r) {
           JsonWriter writer = new JsonWriter(out);
+          writer.setLenient(true);
           printRow(writer, batch, schema, r);
           out.write("\n");
           out.flush();
