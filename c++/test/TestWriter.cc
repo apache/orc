@@ -2122,5 +2122,15 @@ namespace orc {
     }
   }
 
+  TEST_P(WriterTest, testValidateOptions) {
+    WriterOptions options;
+    constexpr uint64_t compressionBlockSizeThreshold = (1 << 23) - 1;
+    EXPECT_NO_THROW(options.setCompressionBlockSize(compressionBlockSizeThreshold));
+    EXPECT_THROW(options.setCompressionBlockSize(compressionBlockSizeThreshold + 1),
+                 std::invalid_argument);
+    EXPECT_THROW(options.setCompressionBlockSize(compressionBlockSizeThreshold + 2),
+                 std::invalid_argument);
+  }
+
   INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12(), FileVersion::UNSTABLE_PRE_2_0()));
 }
