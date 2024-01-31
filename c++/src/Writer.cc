@@ -110,6 +110,9 @@ namespace orc {
   }
 
   WriterOptions& WriterOptions::setCompressionBlockSize(uint64_t size) {
+    if (size >= (1 << 23)) {
+      throw std::invalid_argument("Compression block size cannot be greater or equal than 8M");
+    }
     privateBits->compressionBlockSize = size;
     return *this;
   }
