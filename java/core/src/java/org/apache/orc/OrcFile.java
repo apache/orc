@@ -723,6 +723,7 @@ public class OrcFile {
     /**
      * Set the version of the bloom filters to write.
      */
+    @Deprecated
     public WriterOptions bloomFilterVersion(BloomFilterVersion version) {
       this.bloomFilterVersion = version;
       return this;
@@ -978,6 +979,7 @@ public class OrcFile {
       return bloomFilterFpp;
     }
 
+    @Deprecated
     public BloomFilterVersion getBloomFilterVersion() {
       return bloomFilterVersion;
     }
