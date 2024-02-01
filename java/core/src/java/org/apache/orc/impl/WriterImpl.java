@@ -121,6 +121,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final OrcFile.CompressionStrategy compressionStrategy;
   private final boolean[] bloomFilterColumns;
   private final double bloomFilterFpp;
+  private final OrcFile.BloomFilterVersion bloomFilterVersion;
   private final boolean writeTimeZone;
   private final boolean useUTCTimeZone;
   private final double dictionaryKeySizeThreshold;
@@ -207,6 +208,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           " developer testing.");
     }
 
+    this.bloomFilterVersion = opts.getBloomFilterVersion();
     this.bloomFilterFpp = opts.getBloomFilterFpp();
     /* do not write bloom filters for ORC v11 */
     if (!buildIndex || version == OrcFile.Version.V_0_11) {
@@ -445,6 +447,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     @Override
     public PhysicalWriter getPhysicalWriter() {
       return physicalWriter;
+    }
+
+    @Override
+    public OrcFile.BloomFilterVersion getBloomFilterVersion() {
+      return bloomFilterVersion;
     }
 
     @Override

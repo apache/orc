@@ -78,6 +78,9 @@ public class BinaryTreeWriter extends TreeWriterBase {
         indexStatistics.updateBinary(vec.vector[0], vec.start[0],
             vec.length[0], length);
         if (createBloomFilter) {
+          if (bloomFilter != null) {
+            bloomFilter.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
+          }
           bloomFilterUtf8.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
         }
       }
@@ -90,6 +93,10 @@ public class BinaryTreeWriter extends TreeWriterBase {
           indexStatistics.updateBinary(vec.vector[offset + i],
               vec.start[offset + i], vec.length[offset + i], 1);
           if (createBloomFilter) {
+            if (bloomFilter != null) {
+              bloomFilter.addBytes(vec.vector[offset + i],
+                  vec.start[offset + i], vec.length[offset + i]);
+            }
             bloomFilterUtf8.addBytes(vec.vector[offset + i],
                 vec.start[offset + i], vec.length[offset + i]);
           }

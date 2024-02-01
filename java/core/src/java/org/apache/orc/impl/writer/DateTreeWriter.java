@@ -67,6 +67,9 @@ public class DateTreeWriter extends TreeWriterBase {
         int value = (int) vec.vector[0];
         indexStatistics.updateDate(value);
         if (createBloomFilter) {
+          if (bloomFilter != null) {
+            bloomFilter.addLong(value);
+          }
           bloomFilterUtf8.addLong(value);
         }
         for (int i = 0; i < length; ++i) {
@@ -80,6 +83,9 @@ public class DateTreeWriter extends TreeWriterBase {
           writer.write(value);
           indexStatistics.updateDate(value);
           if (createBloomFilter) {
+            if (bloomFilter != null) {
+              bloomFilter.addLong(value);
+            }
             bloomFilterUtf8.addLong(value);
           }
         }

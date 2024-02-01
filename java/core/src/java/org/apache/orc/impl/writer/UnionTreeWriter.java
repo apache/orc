@@ -65,6 +65,9 @@ public class UnionTreeWriter extends TreeWriterBase {
           tags.write(tag);
         }
         if (createBloomFilter) {
+          if (bloomFilter != null) {
+            bloomFilter.addLong(tag);
+          }
           bloomFilterUtf8.addLong(tag);
         }
         childrenWriters[tag].writeBatch(vec.fields[tag], offset, length);
@@ -94,6 +97,9 @@ public class UnionTreeWriter extends TreeWriterBase {
             currentLength[tag] = 1;
           }
           if (createBloomFilter) {
+            if (bloomFilter != null) {
+              bloomFilter.addLong(tag);
+            }
             bloomFilterUtf8.addLong(tag);
           }
         }

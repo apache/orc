@@ -54,6 +54,9 @@ public class ByteTreeWriter extends TreeWriterBase {
         byte value = (byte) vec.vector[0];
         indexStatistics.updateInteger(value, length);
         if (createBloomFilter) {
+          if (bloomFilter != null) {
+            bloomFilter.addLong(value);
+          }
           bloomFilterUtf8.addLong(value);
         }
         for (int i = 0; i < length; ++i) {
@@ -67,6 +70,9 @@ public class ByteTreeWriter extends TreeWriterBase {
           writer.write(value);
           indexStatistics.updateInteger(value, 1);
           if (createBloomFilter) {
+            if (bloomFilter != null) {
+              bloomFilter.addLong(value);
+            }
             bloomFilterUtf8.addLong(value);
           }
         }

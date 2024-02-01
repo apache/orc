@@ -247,6 +247,11 @@ public class TestStringDictionary {
     }
 
     @Override
+    public OrcFile.BloomFilterVersion getBloomFilterVersion() {
+      return OrcFile.BloomFilterVersion.UTF8;
+    }
+
+    @Override
     public void writeIndex(StreamName name, OrcProto.RowIndex.Builder index) {
 
     }

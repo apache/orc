@@ -90,6 +90,9 @@ public class MapTreeWriter extends TreeWriterBase {
           valueWriter.writeBatch(vec.values, childOffset, childLength);
         }
         if (createBloomFilter) {
+          if (bloomFilter != null) {
+            bloomFilter.addLong(childLength);
+          }
           bloomFilterUtf8.addLong(childLength);
         }
       }
@@ -116,6 +119,9 @@ public class MapTreeWriter extends TreeWriterBase {
             currentLength += nextLength;
           }
           if (createBloomFilter) {
+            if (bloomFilter != null) {
+              bloomFilter.addLong(nextLength);
+            }
             bloomFilterUtf8.addLong(nextLength);
           }
         }
