@@ -131,7 +131,7 @@ public enum OrcConf {
       "", "List of columns to create bloom filters for when writing."),
   BLOOM_FILTER_WRITE_VERSION("orc.bloom.filter.write.version",
       "orc.bloom.filter.write.version", OrcFile.BloomFilterVersion.UTF8.toString(),
-      "Which version of the bloom filters should we write.\n" +
+      "(Deprecated) Which version of the bloom filters should we write.\n" +
           "The choices are:\n" +
           "  original - writes two versions of the bloom filters for use by\n" +
           "             both old and new readers.\n" +

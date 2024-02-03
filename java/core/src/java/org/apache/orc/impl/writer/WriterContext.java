@@ -83,6 +83,7 @@ public interface WriterContext {
    */
   OrcFile.Version getVersion();
 
+  @Deprecated
   OrcFile.BloomFilterVersion getBloomFilterVersion();
 
   void writeIndex(StreamName name,
