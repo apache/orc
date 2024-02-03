@@ -66,6 +66,7 @@ public class JsonFileDump {
     }
     StringWriter stringWriter = new StringWriter();
     JsonWriter writer = new JsonWriter(stringWriter);
+    writer.setLenient(true);
     if (prettyPrint) {
       writer.setIndent("  ");
     }
