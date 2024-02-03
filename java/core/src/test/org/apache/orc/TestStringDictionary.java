@@ -247,6 +247,7 @@ public class TestStringDictionary {
     }
 
     @Override
+    @Deprecated
     public OrcFile.BloomFilterVersion getBloomFilterVersion() {
       return OrcFile.BloomFilterVersion.UTF8;
     }

@@ -450,6 +450,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
 
     @Override
+    @Deprecated
     public OrcFile.BloomFilterVersion getBloomFilterVersion() {
       return bloomFilterVersion;
     }
