@@ -33,7 +33,6 @@ import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -156,14 +155,14 @@ public class TestJsonFileDump {
     assertEquals(3, writer.getNumberOfRows());
 
     PrintStream origOut = System.out;
-    ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+    String outputFilename = "orc-file-dump-nan-and-infinite.json";
+    FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
-    FileDump.main(new String[]{testFilePath.toString(), "-j"});
+    System.setOut(new PrintStream(myOut, true, StandardCharsets.UTF_8));
+    FileDump.main(new String[]{testFilePath.toString(), "-j", "-p"});
     System.out.flush();
     System.setOut(origOut);
-    String[] lines = myOut.toString(StandardCharsets.UTF_8.toString()).split("\n");
-    assertEquals("{\"fileName\":\"TestFileDump.testDump.orc\",\"fileVersion\":\"0.12\",\"writerVersion\":\"ORC_14\",\"softwareVersion\":\"ORC Java unknown\",\"numberOfRows\":3,\"compression\":\"ZLIB\",\"compressionBufferSize\":262144,\"schemaString\":\"struct<x:double>\",\"schema\":{\"columnId\":0,\"columnType\":\"STRUCT\",\"children\":{\"x\":{\"columnId\":1,\"columnType\":\"DOUBLE\"}}},\"calendar\":\"Julian/Gregorian\",\"stripeStatistics\":[{\"stripeNumber\":1,\"columnStatistics\":[{\"columnId\":0,\"count\":3,\"hasNull\":false},{\"columnId\":1,\"count\":3,\"hasNull\":false,\"bytesOnDisk\":23,\"min\":NaN,\"max\":NaN,\"sum\":NaN,\"type\":\"DOUBLE\"}]}],\"fileStatistics\":[{\"columnId\":0,\"count\":3,\"hasNull\":false},{\"columnId\":1,\"count\":3,\"hasNull\":false,\"bytesOnDisk\":23,\"min\":NaN,\"max\":NaN,\"sum\":NaN,\"type\":\"DOUBLE\"}],\"stripes\":[{\"stripeNumber\":1,\"stripeInformation\":{\"offset\":3,\"indexLength\":41,\"dataLength\":23,\"footerLength\":29,\"rowCount\":3},\"streams\":[{\"columnId\":0,\"section\":\"ROW_INDEX\",\"startOffset\":3,\"length\":11},{\"columnId\":1,\"section\":\"ROW_INDEX\",\"startOffset\":14,\"length\":30},{\"columnId\":1,\"section\":\"DATA\",\"startOffset\":44,\"length\":23}],\"encodings\":[{\"columnId\":0,\"kind\":\"DIRECT\"},{\"columnId\":1,\"kind\":\"DIRECT\"}]}],\"fileLength\":234,\"paddingLength\":0,\"paddingRatio\":0.0,\"status\":\"OK\"}", lines[0]);
+    TestFileDump.checkOutput(outputFilename, workDir + File.separator + outputFilename);
   }
 }
