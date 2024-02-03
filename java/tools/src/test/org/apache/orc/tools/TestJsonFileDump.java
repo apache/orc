@@ -156,14 +156,14 @@ public class TestJsonFileDump {
     assertEquals(3, writer.getNumberOfRows());
 
     PrintStream origOut = System.out;
-    ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+    String outputFilename = "orc-file-dump-nan-and-infinite.json";
+    FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
-    FileDump.main(new String[]{testFilePath.toString(), "-j"});
+    System.setOut(new PrintStream(myOut, true, StandardCharsets.UTF_8));
+    FileDump.main(new String[]{testFilePath.toString(), "-j", "-p"});
     System.out.flush();
     System.setOut(origOut);
-    String[] lines = myOut.toString(StandardCharsets.UTF_8).split("\n");
-    assertEquals("{\"fileName\":\"TestFileDump.testDump.orc\",\"fileVersion\":\"0.12\",\"writerVersion\":\"ORC_14\",\"softwareVersion\":\"ORC Java unknown\",\"numberOfRows\":3,\"compression\":\"ZSTD\",\"compressionBufferSize\":262144,\"schemaString\":\"struct<x:double>\",\"schema\":{\"columnId\":0,\"columnType\":\"STRUCT\",\"children\":{\"x\":{\"columnId\":1,\"columnType\":\"DOUBLE\"}}},\"calendar\":\"Julian/Gregorian\",\"stripeStatistics\":[{\"stripeNumber\":1,\"columnStatistics\":[{\"columnId\":0,\"count\":3,\"hasNull\":false},{\"columnId\":1,\"count\":3,\"hasNull\":false,\"bytesOnDisk\":27,\"min\":NaN,\"max\":NaN,\"sum\":NaN,\"type\":\"DOUBLE\"}]}],\"fileStatistics\":[{\"columnId\":0,\"count\":3,\"hasNull\":false},{\"columnId\":1,\"count\":3,\"hasNull\":false,\"bytesOnDisk\":27,\"min\":NaN,\"max\":NaN,\"sum\":NaN,\"type\":\"DOUBLE\"}],\"stripes\":[{\"stripeNumber\":1,\"stripeInformation\":{\"offset\":3,\"indexLength\":55,\"dataLength\":27,\"footerLength\":35,\"rowCount\":3},\"streams\":[{\"columnId\":0,\"section\":\"ROW_INDEX\",\"startOffset\":3,\"length\":11},{\"columnId\":1,\"section\":\"ROW_INDEX\",\"startOffset\":14,\"length\":44},{\"columnId\":1,\"section\":\"DATA\",\"startOffset\":58,\"length\":27}],\"encodings\":[{\"columnId\":0,\"kind\":\"DIRECT\"},{\"columnId\":1,\"kind\":\"DIRECT\"}]}],\"fileLength\":286,\"rawDataSize\":36,\"paddingLength\":0,\"paddingRatio\":0.0,\"status\":\"OK\"}", lines[0]);
+    TestFileDump.checkOutput(outputFilename, workDir + File.separator + outputFilename);
   }
 }
