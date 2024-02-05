@@ -45,6 +45,8 @@ public class CuckooSetBytes {
   private int rehashCount = 0;
   private static final long INT_MASK  = 0x00000000ffffffffL;
   private static final long BYTE_MASK = 0x00000000000000ffL;
+  private int maxLen;
+  private int minLen = Integer.MAX_VALUE;
   // some prime numbers spaced about at powers of 2 in magnitude
   static final int[] primes = {7, 13, 17, 23, 31, 53, 67, 89, 127, 269, 571, 1019, 2089,
     4507, 8263, 16361, 32327, 65437, 131111, 258887, 525961, 999983, 2158909, 4074073,
@@ -84,6 +86,9 @@ public class CuckooSetBytes {
    * and ending at start+len is present in the set.
    */
   public boolean lookup(byte[] b, int start, int len) {
+    if (len < minLen || len > maxLen) {
+      return false;
+    }
 
     return entryEqual(t1, h1(b, start, len), b, start, len) ||
            entryEqual(t2, h2(b, start, len), b, start, len);
@@ -98,6 +103,8 @@ public class CuckooSetBytes {
     if (lookup(x, 0, x.length)) {
       return;
     }
+    minLen = Math.min(minLen, x.length);
+    maxLen = Math.max(maxLen, x.length);
 
     // Try to insert up to n times. Rehash if that fails.
     for(int i = 0; i != n; i++) {
