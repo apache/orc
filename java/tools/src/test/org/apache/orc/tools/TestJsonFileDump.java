@@ -159,7 +159,7 @@ public class TestJsonFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut, true, StandardCharsets.UTF_8));
+    System.setOut(new PrintStream(myOut, true, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "-j", "-p"});
     System.out.flush();
     System.setOut(origOut);
