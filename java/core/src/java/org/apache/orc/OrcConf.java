@@ -54,7 +54,7 @@ public enum OrcConf {
       "Define whether stripes should be padded to the HDFS block boundaries."),
   COMPRESS("orc.compress", "hive.exec.orc.default.compress", "ZSTD",
       "Define the default compression codec for ORC file. " +
-              "It can be NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD, BROTLI."),
+          "It can be NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD, BROTLI."),
   WRITE_FORMAT("orc.write.format", "hive.exec.orc.write.format", "0.12",
       "Define the version of the file to write. Possible values are 0.11 and\n"+
           " 0.12. If this parameter is not defined, ORC will use the run\n" +
