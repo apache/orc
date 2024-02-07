@@ -25,7 +25,7 @@ import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ZstdCodec implements CompressionCodec {
+public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
   private ZstdOptions zstdOptions = null;
   private ZstdCompressCtx zstdCompressCtx = null;
 
@@ -214,6 +214,11 @@ public class ZstdCodec implements CompressionCodec {
 
   @Override
   public void decompress(ByteBuffer in, ByteBuffer out) throws IOException {
+    if (in.isDirect() && out.isDirect()) {
+      directDecompress(in, out);
+      return;
+    }
+
     int srcOffset = in.arrayOffset() + in.position();
     int srcSize = in.remaining();
     int dstOffset = out.arrayOffset() + out.position();
@@ -224,6 +229,17 @@ public class ZstdCodec implements CompressionCodec {
             srcOffset, srcSize);
     in.position(in.limit());
     out.position(dstOffset + (int) decompressOut);
+    out.flip();
+  }
+
+  @Override
+  public boolean isAvailable() {
+    return true;
+  }
+
+  @Override
+  public void directDecompress(ByteBuffer in, ByteBuffer out) throws IOException {
+    Zstd.decompress(out, in);
     out.flip();
   }
 
