@@ -28,8 +28,10 @@ import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestZstd {
@@ -118,5 +120,38 @@ public class TestZstd {
     assertEquals(sourceCompressorIn, destCompressorOut,
         "zstd-jni compression with aircompressor decompression did not return"
             + " the input!");
+  }
+
+  @Test
+  public void testZstdDirectDecompress() {
+    ByteBuffer in = ByteBuffer.allocate(10000);
+    ByteBuffer out = ByteBuffer.allocate(10000);
+    ByteBuffer directOut = ByteBuffer.allocateDirect(10000);
+    ByteBuffer directResult = ByteBuffer.allocateDirect(10000);
+    for (int i = 0; i < 10000; i++) {
+      in.put((byte) i);
+    }
+    in.flip();
+    try (ZstdCodec zstdCodec = new ZstdCodec()) {
+      // write bytes to heap buffer.
+      assertTrue(zstdCodec.compress(in, out, null,
+              zstdCodec.getDefaultOptions()));
+      int position = out.position();
+      out.flip();
+      // copy heap buffer to direct buffer.
+      directOut.put(out.array());
+      directOut.flip();
+      directOut.limit(position);
+
+      zstdCodec.decompress(directOut, directResult);
+
+      // copy result from direct buffer to heap.
+      byte[] heapBytes = new byte[in.array().length];
+      directResult.get(heapBytes, 0, directResult.limit());
+
+      assertArrayEquals(in.array(), heapBytes);
+    } catch (Exception e) {
+      fail(e);
+    }
   }
 }
