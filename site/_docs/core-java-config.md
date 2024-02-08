@@ -71,7 +71,7 @@ permalink: /docs/core-java-config.html
   <td><code>orc.compress</code></td>
   <td>ZSTD</td>
   <td>
-    Define the default compression codec for ORC file
+    Define the default compression codec for ORC file. It can be NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD, BROTLI.
   </td>
 </tr>
 <tr>
