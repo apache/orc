@@ -136,12 +136,10 @@ public class TestBrotli {
       // write bytes to heap buffer.
       assertTrue(brotliCodec.compress(in, out, null,
           brotliCodec.getDefaultOptions()));
-      int position = out.position();
       out.flip();
       // copy heap buffer to direct buffer.
-      directOut.put(out.array());
+      directOut.put(out);
       directOut.flip();
-      directOut.limit(position);
 
       brotliCodec.decompress(directOut, directResult);
 
