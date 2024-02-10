@@ -138,7 +138,7 @@ public class TestBrotli {
           brotliCodec.getDefaultOptions()));
       out.flip();
       // copy heap buffer to direct buffer.
-      directOut.put(out.array());
+      directOut.put(out);
       directOut.flip();
 
       brotliCodec.decompress(directOut, directResult);
