@@ -87,7 +87,7 @@ else ()
 
   ExternalProject_Add (snappy_ep
     URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
-    CMAKE_ARGS ${SNAPPY_CMAKE_ARGS}
+    CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} -DSNAPPY_BUILD_TESTS=OFF
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
 
