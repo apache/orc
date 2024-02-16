@@ -30,7 +30,7 @@ jobs:
           - debian11
           - debian12
           - fedora37
-          - rocky9
+          - oraclelinux9
     steps:
     - name: Checkout
       uses: actions/checkout@v2
