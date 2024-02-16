@@ -4,4 +4,4 @@ ubuntu20
 ubuntu22
 ubuntu24
 fedora37
-rocky9
+oraclelinux9
