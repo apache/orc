@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for Rocky Linux 9
+# ORC compile for Oracle Linux 9
 #
 
-FROM rockylinux:9
+FROM oraclelinux:9
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 
 RUN yum check-update || true
