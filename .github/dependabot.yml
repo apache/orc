@@ -23,9 +23,6 @@ updates:
       # Pin gson to 2.2.4 because of Hive
       - dependency-name: "com.google.code.gson:gson"
         versions: "[2.3,)"
-      # Pin scala-library to 2.12.15
-      - dependency-name: "org.scala-lang:scala-library"
-        versions: "[2.12.16,)"
       # Pin jodd-core to 3.5.2
       - dependency-name: "org.jodd:jodd-core"
         versions: "[3.5.3,)"
