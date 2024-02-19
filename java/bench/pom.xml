@@ -39,7 +39,7 @@
     <junit.version>5.10.2</junit.version>
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.13.1</parquet.version>
-    <spark.version>3.5.0</spark.version>
+    <spark.version>3.5.1</spark.version>
   </properties>
 
   <dependencyManagement>
@@ -364,6 +364,13 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <repositories>
+    <repository>
+      <id>staging</id>
+      <url>https://repository.apache.org/content/repositories/orgapachespark-1452/</url>
+    </repository>
+  </repositories>
 
   <build>
     <pluginManagement>
