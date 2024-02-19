@@ -74,7 +74,7 @@
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
     <maven.version>3.9.6</maven.version>
 
-    <mockito.version>4.11.0</mockito.version>
+    <mockito.version>5.10.0</mockito.version>
     <orc-format.version>1.0.0</orc-format.version>
     <!-- Build Properties -->
     <project.build.outputTimestamp>2024-01-08T16:47:56Z</project.build.outputTimestamp>
@@ -256,13 +256,13 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.23</version>
+        <version>1.14.11</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.12.23</version>
+        <version>1.14.11</version>
         <scope>test</scope>
       </dependency>
       <dependency>
