@@ -252,7 +252,9 @@ public enum OrcConf {
   ROW_BATCH_CHILD_LIMIT("orc.row.child.limit", "orc.row.child.limit",
       1024 * 32, "The maximum number of child elements to buffer before "+
       "the ORC row writer writes the batch to the file."
-      )
+      ),
+  USE_VECTOREDIO("orc.use.vectoredio", "orc.use.vectoredio", true,
+      "Use VectoredIO reads with ORC. (This requires Hadoop 3.3.5 or later.)"),
   ;
 
   private final String attribute;

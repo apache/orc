@@ -240,6 +240,7 @@ public interface Reader extends Closeable {
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
         .getDefaultValue();
     private int rowBatchSize = (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue();
+    private Boolean useVectoredIO = (boolean) OrcConf.USE_VECTOREDIO.getDefaultValue();
 
     /**
      * @since 1.1.0
@@ -266,6 +267,7 @@ public interface Reader extends Closeable {
       minSeekSize = OrcConf.ORC_MIN_DISK_SEEK_SIZE.getInt(conf);
       minSeekSizeTolerance = OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE.getDouble(conf);
       rowBatchSize = OrcConf.ROW_BATCH_SIZE.getInt(conf);
+      useVectoredIO = OrcConf.USE_VECTOREDIO.getBoolean(conf);
     }
 
     /**
@@ -710,6 +712,21 @@ public interface Reader extends Closeable {
      */
     public Options rowBatchSize(int value) {
       this.rowBatchSize = value;
+      return this;
+    }
+
+    /**
+     * @since 2.0.0
+     */
+    public Boolean getUseVectoredIO() {
+      return useVectoredIO;
+    }
+
+    /**
+     * @since 2.0.0
+     */
+    public Options useVectoredIO(boolean value) {
+      this.useVectoredIO = value;
       return this;
     }
   }

@@ -97,6 +97,8 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -2709,6 +2711,35 @@ public class TestRecordReaderImpl {
         assertEquals(value, strVector.toString(r), "row " + (r + base));
       }
       base += batch.size;
+    }
+  }
+
+  @Test
+  public void testHadoopVectoredIO() throws Exception {
+    boolean[] configs = new boolean[]{true, false};
+    for (boolean config : configs) {
+      Configuration conf = new Configuration();
+      conf.set(OrcConf.USE_VECTOREDIO.getAttribute(), String.valueOf(config));
+
+      Path filePath = new Path(TestVectorOrcFile.getFileFromClasspath("orc-file-11-format.orc"));
+
+      FileSystem localFileSystem = FileSystem.getLocal(conf);
+      FSDataInputStream fsDataInputStream = localFileSystem.open(filePath);
+
+      FileSystem spyLocalFileSystem = spy(localFileSystem);
+      FSDataInputStream spyFSDataInputStream = spy(fsDataInputStream);
+      when(spyLocalFileSystem.open(filePath)).thenReturn(spyFSDataInputStream);
+
+      Reader reader = OrcFile.createReader(filePath,
+              OrcFile.readerOptions(conf).filesystem(spyLocalFileSystem));
+      RecordReader recordReader = reader.rows(reader.options());
+      recordReader.close();
+
+      if (config) {
+        verify(spyFSDataInputStream, atLeastOnce()).readVectored(any(), any());
+      } else {
+        verify(spyFSDataInputStream, never()).readVectored(any(), any());
+      }
     }
   }
 }

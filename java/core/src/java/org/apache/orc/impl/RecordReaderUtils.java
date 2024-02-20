@@ -60,6 +60,7 @@ public class RecordReaderUtils {
     private final boolean useZeroCopy;
     private final int minSeekSize;
     private final double minSeekSizeTolerance;
+    private final boolean useVectoredIO;
     private InStream.StreamOptions options;
     private boolean isOpen = false;
 
@@ -71,6 +72,7 @@ public class RecordReaderUtils {
       this.options = properties.getCompression();
       this.minSeekSize = properties.getMinSeekSize();
       this.minSeekSizeTolerance = properties.getMinSeekSizeTolerance();
+      this.useVectoredIO = properties.getVectoredIO();
     }
 
     @Override
@@ -108,7 +110,7 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      if (supportVectoredIO && zcr == null) {
+      if (useVectoredIO && supportVectoredIO && zcr == null) {
         RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
       } else {
         RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect,

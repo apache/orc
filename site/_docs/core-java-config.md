@@ -410,4 +410,11 @@ permalink: /docs/core-java-config.html
     The maximum number of child elements to buffer before the ORC row writer writes the batch to the file.
   </td>
 </tr>
+<tr>
+  <td><code>orc.use.vectoredio</code></td>
+  <td>true</td>
+  <td>
+    Use VectoredIO reads with ORC. (This requires Hadoop 3.3.5 or later.)
+  </td>
+</tr>
 </table>

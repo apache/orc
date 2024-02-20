@@ -268,6 +268,10 @@ public class RecordReaderImpl implements RecordReader {
     if (zeroCopy == null) {
       zeroCopy = OrcConf.USE_ZEROCOPY.getBoolean(fileReader.conf);
     }
+    Boolean vectoredIO = options.getUseVectoredIO();
+    if (vectoredIO == null) {
+      vectoredIO = OrcConf.USE_VECTOREDIO.getBoolean(fileReader.conf);
+    }
     if (options.getDataReader() != null) {
       this.dataReader = options.getDataReader().clone();
     } else {
@@ -283,7 +287,8 @@ public class RecordReaderImpl implements RecordReader {
               .withMaxDiskRangeChunkLimit(maxDiskRangeChunkLimit)
               .withZeroCopy(zeroCopy)
               .withMinSeekSize(options.minSeekSize())
-              .withMinSeekSizeTolerance(options.minSeekSizeTolerance());
+              .withMinSeekSizeTolerance(options.minSeekSizeTolerance())
+              .withVectoredIO(vectoredIO);
       FSDataInputStream file = fileReader.takeFile();
       if (file != null) {
         builder.withFile(file);
