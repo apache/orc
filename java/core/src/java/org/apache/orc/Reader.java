@@ -240,7 +240,7 @@ public interface Reader extends Closeable {
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
         .getDefaultValue();
     private int rowBatchSize = (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue();
-    private Boolean useVectoredIO = (boolean) OrcConf.USE_VECTOREDIO.getDefaultValue();
+    private Boolean useVectoredIO = (Boolean) OrcConf.USE_VECTOREDIO.getDefaultValue();
 
     /**
      * @since 1.1.0
