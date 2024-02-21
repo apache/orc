@@ -97,6 +97,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -2710,5 +2711,25 @@ public class TestRecordReaderImpl {
       }
       base += batch.size;
     }
+  }
+
+  @Test
+  public void testHadoopVectoredIO() throws Exception {
+    Configuration conf = new Configuration();
+    Path filePath = new Path(TestVectorOrcFile.getFileFromClasspath("orc-file-11-format.orc"));
+
+    FileSystem localFileSystem = FileSystem.getLocal(conf);
+    FSDataInputStream fsDataInputStream = localFileSystem.open(filePath);
+
+    FileSystem spyLocalFileSystem = spy(localFileSystem);
+    FSDataInputStream spyFSDataInputStream = spy(fsDataInputStream);
+    when(spyLocalFileSystem.open(filePath)).thenReturn(spyFSDataInputStream);
+
+    Reader reader = OrcFile.createReader(filePath,
+        OrcFile.readerOptions(conf).filesystem(spyLocalFileSystem));
+    RecordReader recordReader = reader.rows(reader.options());
+    recordReader.close();
+
+    verify(spyFSDataInputStream, atLeastOnce()).readVectored(any(), any());
   }
 }
