@@ -39,7 +39,7 @@
     <junit.version>5.10.1</junit.version>
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.13.1</parquet.version>
-    <spark.version>3.5.0</spark.version>
+    <spark.version>3.5.1</spark.version>
   </properties>
 
   <dependencyManagement>
