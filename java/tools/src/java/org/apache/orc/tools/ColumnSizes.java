@@ -126,7 +126,7 @@ public class ColumnSizes {
     }
   }
 
-  private void printResults(PrintStream out) {
+  private void printResults(PrintStream out, boolean summary) {
     List<StringLongPair> sizes = new ArrayList<>(columnSizes.length + 5);
     for(int column = 0; column < columnSizes.length; ++column) {
       if (columnSizes[column] > 0) {
@@ -153,6 +153,10 @@ public class ColumnSizes {
     // sort by descending size, ascending name
     sizes.sort((x, y) -> x.size != y.size ?
         Long.compare(y.size, x.size) : x.name.compareTo(y.name));
+    if (summary) {
+      out.printf("Total Sizes: %d\n", totalSize);
+      out.printf("Total Rows: %d\n", rows);
+    }
     out.println("Percent  Bytes/Row  Name");
     for (StringLongPair item: sizes) {
       out.println(String.format("  %-5.2f  %-9.2f  %s",
@@ -169,9 +173,11 @@ public class ColumnSizes {
       return;
     }
     boolean ignoreExtension = cli.hasOption("ignoreExtension");
+    boolean summary = cli.hasOption("summary");
     String[] files = cli.getArgs();
 
     ColumnSizes result = null;
+    int totalFiles = 0;
     int badFiles = 0;
     for(String root: files) {
       Path rootPath = new Path(root);
@@ -179,6 +185,7 @@ public class ColumnSizes {
       for(RemoteIterator<LocatedFileStatus> itr = fs.listFiles(rootPath, true); itr.hasNext(); ) {
         LocatedFileStatus status = itr.next();
         if (status.isFile() && (ignoreExtension || status.getPath().getName().endsWith(".orc"))) {
+          totalFiles += 1;
           try {
             if (result == null) {
               result = new ColumnSizes(conf, status);
@@ -197,7 +204,10 @@ public class ColumnSizes {
     if (result == null) {
       System.err.println("No files found");
     } else {
-      result.printResults(System.out);
+      if (summary) {
+        System.out.printf("Total Files: %d\n", totalFiles);
+      }
+      result.printResults(System.out, summary);
     }
     if (badFiles > 0) {
       System.err.println(badFiles + " bad ORC files found.");
@@ -215,6 +225,11 @@ public class ColumnSizes {
     result.addOption(Option.builder("i")
         .longOpt("ignoreExtension")
         .desc("Ignore ORC file extension")
+        .build());
+
+    result.addOption(Option.builder("s")
+        .longOpt("summary")
+        .desc("Summarize the number of files, file size, and number of file lines")
         .build());
 
     result.addOption(Option.builder("h")
