@@ -154,8 +154,8 @@ public class ColumnSizes {
     sizes.sort((x, y) -> x.size != y.size ?
         Long.compare(y.size, x.size) : x.name.compareTo(y.name));
     if (summary) {
-      out.printf("Total Sizes: %d\n", totalSize);
-      out.printf("Total Rows: %d\n", rows);
+      out.printf("Total Sizes: %d%n", totalSize);
+      out.printf("Total Rows: %d%n", rows);
     }
     out.println("Percent  Bytes/Row  Name");
     for (StringLongPair item: sizes) {
@@ -205,7 +205,7 @@ public class ColumnSizes {
       System.err.println("No files found");
     } else {
       if (summary) {
-        System.out.printf("Total Files: %d\n", totalFiles);
+        System.out.printf("Total Files: %d%n", totalFiles);
       }
       result.printResults(System.out, summary);
     }
@@ -229,7 +229,7 @@ public class ColumnSizes {
 
     result.addOption(Option.builder("s")
         .longOpt("summary")
-        .desc("Summarize the number of files, file size, and number of file lines")
+        .desc("Summarize the number of files, file sizes, and file rows")
         .build());
 
     result.addOption(Option.builder("h")
