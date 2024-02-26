@@ -72,7 +72,7 @@ endif ()
 # ----------------------------------------------------------------------
 # ORC Format
 ExternalProject_Add (orc-format_ep
-  URL "https://archive.apache.org/dist/orc/orc-format-${ORC_FORMAT_VERSION}/orc-format-${ORC_FORMAT_VERSION}.tar.gz"
+  URL "https://dlcdn.apache.org/orc/orc-format-${ORC_FORMAT_VERSION}/orc-format-${ORC_FORMAT_VERSION}.tar.gz"
   URL_HASH SHA256=739fae5ff94b1f812b413077280361045bf92e510ef04b34a610e23a945d8cd5
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
