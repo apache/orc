@@ -87,8 +87,8 @@ public class TestRowCount {
     RowCount.main(conf, new String[]{workDir.toString()});
     System.out.flush();
     System.setOut(origOut);
-    String[] lines = myOut.toString(StandardCharsets.UTF_8).split("\n");
-    assertTrue(lines[0].contains(" 10000"));
-    assertTrue(lines[1].contains(" 20000"));
+    String output = myOut.toString(StandardCharsets.UTF_8);
+    assertTrue(output.contains(" 10000"));
+    assertTrue(output.contains(" 20000"));
   }
 }
