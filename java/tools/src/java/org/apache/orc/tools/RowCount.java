@@ -66,7 +66,9 @@ public class RowCount {
         }
       }
     }
-    System.exit(bad == 0 ? 0 : 1);
+    if (bad > 0) {
+      System.exit(1);
+    }
   }
 
   public static void main(String[] args) throws Exception {
