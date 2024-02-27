@@ -15,20 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-sources:
-  "1.9.2":
-    url: "https://dlcdn.apache.org/orc/orc-1.9.2/orc-1.9.2.tar.gz"
-    sha256: "7f46f2c184ecefd6791f1a53fb062286818bd8710c3f08b94dd3cac365e240ee"
-  "1.8.6":
-    url: "https://dlcdn.apache.org/orc/orc-1.8.6/orc-1.8.6.tar.gz"
-    sha256: "5675b18118df4dd7f86cc6ba859ed75b425ea1b7ddff805e1d671a17fd57d7f7"
-  "1.7.10":
-    url: "https://dlcdn.apache.org/orc/orc-1.7.10/orc-1.7.10.tar.gz"
-    sha256: "85aef9368dc9bcdffaaf10010b66dfe053ce22f30b64854f63852248164686a3"
-patches:
-  "1.9.2":
-    - patch_file: "patches/0001-thirdparty-toolchain-1.9.x.patch"
-  "1.8.6":
-    - patch_file: "patches/0001-thirdparty-toolchain-1.8.x.patch"
-  "1.7.10":
-    - patch_file: "patches/0001-thirdparty-toolchain-1.7.x.patch"
+cmake_minimum_required(VERSION 3.15)
+project(test_package LANGUAGES CXX)
+
+find_package(orc REQUIRED CONFIG)
+
+add_executable(${PROJECT_NAME} test_package.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE orc::orc)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
