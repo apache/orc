@@ -30,6 +30,8 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 * [Ubuntu 20]({{ page.dockerUrl }}/ubuntu20/Dockerfile)
 * [Ubuntu 22]({{ page.dockerUrl }}/ubuntu22/Dockerfile)
 * [Ubuntu 24]({{ page.dockerUrl }}/ubuntu24/Dockerfile)
+* [Fedora 37]({{ page.dockerUrl }}/fedora37/Dockerfile)
+* [Oracle Linux 9]({{ page.dockerUrl }}/oraclelinux9/Dockerfile)
 
 To build a normal release:
 
