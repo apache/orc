@@ -352,7 +352,7 @@ namespace orc {
     const char* expected = "XXXXabcdabcdABCDABCDwxyzwzyz123";
     ASSERT_EQ(strlen(expected), length);
     for (uint64_t i = 0; i < length; ++i) {
-      ASSERT_EQ(static_cast<const char>(expected[i]), static_cast<const char*>(ptr)[i]);
+      ASSERT_EQ(static_cast<char>(expected[i]), static_cast<const char*>(ptr)[i]);
     }
     ASSERT_TRUE(!result->Next(&ptr, &length));
   }
@@ -419,7 +419,7 @@ namespace orc {
     const char* expected = "XXXXabcdabcdABCDABCDwxyzwzyz123";
     ASSERT_EQ(strlen(expected), length);
     for (uint64_t i = 0; i < length; ++i) {
-      ASSERT_EQ(static_cast<const char>(expected[i]), static_cast<const char*>(ptr)[i]);
+      ASSERT_EQ(static_cast<char>(expected[i]), static_cast<const char*>(ptr)[i]);
     }
     ASSERT_TRUE(!result->Next(&ptr, &length));
   }

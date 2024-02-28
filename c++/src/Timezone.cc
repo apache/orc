@@ -449,7 +449,7 @@ namespace orc {
   std::shared_ptr<FutureRule> parseFutureRule(const std::string& ruleString) {
     auto result = std::make_shared<FutureRuleImpl>();
     FutureRuleParser parser(ruleString, dynamic_cast<FutureRuleImpl*>(result.get()));
-    return std::move(result);
+    return result;
   }
 
   std::string TimezoneVariant::toString() const {

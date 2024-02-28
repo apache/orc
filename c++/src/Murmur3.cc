@@ -69,16 +69,22 @@ namespace orc {
     switch (len - idx) {
       case 7:
         k ^= static_cast<uint64_t>(data[idx + 6]) << 48;
+        [[fallthrough]];
       case 6:
         k ^= static_cast<uint64_t>(data[idx + 5]) << 40;
+        [[fallthrough]];
       case 5:
         k ^= static_cast<uint64_t>(data[idx + 4]) << 32;
+        [[fallthrough]];
       case 4:
         k ^= static_cast<uint64_t>(data[idx + 3]) << 24;
+        [[fallthrough]];
       case 3:
         k ^= static_cast<uint64_t>(data[idx + 2]) << 16;
+        [[fallthrough]];
       case 2:
         k ^= static_cast<uint64_t>(data[idx + 1]) << 8;
+        [[fallthrough]];
       case 1:
         k ^= static_cast<uint64_t>(data[idx + 0]);
 

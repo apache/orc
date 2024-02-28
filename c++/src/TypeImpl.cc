@@ -337,7 +337,7 @@ namespace orc {
                   ->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector)
                   .release());
         }
-        return std::move(result);
+        return result;
       }
 
       case LIST: {
@@ -346,7 +346,7 @@ namespace orc {
           result->elements =
               getSubtype(0)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
-        return std::move(result);
+        return result;
       }
 
       case MAP: {
@@ -359,7 +359,7 @@ namespace orc {
           result->elements =
               getSubtype(1)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
-        return std::move(result);
+        return result;
       }
 
       case DECIMAL: {
@@ -378,7 +378,7 @@ namespace orc {
                   ->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector)
                   .release());
         }
-        return std::move(result);
+        return result;
       }
 
       default:
@@ -405,14 +405,14 @@ namespace orc {
   std::unique_ptr<Type> createListType(std::unique_ptr<Type> elements) {
     auto result = std::make_unique<TypeImpl>(LIST);
     result->addChildType(std::move(elements));
-    return std::move(result);
+    return result;
   }
 
   std::unique_ptr<Type> createMapType(std::unique_ptr<Type> key, std::unique_ptr<Type> value) {
     auto result = std::make_unique<TypeImpl>(MAP);
     result->addChildType(std::move(key));
     result->addChildType(std::move(value));
-    return std::move(result);
+    return result;
   }
 
   std::unique_ptr<Type> createUnionType() {
@@ -567,7 +567,7 @@ namespace orc {
       const auto& value = fileType->getAttributeValue(key);
       result->setAttribute(key, value);
     }
-    return std::move(result);
+    return result;
   }
 
   std::unique_ptr<Type> Type::buildTypeFromString(const std::string& input) {
@@ -590,7 +590,7 @@ namespace orc {
       throw std::logic_error("Array type must contain exactly one sub type.");
     }
     result->addChildType(std::move(res.first));
-    return std::move(result);
+    return result;
   }
 
   std::unique_ptr<Type> TypeImpl::parseMapType(const std::string& input, size_t start, size_t end) {
@@ -608,7 +608,7 @@ namespace orc {
     }
     result->addChildType(std::move(key.first));
     result->addChildType(std::move(val.first));
-    return std::move(result);
+    return result;
   }
 
   std::pair<std::string, size_t> TypeImpl::parseName(const std::string& input, const size_t start,
@@ -671,7 +671,7 @@ namespace orc {
       ++pos;
     }
 
-    return std::move(result);
+    return result;
   }
 
   std::unique_ptr<Type> TypeImpl::parseUnionType(const std::string& input, size_t start,
@@ -691,7 +691,7 @@ namespace orc {
       ++pos;
     }
 
-    return std::move(result);
+    return result;
   }
 
   std::unique_ptr<Type> TypeImpl::parseDecimalType(const std::string& input, size_t start,
