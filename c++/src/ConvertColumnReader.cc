@@ -399,14 +399,14 @@ namespace orc {
     ConvertToTimestampColumnReader(const Type& _readType, const Type& fileType,
                                    StripeStreams& stripe, bool _throwOnOverflow)
         : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow),
-          readerTimezone(readType.getKind() == TIMESTAMP_INSTANT ? getTimezoneByName("GMT")
-                                                                 : stripe.getReaderTimezone()),
-          needConvertTimezone(&readerTimezone != &getTimezoneByName("GMT")) {}
+          readerTimezone(readType.getKind() == TIMESTAMP_INSTANT ? &getTimezoneByName("GMT")
+                                                                 : &stripe.getReaderTimezone()),
+          needConvertTimezone(readerTimezone != &getTimezoneByName("GMT")) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
    protected:
-    const orc::Timezone& readerTimezone;
+    const orc::Timezone* readerTimezone;
     const bool needConvertTimezone;
   };
 
@@ -462,7 +462,7 @@ namespace orc {
       dstBatch.nanoseconds[idx] = 0;
     }
     if (needConvertTimezone) {
-      dstBatch.data[idx] = readerTimezone.convertFromUTC(dstBatch.data[idx]);
+      dstBatch.data[idx] = readerTimezone->convertFromUTC(dstBatch.data[idx]);
     }
   }
 

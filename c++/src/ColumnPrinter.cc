@@ -639,7 +639,7 @@ namespace orc {
         if (i != 0) {
           writeString(buffer, ", ");
         }
-        const auto numBuffer = std::to_string(static_cast<const int>(start[rowId][i]) & 0xff);
+        const auto numBuffer = std::to_string(static_cast<int>(start[rowId][i]) & 0xff);
         writeString(buffer, numBuffer.c_str());
       }
       writeChar(buffer, ']');
