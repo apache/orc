@@ -331,6 +331,15 @@ Percent  Bytes/Row  Name
 ______________________________________________________________________
 ~~~
 
+## Java Merge
+
+The merge command can merge multiple ORC files with the same schema to generate a single ORC file.
+
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar merge --inputDir /path/to/input_orc/ --outputPath /path/to/merged.orc
+______________________________________________________________________
+~~~
+
 ## Java Version
 
 The version command prints the version of this ORC tool.
