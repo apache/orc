@@ -215,7 +215,10 @@ public class ScanData {
           }
         }
       }
-      System.exit(badFiles.size());
+      if (!badFiles.isEmpty()) {
+        System.err.println(badFiles + " bad ORC files found.");
+        System.exit(1);
+      }
     }
   }
 }
