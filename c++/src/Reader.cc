@@ -1050,23 +1050,24 @@ namespace orc {
             << ", footerLength=" << currentStripeInfo.footer_length() << ")";
         throw ParseError(msg.str());
       }
-      currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
       rowsInCurrentStripe = currentStripeInfo.number_of_rows();
       processingStripe = currentStripe;
 
-      if (sargsApplier) {
-        bool isStripeNeeded = true;
-        if (contents->metadata) {
-          const auto& currentStripeStats =
-              contents->metadata->stripe_stats(static_cast<int>(currentStripe));
-          // skip this stripe after stats fail to satisfy sargs
-          uint64_t stripeRowGroupCount =
-              (rowsInCurrentStripe + footer->row_index_stride() - 1) / footer->row_index_stride();
-          isStripeNeeded =
-              sargsApplier->evaluateStripeStatistics(currentStripeStats, stripeRowGroupCount);
-        }
+      bool isStripeNeeded = true;
+      // If PPD enabled and stripe stats existed, evaulate it first
+      if (sargsApplier && contents->metadata) {
+        const auto& currentStripeStats =
+            contents->metadata->stripe_stats(static_cast<int>(currentStripe));
+        // skip this stripe after stats fail to satisfy sargs
+        uint64_t stripeRowGroupCount =
+            (rowsInCurrentStripe + footer->row_index_stride() - 1) / footer->row_index_stride();
+        isStripeNeeded =
+            sargsApplier->evaluateStripeStatistics(currentStripeStats, stripeRowGroupCount);
+      }
 
-        if (isStripeNeeded) {
+      if (isStripeNeeded) {
+        currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
+        if (sargsApplier) {
           // read row group statistics and bloom filters of current stripe
           loadStripeIndex();
 
@@ -1078,11 +1079,12 @@ namespace orc {
           }
           isStripeNeeded = false;
         }
-        if (!isStripeNeeded) {
-          // advance to next stripe when current stripe has no matching rows
-          currentStripe += 1;
-          currentRowInStripe = 0;
-        }
+      }
+
+      if (!isStripeNeeded) {
+        // advance to next stripe when current stripe has no matching rows
+        currentStripe += 1;
+        currentRowInStripe = 0;
       }
     } while (sargsApplier && currentStripe < lastStripe);
 
