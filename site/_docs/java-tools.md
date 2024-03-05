@@ -333,10 +333,10 @@ ______________________________________________________________________
 
 ## Java Merge
 
-The merge command can merge multiple ORC files with the same schema to generate a single ORC file.
+The merge command can merge multiple ORC files that all have the same schema into a single ORC file.
 
 ~~~ shell
-% java -jar orc-tools-X.Y.Z-uber.jar merge --inputDir /path/to/input_orc/ --outputPath /path/to/merged.orc
+% java -jar orc-tools-X.Y.Z-uber.jar merge --output /path/to/merged.orc /path/to/input_orc/
 ______________________________________________________________________
 ~~~
 

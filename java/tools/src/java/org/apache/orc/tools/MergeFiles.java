@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Merges multiple ORC files that all have the same schema to produce a single ORC file.
+ * Merge multiple ORC files that all have the same schema into a single ORC file.
  */
 public class MergeFiles {
 
@@ -48,15 +48,9 @@ public class MergeFiles {
       formatter.printHelp("merge", opts);
       return;
     }
-    String inputDir = cli.getOptionValue("inputDir");
-    if (inputDir == null || inputDir.isEmpty()) {
-      System.err.println("inputDir is null");
-      formatter.printHelp("merge", opts);
-      return;
-    }
-    String outputPath = cli.getOptionValue("outputPath");
-    if (outputPath == null || outputPath.isEmpty()) {
-      System.err.println("outputPath is null");
+    String outputFilename = cli.getOptionValue("output");
+    if (outputFilename == null || outputFilename.isEmpty()) {
+      System.err.println("output filename is null");
       formatter.printHelp("merge", opts);
       return;
     }
@@ -65,12 +59,15 @@ public class MergeFiles {
     List<Path> inputFiles = new ArrayList<>();
     OrcFile.WriterOptions writerOptions = OrcFile.writerOptions(conf);
 
-    Path rootPath = new Path(inputDir);
-    FileSystem fs = rootPath.getFileSystem(conf);
-    for (RemoteIterator<LocatedFileStatus> itr = fs.listFiles(rootPath, true); itr.hasNext(); ) {
-      LocatedFileStatus status = itr.next();
-      if (status.isFile() && (ignoreExtension || status.getPath().getName().endsWith(".orc"))) {
-        inputFiles.add(status.getPath());
+    String[] files = cli.getArgs();
+    for (String root : files) {
+      Path rootPath = new Path(root);
+      FileSystem fs = rootPath.getFileSystem(conf);
+      for (RemoteIterator<LocatedFileStatus> itr = fs.listFiles(rootPath, true); itr.hasNext(); ) {
+        LocatedFileStatus status = itr.next();
+        if (status.isFile() && (ignoreExtension || status.getPath().getName().endsWith(".orc"))) {
+          inputFiles.add(status.getPath());
+        }
       }
     }
     if (inputFiles.isEmpty()) {
@@ -78,7 +75,8 @@ public class MergeFiles {
       System.exit(1);
     }
 
-    List<Path> mergedFiles = OrcFile.mergeFiles(new Path(outputPath), writerOptions, inputFiles);
+    List<Path> mergedFiles = OrcFile.mergeFiles(
+        new Path(outputFilename), writerOptions, inputFiles);
 
     List<Path> unSuccessMergedFiles = new ArrayList<>();
     if (mergedFiles.size() != inputFiles.size()) {
@@ -95,9 +93,8 @@ public class MergeFiles {
       unSuccessMergedFiles.forEach(path -> System.err.println(path.toString()));
     }
 
-    System.out.printf("Input directory: %s, Output path: %s, " +
-            "Input files size: %d, Merge files size: %d%n",
-        inputDir, outputPath, inputFiles.size(), mergedFiles.size());
+    System.out.printf("Output path: %s, Input files size: %d, Merge files size: %d%n",
+        outputFilename, inputFiles.size(), mergedFiles.size());
     if (!unSuccessMergedFiles.isEmpty()) {
       System.exit(1);
     }
@@ -105,16 +102,9 @@ public class MergeFiles {
 
   private static Options createOptions() {
     Options result = new Options();
-
-    result.addOption(Option.builder("id")
-        .longOpt("inputDir")
-        .desc("Input orc directory to be merged")
-        .hasArg()
-        .build());
-
-    result.addOption(Option.builder("op")
-        .longOpt("outputPath")
-        .desc("Output file name")
+    result.addOption(Option.builder("o")
+        .longOpt("output")
+        .desc("Output filename")
         .hasArg()
         .build());
 

@@ -94,8 +94,8 @@ public class TestMergeFiles {
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     // replace stdout and run command
     System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
-    MergeFiles.main(conf, new String[]{"--inputDir", workDir.toString(),
-        "--outputPath", testFilePath.toString()});
+    MergeFiles.main(conf, new String[]{workDir.toString(),
+        "--output", testFilePath.toString()});
     System.out.flush();
     System.setOut(origOut);
     String output = myOut.toString(StandardCharsets.UTF_8);
