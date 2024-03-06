@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -66,10 +67,14 @@ public class TestConvertORC {
     Map<String, Integer> fileToRowCountMap = new LinkedHashMap<>();
     fileToRowCountMap.put("test-convert-1.orc", 10000);
     fileToRowCountMap.put("test-convert-2.orc", 20000);
+    Map<String, CompressionKind> fileToCompressMap = new HashMap<>();
+    fileToCompressMap.put("test-convert-1.orc", CompressionKind.ZLIB);
+    fileToCompressMap.put("test-convert-2.orc", CompressionKind.SNAPPY);
+
     for (Map.Entry<String, Integer> fileToRowCount : fileToRowCountMap.entrySet()) {
       Writer writer = OrcFile.createWriter(new Path(fileToRowCount.getKey()),
           OrcFile.writerOptions(conf)
-              .compress(CompressionKind.ZLIB)
+              .compress(fileToCompressMap.get(fileToRowCount.getKey()))
               .setSchema(schema));
       VectorizedRowBatch batch = schema.createRowBatch();
       LongColumnVector x = (LongColumnVector) batch.cols[0];
@@ -98,7 +103,7 @@ public class TestConvertORC {
 
     try (Reader reader = OrcFile.createReader(new Path("test-convert-2.orc"), OrcFile.readerOptions(conf))) {
       assertEquals(schema, reader.getSchema());
-      assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
+      assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
       assertEquals(20000, reader.getNumberOfRows());
     }
 
