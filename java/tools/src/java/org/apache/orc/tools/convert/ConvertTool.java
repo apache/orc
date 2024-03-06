@@ -79,6 +79,7 @@ public class ConvertTool {
         Reader reader = OrcFile.createReader(file.path,
             OrcFile.readerOptions(conf)
                 .filesystem(file.filesystem));
+        reader.close();
         if (files.size() == 1) {
           return reader.getSchema();
         }
