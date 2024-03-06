@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 /**
- * A conversion tool to convert CSV or JSON files into ORC files.
+ * A conversion tool to convert CSV, JSON OR ORC files into ORC files.
  */
 public class ConvertTool {
   static final String DEFAULT_TIMESTAMP_FORMAT =
