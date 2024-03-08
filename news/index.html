@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2024/03/08/ORC-2.0.0/">ORC 2.0.0 Released</option>
+      
       <option value="/news/2024/01/13/add-deshan/">Deshan Xiao added as committer</option>
       
       <option value="/news/2023/11/10/ORC-1.9.2/">ORC 1.9.2 Released</option>
@@ -294,6 +296,244 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2024/03/08/ORC-2.0.0/">
+      ORC 2.0.0 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      08 Mar 2024
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.0.0.</p>
+
+<ul>
+  <li>Released: 8 March 2024</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.0/orc-2.0.0.tar.gz">orc-2.0.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.0.0/orc-2.0.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.0">rel/release-2.0.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.0%22">ORC 2.0.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.0/orc-2.0.0.tar.gz.sha256">9107730919c29eb3…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.0%22&amp;tempMax=500">ORC-2.0.0</a></li>
+</ul>
+
+<p>New Feature and Notable Changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-998">ORC-998</a>: Refactor compression output buffer within OutStream for better portability</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1088">ORC-1088</a>: Suport ZSTD_JNI and columnn compress to set compression level</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1100">ORC-1100</a>: Support vcpkg</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1251">ORC-1251</a>: Use Hadoop Vectored IO</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1387">ORC-1387</a>: [C++] Support schema evolution from decimal to numeric/decimal</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1440">ORC-1440</a>: Check for protobuf config based module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1463">ORC-1463</a>: Support brotli codec</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1507">ORC-1507</a>: Use Zulu JDK distribution and switch from 21-ea to 21</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1512">ORC-1512</a>: Drop Java 8/11 and make Java 17 by default</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1531">ORC-1531</a>: Create orc-format module and repo</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1545">ORC-1545</a>: Use orc-format 1.0.0-SNAPSHOT</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1546">ORC-1546</a>: Use orc-format 1.0.0-alpha</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1547">ORC-1547</a>: Spin-off ORC Format</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1551">ORC-1551</a>: Use orc-format 1.0.0-beta</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1572">ORC-1572</a>: Use Apache ORC Format 1.0.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1585">ORC-1585</a>: [C++] Add orc-format_ep as a dependency of orc</li>
+</ul>
+
+<p>Improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1459">ORC-1459</a>: Mark DataBuffer::size() and DataBuffer::capacity() as const</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1460">ORC-1460</a>: specification: Clarify how dictionary entries are sorted</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1461">ORC-1461</a>: Mark Int128::getHighBits() and Int128::getLowBits() as const</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1472">ORC-1472</a>: Replace deprecated method in TestMurmur3.java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1479">ORC-1479</a>: Enhance example usage message to use Uber jar</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1481">ORC-1481</a>: [C++] Better error message when TZDB is unavailable</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1504">ORC-1504</a>: Add lower bound check in get API for DynamicIntArray</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1506">ORC-1506</a>: Replacing deprecated valueOf() with recommended forNumber()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1509">ORC-1509</a>: Auto grant contributor role to first-time contributors</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1520">ORC-1520</a>: Remove JDK 8 settings from pom</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1567">ORC-1567</a>: Add the <code class="highlighter-rouge">-ignoreExtension</code> configuration to the <code class="highlighter-rouge">sizes</code> and <code class="highlighter-rouge">count</code> commands of orc-tools</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1570">ORC-1570</a>: Add <code class="highlighter-rouge">supportVectoredIO</code> API to <code class="highlighter-rouge">HadoopShimsCurrent</code> and use it</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1571">ORC-1571</a>: Supports displaying raw data size in the meta command of orc-tools</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1577">ORC-1577</a>: Use ZSTD as the default compression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1580">ORC-1580</a>: Change default DataBuffer constructor to use reserve instead of resize</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1595">ORC-1595</a>: Add a short-cut to skip tiny inputs for ZstdCodec.compress</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1596">ORC-1596</a>: Remove redundant <code class="highlighter-rouge">Zstd.isError</code> JNI usage</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1597">ORC-1597</a>: Set bloom filter fpp to 1%</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1600">ORC-1600</a>: Reduce getStaticMemoryManager sync block in OrcFile</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1601">ORC-1601</a>: Reduce get HadoopShims sync block in HadoopShimsFactory</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1610">ORC-1610</a>: Reduce the number of hash computation in CuckooSetBytes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1613">ORC-1613</a>: Zstd decompression supports direct buffer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1631">ORC-1631</a>: Supports summary output in sizes command</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1637">ORC-1637</a>: [C++] Port conan recipe from upstream conan center</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1638">ORC-1638</a>: Avoid System.exit(0) in count command</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1639">ORC-1639</a>: [C++] Reduce unnecessary compiler flags in CMake</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1641">ORC-1641</a>: Remove <code class="highlighter-rouge">sourceFileExcludes </code> from <code class="highlighter-rouge">maven-javadoc-plugin</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1642">ORC-1642</a>: Avoid <code class="highlighter-rouge">System.exit(0)</code> in <code class="highlighter-rouge">scan</code> command</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1593">ORC-1593</a>: Set orc.compression.zstd.level to 3 by default</li>
+</ul>
+
+<p>Bug Fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-634">ORC-634</a>: Fix the json output for double NaN and infinite</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1455">ORC-1455</a>: [C++] Fix build failure on non-x86 with unused macro in CpuInfoUtil.cc</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1473">ORC-1473</a>: Zero-copy zeroCopyReadRanges and releaseBuffer bugs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1476">ORC-1476</a>: Maven build fail with unsupported platform: protoc-3.17.3-osx-aarch_64.exe</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1480">ORC-1480</a>: [C++] Build failed when the BUILD_CPP_ENABLE_METRICS is ON</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1500">ORC-1500</a>: [C++] The partition field does not support English special characters</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1528">ORC-1528</a>: When using the orc.min.disk.seek.size configuration to read extremely large ORC files, a java.nio.BufferOverflowException may occur.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1553">ORC-1553</a>: Reading information from Row group, where there are 0 records of SArg column</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1563">ORC-1563</a>: Fix orc.bloom.filter.fpp default value and orc.compress notes of Spark and Hive config docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1568">ORC-1568</a>: Use <code class="highlighter-rouge">readDiskRanges</code> if <code class="highlighter-rouge">orc.use.zerocopy</code> is enabled</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1575">ORC-1575</a>: Use ASF Archive URL instead Download URL</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1578">ORC-1578</a>: Fix SparkBenchmark according to SPARK-40918</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1588">ORC-1588</a>: Fix incorrect Decimal assert in LeafFilterFactory</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1602">ORC-1602</a>: [C++] limit compression block size</li>
+</ul>
+
+<p>Tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1422">ORC-1422</a>: Setting version to 2.0.0-SNAPSHOT</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1434">ORC-1434</a>: Remove <code class="highlighter-rouge">org.apache.hadoop</code> from <code class="highlighter-rouge">dependabot.yml</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1484">ORC-1484</a>: Use JIRA_ACCESS_TOKEN in <code class="highlighter-rouge">merge_orc_pr.py</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1485">ORC-1485</a>: Enable checkstyle checks for test classes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1486">ORC-1486</a>: Fix checkstyle violations for tests in orc-core module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1492">ORC-1492</a>: Fix checkstyle violations for tests in <code class="highlighter-rouge">mapreduce</code>, <code class="highlighter-rouge">tools</code>, <code class="highlighter-rouge">bench</code> modules</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1496">ORC-1496</a>: Use iterator to suggest backporting branches</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1515">ORC-1515</a>: Skip publishing orc-example module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1516">ORC-1516</a>: Fix minor typo in comments in IOUtils</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1518">ORC-1518</a>: Remove findbugs folders</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1529">ORC-1529</a>: Fix minor typos in pom.xml</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1530">ORC-1530</a>: Rename variables in RecordReaderUtils.ChunkReader#create</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1535">ORC-1535</a>: Remove generated Java docs from source tree</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1536">ORC-1536</a>: Remove <code class="highlighter-rouge">hive-storage-api</code> link from <code class="highlighter-rouge">maven-javadoc-plugin</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1540">ORC-1540</a>: Remove MacOS 11 from GitHub Action CI</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1542">ORC-1542</a>: Use <code class="highlighter-rouge">Pattern Matching for instanceof</code> (JEP-394)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1549">ORC-1549</a>: Update <code class="highlighter-rouge">libhdfspp.tar.gz</code> by adding <code class="highlighter-rouge">#include &lt;cstdint&gt;</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1569">ORC-1569</a>: Remove HadoopShimsPre2_3, HadoopShimsPre2_6, HadoopShimsPre2_7 classes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1579">ORC-1579</a>: Add <code class="highlighter-rouge">ASF Generative Tooling Guidance</code> to PR template</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1591">ORC-1591</a>: Lower log level from INFO to DEBUG in *ReaderImpl/WriterImpl/PhysicalFsWriter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1592">ORC-1592</a>: Suppress KeyProvider missing log</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1598">ORC-1598</a>: Close reader in orc-examples</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1604">ORC-1604</a>: Deprecate non-utf8 bloom filter for Java writer</li>
+</ul>
+
+<p>Tests:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1003">ORC-1003</a>: Recover java-examples-test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1409">ORC-1409</a>: Add stream order description in ORC spec.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1432">ORC-1432</a>: Add MacOS 13 GitHub Action Job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1474">ORC-1474</a>: Replaced deprecated getMinimum/Maximum in TestColumnStatistics</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1475">ORC-1475</a>: [C++] ConvertColumnReader.TestConvertNumericToStringVariant fails when compiled with unsigned char</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1477">ORC-1477</a>: Remove unused imports from Test classes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1478">ORC-1478</a>: Add Unit Test for org.apache.orc.impl.DynamicIntArray</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1510">ORC-1510</a>: Fix package for TestOrcUtils and add more test cases</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1541">ORC-1541</a>: Add <code class="highlighter-rouge">Ubuntu 24.04 LTS</code> Docker Test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1555">ORC-1555</a>: Simplify <code class="highlighter-rouge">fedora37</code> docker image</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1556">ORC-1556</a>: Add <code class="highlighter-rouge">Rocky Linux 9</code> Docker Test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1557">ORC-1557</a>: Add GitHub Action CI for <code class="highlighter-rouge">Docker Test</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1558">ORC-1558</a>: Remove <code class="highlighter-rouge">ubuntu22_jdk=21</code> and <code class="highlighter-rouge">ubuntu22_jdk=21_cc=clang</code> test combinations from <code class="highlighter-rouge">docker/os-list.txt</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1574">ORC-1574</a>: Update <code class="highlighter-rouge">GitHub Action</code> YAML files in <code class="highlighter-rouge">branch-2.0</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1586">ORC-1586</a>: Fix IllegalAccessError when SparkBenchmark runs on JDK17</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1607">ORC-1607</a>: Fix <code class="highlighter-rouge">testDoubleNaNAndInfinite</code> to use <code class="highlighter-rouge">TestFileDump.checkOutput</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1614">ORC-1614</a>: Set ByteBuffer limit in TestBrotli test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1618">ORC-1618</a>: Disable building tests for snappy</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1619">ORC-1619</a>: Add <code class="highlighter-rouge">MacOS 14</code> to GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1620">ORC-1620</a>: Add Apple Silicon Test Coverage</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1621">ORC-1621</a>: Switch to <code class="highlighter-rouge">oraclelinux9</code> from <code class="highlighter-rouge">rocky9</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1623">ORC-1623</a>: Use <code class="highlighter-rouge">directOut.put(out)</code> instead of <code class="highlighter-rouge">directOut.put(out.array())</code> in <code class="highlighter-rouge">TestZstd</code> test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1630">ORC-1630</a>: Test using VectoredIO of hadoop to read ORC</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1632">ORC-1632</a>: Add test for count command</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1633">ORC-1633</a>: Add test for sizes command</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1643">ORC-1643</a>: Add test for <code class="highlighter-rouge">scan</code> command</li>
+</ul>
+
+<p>Build and dependency changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-870">ORC-870</a>: Unpin and upgrade <code class="highlighter-rouge">jmh</code> to 1.37</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1423">ORC-1423</a>: Bump build-helper-maven-plugin to 3.4.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1424">ORC-1424</a>: Bump maven-assembly-plugin to 3.6.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1425">ORC-1425</a>: Bump checkstyle to 10.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1427">ORC-1427</a>: Use Hadoop 3.3.5 in <code class="highlighter-rouge">tools</code> module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1429">ORC-1429</a>: Upgrade Maven to 3.8.8</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1430">ORC-1430</a>: Use Hadoop 3.3.5 shaded clients</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1431">ORC-1431</a>: Use parquet to 1.13.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1437">ORC-1437</a>: Bump checkstyle to 10.12.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1438">ORC-1438</a>: Bump auto-service to 1.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1439">ORC-1439</a>: Bump guava to 32.0.0-jre</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1442">ORC-1442</a>: Update guava to 32.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1445">ORC-1445</a>: Bump snappy-java to 1.1.10.1 in <code class="highlighter-rouge">bench</code> module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1448">ORC-1448</a>: Bump auto-service to 1.1.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1456">ORC-1456</a>: Update Hadoop to 3.3.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1466">ORC-1466</a>: Bump junit to 5.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1467">ORC-1467</a>: Upgrade <code class="highlighter-rouge">commons-lang3</code> to 3.13.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1468">ORC-1468</a>: Bump <code class="highlighter-rouge">opencsv</code> to 5.8</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1469">ORC-1469</a>: Update guava to 32.1.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1470">ORC-1470</a>: Update maven-shade-plugin to 3.5.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1493">ORC-1493</a>: Bump <code class="highlighter-rouge">byte-buddy</code> to 1.14.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1502">ORC-1502</a>: Upgrade Maven to 3.9.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1508">ORC-1508</a>: Upgrade slf4j to 2.0.9</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1513">ORC-1513</a>: Upgrade <code class="highlighter-rouge">snappy</code> to 1.1.10.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1514">ORC-1514</a>: Remove zookeeper runtime dependency</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1517">ORC-1517</a>: Bump snappy-java to 1.1.10.5 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1521">ORC-1521</a>: Bump com.google.guava:guava to 32.1.3-jre</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1522">ORC-1522</a>: Bump commons-cli:commons-cli to 1.6.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1523">ORC-1523</a>: Bump <code class="highlighter-rouge">maven-checkstyle-plugin</code> to 3.3.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1524">ORC-1524</a>: Bump <code class="highlighter-rouge">maven-shade-plugin</code> to 3.5.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1526">ORC-1526</a>: Bump spotbugs-maven-plugin to 4.8.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1527">ORC-1527</a>: Bump <code class="highlighter-rouge">junit</code> to 5.10.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1533">ORC-1533</a>: Upgrade <code class="highlighter-rouge">commons-lang3</code> to 3.14.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1534">ORC-1534</a>: Upgrade <code class="highlighter-rouge">build-helper-maven-plugin</code> to 3.5.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1537">ORC-1537</a>: Unpin and upgrade <code class="highlighter-rouge">spotless</code> to 2.41.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1538">ORC-1538</a>: Unpin and upgrade <code class="highlighter-rouge">maven-dependency-plugin</code> to 3.6.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1543">ORC-1543</a>: Bump <code class="highlighter-rouge">spotless-maven-plugin</code> to 2.41.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1544">ORC-1544</a>: Unpin and upgrade <code class="highlighter-rouge">protobuf-java</code> to 3.25.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1550">ORC-1550</a>: Upgrade <code class="highlighter-rouge">Maven</code> to 3.9.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1562">ORC-1562</a>: Bump <code class="highlighter-rouge">com.google.guava:guava</code> to 33.0.0-jre</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1565">ORC-1565</a>: Bump slf4j.version to 2.0.10</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1566">ORC-1566</a>: Make Brotli dependency as optional</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1576">ORC-1576</a>: Upgrade spark.jackson.version to 2.15.2 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1581">ORC-1581</a>: Bump <code class="highlighter-rouge">slf4j.version</code> to 2.0.11</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1582">ORC-1582</a>: Bump <code class="highlighter-rouge">protobuf-java</code> to 3.25.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1605">ORC-1605</a>: Upgrade <code class="highlighter-rouge">brotli4j</code> to 1.16.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1616">ORC-1616</a>: Upgrade <code class="highlighter-rouge">aircompressor</code> to 0.26</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1624">ORC-1624</a>: Upgrade Spark to 3.5.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1626">ORC-1626</a>: Upgrade <code class="highlighter-rouge">Mockito</code> to 5.10 and <code class="highlighter-rouge">byte-buddy</code> to <code class="highlighter-rouge">1.14.11</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1627">ORC-1627</a>: Unpin <code class="highlighter-rouge">scala-library</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1628">ORC-1628</a>: Bump <code class="highlighter-rouge">protobuf-java</code> to 3.25.3</li>
+</ul>
+
+<p>Documentations:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-994">ORC-994</a>: Fix javadoc so that it doesn’t put files into the source tree</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1471">ORC-1471</a>: Updated README.md to use maven 3.8.8</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1491">ORC-1491</a>: Update Python documentation with PyArrow 13.0.0 and Dask 2023.8.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1503">ORC-1503</a>: Update README.md to use maven 3.9.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1552">ORC-1552</a>: Update README.md to use maven 3.9.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1564">ORC-1564</a>: Add Java ORC configuration documentation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1584">ORC-1584</a>: Remove README about Proto subdirectory</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1587">ORC-1587</a>: Fix usage command of SparkBenchmark document</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1599">ORC-1599</a>: Add zstd compression level and windowlog in Java configuration documentation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1612">ORC-1612</a>: Document available encodings at <code class="highlighter-rouge">orc.compress</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1625">ORC-1625</a>: Switch to oraclelinux9 from rocky9 in <code class="highlighter-rouge">README</code></li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2024/01/13/add-deshan/">
@@ -5749,6 +5989,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2024/03/08/ORC-2.0.0/">Version 2.0.0</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2023/11/10/ORC-1.9.2/">Version 1.9.2</a>
       </li>
       
@@ -5764,13 +6008,11 @@ together with the Java implementation.</p>
         <a href="/news/2023/09/05/ORC-1.8.5/">Version 1.8.5</a>
       </li>
       
-      <li class="">
-        <a href="/news/2023/08/16/ORC-1.9.1/">Version 1.9.1</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         <li class="">

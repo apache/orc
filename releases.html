@@ -997,34 +997,34 @@
         <article>
           <h1>Releases</h1>
           
-<h2 id="current-release---192">Current Release - 1.9.2:</h2>
+<h2 id="current-release---200">Current Release - 2.0.0:</h2>
 
-<p>ORC 1.9.2 contains both the Java and C++ reader and writer
+<p>ORC 2.0.0 contains both the Java and C++ reader and writer
 for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.</p>
 
 <ul>
-  <li>Released: 10 November 2023</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.2/orc-1.9.2.tar.gz">orc-1.9.2.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.9.2/orc-1.9.2.tar.gz.asc">GPG Signature</a>
+  <li>Released: 8 March 2024</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.0/orc-2.0.0.tar.gz">orc-2.0.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.0.0/orc-2.0.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.2">rel/release-1.9.2</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.2%22">ORC 1.9.2</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.2/orc-1.9.2.tar.gz.sha256">7f46f2c184ecefd6…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.2%22&amp;tempMax=500">ORC-1.9.2</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.0">rel/release-2.0.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.0%22">ORC 2.0.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.0/orc-2.0.0.tar.gz.sha256">9107730919c29eb3…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.0%22&amp;tempMax=500">ORC-2.0.0</a></li>
 </ul>
 
-<p>The New Features and Notable Changes of ORC 1.9:</p>
+<p>The New Features and Notable Changes of ORC 2.0:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-961">ORC-961</a>: Expose metrics of the reader</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1167">ORC-1167</a>: Support orc.row.batch.size configuration</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1252">ORC-1252</a>: Expose io metrics for write operation</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1301">ORC-1301</a>: Enforce C++ 17</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1310">ORC-1310</a>: allowlist Support for plugin filter</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1356">ORC-1356</a>: Use Intel AVX-512 instructions to accelerate the Rle-bit-packing decode</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1385">ORC-1385</a>: Support schema evolution from numeric to numeric</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1386">ORC-1386</a>: Support schema evolution from primitive to string group/decimal/timestamp</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1547">ORC-1547</a>: Spin-off ORC Format</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1572">ORC-1572</a>: Use Apache ORC Format 1.0.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1507">ORC-1507</a>: Support Java 21</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1512">ORC-1512</a>: Drop Java 8/11 and make Java 17 by default</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1577">ORC-1577</a>: Use ZSTD as the default compression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1251">ORC-1251</a>: Use Hadoop Vectored IO</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1463">ORC-1463</a>: Support brotli codec</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1100">ORC-1100</a>: Support vcpkg</li>
 </ul>
 
 <p>Known issues:</p>
@@ -1055,9 +1055,19 @@ committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
     
       
       <tr>
+        <td style="text-align: center">2.0.0</td>
+        <td style="text-align: center">2024-03-08</td>
+        <td style="text-align: center">latest</td>
+        <td style="text-align: center">
+          <a href="/news/2024/03/08/ORC-2.0.0/">
+          ORC-2.0.0</a></td>
+      </tr>
+    
+      
+      <tr>
         <td style="text-align: center">1.9.2</td>
         <td style="text-align: center">2023-11-10</td>
-        <td style="text-align: center">latest</td>
+        <td style="text-align: center">stable</td>
         <td style="text-align: center">
           <a href="/news/2023/11/10/ORC-1.9.2/">
           ORC-1.9.2</a></td>

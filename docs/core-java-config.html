@@ -1062,9 +1062,9 @@
 </tr>
 <tr>
   <td><code>orc.compress</code></td>
-  <td>ZLIB</td>
+  <td>ZSTD</td>
   <td>
-    Define the default compression codec for ORC file
+    Define the default compression codec for ORC file. It can be NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD, BROTLI.
   </td>
 </tr>
 <tr>
@@ -1093,6 +1093,20 @@
   <td>SPEED</td>
   <td>
     Define the compression strategy to use while writing data. This changes the compression level of higher level compression codec (like ZLIB).
+  </td>
+</tr>
+<tr>
+  <td><code>orc.compression.zstd.level</code></td>
+  <td>3</td>
+  <td>
+    Define the compression level to use with ZStandard codec while writing data. The valid range is 1~22.
+  </td>
+</tr>
+<tr>
+  <td><code>orc.compression.zstd.windowlog</code></td>
+  <td>0</td>
+  <td>
+    Set the maximum allowed back-reference distance for ZStandard codec, expressed as power of 2.
   </td>
 </tr>
 <tr>
@@ -1169,7 +1183,7 @@
   <td><code>orc.bloom.filter.write.version</code></td>
   <td>utf8</td>
   <td>
-    Which version of the bloom filters should we write. The choices are:   original - writes two versions of the bloom filters for use by              both old and new readers.   utf8 - writes just the new bloom filters.
+    (Deprecated) Which version of the bloom filters should we write. The choices are:   original - writes two versions of the bloom filters for use by              both old and new readers.   utf8 - writes just the new bloom filters.
   </td>
 </tr>
 <tr>
