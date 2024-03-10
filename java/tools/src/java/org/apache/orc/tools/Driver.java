@@ -91,6 +91,7 @@ public class Driver {
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   json-schema - scan JSON files to determine their schema");
       System.err.println("   key - print information about the keys");
+      System.err.println("   merge - merge multiple ORC files into a single ORC file");
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   scan - scan the ORC file");
       System.err.println("   sizes - list size on disk of each column");
@@ -119,6 +120,9 @@ public class Driver {
         break;
       case "key":
         KeyTool.main(conf, options.commandArgs);
+        break;
+      case "merge":
+        MergeFiles.main(conf, options.commandArgs);
         break;
       case "meta":
         FileDump.main(conf, options.commandArgs);
