@@ -11,7 +11,7 @@ supports both the local file system and HDFS.
 
 The subcommands for the tools are:
 
-  * convert (since ORC 1.4) - convert JSON/CSV files to ORC
+  * convert (since ORC 1.4) - convert CSV/JSON/ORC files to ORC
   * count (since ORC 1.6) - recursively find *.orc and print the number of rows
   * data - print the data of an ORC file
   * json-schema (since ORC 1.4) - determine the schema of JSON documents
@@ -29,7 +29,7 @@ The command line looks like:
 
 ## Java Convert
 
-The convert command reads several JSON/CSV files and converts them into a
+The convert command reads several CSV/JSON/ORC files and converts them into a
 single ORC file.
 
 `-b,--bloomFilterColumns <columns>`

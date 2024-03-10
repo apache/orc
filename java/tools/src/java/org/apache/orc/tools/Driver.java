@@ -86,7 +86,7 @@ public class Driver {
           " [--define X=Y] <command> <args>");
       System.err.println();
       System.err.println("Commands:");
-      System.err.println("   convert - convert CSV and JSON files to ORC");
+      System.err.println("   convert - convert CSV/JSON/ORC files to ORC");
       System.err.println("   count - recursively find *.orc and print the number of rows");
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   json-schema - scan JSON files to determine their schema");
