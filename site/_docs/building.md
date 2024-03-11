@@ -18,19 +18,20 @@ You'll want to install the usual set of developer tools, but at least:
 
 * cmake
 * g++ or clang++
-* java ( >= 1.8)
+* java ( >= 17)
 * make
 * maven ( >= 3)
 
 For each version of Linux, please check the corresponding Dockerfile, which
 is in the docker subdirectory, for the list of packages required to build ORC:
 
-* [CentOS 7]({{ page.dockerUrl }}/centos7/Dockerfile)
-* [Debian 10]({{ page.dockerUrl }}/debian10/Dockerfile)
 * [Debian 11]({{ page.dockerUrl }}/debian11/Dockerfile)
 * [Debian 12]({{ page.dockerUrl }}/debian12/Dockerfile)
 * [Ubuntu 20]({{ page.dockerUrl }}/ubuntu20/Dockerfile)
 * [Ubuntu 22]({{ page.dockerUrl }}/ubuntu22/Dockerfile)
+* [Ubuntu 24]({{ page.dockerUrl }}/ubuntu24/Dockerfile)
+* [Fedora 37]({{ page.dockerUrl }}/fedora37/Dockerfile)
+* [Oracle Linux 9]({{ page.dockerUrl }}/oraclelinux9/Dockerfile)
 
 To build a normal release:
 
@@ -59,7 +60,7 @@ is invoking:
 
 You'll need to install:
 
-* java (>= 1.8)
+* java (>= 17)
 * maven (>= 3)
 
 To build:
