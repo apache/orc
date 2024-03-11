@@ -342,6 +342,29 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
   <p>Note: You will not immediately find the merged PR version on the official website of vcpkg. check <a href="https://github.com/microsoft/vcpkg/releases">vcpkg release</a> to know the latest release progress.</p>
 </blockquote>
 
+<h2 id="to-release-orc-in-conan">To release ORC in Conan.</h2>
+
+<p>We could release the latest ORC version in <a href="https://conan.io/center/recipes/orc">conan</a>.</p>
+
+<p>1.Install conan</p>
+
+<p>Install your conan with the help of the official guide: <a href="https://docs.conan.io/2/installation.html">Install</a></p>
+
+<p>2.Download the source code of conan-center-index:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone git@github.com:conan-io/conan-center-index.git
+</code></pre></div></div>
+
+<p>3.Update ORC version</p>
+
+<p>Add the new version to <a href="https://github.com/conan-io/conan-center-index/blob/master/recipes/orc/config.yml">config.yml</a> and <a href="https://github.com/conan-io/conan-center-index/blob/master/recipes/orc/all/conandata.yml">conandata.yml</a> locally in your conan-center-index. Run the following command in the conan-center-index/recipes/orc/all directory to build ORC of version X.Y.Z:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% conan create . --version=X.Y.Z
+</code></pre></div></div>
+
+<p>4.Commit current changes</p>
+
+<p>If everything is ok, commit the local change and open a pull request to <a href="https://github.com/conan-io/conan-center-index">conan-center-index repo</a>.</p>
+
+<p>This is an <a href="https://github.com/conan-io/conan-center-index/pull/23046">example</a> of adding ORC 2.0.0 to it.</p>
 
       </article>
     </div>
