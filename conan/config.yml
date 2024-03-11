@@ -16,6 +16,8 @@
 # under the License.
 
 versions:
+  "2.0.0":
+    folder: all
   "1.9.2":
     folder: all
   "1.8.6":
