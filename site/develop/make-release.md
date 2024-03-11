@@ -235,4 +235,28 @@ This is an [example](https://github.com/microsoft/vcpkg/pull/36098/files) of upd
 
 > Note: You will not immediately find the merged PR version on the official website of vcpkg. check [vcpkg release](https://github.com/microsoft/vcpkg/releases) to know the latest release progress.
 
+## To release ORC in Conan.
 
+We could release the latest ORC version in [conan](https://conan.io/center/recipes/orc).
+
+1.Install conan
+
+Install your conan with the help of the official guide: [Install](https://docs.conan.io/2/installation.html)
+
+2.Download the source code of conan-center-index:
+~~~
+% git clone git@github.com:conan-io/conan-center-index.git
+~~~
+
+3.Update ORC version
+
+Add the new version to [config.yml](https://github.com/conan-io/conan-center-index/blob/master/recipes/orc/config.yml) and [conandata.yml](https://github.com/conan-io/conan-center-index/blob/master/recipes/orc/all/conandata.yml) locally in your conan-center-index. Run the following command in the conan-center-index/recipes/orc/all directory to build ORC of version X.Y.Z:
+```
+% conan create . --version=X.Y.Z
+```
+
+4.Commit current changes
+
+If everything is ok, commit the local change and open a pull request to [conan-center-index repo](https://github.com/conan-io/conan-center-index).
+
+This is an [example](https://github.com/conan-io/conan-center-index/pull/23046) of adding ORC 2.0.0 to it.
