@@ -67,7 +67,7 @@
     <java.version>17</java.version>
     <javadoc.location>${project.basedir}/../target/javadoc</javadoc.location>
     <junit.version>5.10.2</junit.version>
-    <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
+    <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
     <maven-shade-plugin.version>3.5.2</maven-shade-plugin.version>
     <maven.compiler.release>17</maven.compiler.release>
