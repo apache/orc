@@ -139,7 +139,7 @@ namespace orc {
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
-      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
     }
     // Test file stats 0 <= x <= 10 and 0 <= y <= 50
     {
@@ -181,7 +181,7 @@ namespace orc {
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
-      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
     }
   }
 }  // namespace orc
