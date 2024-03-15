@@ -30,6 +30,7 @@ BUILD:
   - "cmake_modules/**/*"
   - "proto/**/*"
   - "**/*pom.xml"
+  - "conan/**/*"
 DOCS:
   - "site/**/*"
   - "**/README.md"
