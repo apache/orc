@@ -4,11 +4,13 @@ on:
   push:
     paths-ignore:
     - 'site/**'
+    - 'conan/**'
     branches:
     - main
   pull_request:
     paths-ignore:
     - 'site/**'
+    - 'conan/**'
     branches:
     - main
 
