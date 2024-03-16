@@ -69,12 +69,13 @@ typedef SSIZE_T ssize_t;
 
 #define PRAGMA(TXT) _Pragma(#TXT)
 
-#ifdef __clang__
+#if defined(_MSC_VER)
+  // Handles both cl.exe and clang-cl.exe compilers
+  #define DIAGNOSTIC_IGNORE(XXX) __pragma(warning(disable : XXX))
+#elif defined(__clang__)
   #define DIAGNOSTIC_IGNORE(XXX) PRAGMA(clang diagnostic ignored XXX)
 #elif defined(__GNUC__)
   #define DIAGNOSTIC_IGNORE(XXX) PRAGMA(GCC diagnostic ignored XXX)
-#elif defined(_MSC_VER)
-  #define DIAGNOSTIC_IGNORE(XXX) __pragma(warning(disable : XXX))
 #else
   #define DIAGNOSTIC_IGNORE(XXX)
 #endif
