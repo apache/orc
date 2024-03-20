@@ -87,8 +87,7 @@ int main(int argc, char* argv[]) {
   argv += optind;
 
   if (argc < 1 || helpFlag) {
-    std::cerr << "Usage: orc-statistics [-h] [--help] [-i] [--withIndex]"
-              << " <filenames>\n";
+    std::cerr << "Usage: orc-statistics [-h] [--help] [-i] [--withIndex]" << " <filenames>\n";
     exit(1);
   }
 

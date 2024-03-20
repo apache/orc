@@ -261,20 +261,20 @@ namespace orc {
       };
       std::vector<SysCtlCpuFeature> features = {
 #if defined(CPUINFO_ARCH_X86)
-        {"hw.optional.sse4_2",
-         CpuInfo::SSSE3 | CpuInfo::SSE4_1 | CpuInfo::SSE4_2 | CpuInfo::POPCNT},
-        {"hw.optional.avx1_0", CpuInfo::AVX},
-        {"hw.optional.avx2_0", CpuInfo::AVX2},
-        {"hw.optional.bmi1", CpuInfo::BMI1},
-        {"hw.optional.bmi2", CpuInfo::BMI2},
-        {"hw.optional.avx512f", CpuInfo::AVX512F},
-        {"hw.optional.avx512cd", CpuInfo::AVX512CD},
-        {"hw.optional.avx512dq", CpuInfo::AVX512DQ},
-        {"hw.optional.avx512bw", CpuInfo::AVX512BW},
-        {"hw.optional.avx512vl", CpuInfo::AVX512VL},
+          {"hw.optional.sse4_2",
+           CpuInfo::SSSE3 | CpuInfo::SSE4_1 | CpuInfo::SSE4_2 | CpuInfo::POPCNT},
+          {"hw.optional.avx1_0", CpuInfo::AVX},
+          {"hw.optional.avx2_0", CpuInfo::AVX2},
+          {"hw.optional.bmi1", CpuInfo::BMI1},
+          {"hw.optional.bmi2", CpuInfo::BMI2},
+          {"hw.optional.avx512f", CpuInfo::AVX512F},
+          {"hw.optional.avx512cd", CpuInfo::AVX512CD},
+          {"hw.optional.avx512dq", CpuInfo::AVX512DQ},
+          {"hw.optional.avx512bw", CpuInfo::AVX512BW},
+          {"hw.optional.avx512vl", CpuInfo::AVX512VL},
 #elif defined(CPUINFO_ARCH_ARM)
-        // ARM64 (note that this is exposed under Rosetta as well)
-        {"hw.optional.neon", CpuInfo::ASIMD},
+          // ARM64 (note that this is exposed under Rosetta as well)
+          {"hw.optional.neon", CpuInfo::ASIMD},
 #endif
       };
       for (const auto& feature : features) {
@@ -347,21 +347,15 @@ namespace orc {
         int64_t flag;
       } flag_mappings[] = {
 #if defined(CPUINFO_ARCH_X86)
-        {"ssse3", CpuInfo::SSSE3},
-        {"sse4_1", CpuInfo::SSE4_1},
-        {"sse4_2", CpuInfo::SSE4_2},
-        {"popcnt", CpuInfo::POPCNT},
-        {"avx", CpuInfo::AVX},
-        {"avx2", CpuInfo::AVX2},
-        {"avx512f", CpuInfo::AVX512F},
-        {"avx512cd", CpuInfo::AVX512CD},
-        {"avx512vl", CpuInfo::AVX512VL},
-        {"avx512dq", CpuInfo::AVX512DQ},
-        {"avx512bw", CpuInfo::AVX512BW},
-        {"bmi1", CpuInfo::BMI1},
-        {"bmi2", CpuInfo::BMI2},
+          {"ssse3", CpuInfo::SSSE3},       {"sse4_1", CpuInfo::SSE4_1},
+          {"sse4_2", CpuInfo::SSE4_2},     {"popcnt", CpuInfo::POPCNT},
+          {"avx", CpuInfo::AVX},           {"avx2", CpuInfo::AVX2},
+          {"avx512f", CpuInfo::AVX512F},   {"avx512cd", CpuInfo::AVX512CD},
+          {"avx512vl", CpuInfo::AVX512VL}, {"avx512dq", CpuInfo::AVX512DQ},
+          {"avx512bw", CpuInfo::AVX512BW}, {"bmi1", CpuInfo::BMI1},
+          {"bmi2", CpuInfo::BMI2},
 #elif defined(CPUINFO_ARCH_ARM)
-        {"asimd", CpuInfo::ASIMD},
+          {"asimd", CpuInfo::ASIMD},
 #endif
       };
       const int64_t num_flags = sizeof(flag_mappings) / sizeof(flag_mappings[0]);
@@ -375,11 +369,11 @@ namespace orc {
       return flags;
     }
 
-    void OsRetrieveCacheSize(std::array<int64_t, kCacheLevels>* cache_sizes) {
+    void OsRetrieveCacheSize(std::array<int64_t, kCacheLevels>* cacheSizes) {
       for (int i = 0; i < kCacheLevels; ++i) {
         const int64_t cache_size = LinuxGetCacheSize(i);
         if (cache_size > 0) {
-          (*cache_sizes)[i] = cache_size;
+          (*cacheSizes)[i] = cache_size;
         }
       }
     }
@@ -403,8 +397,8 @@ namespace orc {
     }
 
     // Read from /proc/cpuinfo
-    void OsRetrieveCpuInfo(int64_t* hardware_flags, CpuInfo::Vendor* vendor,
-                           std::string* model_name) {
+    void OsRetrieveCpuInfo(int64_t* hardwareFlags, CpuInfo::Vendor* vendor,
+                           std::string* modelName) {
       std::ifstream cpuinfo("/proc/cpuinfo", std::ios::in);
       while (cpuinfo) {
         std::string line;
@@ -414,9 +408,9 @@ namespace orc {
           const std::string name = TrimString(line.substr(0, colon - 1));
           const std::string value = TrimString(line.substr(colon + 1, std::string::npos));
           if (name.compare("flags") == 0 || name.compare("Features") == 0) {
-            *hardware_flags |= LinuxParseCpuFlags(value);
+            *hardwareFlags |= LinuxParseCpuFlags(value);
           } else if (name.compare("model name") == 0) {
-            *model_name = value;
+            *modelName = value;
           } else if (name.compare("vendor_id") == 0) {
             if (value.compare("GenuineIntel") == 0) {
               *vendor = CpuInfo::Vendor::Intel;
@@ -433,7 +427,7 @@ namespace orc {
 
 #if defined(CPUINFO_ARCH_X86)
     //------------------------------ X86_64 ------------------------------//
-    bool ArchParseUserSimdLevel(const std::string& simd_level, int64_t* hardware_flags) {
+    bool ArchParseUserSimdLevel(const std::string& simdLevel, int64_t* hardwareFlags) {
       enum {
         USER_SIMD_NONE,
         USER_SIMD_AVX512,
@@ -442,9 +436,9 @@ namespace orc {
 
       int level = USER_SIMD_MAX;
       // Parse the level
-      if (simd_level == "AVX512") {
+      if (simdLevel == "AVX512") {
         level = USER_SIMD_AVX512;
-      } else if (simd_level == "NONE") {
+      } else if (simdLevel == "NONE") {
         level = USER_SIMD_NONE;
       } else {
         return false;
@@ -452,7 +446,7 @@ namespace orc {
 
       // Disable feature as the level
       if (level < USER_SIMD_AVX512) {
-        *hardware_flags &= ~CpuInfo::AVX512;
+        *hardwareFlags &= ~CpuInfo::AVX512;
       }
       return true;
     }

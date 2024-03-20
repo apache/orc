@@ -37,50 +37,50 @@ namespace orc {
    * Implementation of BitSet
    */
   BitSet::BitSet(uint64_t numBits) {
-    mData.resize(static_cast<size_t>(ceil(static_cast<double>(numBits) / BITS_OF_LONG)), 0);
+    mData_.resize(static_cast<size_t>(ceil(static_cast<double>(numBits) / BITS_OF_LONG)), 0);
   }
 
   BitSet::BitSet(const uint64_t* bits, uint64_t numBits) {
     // caller should make sure numBits is multiple of 64
-    mData.resize(numBits >> SHIFT_6_BITS, 0);
-    memcpy(mData.data(), bits, numBits >> SHIFT_3_BITS);
+    mData_.resize(numBits >> SHIFT_6_BITS, 0);
+    memcpy(mData_.data(), bits, numBits >> SHIFT_3_BITS);
   }
 
   void BitSet::set(uint64_t index) {
-    mData[index >> SHIFT_6_BITS] |= (1ULL << (index % BITS_OF_LONG));
+    mData_[index >> SHIFT_6_BITS] |= (1ULL << (index % BITS_OF_LONG));
   }
 
   bool BitSet::get(uint64_t index) {
-    return (mData[index >> SHIFT_6_BITS] & (1ULL << (index % BITS_OF_LONG))) != 0;
+    return (mData_[index >> SHIFT_6_BITS] & (1ULL << (index % BITS_OF_LONG))) != 0;
   }
 
   uint64_t BitSet::bitSize() {
-    return mData.size() << SHIFT_6_BITS;
+    return mData_.size() << SHIFT_6_BITS;
   }
 
   void BitSet::merge(const BitSet& other) {
-    if (mData.size() != other.mData.size()) {
+    if (mData_.size() != other.mData_.size()) {
       std::stringstream ss;
-      ss << "BitSet must be of equal length (" << mData.size() << " != " << other.mData.size()
+      ss << "BitSet must be of equal length (" << mData_.size() << " != " << other.mData_.size()
          << ")";
       throw std::logic_error(ss.str());
     }
 
-    for (size_t i = 0; i != mData.size(); i++) {
-      mData[i] |= other.mData[i];
+    for (size_t i = 0; i != mData_.size(); i++) {
+      mData_[i] |= other.mData_[i];
     }
   }
 
   void BitSet::clear() {
-    memset(mData.data(), 0, sizeof(uint64_t) * mData.size());
+    memset(mData_.data(), 0, sizeof(uint64_t) * mData_.size());
   }
 
   const uint64_t* BitSet::getData() const {
-    return mData.data();
+    return mData_.data();
   }
 
   bool BitSet::operator==(const BitSet& other) const {
-    return mData == other.mData;
+    return mData_ == other.mData_;
   }
 
   /**
@@ -127,9 +127,9 @@ namespace orc {
 
     uint64_t nb = static_cast<uint64_t>(optimalNumOfBits(expectedEntries, fpp));
     // make 'mNumBits' multiple of 64
-    mNumBits = nb + (BITS_OF_LONG - (nb % BITS_OF_LONG));
-    mNumHashFunctions = optimalNumOfHashFunctions(expectedEntries, mNumBits);
-    mBitSet.reset(new BitSet(mNumBits));
+    mNumBits_ = nb + (BITS_OF_LONG - (nb % BITS_OF_LONG));
+    mNumHashFunctions_ = optimalNumOfHashFunctions(expectedEntries, mNumBits_);
+    mBitSet_.reset(new BitSet(mNumBits_));
   }
 
   void BloomFilterImpl::addBytes(const char* data, int64_t length) {
@@ -155,11 +155,11 @@ namespace orc {
   }
 
   uint64_t BloomFilterImpl::getBitSize() const {
-    return mBitSet->bitSize();
+    return mBitSet_->bitSize();
   }
 
   int32_t BloomFilterImpl::getNumHashFunctions() const {
-    return mNumHashFunctions;
+    return mNumHashFunctions_;
   }
 
   DIAGNOSTIC_PUSH
@@ -175,17 +175,17 @@ namespace orc {
   // caller should make sure input proto::BloomFilter is valid since
   // no check will be performed in the following constructor
   BloomFilterImpl::BloomFilterImpl(const proto::BloomFilter& bloomFilter) {
-    mNumHashFunctions = static_cast<int32_t>(bloomFilter.num_hash_functions());
+    mNumHashFunctions_ = static_cast<int32_t>(bloomFilter.num_hash_functions());
 
     const std::string& bitsetStr = bloomFilter.utf8bitset();
-    mNumBits = bitsetStr.size() << SHIFT_3_BITS;
-    checkArgument(mNumBits % BITS_OF_LONG == 0, "numBits should be multiple of 64!");
+    mNumBits_ = bitsetStr.size() << SHIFT_3_BITS;
+    checkArgument(mNumBits_ % BITS_OF_LONG == 0, "numBits should be multiple of 64!");
 
     const uint64_t* bitset = reinterpret_cast<const uint64_t*>(bitsetStr.data());
     if (isLittleEndian()) {
-      mBitSet.reset(new BitSet(bitset, mNumBits));
+      mBitSet_.reset(new BitSet(bitset, mNumBits_));
     } else {
-      std::vector<uint64_t> longs(mNumBits >> SHIFT_6_BITS);
+      std::vector<uint64_t> longs(mNumBits_ >> SHIFT_6_BITS);
       for (size_t i = 0; i != longs.size(); ++i) {
         // convert little-endian to big-endian
         const uint64_t src = bitset[i];
@@ -195,7 +195,7 @@ namespace orc {
         }
       }
 
-      mBitSet.reset(new BitSet(longs.data(), mNumBits));
+      mBitSet_.reset(new BitSet(longs.data(), mNumBits_));
     }
   }
 
@@ -215,14 +215,14 @@ namespace orc {
     // So we cast hash64 to uint64_t here for an unsigned right shift.
     int32_t hash2 = static_cast<int32_t>(static_cast<uint64_t>(hash64) >> 32);
 
-    for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
+    for (int32_t i = 1; i <= mNumHashFunctions_; ++i) {
       int32_t combinedHash = hash1 + i * hash2;
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
       }
-      uint64_t pos = static_cast<uint64_t>(combinedHash) % mNumBits;
-      mBitSet->set(pos);
+      uint64_t pos = static_cast<uint64_t>(combinedHash) % mNumBits_;
+      mBitSet_->set(pos);
     }
   }
 
@@ -232,14 +232,14 @@ namespace orc {
     // So we cast hash64 to uint64_t here for an unsigned right shift.
     int32_t hash2 = static_cast<int32_t>(static_cast<uint64_t>(hash64) >> 32);
 
-    for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
+    for (int32_t i = 1; i <= mNumHashFunctions_; ++i) {
       int32_t combinedHash = hash1 + i * hash2;
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
       }
-      uint64_t pos = static_cast<uint64_t>(combinedHash) % mNumBits;
-      if (!mBitSet->get(pos)) {
+      uint64_t pos = static_cast<uint64_t>(combinedHash) % mNumBits_;
+      if (!mBitSet_->get(pos)) {
         return false;
       }
     }
@@ -247,33 +247,33 @@ namespace orc {
   }
 
   void BloomFilterImpl::merge(const BloomFilterImpl& other) {
-    if (mNumBits != other.mNumBits || mNumHashFunctions != other.mNumHashFunctions) {
+    if (mNumBits_ != other.mNumBits_ || mNumHashFunctions_ != other.mNumHashFunctions_) {
       std::stringstream ss;
-      ss << "BloomFilters are not compatible for merging: "
-         << "this: numBits:" << mNumBits << ",numHashFunctions:" << mNumHashFunctions
-         << ", that: numBits:" << other.mNumBits << ",numHashFunctions:" << other.mNumHashFunctions;
+      ss << "BloomFilters are not compatible for merging: " << "this: numBits:" << mNumBits_
+         << ",numHashFunctions:" << mNumHashFunctions_ << ", that: numBits:" << other.mNumBits_
+         << ",numHashFunctions:" << other.mNumHashFunctions_;
       throw std::logic_error(ss.str());
     }
 
-    mBitSet->merge(*other.mBitSet);
+    mBitSet_->merge(*other.mBitSet_);
   }
 
   void BloomFilterImpl::reset() {
-    mBitSet->clear();
+    mBitSet_->clear();
   }
 
   void BloomFilterImpl::serialize(proto::BloomFilter& bloomFilter) const {
-    bloomFilter.set_num_hash_functions(static_cast<uint32_t>(mNumHashFunctions));
+    bloomFilter.set_num_hash_functions(static_cast<uint32_t>(mNumHashFunctions_));
 
     // According to ORC standard, the encoding is a sequence of bytes with
     // a little endian encoding in the utf8bitset field.
     if (isLittleEndian()) {
       // bytes are already organized in little endian; thus no conversion needed
-      const char* bitset = reinterpret_cast<const char*>(mBitSet->getData());
+      const char* bitset = reinterpret_cast<const char*>(mBitSet_->getData());
       bloomFilter.set_utf8bitset(bitset, sizeInBytes());
     } else {
       std::vector<uint64_t> bitset(sizeInBytes() / sizeof(uint64_t), 0);
-      const uint64_t* longs = mBitSet->getData();
+      const uint64_t* longs = mBitSet_->getData();
       for (size_t i = 0; i != bitset.size(); ++i) {
         uint64_t& dst = bitset[i];
         const uint64_t src = longs[i];
@@ -287,8 +287,8 @@ namespace orc {
   }
 
   bool BloomFilterImpl::operator==(const BloomFilterImpl& other) const {
-    return mNumBits == other.mNumBits && mNumHashFunctions == other.mNumHashFunctions &&
-           *mBitSet == *other.mBitSet;
+    return mNumBits_ == other.mNumBits_ && mNumHashFunctions_ == other.mNumHashFunctions_ &&
+           *mBitSet_ == *other.mBitSet_;
   }
 
   BloomFilter::~BloomFilter() {

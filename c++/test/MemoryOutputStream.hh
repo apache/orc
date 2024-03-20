@@ -28,30 +28,30 @@ namespace orc {
 
   class MemoryOutputStream : public OutputStream {
    public:
-    MemoryOutputStream(size_t capacity) : name("MemoryOutputStream") {
-      data = new char[capacity];
-      length = 0;
-      naturalWriteSize = 2048;
+    MemoryOutputStream(size_t capacity) : name_("MemoryOutputStream") {
+      data_ = new char[capacity];
+      length_ = 0;
+      naturalWriteSize_ = 2048;
     }
 
     virtual ~MemoryOutputStream() override;
 
     virtual uint64_t getLength() const override {
-      return length;
+      return length_;
     }
 
     virtual uint64_t getNaturalWriteSize() const override {
-      return naturalWriteSize;
+      return naturalWriteSize_;
     }
 
     virtual void write(const void* buf, size_t size) override;
 
     virtual const std::string& getName() const override {
-      return name;
+      return name_;
     }
 
     const char* getData() const {
-      return data;
+      return data_;
     }
 
     void close() override {}
@@ -59,13 +59,13 @@ namespace orc {
     void flush() override {}
 
     void reset() {
-      length = 0;
+      length_ = 0;
     }
 
    private:
-    char* data;
-    std::string name;
-    uint64_t length, naturalWriteSize;
+    char* data_;
+    std::string name_;
+    uint64_t length_, naturalWriteSize_;
   };
 }  // namespace orc
 

@@ -25,34 +25,34 @@
 namespace orc {
 
   class AutoStopwatch {
-    std::chrono::high_resolution_clock::time_point start;
-    std::atomic<uint64_t>* latencyUs;
-    std::atomic<uint64_t>* count;
-    bool minus;
+    std::chrono::high_resolution_clock::time_point start_;
+    std::atomic<uint64_t>* latencyUs_;
+    std::atomic<uint64_t>* count_;
+    bool minus_;
 
    public:
-    AutoStopwatch(std::atomic<uint64_t>* _latencyUs, std::atomic<uint64_t>* _count,
-                  bool _minus = false)
-        : latencyUs(_latencyUs), count(_count), minus(_minus) {
-      if (latencyUs) {
-        start = std::chrono::high_resolution_clock::now();
+    AutoStopwatch(std::atomic<uint64_t>* latencyUs, std::atomic<uint64_t>* count,
+                  bool minus = false)
+        : latencyUs_(latencyUs), count_(count), minus_(minus) {
+      if (latencyUs_) {
+        start_ = std::chrono::high_resolution_clock::now();
       }
     }
 
     ~AutoStopwatch() {
-      if (latencyUs) {
+      if (latencyUs_) {
         std::chrono::microseconds elapsedTime =
             std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::high_resolution_clock::now() - start);
-        if (!minus) {
-          latencyUs->fetch_add(static_cast<uint64_t>(elapsedTime.count()));
+                std::chrono::high_resolution_clock::now() - start_);
+        if (!minus_) {
+          latencyUs_->fetch_add(static_cast<uint64_t>(elapsedTime.count()));
         } else {
-          latencyUs->fetch_sub(static_cast<uint64_t>(elapsedTime.count()));
+          latencyUs_->fetch_sub(static_cast<uint64_t>(elapsedTime.count()));
         }
       }
 
-      if (count) {
-        count->fetch_add(1);
+      if (count_) {
+        count_->fetch_add(1);
       }
     }
   };
