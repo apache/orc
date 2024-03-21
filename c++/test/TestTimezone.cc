@@ -412,7 +412,7 @@ namespace orc {
 
   bool setEnv(const char* name, const char* value) {
 #ifdef _MSC_VER
-    return SetEnvironmentVariableA(name, value);
+    return _putenv_s(name, value) == 0;
 #else
     return setenv(name, value, 1) == 0;
 #endif
@@ -420,7 +420,7 @@ namespace orc {
 
   bool delEnv(const char* name) {
 #ifdef _MSC_VER
-    return SetEnvironmentVariableA(name, nullptr);
+    return _putenv_s(name, "") == 0;
 #else
     return unsetenv(name) == 0;
 #endif
