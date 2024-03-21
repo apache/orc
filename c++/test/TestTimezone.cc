@@ -403,7 +403,6 @@ namespace orc {
     EXPECT_EQ(1699164000 + 8 * 3600, la->convertFromUTC(1699164000));
   }
 
-#ifndef _MSC_VER
   TEST(TestTimezone, testMissingTZDB) {
     const char* tzDirBackup = std::getenv("TZDIR");
     setenv("TZDIR", "/path/to/wrong/tzdb", 1);
@@ -417,6 +416,5 @@ namespace orc {
       unsetenv("TZDIR");
     }
   }
-#endif
 
 }  // namespace orc
