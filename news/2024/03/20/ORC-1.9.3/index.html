@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.7.4 Released</title>
+  <title>ORC 1.9.3 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -299,8 +299,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.7.4 Released
-    <a href="/news/2022/04/15/ORC-1.7.4/" class="permalink" title="Permalink">∞</a>
+    ORC 1.9.3 Released
+    <a href="/news/2024/03/20/ORC-1.9.3/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -309,55 +309,62 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      15 Apr 2022
+      20 Mar 2024
     </span>
-    <a href="https://people.apache.org/~william" class="post-author">
-      <img src="https://people.apache.org/~william/william.png"
-           class="avatar" alt="william avatar"
+    <a href="https://people.apache.org/~gangwu" class="post-author">
+      <img src="https://people.apache.org/~gangwu/gangwu.png"
+           class="avatar" alt="gangwu avatar"
            width="24" height="24">
-      william
+      gangwu
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.7.4.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.9.3.</p>
 
 <ul>
-  <li>Released: 15 April 2022</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.7.4/orc-1.7.4.tar.gz">orc-1.7.4.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.7.4/orc-1.7.4.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.4">rel/release-1.7.4</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.4%22">ORC 1.7.4</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.7.4/orc-1.7.4.tar.gz.sha256">0a70c5e877b1ff26…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.4%22&amp;tempMax=500">ORC-1.7.4</a></li>
+  <li>Released: 20 March 2024</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.3/orc-1.9.3.tar.gz">orc-1.9.3.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.3/orc-1.9.3.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Gang Wu (578F619B)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.3">rel/release-1.9.3</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.3%22">ORC 1.9.3</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.3/orc-1.9.3.tar.gz.sha256">f737d005d0c4deb6…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.3%22&amp;tempMax=500">ORC-1.9.3</a></li>
 </ul>
 
 <p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1120">ORC-1120</a> Remove C++ library limitation about write version</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1121">ORC-1121</a> Fix column conversion check bug which causes column filters don’t work</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1127">ORC-1127</a> Add missing version of UNSTABLE-PRE-2.0</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1146">ORC-1146</a> Float category missing check if the statistic sum is a finite value</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1147">ORC-1147</a> Use isNaN instead of isFinite to determine the contain NaN values</li>
-</ul>
-
-<p>The improvements:</p>
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-236">ORC-236</a> Support <code class="highlighter-rouge">UNION</code> type in Java Convert tool</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1116">ORC-1116</a> Fix csv-import tool when exporting long bytes</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1123">ORC-1123</a> Add estimationMemory method for writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-634">ORC-634</a>   Fix the json output for double NaN and infinite</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1553">ORC-1553</a> Reading information from Row group, where there are 0 records of SArg column</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1563">ORC-1563</a> Fix orc.bloom.filter.fpp default value and orc.compress notes of Spark and Hive config docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1578">ORC-1578</a> Fix SparkBenchmark according to SPARK-40918</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1586">ORC-1586</a> Fix IllegalAccessError when SparkBenchmark runs on JDK17</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1602">ORC-1602</a> [C++] limit compression block size</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1607">ORC-1607</a> Fix <code class="highlighter-rouge">testDoubleNaNAndInfinite</code> to use <code class="highlighter-rouge">TestFileDump.checkOutput</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1609">ORC-1609</a> Fix the compilation problem of TestJsonFileDump in branch 1.9</li>
 </ul>
 
 <p>The test changes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1145">ORC-1145</a> Add Java 18 to GitHub Action CI</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1118">ORC-1118</a> Support Java 17 and ARM64 docker tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1556">ORC-1556</a> Add <code class="highlighter-rouge">Rocky Linux 9</code> Docker Test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1557">ORC-1557</a> Add GitHub Action CI for <code class="highlighter-rouge">Docker Test</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1559">ORC-1559</a> Remove Java11 and clang variants from <code class="highlighter-rouge">docker/os-list.txt</code> from <code class="highlighter-rouge">branch-1.9</code></li>
 </ul>
 
-<p>The documentation changes:</p>
+<p>The tasks:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1117">ORC-1117</a> Add <code class="highlighter-rouge">Dask</code> page at <code class="highlighter-rouge">Using in Python</code> section</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1119">ORC-1119</a> Remove timestamp from ORC API docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1532">ORC-1532</a> Upgrade <code class="highlighter-rouge">opencsv</code> to 5.9</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1536">ORC-1536</a> Remove <code class="highlighter-rouge">hive-storage-api</code> link from <code class="highlighter-rouge">maven-javadoc-plugin</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1576">ORC-1576</a> Upgrade spark.jackson.version to 2.15.2 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1591">ORC-1591</a> Lower log level from INFO to DEBUG in *ReaderImpl/WriterImpl/PhysicalFsWriter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1592">ORC-1592</a> Suppress KeyProvider missing log</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1616">ORC-1616</a> Upgrade <code class="highlighter-rouge">aircompressor</code> to 0.26</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1618">ORC-1618</a> Disable building tests for snappy</li>
+</ul>
+
+<p>Documentation:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1535">ORC-1535</a> Remove generated Java docs from source tree</li>
 </ul>
 
   </div>
@@ -378,7 +385,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2024/03/20/ORC-1.9.3/">Version 1.9.3</a>
       </li>
       

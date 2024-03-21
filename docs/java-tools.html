@@ -1004,7 +1004,7 @@ supports both the local file system and HDFS.</p>
 <p>The subcommands for the tools are:</p>
 
 <ul>
-  <li>convert (since ORC 1.4) - convert JSON/CSV files to ORC</li>
+  <li>convert (since ORC 1.4) - convert CSV/JSON/ORC files to ORC</li>
   <li>count (since ORC 1.6) - recursively find *.orc and print the number of rows</li>
   <li>data - print the data of an ORC file</li>
   <li>json-schema (since ORC 1.4) - determine the schema of JSON documents</li>
@@ -1022,7 +1022,7 @@ supports both the local file system and HDFS.</p>
 
 <h2 id="java-convert">Java Convert</h2>
 
-<p>The convert command reads several JSON/CSV files and converts them into a
+<p>The convert command reads several CSV/JSON/ORC files and converts them into a
 single ORC file.</p>
 
 <dl>
@@ -1305,6 +1305,14 @@ Percent  Bytes/Row  Name
   0.30   0.01       _index
   0.25   0.01       x
   0.19   0.01       _stripe_footer
+______________________________________________________________________
+</code></pre></div></div>
+
+<h2 id="java-merge">Java Merge</h2>
+
+<p>The merge command can merge multiple ORC files that all have the same schema into a single ORC file.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar merge <span class="nt">--output</span> /path/to/merged.orc /path/to/input_orc/
 ______________________________________________________________________
 </code></pre></div></div>
 
