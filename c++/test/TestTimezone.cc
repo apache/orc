@@ -21,13 +21,7 @@
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
-#ifdef _MSC_VER
-// clang-format off
-#include "windows.h"
-#include "processenv.h"
-// clang-format on
-#endif
-
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
