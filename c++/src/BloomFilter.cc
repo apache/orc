@@ -249,8 +249,9 @@ namespace orc {
   void BloomFilterImpl::merge(const BloomFilterImpl& other) {
     if (mNumBits_ != other.mNumBits_ || mNumHashFunctions_ != other.mNumHashFunctions_) {
       std::stringstream ss;
-      ss << "BloomFilters are not compatible for merging: " << "this: numBits:" << mNumBits_
-         << ",numHashFunctions:" << mNumHashFunctions_ << ", that: numBits:" << other.mNumBits_
+      ss << "BloomFilters are not compatible for merging: "
+         << "this: numBits:" << mNumBits_ << ",numHashFunctions:" << mNumHashFunctions_
+         << ", that: numBits:" << other.mNumBits_
          << ",numHashFunctions:" << other.mNumHashFunctions_;
       throw std::logic_error(ss.str());
     }

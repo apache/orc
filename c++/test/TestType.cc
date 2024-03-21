@@ -277,7 +277,8 @@ namespace orc {
   void expectLogicErrorDuringParse(std::string typeStr, const char* errMsg) {
     try {
       std::unique_ptr<Type> type = Type::buildTypeFromString(typeStr);
-      FAIL() << "'" << typeStr << "'" << " should throw std::logic_error for invalid schema";
+      FAIL() << "'" << typeStr << "'"
+             << " should throw std::logic_error for invalid schema";
     } catch (std::logic_error& e) {
       EXPECT_EQ(e.what(), std::string(errMsg));
     } catch (...) {

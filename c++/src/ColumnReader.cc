@@ -1676,7 +1676,8 @@ namespace orc {
             if (throwOnOverflow_) {
               throw ParseError("Hive 0.11 decimal was more than 38 digits.");
             } else {
-              *errorStream_ << "Warning: " << "Hive 0.11 decimal with more than 38 digits "
+              *errorStream_ << "Warning: "
+                            << "Hive 0.11 decimal with more than 38 digits "
                             << "replaced by NULL.\n";
               notNull[i] = false;
             }
@@ -1689,7 +1690,8 @@ namespace orc {
           if (throwOnOverflow_) {
             throw ParseError("Hive 0.11 decimal was more than 38 digits.");
           } else {
-            *errorStream_ << "Warning: " << "Hive 0.11 decimal with more than 38 digits "
+            *errorStream_ << "Warning: "
+                          << "Hive 0.11 decimal with more than 38 digits "
                           << "replaced by NULL.\n";
             batch.hasNulls = true;
             batch.notNull[i] = false;
