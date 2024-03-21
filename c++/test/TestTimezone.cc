@@ -22,7 +22,10 @@
 #include "wrap/gtest-wrapper.h"
 
 #ifdef _MSC_VER
+// clang-format off
+#include "windows.h"
 #include "processenv.h"
+// clang-format on
 #endif
 
 #include <iostream>
@@ -417,7 +420,7 @@ namespace orc {
 
   bool delEnv(const char* name) {
 #ifdef _MSC_VER
-  return SetEnvironmentVariableA(name, nullptr));
+    return SetEnvironmentVariableA(name, nullptr);
 #else
     return unsetenv(name) == 0;
 #endif
