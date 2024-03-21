@@ -428,15 +428,18 @@ namespace orc {
 
   TEST(TestTimezone, testMissingTZDB) {
     const char* tzDirBackup = std::getenv("TZDIR");
-    setEnv("TZDIR", "/path/to/wrong/tzdb");
+    if (tzDirBackup != nullptr) {
+      ASSERT_TRUE(delEnv("TZDIR"));
+    }
+    ASSERT_TRUE(setEnv("TZDIR", "/path/to/wrong/tzdb"));
     EXPECT_THAT([]() { getTimezoneByName("America/Los_Angeles"); },
                 testing::ThrowsMessage<TimezoneError>(testing::HasSubstr(
                     "Time zone file /path/to/wrong/tzdb/America/Los_Angeles does not exist."
                     " Please install IANA time zone database and set TZDIR env.")));
     if (tzDirBackup != nullptr) {
-      setEnv("TZDIR", tzDirBackup);
+      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
     } else {
-      delEnv("TZDIR");
+      ASSERT_TRUE(delEnv("TZDIR"));
     }
   }
 
