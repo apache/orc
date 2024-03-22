@@ -21,6 +21,7 @@
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
@@ -403,20 +404,37 @@ namespace orc {
     EXPECT_EQ(1699164000 + 8 * 3600, la->convertFromUTC(1699164000));
   }
 
-#ifndef _MSC_VER
+  bool setEnv(const char* name, const char* value) {
+#ifdef _MSC_VER
+    return _putenv_s(name, value) == 0;
+#else
+    return setenv(name, value, 1) == 0;
+#endif
+  }
+
+  bool delEnv(const char* name) {
+#ifdef _MSC_VER
+    return _putenv_s(name, "") == 0;
+#else
+    return unsetenv(name) == 0;
+#endif
+  }
+
   TEST(TestTimezone, testMissingTZDB) {
     const char* tzDirBackup = std::getenv("TZDIR");
-    setenv("TZDIR", "/path/to/wrong/tzdb", 1);
+    if (tzDirBackup != nullptr) {
+      ASSERT_TRUE(delEnv("TZDIR"));
+    }
+    ASSERT_TRUE(setEnv("TZDIR", "/path/to/wrong/tzdb"));
     EXPECT_THAT([]() { getTimezoneByName("America/Los_Angeles"); },
                 testing::ThrowsMessage<TimezoneError>(testing::HasSubstr(
                     "Time zone file /path/to/wrong/tzdb/America/Los_Angeles does not exist."
                     " Please install IANA time zone database and set TZDIR env.")));
     if (tzDirBackup != nullptr) {
-      setenv("TZDIR", tzDirBackup, 1);
+      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
     } else {
-      unsetenv("TZDIR");
+      ASSERT_TRUE(delEnv("TZDIR"));
     }
   }
-#endif
 
 }  // namespace orc
