@@ -350,6 +350,15 @@
               </sortPom>
             </pom>
             <java>
+              <includes>
+                <include>src/java/**/*.java</include>
+              </includes>
+              <excludes>
+                <exclude>src/test/**/*.java</exclude>
+              </excludes>
+              <importOrder>
+                <order>,javax|java,\#</order>
+              </importOrder>
               <removeUnusedImports></removeUnusedImports>
             </java>
           </configuration>
