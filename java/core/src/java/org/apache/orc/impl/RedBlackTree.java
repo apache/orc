@@ -306,4 +306,3 @@ abstract class RedBlackTree {
     return data.getSizeInBytes();
   }
 }
-

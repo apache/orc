@@ -122,4 +122,3 @@ public class WriterEncryptionVariant implements EncryptionVariant {
     return result;
   }
 }
-

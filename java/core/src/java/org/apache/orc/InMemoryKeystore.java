@@ -330,4 +330,3 @@ public class InMemoryKeystore implements KeyProvider {
   }
 
 }
-

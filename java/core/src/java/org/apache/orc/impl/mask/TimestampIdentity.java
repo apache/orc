@@ -48,5 +48,3 @@ class TimestampIdentity implements DataMask {
     }
   }
 }
-
-

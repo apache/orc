@@ -201,4 +201,3 @@ public class TestOrcTimestampPPD {
     assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
   }
 }
-

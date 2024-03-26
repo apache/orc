@@ -49,4 +49,3 @@ public class RecordCounters {
     System.out.println("Invocations: " + invocations);
   }
 }
-
