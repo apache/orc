@@ -132,4 +132,3 @@ public class StreamName implements Comparable<StreamName> {
                column * 101 + kind.getNumber();
   }
 }
-

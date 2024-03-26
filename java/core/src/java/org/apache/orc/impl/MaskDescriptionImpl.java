@@ -143,4 +143,3 @@ public class MaskDescriptionImpl implements DataMaskDescription,
     return result;
   }
 }
-

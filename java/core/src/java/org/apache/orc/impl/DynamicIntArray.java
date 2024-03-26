@@ -141,4 +141,3 @@ public final class DynamicIntArray {
     return 4 * initializedChunks * chunkSize;
   }
 }
-
