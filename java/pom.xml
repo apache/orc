@@ -349,6 +349,9 @@
                 <sortProperties>true</sortProperties>
               </sortPom>
             </pom>
+            <java>
+              <removeUnusedImports></removeUnusedImports>
+            </java>
           </configuration>
           <executions>
             <execution>
