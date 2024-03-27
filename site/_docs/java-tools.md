@@ -16,6 +16,7 @@ The subcommands for the tools are:
   * data - print the data of an ORC file
   * json-schema (since ORC 1.4) - determine the schema of JSON documents
   * key (since ORC 1.5) - print information about the encryption keys
+  * merge (since ORC 2.0.1) - merge multiple ORC files into a single ORC file
   * meta - print the metadata of an ORC file
   * scan (since ORC 1.3) - scan the data for benchmarking
   * sizes (since ORC 1.7.2) - list size on disk of each column
