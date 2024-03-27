@@ -86,6 +86,7 @@ public class Driver {
           " [--define X=Y] <command> <args>");
       System.err.println();
       System.err.println("Commands:");
+      System.err.println("   bloom-filter - check the bloom filter of the specified column");
       System.err.println("   convert - convert CSV/JSON/ORC files to ORC");
       System.err.println("   count - recursively find *.orc and print the number of rows");
       System.err.println("   data - print the data from the ORC file");
@@ -106,6 +107,9 @@ public class Driver {
       conf.set(pair.getKey().toString(), pair.getValue().toString());
     }
     switch (options.command) {
+      case "bloom-filter":
+        BloomFilter.main(conf, options.commandArgs);
+        break;
       case "convert":
         ConvertTool.main(conf, options.commandArgs);
         break;

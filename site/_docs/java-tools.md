@@ -11,6 +11,7 @@ supports both the local file system and HDFS.
 
 The subcommands for the tools are:
 
+  * bloom-filter (since ORC 2.1) - check the bloom filter of the specified column
   * convert (since ORC 1.4) - convert CSV/JSON/ORC files to ORC
   * count (since ORC 1.6) - recursively find *.orc and print the number of rows
   * data - print the data of an ORC file
@@ -25,6 +26,13 @@ The command line looks like:
 
 ~~~ shell
 % java -jar orc-tools-X.Y.Z-uber.jar <sub-command> <args>
+~~~
+## Java Bloom filter
+
+The bloom filter command can check whether the specified value of the column specified by multiple ORC files can be filtered.
+
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar bloom-filter /path/to/example.orc --values 1234 --values 5566 --column x
 ~~~
 
 ## Java Convert
