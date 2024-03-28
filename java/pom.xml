@@ -84,7 +84,7 @@
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
-    <zstd-jni.version>1.5.5-11</zstd-jni.version>
+    <zstd-jni.version>1.5.6-1</zstd-jni.version>
   </properties>
 
   <dependencyManagement>
