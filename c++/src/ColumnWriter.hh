@@ -53,14 +53,14 @@ namespace orc {
    public:
     virtual ~RowIndexPositionRecorder() override;
 
-    RowIndexPositionRecorder(proto::RowIndexEntry& entry) : rowIndexEntry(entry) {}
+    RowIndexPositionRecorder(proto::RowIndexEntry& entry) : rowIndexEntry_(entry) {}
 
     virtual void add(uint64_t pos) override {
-      rowIndexEntry.add_positions(pos);
+      rowIndexEntry_.add_positions(pos);
     }
 
    private:
-    proto::RowIndexEntry& rowIndexEntry;
+    proto::RowIndexEntry& rowIndexEntry_;
   };
 
   /**

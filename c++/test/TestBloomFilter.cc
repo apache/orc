@@ -106,11 +106,11 @@ namespace orc {
   }
 
 #define CheckBitSet(bf, p1, p2, p3, p4, p5) \
-  EXPECT_TRUE(bf.mBitSet->get(p1));         \
-  EXPECT_TRUE(bf.mBitSet->get(p2));         \
-  EXPECT_TRUE(bf.mBitSet->get(p3));         \
-  EXPECT_TRUE(bf.mBitSet->get(p4));         \
-  EXPECT_TRUE(bf.mBitSet->get(p5))
+  EXPECT_TRUE(bf.mBitSet_->get(p1));        \
+  EXPECT_TRUE(bf.mBitSet_->get(p2));        \
+  EXPECT_TRUE(bf.mBitSet_->get(p3));        \
+  EXPECT_TRUE(bf.mBitSet_->get(p4));        \
+  EXPECT_TRUE(bf.mBitSet_->get(p5))
 
   // Same test as TestBloomFilter#testBasicOperations() in Java codes. We also
   // verifies the bitSet positions that are set, to make sure both the Java and C++ codes

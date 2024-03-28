@@ -27,14 +27,14 @@ namespace orc {
 
   class GzipTextReader {
    private:
-    std::string filename;
-    FILE* file;
-    z_stream stream;
-    unsigned char input[64 * 1024];
-    unsigned char output[64 * 1024];
-    unsigned char* outPtr;
-    unsigned char* outEnd;
-    bool isDone;
+    std::string filename_;
+    FILE* file_;
+    z_stream stream_;
+    unsigned char input_[64 * 1024];
+    unsigned char output_[64 * 1024];
+    unsigned char* outPtr_;
+    unsigned char* outEnd_;
+    bool isDone_;
 
     bool nextBuffer();
 

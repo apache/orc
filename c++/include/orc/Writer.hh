@@ -55,7 +55,7 @@ namespace orc {
    */
   class WriterOptions {
    private:
-    std::unique_ptr<WriterOptionsPrivate> privateBits;
+    std::unique_ptr<WriterOptionsPrivate> privateBits_;
 
    public:
     WriterOptions();

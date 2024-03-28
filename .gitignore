@@ -13,3 +13,4 @@ dependency-reduced-pom.xml
 .java-version
 java/bench/data
 *.swp
+.cache/*

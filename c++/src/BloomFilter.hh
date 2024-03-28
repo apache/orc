@@ -90,7 +90,7 @@ namespace orc {
     bool operator==(const BitSet& other) const;
 
    private:
-    std::vector<uint64_t> mData;
+    std::vector<uint64_t> mData_;
   };
 
   /**
@@ -174,9 +174,9 @@ namespace orc {
 
    private:
     static constexpr double DEFAULT_FPP = 0.05;
-    uint64_t mNumBits;
-    int32_t mNumHashFunctions;
-    std::unique_ptr<BitSet> mBitSet;
+    uint64_t mNumBits_;
+    int32_t mNumHashFunctions_;
+    std::unique_ptr<BitSet> mBitSet_;
   };
 
   struct BloomFilterUTF8Utils {

@@ -66,8 +66,8 @@ namespace orc {
     std::string toString() const override;
 
    private:
-    std::shared_ptr<ExpressionTree> mExpressionTree;
-    std::vector<PredicateLeaf> mLeaves;
+    std::shared_ptr<ExpressionTree> mExpressionTree_;
+    std::vector<PredicateLeaf> mLeaves_;
   };
 
   /**
@@ -304,9 +304,9 @@ namespace orc {
     static TreeNode convertToCNF(TreeNode root);
 
    private:
-    std::deque<TreeNode> mCurrTree;
-    std::unordered_map<PredicateLeaf, size_t, PredicateLeafHash, PredicateLeafComparator> mLeaves;
-    std::shared_ptr<ExpressionTree> mRoot;
+    std::deque<TreeNode> mCurrTree_;
+    std::unordered_map<PredicateLeaf, size_t, PredicateLeafHash, PredicateLeafComparator> mLeaves_;
+    std::shared_ptr<ExpressionTree> mRoot_;
   };
 
 }  // namespace orc

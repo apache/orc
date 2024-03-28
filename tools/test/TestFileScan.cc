@@ -202,13 +202,13 @@ TEST(TestFileScan, testBadCommand) {
       error);
 }
 
-void checkForError(const std::string& filename, const std::string& error_msg) {
+void checkForError(const std::string& filename, const std::string& errorMsg) {
   const std::string pgm = findProgram("tools/src/orc-scan");
   std::string output;
   std::string error;
   EXPECT_EQ(1, runProgram({pgm, filename}, output, error));
   EXPECT_EQ("", output);
-  EXPECT_NE(std::string::npos, error.find(error_msg)) << error;
+  EXPECT_NE(std::string::npos, error.find(errorMsg)) << error;
 }
 
 TEST(TestFileScan, testErrorHandling) {

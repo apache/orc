@@ -47,24 +47,24 @@ namespace orc {
     uint64_t rowIndexStride;
     std::map<std::string, std::string> userMeta;
 
-    OrcFileDescription(const std::string& _filename, const std::string& _json,
-                       const std::string& _typeString, const std::string& _version,
-                       const std::string& _softwareVersion, uint64_t _rowCount,
-                       uint64_t _contentLength, uint64_t _stripeCount, CompressionKind _compression,
-                       size_t _compressionSize, uint64_t _rowIndexStride,
-                       const std::map<std::string, std::string>& _meta)
-        : filename(_filename),
-          json(_json),
-          typeString(_typeString),
-          formatVersion(_version),
-          softwareVersion(_softwareVersion),
-          rowCount(_rowCount),
-          contentLength(_contentLength),
-          stripeCount(_stripeCount),
-          compression(_compression),
-          compressionSize(_compressionSize),
-          rowIndexStride(_rowIndexStride),
-          userMeta(_meta) {
+    OrcFileDescription(const std::string& filename, const std::string& json,
+                       const std::string& typeString, const std::string& version,
+                       const std::string& softwareVersion, uint64_t rowCount,
+                       uint64_t contentLength, uint64_t stripeCount, CompressionKind compression,
+                       size_t compressionSize, uint64_t rowIndexStride,
+                       const std::map<std::string, std::string>& meta)
+        : filename(filename),
+          json(json),
+          typeString(typeString),
+          formatVersion(version),
+          softwareVersion(softwareVersion),
+          rowCount(rowCount),
+          contentLength(contentLength),
+          stripeCount(stripeCount),
+          compression(compression),
+          compressionSize(compressionSize),
+          rowIndexStride(rowIndexStride),
+          userMeta(meta) {
       // PASS
     }
 

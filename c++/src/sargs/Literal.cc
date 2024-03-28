@@ -26,196 +26,196 @@
 namespace orc {
 
   Literal::Literal(PredicateDataType type) {
-    mType = type;
-    mValue.DecimalVal = 0;
-    mSize = 0;
-    mIsNull = true;
-    mPrecision = 0;
-    mScale = 0;
-    mHashCode = 0;
+    mType_ = type;
+    mValue_.DecimalVal = 0;
+    mSize_ = 0;
+    mIsNull_ = true;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mHashCode_ = 0;
   }
 
   Literal::Literal(int64_t val) {
-    mType = PredicateDataType::LONG;
-    mValue.IntVal = val;
-    mSize = sizeof(val);
-    mIsNull = false;
-    mPrecision = 0;
-    mScale = 0;
-    mHashCode = hashCode();
+    mType_ = PredicateDataType::LONG;
+    mValue_.IntVal = val;
+    mSize_ = sizeof(val);
+    mIsNull_ = false;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(double val) {
-    mType = PredicateDataType::FLOAT;
-    mValue.DoubleVal = val;
-    mSize = sizeof(val);
-    mIsNull = false;
-    mPrecision = 0;
-    mScale = 0;
-    mHashCode = hashCode();
+    mType_ = PredicateDataType::FLOAT;
+    mValue_.DoubleVal = val;
+    mSize_ = sizeof(val);
+    mIsNull_ = false;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(bool val) {
-    mType = PredicateDataType::BOOLEAN;
-    mValue.BooleanVal = val;
-    mSize = sizeof(val);
-    mIsNull = false;
-    mPrecision = 0;
-    mScale = 0;
-    mHashCode = hashCode();
+    mType_ = PredicateDataType::BOOLEAN;
+    mValue_.BooleanVal = val;
+    mSize_ = sizeof(val);
+    mIsNull_ = false;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(PredicateDataType type, int64_t val) {
     if (type != PredicateDataType::DATE) {
       throw std::invalid_argument("only DATE is supported here!");
     }
-    mType = type;
-    mValue.IntVal = val;
-    mSize = sizeof(val);
-    mIsNull = false;
-    mPrecision = 0;
-    mScale = 0;
-    mHashCode = hashCode();
+    mType_ = type;
+    mValue_.IntVal = val;
+    mSize_ = sizeof(val);
+    mIsNull_ = false;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(const char* str, size_t size) {
-    mType = PredicateDataType::STRING;
-    mValue.Buffer = new char[size];
-    memcpy(mValue.Buffer, str, size);
-    mSize = size;
-    mIsNull = false;
-    mPrecision = 0;
-    mScale = 0;
-    mHashCode = hashCode();
+    mType_ = PredicateDataType::STRING;
+    mValue_.Buffer = new char[size];
+    memcpy(mValue_.Buffer, str, size);
+    mSize_ = size;
+    mIsNull_ = false;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(Int128 val, int32_t precision, int32_t scale) {
-    mType = PredicateDataType::DECIMAL;
-    mValue.DecimalVal = val;
-    mPrecision = precision;
-    mScale = scale;
-    mSize = sizeof(Int128);
-    mIsNull = false;
-    mHashCode = hashCode();
+    mType_ = PredicateDataType::DECIMAL;
+    mValue_.DecimalVal = val;
+    mPrecision_ = precision;
+    mScale_ = scale;
+    mSize_ = sizeof(Int128);
+    mIsNull_ = false;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(int64_t second, int32_t nanos) {
-    mType = PredicateDataType::TIMESTAMP;
-    mValue.TimeStampVal.second = second;
-    mValue.TimeStampVal.nanos = nanos;
-    mPrecision = 0;
-    mScale = 0;
-    mSize = sizeof(Timestamp);
-    mIsNull = false;
-    mHashCode = hashCode();
+    mType_ = PredicateDataType::TIMESTAMP;
+    mValue_.TimeStampVal.second = second;
+    mValue_.TimeStampVal.nanos = nanos;
+    mPrecision_ = 0;
+    mScale_ = 0;
+    mSize_ = sizeof(Timestamp);
+    mIsNull_ = false;
+    mHashCode_ = hashCode();
   }
 
   Literal::Literal(const Literal& r)
-      : mType(r.mType), mSize(r.mSize), mIsNull(r.mIsNull), mHashCode(r.mHashCode) {
-    if (mType == PredicateDataType::STRING) {
-      mValue.Buffer = new char[r.mSize];
-      memcpy(mValue.Buffer, r.mValue.Buffer, r.mSize);
-      mPrecision = 0;
-      mScale = 0;
-    } else if (mType == PredicateDataType::DECIMAL) {
-      mPrecision = r.mPrecision;
-      mScale = r.mScale;
-      mValue = r.mValue;
-    } else if (mType == PredicateDataType::TIMESTAMP) {
-      mValue.TimeStampVal = r.mValue.TimeStampVal;
+      : mType_(r.mType_), mSize_(r.mSize_), mIsNull_(r.mIsNull_), mHashCode_(r.mHashCode_) {
+    if (mType_ == PredicateDataType::STRING) {
+      mValue_.Buffer = new char[r.mSize_];
+      memcpy(mValue_.Buffer, r.mValue_.Buffer, r.mSize_);
+      mPrecision_ = 0;
+      mScale_ = 0;
+    } else if (mType_ == PredicateDataType::DECIMAL) {
+      mPrecision_ = r.mPrecision_;
+      mScale_ = r.mScale_;
+      mValue_ = r.mValue_;
+    } else if (mType_ == PredicateDataType::TIMESTAMP) {
+      mValue_.TimeStampVal = r.mValue_.TimeStampVal;
     } else {
-      mValue = r.mValue;
-      mPrecision = 0;
-      mScale = 0;
+      mValue_ = r.mValue_;
+      mPrecision_ = 0;
+      mScale_ = 0;
     }
   }
 
   Literal::~Literal() {
-    if (mType == PredicateDataType::STRING && mValue.Buffer) {
-      delete[] mValue.Buffer;
-      mValue.Buffer = nullptr;
+    if (mType_ == PredicateDataType::STRING && mValue_.Buffer) {
+      delete[] mValue_.Buffer;
+      mValue_.Buffer = nullptr;
     }
   }
 
   Literal& Literal::operator=(const Literal& r) {
     if (this != &r) {
-      if (mType == PredicateDataType::STRING && mValue.Buffer) {
-        delete[] mValue.Buffer;
-        mValue.Buffer = nullptr;
+      if (mType_ == PredicateDataType::STRING && mValue_.Buffer) {
+        delete[] mValue_.Buffer;
+        mValue_.Buffer = nullptr;
       }
 
-      mType = r.mType;
-      mSize = r.mSize;
-      mIsNull = r.mIsNull;
-      mPrecision = r.mPrecision;
-      mScale = r.mScale;
-      if (mType == PredicateDataType::STRING) {
-        mValue.Buffer = new char[r.mSize];
-        memcpy(mValue.Buffer, r.mValue.Buffer, r.mSize);
-      } else if (mType == PredicateDataType::TIMESTAMP) {
-        mValue.TimeStampVal = r.mValue.TimeStampVal;
+      mType_ = r.mType_;
+      mSize_ = r.mSize_;
+      mIsNull_ = r.mIsNull_;
+      mPrecision_ = r.mPrecision_;
+      mScale_ = r.mScale_;
+      if (mType_ == PredicateDataType::STRING) {
+        mValue_.Buffer = new char[r.mSize_];
+        memcpy(mValue_.Buffer, r.mValue_.Buffer, r.mSize_);
+      } else if (mType_ == PredicateDataType::TIMESTAMP) {
+        mValue_.TimeStampVal = r.mValue_.TimeStampVal;
       } else {
-        mValue = r.mValue;
+        mValue_ = r.mValue_;
       }
-      mHashCode = r.mHashCode;
+      mHashCode_ = r.mHashCode_;
     }
     return *this;
   }
 
   std::string Literal::toString() const {
-    if (mIsNull) {
+    if (mIsNull_) {
       return "null";
     }
 
     std::ostringstream sstream;
-    switch (mType) {
+    switch (mType_) {
       case PredicateDataType::LONG:
-        sstream << mValue.IntVal;
+        sstream << mValue_.IntVal;
         break;
       case PredicateDataType::DATE:
-        sstream << mValue.DateVal;
+        sstream << mValue_.DateVal;
         break;
       case PredicateDataType::TIMESTAMP:
-        sstream << mValue.TimeStampVal.second << "." << mValue.TimeStampVal.nanos;
+        sstream << mValue_.TimeStampVal.second << "." << mValue_.TimeStampVal.nanos;
         break;
       case PredicateDataType::FLOAT:
-        sstream << mValue.DoubleVal;
+        sstream << mValue_.DoubleVal;
         break;
       case PredicateDataType::BOOLEAN:
-        sstream << (mValue.BooleanVal ? "true" : "false");
+        sstream << (mValue_.BooleanVal ? "true" : "false");
         break;
       case PredicateDataType::STRING:
-        sstream << std::string(mValue.Buffer, mSize);
+        sstream << std::string(mValue_.Buffer, mSize_);
         break;
       case PredicateDataType::DECIMAL:
-        sstream << mValue.DecimalVal.toDecimalString(mScale);
+        sstream << mValue_.DecimalVal.toDecimalString(mScale_);
         break;
     }
     return sstream.str();
   }
 
   size_t Literal::hashCode() const {
-    if (mIsNull) {
+    if (mIsNull_) {
       return 0;
     }
 
-    switch (mType) {
+    switch (mType_) {
       case PredicateDataType::LONG:
-        return std::hash<int64_t>{}(mValue.IntVal);
+        return std::hash<int64_t>{}(mValue_.IntVal);
       case PredicateDataType::DATE:
-        return std::hash<int64_t>{}(mValue.DateVal);
+        return std::hash<int64_t>{}(mValue_.DateVal);
       case PredicateDataType::TIMESTAMP:
-        return std::hash<int64_t>{}(mValue.TimeStampVal.second) * 17 +
-               std::hash<int32_t>{}(mValue.TimeStampVal.nanos);
+        return std::hash<int64_t>{}(mValue_.TimeStampVal.second) * 17 +
+               std::hash<int32_t>{}(mValue_.TimeStampVal.nanos);
       case PredicateDataType::FLOAT:
-        return std::hash<double>{}(mValue.DoubleVal);
+        return std::hash<double>{}(mValue_.DoubleVal);
       case PredicateDataType::BOOLEAN:
-        return std::hash<bool>{}(mValue.BooleanVal);
+        return std::hash<bool>{}(mValue_.BooleanVal);
       case PredicateDataType::STRING:
-        return std::hash<std::string>{}(std::string(mValue.Buffer, mSize));
+        return std::hash<std::string>{}(std::string(mValue_.Buffer, mSize_));
       case PredicateDataType::DECIMAL:
         // current glibc does not support hash<int128_t>
-        return std::hash<int64_t>{}(mValue.IntVal);
+        return std::hash<int64_t>{}(mValue_.IntVal);
       default:
         return 0;
     }
@@ -225,30 +225,30 @@ namespace orc {
     if (this == &r) {
       return true;
     }
-    if (mHashCode != r.mHashCode || mType != r.mType || mIsNull != r.mIsNull) {
+    if (mHashCode_ != r.mHashCode_ || mType_ != r.mType_ || mIsNull_ != r.mIsNull_) {
       return false;
     }
 
-    if (mIsNull) {
+    if (mIsNull_) {
       return true;
     }
 
-    switch (mType) {
+    switch (mType_) {
       case PredicateDataType::LONG:
-        return mValue.IntVal == r.mValue.IntVal;
+        return mValue_.IntVal == r.mValue_.IntVal;
       case PredicateDataType::DATE:
-        return mValue.DateVal == r.mValue.DateVal;
+        return mValue_.DateVal == r.mValue_.DateVal;
       case PredicateDataType::TIMESTAMP:
-        return mValue.TimeStampVal == r.mValue.TimeStampVal;
+        return mValue_.TimeStampVal == r.mValue_.TimeStampVal;
       case PredicateDataType::FLOAT:
-        return std::fabs(mValue.DoubleVal - r.mValue.DoubleVal) <
+        return std::fabs(mValue_.DoubleVal - r.mValue_.DoubleVal) <
                std::numeric_limits<double>::epsilon();
       case PredicateDataType::BOOLEAN:
-        return mValue.BooleanVal == r.mValue.BooleanVal;
+        return mValue_.BooleanVal == r.mValue_.BooleanVal;
       case PredicateDataType::STRING:
-        return mSize == r.mSize && memcmp(mValue.Buffer, r.mValue.Buffer, mSize) == 0;
+        return mSize_ == r.mSize_ && memcmp(mValue_.Buffer, r.mValue_.Buffer, mSize_) == 0;
       case PredicateDataType::DECIMAL:
-        return mValue.DecimalVal == r.mValue.DecimalVal;
+        return mValue_.DecimalVal == r.mValue_.DecimalVal;
       default:
         return true;
     }
@@ -269,38 +269,38 @@ namespace orc {
   }
 
   int64_t Literal::getLong() const {
-    validate(mIsNull, mType, PredicateDataType::LONG);
-    return mValue.IntVal;
+    validate(mIsNull_, mType_, PredicateDataType::LONG);
+    return mValue_.IntVal;
   }
 
   int64_t Literal::getDate() const {
-    validate(mIsNull, mType, PredicateDataType::DATE);
-    return mValue.DateVal;
+    validate(mIsNull_, mType_, PredicateDataType::DATE);
+    return mValue_.DateVal;
   }
 
   Literal::Timestamp Literal::getTimestamp() const {
-    validate(mIsNull, mType, PredicateDataType::TIMESTAMP);
-    return mValue.TimeStampVal;
+    validate(mIsNull_, mType_, PredicateDataType::TIMESTAMP);
+    return mValue_.TimeStampVal;
   }
 
   double Literal::getFloat() const {
-    validate(mIsNull, mType, PredicateDataType::FLOAT);
-    return mValue.DoubleVal;
+    validate(mIsNull_, mType_, PredicateDataType::FLOAT);
+    return mValue_.DoubleVal;
   }
 
   std::string Literal::getString() const {
-    validate(mIsNull, mType, PredicateDataType::STRING);
-    return std::string(mValue.Buffer, mSize);
+    validate(mIsNull_, mType_, PredicateDataType::STRING);
+    return std::string(mValue_.Buffer, mSize_);
   }
 
   bool Literal::getBool() const {
-    validate(mIsNull, mType, PredicateDataType::BOOLEAN);
-    return mValue.BooleanVal;
+    validate(mIsNull_, mType_, PredicateDataType::BOOLEAN);
+    return mValue_.BooleanVal;
   }
 
   Decimal Literal::getDecimal() const {
-    validate(mIsNull, mType, PredicateDataType::DECIMAL);
-    return Decimal(mValue.DecimalVal, mScale);
+    validate(mIsNull_, mType_, PredicateDataType::DECIMAL);
+    return Decimal(mValue_.DecimalVal, mScale_);
   }
 
 }  // namespace orc

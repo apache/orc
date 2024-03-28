@@ -67,7 +67,7 @@ namespace orc {
    */
   class ReaderOptions {
    private:
-    std::unique_ptr<ReaderOptionsPrivate> privateBits;
+    std::unique_ptr<ReaderOptionsPrivate> privateBits_;
 
    public:
     ReaderOptions();
@@ -145,7 +145,7 @@ namespace orc {
    */
   class RowReaderOptions {
    private:
-    std::unique_ptr<RowReaderOptionsPrivate> privateBits;
+    std::unique_ptr<RowReaderOptionsPrivate> privateBits_;
 
    public:
     RowReaderOptions();

@@ -23,9 +23,9 @@ namespace orc {
   // Assume that we are using tight numeric vector batch
   using BooleanVectorBatch = ByteVectorBatch;
 
-  ConvertColumnReader::ConvertColumnReader(const Type& _readType, const Type& fileType,
-                                           StripeStreams& stripe, bool _throwOnOverflow)
-      : ColumnReader(_readType, stripe), readType(_readType), throwOnOverflow(_throwOnOverflow) {
+  ConvertColumnReader::ConvertColumnReader(const Type& readType, const Type& fileType,
+                                           StripeStreams& stripe, bool throwOnOverflow)
+      : ColumnReader(readType, stripe), readType(readType), throwOnOverflow(throwOnOverflow) {
     reader = buildReader(fileType, stripe, /*useTightNumericVector=*/true,
                          /*throwOnOverflow=*/false, /*convertToReadType*/ false);
     data =
@@ -135,9 +135,9 @@ namespace orc {
   template <typename FileTypeBatch, typename ReadTypeBatch, typename ReadType>
   class NumericConvertColumnReader : public ConvertColumnReader {
    public:
-    NumericConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
-                               bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+    NumericConvertColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                               bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -164,9 +164,9 @@ namespace orc {
   class NumericConvertColumnReader<FileTypeBatch, BooleanVectorBatch, bool>
       : public ConvertColumnReader {
    public:
-    NumericConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
-                               bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+    NumericConvertColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                               bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -188,9 +188,9 @@ namespace orc {
 
   class ConvertToStringVariantColumnReader : public ConvertColumnReader {
    public:
-    ConvertToStringVariantColumnReader(const Type& _readType, const Type& fileType,
-                                       StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+    ConvertToStringVariantColumnReader(const Type& readType, const Type& fileType,
+                                       StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
@@ -225,19 +225,19 @@ namespace orc {
 
   class BooleanToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
    public:
-    BooleanToStringVariantColumnReader(const Type& _readType, const Type& fileType,
-                                       StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
-      trueValue = "TRUE";
-      falseValue = "FALSE";
+    BooleanToStringVariantColumnReader(const Type& readType, const Type& fileType,
+                                       StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertToStringVariantColumnReader(readType, fileType, stripe, throwOnOverflow) {
+      trueValue_ = "TRUE";
+      falseValue_ = "FALSE";
       if (readType.getKind() == CHAR || readType.getKind() == VARCHAR) {
         if (readType.getMaximumLength() < 5) {
           throw SchemaEvolutionError("Invalid maximum length for boolean type: " +
                                      std::to_string(readType.getMaximumLength()));
         }
         if (readType.getKind() == CHAR) {
-          trueValue.resize(readType.getMaximumLength(), ' ');
-          falseValue.resize(readType.getMaximumLength(), ' ');
+          trueValue_.resize(readType.getMaximumLength(), ' ');
+          falseValue_.resize(readType.getMaximumLength(), ' ');
         }
       }
     }
@@ -245,8 +245,8 @@ namespace orc {
     uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
 
    private:
-    std::string trueValue;
-    std::string falseValue;
+    std::string trueValue_;
+    std::string falseValue_;
   };
 
   uint64_t BooleanToStringVariantColumnReader::convertToStrBuffer(ColumnVectorBatch& rowBatch,
@@ -257,7 +257,7 @@ namespace orc {
     // cast the bool value to string
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-        strBuffer[i] = (srcBatch.data[i] ? trueValue : falseValue);
+        strBuffer[i] = (srcBatch.data[i] ? trueValue_ : falseValue_);
         size += strBuffer[i].size();
       }
     }
@@ -267,9 +267,9 @@ namespace orc {
   template <typename FileTypeBatch>
   class NumericToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
    public:
-    NumericToStringVariantColumnReader(const Type& _readType, const Type& fileType,
-                                       StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+    NumericToStringVariantColumnReader(const Type& readType, const Type& fileType,
+                                       StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertToStringVariantColumnReader(readType, fileType, stripe, throwOnOverflow) {}
     uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override;
   };
 
@@ -321,13 +321,13 @@ namespace orc {
   template <typename FileTypeBatch, typename ReadTypeBatch, bool isFloatingFileType>
   class NumericToDecimalColumnReader : public ConvertColumnReader {
    public:
-    NumericToDecimalColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
-                                 bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
-      precision = static_cast<int32_t>(readType.getPrecision());
-      scale = static_cast<int32_t>(readType.getScale());
+    NumericToDecimalColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                                 bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {
+      precision_ = static_cast<int32_t>(readType.getPrecision());
+      scale_ = static_cast<int32_t>(readType.getScale());
       bool overflow = false;
-      upperBound = scaleUpInt128ByPowerOfTen(1, precision, overflow);
+      upperBound_ = scaleUpInt128ByPowerOfTen(1, precision_, overflow);
     }
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
@@ -335,8 +335,8 @@ namespace orc {
 
       const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
       auto& dstBatch = *SafeCastBatchTo<ReadTypeBatch*>(&rowBatch);
-      dstBatch.precision = precision;
-      dstBatch.scale = scale;
+      dstBatch.precision = precision_;
+      dstBatch.scale = scale_;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
           if constexpr (isFloatingFileType) {
@@ -351,7 +351,7 @@ namespace orc {
    private:
     template <typename SrcType>
     void convertDoubleToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, SrcType value) {
-      const auto result = convertDecimal(value, precision, scale);
+      const auto result = convertDecimal(value, precision_, scale_);
       Int128 i128 = result.second;
       if (result.first) {
         handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
@@ -372,7 +372,7 @@ namespace orc {
     template <typename SrcType>
     void convertIntegerToDecimal(ReadTypeBatch& dstBatch, uint64_t idx, SrcType value) {
       int fromScale = 0;
-      auto result = convertDecimal(value, fromScale, precision, scale);
+      auto result = convertDecimal(value, fromScale, precision_, scale_);
       if (result.first) {
         handleOverflow<SrcType, decltype(dstBatch.values[idx])>(dstBatch, idx, throwOnOverflow);
       } else {
@@ -388,17 +388,17 @@ namespace orc {
       }
     }
 
-    int32_t precision;
-    int32_t scale;
-    int64_t scaleMultiplier;
-    Int128 upperBound;
+    int32_t precision_;
+    int32_t scale_;
+    int64_t scaleMultiplier_;
+    Int128 upperBound_;
   };
 
   class ConvertToTimestampColumnReader : public ConvertColumnReader {
    public:
-    ConvertToTimestampColumnReader(const Type& _readType, const Type& fileType,
-                                   StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow),
+    ConvertToTimestampColumnReader(const Type& readType, const Type& fileType,
+                                   StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow),
           readerTimezone(readType.getKind() == TIMESTAMP_INSTANT ? &getTimezoneByName("GMT")
                                                                  : &stripe.getReaderTimezone()),
           needConvertTimezone(readerTimezone != &getTimezoneByName("GMT")) {}
@@ -419,9 +419,9 @@ namespace orc {
   template <typename FileTypeBatch>
   class NumericToTimestampColumnReader : public ConvertToTimestampColumnReader {
    public:
-    NumericToTimestampColumnReader(const Type& _readType, const Type& fileType,
-                                   StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertToTimestampColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+    NumericToTimestampColumnReader(const Type& readType, const Type& fileType,
+                                   StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertToTimestampColumnReader(readType, fileType, stripe, throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertToTimestampColumnReader::next(rowBatch, numValues, notNull);
@@ -469,14 +469,14 @@ namespace orc {
   template <typename FileTypeBatch, typename ReadTypeBatch, typename ReadType>
   class DecimalToNumericColumnReader : public ConvertColumnReader {
    public:
-    DecimalToNumericColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
-                                 bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
-      precision = fileType.getPrecision();
-      scale = fileType.getScale();
-      factor = 1;
-      for (int i = 0; i < scale; i++) {
-        factor *= 10;
+    DecimalToNumericColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                                 bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {
+      precision_ = fileType.getPrecision();
+      scale_ = fileType.getScale();
+      factor_ = 1;
+      for (int i = 0; i < scale_; i++) {
+        factor_ *= 10;
       }
     }
 
@@ -500,7 +500,7 @@ namespace orc {
     void convertDecimalToInteger(ReadTypeBatch& dstBatch, uint64_t idx,
                                  const FileTypeBatch& srcBatch) {
       using FileType = decltype(srcBatch.values[idx]);
-      Int128 result = scaleDownInt128ByPowerOfTen(srcBatch.values[idx], scale);
+      Int128 result = scaleDownInt128ByPowerOfTen(srcBatch.values[idx], scale_);
       if (!result.fitsInLong()) {
         handleOverflow<FileType, ReadType>(dstBatch, idx, throwOnOverflow);
         return;
@@ -512,21 +512,21 @@ namespace orc {
     void convertDecimalToDouble(ReadTypeBatch& dstBatch, uint64_t idx,
                                 const FileTypeBatch& srcBatch) {
       double doubleValue = Int128(srcBatch.values[idx]).toDouble();
-      dstBatch.data[idx] = static_cast<ReadType>(doubleValue) / static_cast<ReadType>(factor);
+      dstBatch.data[idx] = static_cast<ReadType>(doubleValue) / static_cast<ReadType>(factor_);
     }
 
-    int32_t precision;
-    int32_t scale;
-    int64_t factor;
+    int32_t precision_;
+    int32_t scale_;
+    int64_t factor_;
   };
 
   template <typename FileTypeBatch>
   class DecimalToNumericColumnReader<FileTypeBatch, BooleanVectorBatch, bool>
       : public ConvertColumnReader {
    public:
-    DecimalToNumericColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
-                                 bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {}
+    DecimalToNumericColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                                 bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -544,13 +544,13 @@ namespace orc {
   template <typename FileTypeBatch, typename ReadTypeBatch>
   class DecimalConvertColumnReader : public ConvertColumnReader {
    public:
-    DecimalConvertColumnReader(const Type& _readType, const Type& fileType, StripeStreams& stripe,
-                               bool _throwOnOverflow)
-        : ConvertColumnReader(_readType, fileType, stripe, _throwOnOverflow) {
-      fromPrecision = fileType.getPrecision();
-      fromScale = fileType.getScale();
-      toPrecision = _readType.getPrecision();
-      toScale = _readType.getScale();
+    DecimalConvertColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
+                               bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {
+      fromPrecision_ = fileType.getPrecision();
+      fromScale_ = fileType.getScale();
+      toPrecision_ = readType.getPrecision();
+      toScale_ = readType.getScale();
     }
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
@@ -572,7 +572,7 @@ namespace orc {
       using ReadType = decltype(dstBatch.values[idx]);
 
       auto [overflows, resultI128] =
-          convertDecimal(srcBatch.values[idx], fromScale, toPrecision, toScale);
+          convertDecimal(srcBatch.values[idx], fromScale_, toPrecision_, toScale_);
       if (overflows) {
         handleOverflow<FileType, ReadType>(dstBatch, idx, throwOnOverflow);
       }
@@ -587,20 +587,20 @@ namespace orc {
       }
     }
 
-    int32_t fromPrecision;
-    int32_t fromScale;
-    int32_t toPrecision;
-    int32_t toScale;
+    int32_t fromPrecision_;
+    int32_t fromScale_;
+    int32_t toPrecision_;
+    int32_t toScale_;
   };
 
   template <typename FileTypeBatch>
   class DecimalToTimestampColumnReader : public ConvertToTimestampColumnReader {
    public:
-    DecimalToTimestampColumnReader(const Type& _readType, const Type& fileType,
-                                   StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertToTimestampColumnReader(_readType, fileType, stripe, _throwOnOverflow),
-          precision(static_cast<int32_t>(fileType.getPrecision())),
-          scale(static_cast<int32_t>(fileType.getScale())) {}
+    DecimalToTimestampColumnReader(const Type& readType, const Type& fileType,
+                                   StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertToTimestampColumnReader(readType, fileType, stripe, throwOnOverflow),
+          precision_(static_cast<int32_t>(fileType.getPrecision())),
+          scale_(static_cast<int32_t>(fileType.getScale())) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -626,18 +626,18 @@ namespace orc {
       bool overflow = false;
 
       Int128 i128(srcBatch.values[idx]);
-      Int128 integerPortion = scaleDownInt128ByPowerOfTen(i128, scale);
+      Int128 integerPortion = scaleDownInt128ByPowerOfTen(i128, scale_);
       if (integerPortion < MIN_EPOCH_SECONDS || integerPortion > MAX_EPOCH_SECONDS) {
         handleOverflow<Decimal, int64_t>(dstBatch, idx, throwOnOverflow);
         return;
       }
-      i128 -= scaleUpInt128ByPowerOfTen(integerPortion, scale, overflow);
+      i128 -= scaleUpInt128ByPowerOfTen(integerPortion, scale_, overflow);
       Int128 fractionPortion = std::move(i128);
-      if (scale < SecondToNanoFactor) {
+      if (scale_ < SecondToNanoFactor) {
         fractionPortion =
-            scaleUpInt128ByPowerOfTen(fractionPortion, SecondToNanoFactor - scale, overflow);
+            scaleUpInt128ByPowerOfTen(fractionPortion, SecondToNanoFactor - scale_, overflow);
       } else {
-        fractionPortion = scaleDownInt128ByPowerOfTen(fractionPortion, scale - SecondToNanoFactor);
+        fractionPortion = scaleDownInt128ByPowerOfTen(fractionPortion, scale_ - SecondToNanoFactor);
       }
       if (fractionPortion < 0) {
         fractionPortion += 1e9;
@@ -652,17 +652,17 @@ namespace orc {
       }
     }
 
-    const int32_t precision;
-    const int32_t scale;
+    const int32_t precision_;
+    const int32_t scale_;
   };
 
   template <typename FileTypeBatch>
   class DecimalToStringVariantColumnReader : public ConvertToStringVariantColumnReader {
    public:
-    DecimalToStringVariantColumnReader(const Type& _readType, const Type& fileType,
-                                       StripeStreams& stripe, bool _throwOnOverflow)
-        : ConvertToStringVariantColumnReader(_readType, fileType, stripe, _throwOnOverflow),
-          scale(fileType.getScale()) {}
+    DecimalToStringVariantColumnReader(const Type& readType, const Type& fileType,
+                                       StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertToStringVariantColumnReader(readType, fileType, stripe, throwOnOverflow),
+          scale_(fileType.getScale()) {}
 
     uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override {
       uint64_t size = 0;
@@ -671,7 +671,7 @@ namespace orc {
       if (readType.getKind() == STRING) {
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-            strBuffer[i] = Int128(srcBatch.values[i]).toDecimalString(scale, true);
+            strBuffer[i] = Int128(srcBatch.values[i]).toDecimalString(scale_, true);
             size += strBuffer[i].size();
           }
         }
@@ -679,7 +679,7 @@ namespace orc {
         const auto maxLength = readType.getMaximumLength();
         for (uint64_t i = 0; i < rowBatch.numElements; ++i) {
           if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
-            strBuffer[i] = Int128(srcBatch.values[i]).toDecimalString(scale, true);
+            strBuffer[i] = Int128(srcBatch.values[i]).toDecimalString(scale_, true);
           }
           if (strBuffer[i].size() > maxLength) {
             strBuffer[i].resize(maxLength);
@@ -691,7 +691,7 @@ namespace orc {
     }
 
    private:
-    const int32_t scale;
+    const int32_t scale_;
   };
 
 #define DEFINE_NUMERIC_CONVERT_READER(FROM, TO, TYPE) \
