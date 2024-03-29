@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
@@ -50,10 +51,10 @@ public class TestCheckTool {
     fs.setWorkingDirectory(workDir);
     testFilePath = new Path("TestCheckTool.testCheckTool.orc");
     fs.delete(testFilePath, false);
+    createFile();
   }
 
-  @Test
-  public void testBloomFilter() throws Exception {
+  private void createFile() throws IOException {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string,z:string>");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -67,9 +68,10 @@ public class TestCheckTool {
     for (int r = 0; r < 10000; ++r) {
       int row = batch.size++;
       x.vector[row] = r;
-      byte[] buffer = ("byte-" + r).getBytes();
-      y.setRef(row, buffer, 0, buffer.length);
-      z.setRef(row, buffer, 0, buffer.length);
+      byte[] yBuffer = ("y-byte-" + r).getBytes();
+      byte[] zBuffer = ("z-byte-" + r).getBytes();
+      y.setRef(row, yBuffer, 0, yBuffer.length);
+      z.setRef(row, zBuffer, 0, zBuffer.length);
       if (batch.size == batch.getMaxSize()) {
         writer.addRowBatch(batch);
         batch.reset();
@@ -79,27 +81,29 @@ public class TestCheckTool {
       writer.addRowBatch(batch);
     }
     writer.close();
+  }
 
+  @Test
+  public void testPredicate() throws Exception {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
-    // replace stdout and run command
     System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
 
     CheckTool.main(conf, new String[]{
-        "--type", "bloom-filter",
-        "--values", "1234", "--values", "5566",
+        "--type", "predicate",
+        "--values", "0", "--values", "5566",
         "--column", "x",
         testFilePath.toString()});
 
     CheckTool.main(conf, new String[]{
-        "--type", "bloom-filter",
-        "--values", "byte-1234", "--values", "byte-5566",
+        "--type", "predicate",
+        "--values", "y-byte-1234", "--values", "y-byte-5566",
         "--column", "y",
         testFilePath.toString()});
 
     CheckTool.main(conf, new String[]{
-        "--type", "bloom-filter",
-        "--values", "byte-1234", "--values", "byte-5566",
+        "--type", "predicate",
+        "--values", "z-byte-1234", "--values", "z-byte-5566",
         "--column", "z",
         testFilePath.toString()});
 
@@ -107,13 +111,102 @@ public class TestCheckTool {
     System.setOut(origOut);
     String output = myOut.toString(StandardCharsets.UTF_8);
 
-    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 1234 maybe exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 5566 not exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 1234 not exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 5566 maybe exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: byte-1234 maybe exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: byte-5566 not exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: byte-1234 not exist"));
-    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: byte-5566 maybe exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 0, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 5566, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 0, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 5566, test value: YES_NO"));
+
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: y-byte-1234, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: y-byte-5566, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: y-byte-1234, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: y-byte-5566, test value: YES_NO"));
+
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: z-byte-1234, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: z-byte-5566, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: z-byte-1234, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: z-byte-5566, test value: YES_NO"));
+  }
+
+  @Test
+  public void testStatistics() throws Exception {
+    PrintStream origOut = System.out;
+    ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
+
+    CheckTool.main(conf, new String[]{
+        "--type", "stat",
+        "--values", "0", "--values", "5566",
+        "--column", "x",
+        testFilePath.toString()});
+
+    CheckTool.main(conf, new String[]{
+        "--type", "stat",
+        "--values", "y-byte-1234", "--values", "y-byte-5566",
+        "--column", "y",
+        testFilePath.toString()});
+
+    CheckTool.main(conf, new String[]{
+        "--type", "stat",
+        "--values", "z-byte-1234", "--values", "z-byte-5566",
+        "--column", "z",
+        testFilePath.toString()});
+
+    System.out.flush();
+    System.setOut(origOut);
+    String output = myOut.toString(StandardCharsets.UTF_8);
+
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 0, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 5566, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 0, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 5566, test value: YES_NO"));
+
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: y-byte-1234, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: y-byte-5566, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: y-byte-1234, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: y-byte-5566, test value: YES_NO"));
+
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: z-byte-1234, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: z-byte-5566, test value: YES_NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: z-byte-1234, test value: NO"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: z-byte-5566, test value: YES_NO"));
+  }
+
+  @Test
+  public void testBloomFilter() throws Exception {
+    PrintStream origOut = System.out;
+    ByteArrayOutputStream myOut = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
+
+    CheckTool.main(conf, new String[]{
+        "--type", "bloom-filter",
+        "--values", "0", "--values", "5566",
+        "--column", "x",
+        testFilePath.toString()});
+
+    CheckTool.main(conf, new String[]{
+        "--type", "bloom-filter",
+        "--values", "y-byte-1234", "--values", "y-byte-5566",
+        "--column", "y",
+        testFilePath.toString()});
+
+    CheckTool.main(conf, new String[]{
+        "--type", "bloom-filter",
+        "--values", "z-byte-1234", "--values", "z-byte-5566",
+        "--column", "z",
+        testFilePath.toString()});
+
+    System.out.flush();
+    System.setOut(origOut);
+
+    String output = myOut.toString(StandardCharsets.UTF_8);
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 0, bloom filter: maybe exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: 5566, bloom filter: not exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 0, bloom filter: maybe exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: 5566, bloom filter: maybe exist"));
+
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: y-byte-1234, bloom filter: maybe exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 0, value: y-byte-5566, bloom filter: not exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: y-byte-1234, bloom filter: not exist"));
+    assertTrue(output.contains("stripe: 0, rowIndex: 1, value: y-byte-5566, bloom filter: maybe exist"));
   }
 }

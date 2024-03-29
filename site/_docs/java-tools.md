@@ -31,6 +31,16 @@ The command line looks like:
 
 The check command can check whether the specified value of the column specified by multiple ORC files can be filtered.
 
+Check statistics and bloom filter index on x column.
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar check --type predicate /path/to/example.orc --values 1234 --values 5566 --column x
+~~~
+
+Check statistics on x column.
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar check --type stat /path/to/example.orc --values 1234 --values 5566 --column x
+~~~
+
 Check bloom filter index on x column.
 ~~~ shell
 % java -jar orc-tools-X.Y.Z-uber.jar check --type bloom-filter /path/to/example.orc --values 1234 --values 5566 --column x
