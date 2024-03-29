@@ -44,27 +44,35 @@ import java.util.List;
 /**
  * Check whether the specified column of multiple ORC files can filter the specified value.
  */
-public class BloomFilter {
+public class CheckTool {
+
+  private static final String CHECK_TYPE_BLOOM_FILTER = "bloom-filter";
 
   public static void main(Configuration conf, String[] args) throws Exception {
     Options opts = createOptions();
     CommandLine cli = new DefaultParser().parse(opts, args);
     HelpFormatter formatter = new HelpFormatter();
     if (cli.hasOption('h')) {
-      formatter.printHelp("bloom-filter", opts);
+      formatter.printHelp("check", opts);
       return;
     }
 
+    String type = cli.getOptionValue("type");
+    if (type == null || !type.equals(CHECK_TYPE_BLOOM_FILTER)) {
+      System.err.printf("type %s not support %n", type);
+      formatter.printHelp("check", opts);
+      return;
+    }
     String column = cli.getOptionValue("column");
     if (column == null || column.isEmpty()) {
       System.err.println("column is null");
-      formatter.printHelp("bloom-filter", opts);
+      formatter.printHelp("check", opts);
       return;
     }
     String[] values = cli.getOptionValues("values");
     if (values == null || values.length == 0) {
       System.err.println("values is null");
-      formatter.printHelp("bloom-filter", opts);
+      formatter.printHelp("check", opts);
       return;
     }
     boolean ignoreExtension = cli.hasOption("ignoreExtension");
@@ -93,10 +101,10 @@ public class BloomFilter {
           OrcFile.readerOptions(conf).filesystem(fs))) {
         RecordReaderImpl rows = (RecordReaderImpl) reader.rows();
         TypeDescription schema = reader.getSchema();
-        boolean[] bloomFilterColumns = OrcUtils.includeColumns(column, schema);
+        boolean[] includedColumns = OrcUtils.includeColumns(column, schema);
         int colIndex = -1;
-        for (int i = 0; i < bloomFilterColumns.length; i++) {
-          if (bloomFilterColumns[i]) {
+        for (int i = 0; i < includedColumns.length; i++) {
+          if (includedColumns[i]) {
             colIndex = i;
             break;
           }
@@ -112,31 +120,46 @@ public class BloomFilter {
           OrcProto.ColumnEncoding columnEncoding = footer.getColumns(colIndex);
           TypeDescription.Category columnCategory =
               reader.getSchema().findSubtype(colIndex).getCategory();
-          OrcIndex indices = rows.readRowIndex(stripeIndex, null, bloomFilterColumns);
-          OrcProto.BloomFilterIndex[] bloomFilterIndices = indices.getBloomFilterIndex();
-          OrcProto.BloomFilterIndex bloomFilterIndex = bloomFilterIndices[colIndex];
-          if (bloomFilterIndex == null || bloomFilterIndex.getBloomFilterList().isEmpty()) {
-            System.err.printf("The bloom filter index for column: %s is not found in file: %s%n",
-                column, inputFile);
-            continue;
+          OrcIndex indices = rows.readRowIndex(stripeIndex, null, includedColumns);
+          if (type.equals(CHECK_TYPE_BLOOM_FILTER)) {
+            checkBloomFilter(inputFile, reader, indices, stripeIndex,
+                colIndex, column, columnEncoding, columnCategory, values);
           }
-          List<OrcProto.BloomFilter> bloomFilterList = bloomFilterIndex.getBloomFilterList();
-          for (int i = 0; i < bloomFilterList.size(); i++) {
-            OrcProto.BloomFilter bf = bloomFilterList.get(i);
-            org.apache.orc.util.BloomFilter bloomFilter = BloomFilterIO.deserialize(
-                indices.getBloomFilterKinds()[colIndex], columnEncoding,
-                reader.getWriterVersion(), columnCategory, bf);
-            for (String value : values) {
-              boolean testResult = test(bloomFilter, columnCategory, value);
-              if (testResult) {
-                System.out.printf("stripe: %d, rowIndex: %d, value: %s maybe exist%n",
-                    stripeIndex, i, value);
-              } else {
-                System.out.printf("stripe: %d, rowIndex: %d, value: %s not exist%n",
-                    stripeIndex, i, value);
-              }
-            }
-          }
+        }
+      }
+    }
+  }
+
+  private static void checkBloomFilter(Path inputFile,
+                                       Reader reader,
+                                       OrcIndex indices,
+                                       int stripeIndex,
+                                       int colIndex,
+                                       String column,
+                                       OrcProto.ColumnEncoding columnEncoding,
+                                       TypeDescription.Category columnCategory,
+                                       String[] values) {
+    OrcProto.BloomFilterIndex[] bloomFilterIndices = indices.getBloomFilterIndex();
+    OrcProto.BloomFilterIndex bloomFilterIndex = bloomFilterIndices[colIndex];
+    if (bloomFilterIndex == null || bloomFilterIndex.getBloomFilterList().isEmpty()) {
+      System.err.printf("The bloom filter index for column: %s is not found in file: %s%n",
+          column, inputFile);
+      return;
+    }
+    List<OrcProto.BloomFilter> bloomFilterList = bloomFilterIndex.getBloomFilterList();
+    for (int i = 0; i < bloomFilterList.size(); i++) {
+      OrcProto.BloomFilter bf = bloomFilterList.get(i);
+      org.apache.orc.util.BloomFilter bloomFilter = BloomFilterIO.deserialize(
+          indices.getBloomFilterKinds()[colIndex], columnEncoding,
+          reader.getWriterVersion(), columnCategory, bf);
+      for (String value : values) {
+        boolean testResult = test(bloomFilter, columnCategory, value);
+        if (testResult) {
+          System.out.printf("stripe: %d, rowIndex: %d, value: %s maybe exist%n",
+              stripeIndex, i, value);
+        } else {
+          System.out.printf("stripe: %d, rowIndex: %d, value: %s not exist%n",
+              stripeIndex, i, value);
         }
       }
     }
@@ -167,6 +190,13 @@ public class BloomFilter {
 
   private static Options createOptions() {
     Options result = new Options();
+
+    result.addOption(Option.builder("t")
+        .longOpt("type")
+        .desc("check type = {" + CHECK_TYPE_BLOOM_FILTER + "}")
+        .hasArg()
+        .build());
+
     result.addOption(Option.builder("col")
         .longOpt("column")
         .desc("column name")
@@ -181,7 +211,7 @@ public class BloomFilter {
 
     result.addOption(Option.builder("h")
         .longOpt("help")
-        .desc("Print help message")
+        .desc("print help message")
         .build());
     return result;
   }

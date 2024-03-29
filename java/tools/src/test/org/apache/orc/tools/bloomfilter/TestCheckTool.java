@@ -27,7 +27,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.tools.BloomFilter;
+import org.apache.orc.tools.CheckTool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +37,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestBloomFilter {
+public class TestCheckTool {
   private Path workDir = new Path(System.getProperty("test.tmp.dir"));
   private Configuration conf;
   private FileSystem fs;
@@ -48,7 +48,7 @@ public class TestBloomFilter {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TestBloomFilter.testBloomFilter.orc");
+    testFilePath = new Path("TestCheckTool.testCheckTool.orc");
     fs.delete(testFilePath, false);
   }
 
@@ -85,15 +85,21 @@ public class TestBloomFilter {
     // replace stdout and run command
     System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
 
-    BloomFilter.main(conf, new String[]{"--values", "1234", "--values", "5566",
+    CheckTool.main(conf, new String[]{
+        "--type", "bloom-filter",
+        "--values", "1234", "--values", "5566",
         "--column", "x",
         testFilePath.toString()});
 
-    BloomFilter.main(conf, new String[]{"--values", "byte-1234", "--values", "byte-5566",
+    CheckTool.main(conf, new String[]{
+        "--type", "bloom-filter",
+        "--values", "byte-1234", "--values", "byte-5566",
         "--column", "y",
         testFilePath.toString()});
 
-    BloomFilter.main(conf, new String[]{"--values", "byte-1234", "--values", "byte-5566",
+    CheckTool.main(conf, new String[]{
+        "--type", "bloom-filter",
+        "--values", "byte-1234", "--values", "byte-5566",
         "--column", "z",
         testFilePath.toString()});
 
