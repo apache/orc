@@ -16,20 +16,17 @@
  * limitations under the License.
  */
 
-package org.apache.orc.tools.merge;
+package org.apache.orc.tools;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
-import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.tools.MergeFiles;
+import org.apache.orc.tools.RowCount;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,15 +37,13 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestMergeFiles {
+public class TestRowCount {
   private Path workDir = new Path(
-      Paths.get(System.getProperty("test.tmp.dir"), "orc-test-merge").toString());
+      Paths.get(System.getProperty("test.tmp.dir"), "orc-test-count").toString());
   private Configuration conf;
   private FileSystem fs;
-  private Path testFilePath;
 
   @BeforeEach
   public void openFileSystem() throws Exception {
@@ -57,28 +52,23 @@ public class TestMergeFiles {
     fs.setWorkingDirectory(workDir);
     fs.mkdirs(workDir);
     fs.deleteOnExit(workDir);
-    testFilePath = new Path("TestMergeFiles.testMerge.orc");
-    fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testMerge() throws Exception {
-    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
+  public void testCount() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("struct<x:int>");
     Map<String, Integer> fileToRowCountMap = new LinkedHashMap<>();
-    fileToRowCountMap.put("test-merge-1.orc", 10000);
-    fileToRowCountMap.put("test-merge-2.orc", 20000);
+    fileToRowCountMap.put("test-count-1.orc", 10000);
+    fileToRowCountMap.put("test-count-2.orc", 20000);
     for (Map.Entry<String, Integer> fileToRowCount : fileToRowCountMap.entrySet()) {
       Writer writer = OrcFile.createWriter(new Path(fileToRowCount.getKey()),
           OrcFile.writerOptions(conf)
               .setSchema(schema));
       VectorizedRowBatch batch = schema.createRowBatch();
       LongColumnVector x = (LongColumnVector) batch.cols[0];
-      BytesColumnVector y = (BytesColumnVector) batch.cols[1];
       for (int r = 0; r < fileToRowCount.getValue(); ++r) {
         int row = batch.size++;
         x.vector[row] = r;
-        byte[] buffer = ("byte-" + r).getBytes();
-        y.setRef(row, buffer, 0, buffer.length);
         if (batch.size == batch.getMaxSize()) {
           writer.addRowBatch(batch);
           batch.reset();
@@ -94,19 +84,11 @@ public class TestMergeFiles {
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     // replace stdout and run command
     System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
-    MergeFiles.main(conf, new String[]{workDir.toString(),
-        "--output", testFilePath.toString()});
+    RowCount.main(conf, new String[]{workDir.toString()});
     System.out.flush();
     System.setOut(origOut);
     String output = myOut.toString(StandardCharsets.UTF_8);
-    System.out.println(output);
-    assertTrue(output.contains("Input files size: 2, Merge files size: 2"));
-
-    try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf))) {
-      assertEquals(schema, reader.getSchema());
-      assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
-      assertEquals(2, reader.getStripes().size());
-      assertEquals(10000 + 20000, reader.getNumberOfRows());
-    }
+    assertTrue(output.contains(" 10000"));
+    assertTrue(output.contains(" 20000"));
   }
 }
