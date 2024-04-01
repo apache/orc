@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.orc.tools.check;
+package org.apache.orc.tools;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
