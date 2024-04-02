@@ -387,7 +387,9 @@ namespace orc {
     if (hasNulls && !notNull[rowId]) {
       writeString(buffer, "null");
     } else {
+      writeChar(buffer, '"');
       writeString(buffer, toDecimalString(data_[rowId], scale_).c_str());
+      writeChar(buffer, '"');
     }
   }
 
@@ -406,7 +408,9 @@ namespace orc {
     if (hasNulls && !notNull[rowId]) {
       writeString(buffer, "null");
     } else {
+      writeChar(buffer, '"');
       writeString(buffer, data_[rowId].toDecimalString(scale_).c_str());
+      writeChar(buffer, '"');
     }
   }
 
