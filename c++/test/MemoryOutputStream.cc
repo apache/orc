@@ -21,11 +21,11 @@
 namespace orc {
 
   MemoryOutputStream::~MemoryOutputStream() {
-    delete[] data;
+    delete[] data_;
   }
 
   void MemoryOutputStream::write(const void* buf, size_t size) {
-    memcpy(data + length, buf, size);
-    length += size;
+    memcpy(data_ + length_, buf, size);
+    length_ += size;
   }
 }  // namespace orc

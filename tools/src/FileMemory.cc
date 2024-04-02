@@ -25,32 +25,32 @@
 
 class TestMemoryPool : public orc::MemoryPool {
  private:
-  std::map<char*, uint64_t> blocks;
-  uint64_t totalMemory;
-  uint64_t maxMemory;
+  std::map<char*, uint64_t> blocks_;
+  uint64_t totalMemory_;
+  uint64_t maxMemory_;
 
  public:
   char* malloc(uint64_t size) override {
     char* p = static_cast<char*>(std::malloc(size));
-    blocks[p] = size;
-    totalMemory += size;
-    if (maxMemory < totalMemory) {
-      maxMemory = totalMemory;
+    blocks_[p] = size;
+    totalMemory_ += size;
+    if (maxMemory_ < totalMemory_) {
+      maxMemory_ = totalMemory_;
     }
     return p;
   }
 
   void free(char* p) override {
     std::free(p);
-    totalMemory -= blocks[p];
-    blocks.erase(p);
+    totalMemory_ -= blocks_[p];
+    blocks_.erase(p);
   }
 
   uint64_t getMaxMemory() {
-    return maxMemory;
+    return maxMemory_;
   }
 
-  TestMemoryPool() : totalMemory(0), maxMemory(0) {}
+  TestMemoryPool() : totalMemory_(0), maxMemory_(0) {}
   ~TestMemoryPool() override;
 };
 

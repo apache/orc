@@ -27,35 +27,35 @@
 namespace orc {
   class MemoryInputStream : public InputStream {
    public:
-    MemoryInputStream(const char* _buffer, size_t _size)
-        : buffer(_buffer), size(_size), naturalReadSize(1024), name("MemoryInputStream") {}
+    MemoryInputStream(const char* buffer, size_t size)
+        : buffer_(buffer), size_(size), naturalReadSize_(1024), name_("MemoryInputStream") {}
 
     ~MemoryInputStream() override;
 
     virtual uint64_t getLength() const override {
-      return size;
+      return size_;
     }
 
     virtual uint64_t getNaturalReadSize() const override {
-      return naturalReadSize;
+      return naturalReadSize_;
     }
 
     virtual void read(void* buf, uint64_t length, uint64_t offset) override {
-      memcpy(buf, buffer + offset, length);
+      memcpy(buf, buffer_ + offset, length);
     }
 
     virtual const std::string& getName() const override {
-      return name;
+      return name_;
     }
 
     const char* getData() const {
-      return buffer;
+      return buffer_;
     }
 
    private:
-    const char* buffer;
-    uint64_t size, naturalReadSize;
-    std::string name;
+    const char* buffer_;
+    uint64_t size_, naturalReadSize_;
+    std::string name_;
   };
 }  // namespace orc
 

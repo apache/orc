@@ -105,7 +105,7 @@ namespace orc {
     // must be non-inline!
     virtual ~RleDecoder();
 
-    RleDecoder(ReaderMetrics* _metrics) : metrics(_metrics) {
+    RleDecoder(ReaderMetrics* metrics) : metrics(metrics) {
       // pass
     }
 

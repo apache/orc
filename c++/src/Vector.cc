@@ -66,8 +66,8 @@ namespace orc {
     // PASS
   }
 
-  EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : StringVectorBatch(_capacity, pool), dictionary(), index(pool, _capacity) {
+  EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool)
+      : StringVectorBatch(capacity, pool), dictionary(), index(pool, capacity) {
     // PASS
   }
 
@@ -88,10 +88,10 @@ namespace orc {
     }
   }
 
-  StringVectorBatch::StringVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : ColumnVectorBatch(_capacity, pool),
-        data(pool, _capacity),
-        length(pool, _capacity),
+  StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool)
+      : ColumnVectorBatch(capacity, pool),
+        data(pool, capacity),
+        length(pool, capacity),
         blob(pool) {
     // PASS
   }
@@ -383,7 +383,7 @@ namespace orc {
                                  readScales.capacity() * sizeof(int64_t));
   }
 
-  Decimal::Decimal(const Int128& _value, int32_t _scale) : value(_value), scale(_scale) {
+  Decimal::Decimal(const Int128& value, int32_t scale) : value(value), scale(scale) {
     // PASS
   }
 
@@ -408,8 +408,8 @@ namespace orc {
     return value.toDecimalString(scale, trimTrailingZeros);
   }
 
-  TimestampVectorBatch::TimestampVectorBatch(uint64_t _capacity, MemoryPool& pool)
-      : ColumnVectorBatch(_capacity, pool), data(pool, _capacity), nanoseconds(pool, _capacity) {
+  TimestampVectorBatch::TimestampVectorBatch(uint64_t capacity, MemoryPool& pool)
+      : ColumnVectorBatch(capacity, pool), data(pool, capacity), nanoseconds(pool, capacity) {
     // PASS
   }
 

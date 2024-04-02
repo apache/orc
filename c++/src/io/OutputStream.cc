@@ -29,11 +29,11 @@ namespace orc {
   }
 
   BufferedOutputStream::BufferedOutputStream(MemoryPool& pool, OutputStream* outStream,
-                                             uint64_t capacity_, uint64_t blockSize_,
-                                             WriterMetrics* metrics_)
-      : outputStream(outStream), blockSize(blockSize_), metrics(metrics_) {
-    dataBuffer.reset(new BlockBuffer(pool, blockSize));
-    dataBuffer->reserve(capacity_);
+                                             uint64_t capacity, uint64_t blockSize,
+                                             WriterMetrics* metrics)
+      : outputStream_(outStream), blockSize_(blockSize), metrics_(metrics) {
+    dataBuffer_.reset(new BlockBuffer(pool, blockSize_));
+    dataBuffer_->reserve(capacity);
   }
 
   BufferedOutputStream::~BufferedOutputStream() {
@@ -41,7 +41,7 @@ namespace orc {
   }
 
   bool BufferedOutputStream::Next(void** buffer, int* size) {
-    auto block = dataBuffer->getNextBlock();
+    auto block = dataBuffer_->getNextBlock();
     if (block.data == nullptr) {
       throw std::logic_error("Failed to get next buffer from block buffer.");
     }
@@ -53,8 +53,8 @@ namespace orc {
   void BufferedOutputStream::BackUp(int count) {
     if (count >= 0) {
       uint64_t unsignedCount = static_cast<uint64_t>(count);
-      if (unsignedCount <= dataBuffer->size()) {
-        dataBuffer->resize(dataBuffer->size() - unsignedCount);
+      if (unsignedCount <= dataBuffer_->size()) {
+        dataBuffer_->resize(dataBuffer_->size() - unsignedCount);
       } else {
         throw std::logic_error("Can't backup that much!");
       }
@@ -62,7 +62,7 @@ namespace orc {
   }
 
   google::protobuf::int64 BufferedOutputStream::ByteCount() const {
-    return static_cast<google::protobuf::int64>(dataBuffer->size());
+    return static_cast<google::protobuf::int64>(dataBuffer_->size());
   }
 
   bool BufferedOutputStream::WriteAliasedRaw(const void*, int) {
@@ -75,67 +75,67 @@ namespace orc {
 
   std::string BufferedOutputStream::getName() const {
     std::ostringstream result;
-    result << "BufferedOutputStream " << dataBuffer->size() << " of " << dataBuffer->capacity();
+    result << "BufferedOutputStream " << dataBuffer_->size() << " of " << dataBuffer_->capacity();
     return result.str();
   }
 
   uint64_t BufferedOutputStream::getSize() const {
-    return dataBuffer->size();
+    return dataBuffer_->size();
   }
 
   uint64_t BufferedOutputStream::flush() {
-    uint64_t dataSize = dataBuffer->size();
+    uint64_t dataSize = dataBuffer_->size();
     // flush data buffer into outputStream
     if (dataSize > 0) {
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
-      dataBuffer->writeTo(outputStream, metrics);
+      dataBuffer_->writeTo(outputStream_, metrics_);
     }
-    dataBuffer->resize(0);
+    dataBuffer_->resize(0);
     return dataSize;
   }
 
   void BufferedOutputStream::suppress() {
-    dataBuffer->resize(0);
+    dataBuffer_->resize(0);
   }
 
   void AppendOnlyBufferedStream::write(const char* data, size_t size) {
     size_t dataOffset = 0;
     while (size > 0) {
-      if (bufferOffset == bufferLength) {
-        if (!outStream->Next(reinterpret_cast<void**>(&buffer), &bufferLength)) {
+      if (bufferOffset_ == bufferLength_) {
+        if (!outStream_->Next(reinterpret_cast<void**>(&buffer_), &bufferLength_)) {
           throw std::logic_error("Failed to allocate buffer.");
         }
-        bufferOffset = 0;
+        bufferOffset_ = 0;
       }
-      size_t len = std::min(static_cast<size_t>(bufferLength - bufferOffset), size);
-      memcpy(buffer + bufferOffset, data + dataOffset, len);
-      bufferOffset += static_cast<int>(len);
+      size_t len = std::min(static_cast<size_t>(bufferLength_ - bufferOffset_), size);
+      memcpy(buffer_ + bufferOffset_, data + dataOffset, len);
+      bufferOffset_ += static_cast<int>(len);
       dataOffset += len;
       size -= len;
     }
   }
 
   uint64_t AppendOnlyBufferedStream::getSize() const {
-    return outStream->getSize();
+    return outStream_->getSize();
   }
 
   uint64_t AppendOnlyBufferedStream::flush() {
-    outStream->BackUp(bufferLength - bufferOffset);
-    bufferOffset = bufferLength = 0;
-    buffer = nullptr;
-    return outStream->flush();
+    outStream_->BackUp(bufferLength_ - bufferOffset_);
+    bufferOffset_ = bufferLength_ = 0;
+    buffer_ = nullptr;
+    return outStream_->flush();
   }
 
   void AppendOnlyBufferedStream::recordPosition(PositionRecorder* recorder) const {
-    uint64_t flushedSize = outStream->getSize();
-    uint64_t unflushedSize = static_cast<uint64_t>(bufferOffset);
-    if (outStream->isCompressed()) {
+    uint64_t flushedSize = outStream_->getSize();
+    uint64_t unflushedSize = static_cast<uint64_t>(bufferOffset_);
+    if (outStream_->isCompressed()) {
       // start of the compression chunk in the stream
       recorder->add(flushedSize);
       // number of decompressed bytes that need to be consumed
       recorder->add(unflushedSize);
     } else {
-      flushedSize -= static_cast<uint64_t>(bufferLength);
+      flushedSize -= static_cast<uint64_t>(bufferLength_);
       // byte offset of the start location
       recorder->add(flushedSize + unflushedSize);
     }

@@ -21,20 +21,20 @@
 
 namespace orc {
 
-  SchemaEvolution::SchemaEvolution(const std::shared_ptr<Type>& _readType, const Type* fileType)
-      : readType(_readType) {
-    if (readType) {
-      buildConversion(readType.get(), fileType);
+  SchemaEvolution::SchemaEvolution(const std::shared_ptr<Type>& readType, const Type* fileType)
+      : readType_(readType) {
+    if (readType_) {
+      buildConversion(readType_.get(), fileType);
     } else {
       for (uint64_t i = 0; i <= fileType->getMaximumColumnId(); ++i) {
-        safePPDConversionMap.insert(i);
+        safePPDConversionMap_.insert(i);
       }
     }
   }
 
   const Type* SchemaEvolution::getReadType(const Type& fileType) const {
-    auto ret = readTypeMap.find(fileType.getColumnId());
-    return ret == readTypeMap.cend() ? &fileType : ret->second;
+    auto ret = readTypeMap_.find(fileType.getColumnId());
+    return ret == readTypeMap_.cend() ? &fileType : ret->second;
   }
 
   inline void invalidConversion(const Type* readType, const Type* fileType) {
@@ -127,22 +127,22 @@ namespace orc {
     return ret;
   }
 
-  void SchemaEvolution::buildConversion(const Type* _readType, const Type* fileType) {
+  void SchemaEvolution::buildConversion(const Type* readType, const Type* fileType) {
     if (fileType == nullptr) {
-      throw SchemaEvolutionError("File does not have " + _readType->toString());
+      throw SchemaEvolutionError("File does not have " + readType->toString());
     }
 
-    auto [valid, convert] = checkConversion(*_readType, *fileType);
+    auto [valid, convert] = checkConversion(*readType, *fileType);
     if (!valid) {
-      invalidConversion(_readType, fileType);
+      invalidConversion(readType, fileType);
     }
-    readTypeMap.emplace(_readType->getColumnId(), convert ? _readType : fileType);
+    readTypeMap_.emplace(readType->getColumnId(), convert ? readType : fileType);
 
     // check whether PPD conversion is safe
-    buildSafePPDConversionMap(_readType, fileType);
+    buildSafePPDConversionMap(readType, fileType);
 
-    for (uint64_t i = 0; i < _readType->getSubtypeCount(); ++i) {
-      auto subType = _readType->getSubtype(i);
+    for (uint64_t i = 0; i < readType->getSubtypeCount(); ++i) {
+      auto subType = readType->getSubtype(i);
       if (subType) {
         // null subType means that this is a sub column of map/list type
         // and it does not exist in the file. simply skip it.
@@ -165,20 +165,20 @@ namespace orc {
     return kind != STRUCT && kind != MAP && kind != LIST && kind != UNION;
   }
 
-  void SchemaEvolution::buildSafePPDConversionMap(const Type* _readType, const Type* fileType) {
-    if (_readType == nullptr || !isPrimitive(_readType) || fileType == nullptr ||
+  void SchemaEvolution::buildSafePPDConversionMap(const Type* readType, const Type* fileType) {
+    if (readType == nullptr || !isPrimitive(readType) || fileType == nullptr ||
         !isPrimitive(fileType)) {
       return;
     }
 
     bool isSafe = false;
-    if (_readType == fileType) {
+    if (readType == fileType) {
       // short cut for same type
       isSafe = true;
-    } else if (_readType->getKind() == DECIMAL && fileType->getKind() == DECIMAL) {
+    } else if (readType->getKind() == DECIMAL && fileType->getKind() == DECIMAL) {
       // for decimals alone do equality check to not mess up with precision change
-      if (fileType->getPrecision() == readType->getPrecision() &&
-          fileType->getScale() == readType->getScale()) {
+      if (fileType->getPrecision() == readType_->getPrecision() &&
+          fileType->getScale() == readType_->getScale()) {
         isSafe = true;
       }
     } else {
@@ -196,32 +196,32 @@ namespace orc {
       // as ORC stores char with padded spaces in its internal index.
       switch (fileType->getKind()) {
         case BYTE: {
-          if (readType->getKind() == SHORT || readType->getKind() == INT ||
-              readType->getKind() == LONG) {
+          if (readType_->getKind() == SHORT || readType_->getKind() == INT ||
+              readType_->getKind() == LONG) {
             isSafe = true;
           }
           break;
         }
         case SHORT: {
-          if (readType->getKind() == INT || readType->getKind() == LONG) {
+          if (readType_->getKind() == INT || readType_->getKind() == LONG) {
             isSafe = true;
           }
           break;
         }
         case INT: {
-          if (readType->getKind() == LONG) {
+          if (readType_->getKind() == LONG) {
             isSafe = true;
           }
           break;
         }
         case STRING: {
-          if (readType->getKind() == VARCHAR) {
+          if (readType_->getKind() == VARCHAR) {
             isSafe = true;
           }
           break;
         }
         case VARCHAR: {
-          if (readType->getKind() == STRING) {
+          if (readType_->getKind() == STRING) {
             isSafe = true;
           }
           break;
@@ -245,12 +245,12 @@ namespace orc {
     }
 
     if (isSafe) {
-      safePPDConversionMap.insert(fileType->getColumnId());
+      safePPDConversionMap_.insert(fileType->getColumnId());
     }
   }
 
   bool SchemaEvolution::isSafePPDConversion(uint64_t columnId) const {
-    return safePPDConversionMap.find(columnId) != safePPDConversionMap.cend();
+    return safePPDConversionMap_.find(columnId) != safePPDConversionMap_.cend();
   }
 
 }  // namespace orc

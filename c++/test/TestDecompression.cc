@@ -601,33 +601,33 @@ namespace orc {
 #define HEADER_SIZE 3
 
   class CompressBuffer {
-    std::vector<char> buf;
+    std::vector<char> buf_;
 
    public:
-    CompressBuffer(size_t capacity) : buf(capacity + HEADER_SIZE) {}
+    CompressBuffer(size_t capacity) : buf_(capacity + HEADER_SIZE) {}
 
     char* getCompressed() {
-      return buf.data() + HEADER_SIZE;
+      return buf_.data() + HEADER_SIZE;
     }
     char* getBuffer() {
-      return buf.data();
+      return buf_.data();
     }
 
     void writeHeader(size_t compressedSize) {
-      buf[0] = static_cast<char>(compressedSize << 1);
-      buf[1] = static_cast<char>(compressedSize >> 7);
-      buf[2] = static_cast<char>(compressedSize >> 15);
+      buf_[0] = static_cast<char>(compressedSize << 1);
+      buf_[1] = static_cast<char>(compressedSize >> 7);
+      buf_[2] = static_cast<char>(compressedSize >> 15);
     }
 
     void writeUncompressedHeader(size_t compressedSize) {
       writeHeader(compressedSize);
-      buf[0] |= 1;
+      buf_[0] |= 1;
     }
 
     size_t getCompressedSize() const {
-      size_t header = static_cast<unsigned char>(buf[0]);
-      header |= static_cast<size_t>(static_cast<unsigned char>(buf[1])) << 8;
-      header |= static_cast<size_t>(static_cast<unsigned char>(buf[2])) << 16;
+      size_t header = static_cast<unsigned char>(buf_[0]);
+      header |= static_cast<size_t>(static_cast<unsigned char>(buf_[1])) << 8;
+      header |= static_cast<size_t>(static_cast<unsigned char>(buf_[2])) << 16;
       return header >> 1;
     }
 
