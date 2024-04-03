@@ -35,6 +35,7 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
   std::string line;
   orc::ColumnPrinter::Param param;
   param.printDecimalAsString = true;
+  param.printDecimalTrimTrailingZeros = true;
   std::unique_ptr<orc::ColumnPrinter> printer =
       createColumnPrinter(line, &rowReader->getSelectedType(), param);
 

@@ -43,6 +43,7 @@ namespace orc {
     virtual void reset(const ColumnVectorBatch& batch);
     struct Param {
       bool printDecimalAsString = false;
+      bool printDecimalTrimTrailingZeros = false;
     };
   };
 

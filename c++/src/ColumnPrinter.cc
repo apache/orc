@@ -17,6 +17,7 @@
  */
 
 #include "orc/ColumnPrinter.hh"
+#include "orc/Int128.hh"
 #include "orc/orc-config.hh"
 
 #include "Adaptor.hh"
@@ -360,44 +361,21 @@ namespace orc {
     scale_ = dynamic_cast<const Decimal64VectorBatch&>(batch).scale;
   }
 
-  std::string toDecimalString(int64_t value, int32_t scale) {
-    std::stringstream buffer;
-    if (scale == 0) {
-      buffer << value;
-      return buffer.str();
-    }
-    std::string sign = "";
-    if (value < 0) {
-      sign = "-";
-      value = -value;
-    }
-    buffer << value;
-    std::string str = buffer.str();
-    int32_t len = static_cast<int32_t>(str.length());
-    if (len > scale) {
-      return sign + str.substr(0, static_cast<size_t>(len - scale)) + "." +
-             str.substr(static_cast<size_t>(len - scale), static_cast<size_t>(scale));
-    } else if (len == scale) {
-      return sign + "0." + str;
-    } else {
-      std::string result = sign + "0.";
-      for (int32_t i = 0; i < scale - len; ++i) {
-        result += "0";
-      }
-      return result + str;
-    }
+  std::string toDecimalString(int64_t value, int32_t scale, bool trimTrailingZeros) {
+    return Int128(value).toDecimalString(scale, trimTrailingZeros);
   }
 
   void Decimal64ColumnPrinter::printRow(uint64_t rowId) {
     if (hasNulls && !notNull[rowId]) {
       writeString(buffer, "null");
     } else {
+      bool trimTrailingZeros = param_.printDecimalTrimTrailingZeros;
       if (param_.printDecimalAsString) {
         writeChar(buffer, '"');
-        writeString(buffer, toDecimalString(data_[rowId], scale_).c_str());
+        writeString(buffer, toDecimalString(data_[rowId], scale_, trimTrailingZeros).c_str());
         writeChar(buffer, '"');
       } else {
-        writeString(buffer, toDecimalString(data_[rowId], scale_).c_str());
+        writeString(buffer, toDecimalString(data_[rowId], scale_, trimTrailingZeros).c_str());
       }
     }
   }
@@ -417,12 +395,13 @@ namespace orc {
     if (hasNulls && !notNull[rowId]) {
       writeString(buffer, "null");
     } else {
+      bool trimTrailingZeros = param_.printDecimalTrimTrailingZeros;
       if (param_.printDecimalAsString) {
         writeChar(buffer, '"');
-        writeString(buffer, data_[rowId].toDecimalString(scale_).c_str());
+        writeString(buffer, data_[rowId].toDecimalString(scale_, trimTrailingZeros).c_str());
         writeChar(buffer, '"');
       } else {
-        writeString(buffer, data_[rowId].toDecimalString(scale_).c_str());
+        writeString(buffer, data_[rowId].toDecimalString(scale_, trimTrailingZeros).c_str());
       }
     }
   }
