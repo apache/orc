@@ -1216,7 +1216,7 @@ the Hive type model.
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
 DIRECT        | PRESENT         | Yes      | Boolean RLE
-              | DIRECT          | No       | Byte RLE
+              | DATA            | No       | Byte RLE
 
 # Indexes
 
