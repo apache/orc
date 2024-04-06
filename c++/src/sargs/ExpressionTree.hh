@@ -74,10 +74,10 @@ namespace orc {
     TruthValue evaluate(const std::vector<TruthValue>& leaves) const;
 
    private:
-    Operator mOperator_;
-    std::vector<TreeNode> mChildren_;
-    size_t mLeaf_;
-    TruthValue mConstant_;
+    Operator operator_;
+    std::vector<TreeNode> children_;
+    size_t leaf_;
+    TruthValue constant_;
   };
 
 }  // namespace orc

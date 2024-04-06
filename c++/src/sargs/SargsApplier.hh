@@ -75,30 +75,30 @@ namespace orc {
      * Only valid after invoking pickRowGroups().
      */
     const std::vector<uint64_t>& getNextSkippedRows() const {
-      return mNextSkippedRows_;
+      return nextSkippedRows_;
     }
 
     /**
      * Indicate whether any row group is selected in the last evaluation
      */
     bool hasSelected() const {
-      return mHasSelected_;
+      return hasSelected_;
     }
 
     /**
      * Indicate whether any row group is skipped in the last evaluation
      */
     bool hasSkipped() const {
-      return mHasSkipped_;
+      return hasSkipped_;
     }
 
     /**
      * Whether any row group from current row in the stripe matches PPD.
      */
     bool hasSelectedFrom(uint64_t currentRowInStripe) const {
-      uint64_t rg = currentRowInStripe / mRowIndexStride_;
-      for (; rg < mNextSkippedRows_.size(); ++rg) {
-        if (mNextSkippedRows_[rg]) {
+      uint64_t rg = currentRowInStripe / rowIndexStride_;
+      for (; rg < nextSkippedRows_.size(); ++rg) {
+        if (nextSkippedRows_[rg]) {
           return true;
         }
       }
@@ -106,9 +106,9 @@ namespace orc {
     }
 
     std::pair<uint64_t, uint64_t> getStats() const {
-      if (mMetrics_ != nullptr) {
-        return std::make_pair(mMetrics_->SelectedRowGroupCount.load(),
-                              mMetrics_->EvaluatedRowGroupCount.load());
+      if (metrics_ != nullptr) {
+        return std::make_pair(metrics_->SelectedRowGroupCount.load(),
+                              metrics_->EvaluatedRowGroupCount.load());
       } else {
         return {0, 0};
       }
@@ -125,27 +125,27 @@ namespace orc {
     static uint64_t findColumn(const Type& type, const std::string& colName);
 
    private:
-    const Type& mType_;
-    const SearchArgument* mSearchArgument_;
-    const SchemaEvolution* mSchemaEvolution_;
-    uint64_t mRowIndexStride_;
-    WriterVersion mWriterVersion_;
+    const Type& type_;
+    const SearchArgument* searchArgument_;
+    const SchemaEvolution* schemaEvolution_;
+    uint64_t rowIndexStride_;
+    WriterVersion writerVersion_;
     // column ids for each predicate leaf in the search argument
-    std::vector<uint64_t> mFilterColumns_;
+    std::vector<uint64_t> filterColumns_;
 
     // Map from RowGroup index to the next skipped row of the selected range it
     // locates. If the RowGroup is not selected, set the value to 0.
     // Calculated in pickRowGroups().
-    std::vector<uint64_t> mNextSkippedRows_;
-    uint64_t mTotalRowsInStripe_;
-    bool mHasSelected_;
-    bool mHasSkipped_;
+    std::vector<uint64_t> nextSkippedRows_;
+    uint64_t totalRowsInStripe_;
+    bool hasSelected_;
+    bool hasSkipped_;
     // store result of file stats evaluation
-    bool mHasEvaluatedFileStats_;
-    bool mFileStatsEvalResult_;
+    bool hasEvaluatedFileStats_;
+    bool fileStatsEvalResult_;
     // use the SelectedRowGroupCount and EvaluatedRowGroupCount to
     // keep stats of selected RGs and evaluated RGs
-    ReaderMetrics* mMetrics_;
+    ReaderMetrics* metrics_;
   };
 
 }  // namespace orc
