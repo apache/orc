@@ -114,8 +114,8 @@ namespace orc {
         nextSkippedRowGroup = rowGroup;
       } else {
         nextSkippedRows_[rowGroup] = (nextSkippedRowGroup == groupsInStripe)
-                                          ? rowsInStripe
-                                          : (nextSkippedRowGroup * rowIndexStride_);
+                                         ? rowsInStripe
+                                         : (nextSkippedRowGroup * rowIndexStride_);
       }
       hasSelected_ |= needed;
       hasSkipped_ |= !needed;

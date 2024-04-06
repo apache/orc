@@ -238,8 +238,8 @@ namespace orc {
     size_t value = 0;
     std::for_each(literals_.cbegin(), literals_.cend(),
                   [&](const Literal& literal) { value = value * 17 + literal.getHashCode(); });
-    auto colHash = hasColumnName_ ? std::hash<std::string>{}(columnName_)
-                                   : std::hash<uint64_t>{}(columnId_);
+    auto colHash =
+        hasColumnName_ ? std::hash<std::string>{}(columnName_) : std::hash<uint64_t>{}(columnId_);
     return value * 103 * 101 * 3 * 17 + std::hash<int>{}(static_cast<int>(operator_)) +
            std::hash<int>{}(static_cast<int>(type_)) * 17 + colHash * 3 * 17;
   }

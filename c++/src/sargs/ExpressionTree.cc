@@ -35,10 +35,7 @@ namespace orc {
   }
 
   ExpressionTree::ExpressionTree(size_t leaf)
-      : operator_(Operator::LEAF),
-        children_(),
-        leaf_(leaf),
-        constant_(TruthValue::YES_NO_NULL) {
+      : operator_(Operator::LEAF), children_(), leaf_(leaf), constant_(TruthValue::YES_NO_NULL) {
     // PASS
   }
 
