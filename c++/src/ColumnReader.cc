@@ -1183,7 +1183,7 @@ namespace orc {
     std::unique_ptr<ByteRleDecoder> rle_;
     std::vector<std::unique_ptr<ColumnReader>> childrenReader_;
     std::vector<int64_t> childrenCounts_;
-    uint64_t nuchildren_;
+    uint64_t numChildren_;
 
    public:
     UnionColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false,
@@ -1206,9 +1206,9 @@ namespace orc {
                                        bool useTightNumericVector,
                                        bool throwOnSchemaEvolutionOverflow)
       : ColumnReader(type, stripe) {
-    nuchildren_ = type.getSubtypeCount();
-    childrenReader_.resize(nuchildren_);
-    childrenCounts_.resize(nuchildren_);
+    numChildren_ = type.getSubtypeCount();
+    childrenReader_.resize(numChildren_);
+    childrenCounts_.resize(numChildren_);
 
     std::unique_ptr<SeekableInputStream> stream =
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
@@ -1216,7 +1216,7 @@ namespace orc {
     rle_ = createByteRleDecoder(std::move(stream), metrics);
     // figure out which types are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
-    for (unsigned int i = 0; i < nuchildren_; ++i) {
+    for (unsigned int i = 0; i < numChildren_; ++i) {
       const Type& child = *type.getSubtype(i);
       if (selectedColumns[static_cast<size_t>(child.getColumnId())]) {
         childrenReader_[i] =
@@ -1231,7 +1231,7 @@ namespace orc {
     char buffer[BUFFER_SIZE];
     uint64_t lengthsRead = 0;
     int64_t* counts = childrenCounts_.data();
-    memset(counts, 0, sizeof(int64_t) * nuchildren_);
+    memset(counts, 0, sizeof(int64_t) * numChildren_);
     while (lengthsRead < numValues) {
       uint64_t chunk = std::min(numValues - lengthsRead, BUFFER_SIZE);
       rle_->next(buffer, chunk, nullptr);
@@ -1240,7 +1240,7 @@ namespace orc {
       }
       lengthsRead += chunk;
     }
-    for (size_t i = 0; i < nuchildren_; ++i) {
+    for (size_t i = 0; i < numChildren_; ++i) {
       if (counts[i] != 0 && childrenReader_[i] != nullptr) {
         childrenReader_[i]->skip(static_cast<uint64_t>(counts[i]));
       }
@@ -1264,7 +1264,7 @@ namespace orc {
     UnionVectorBatch& unionBatch = dynamic_cast<UnionVectorBatch&>(rowBatch);
     uint64_t* offsets = unionBatch.offsets.data();
     int64_t* counts = childrenCounts_.data();
-    memset(counts, 0, sizeof(int64_t) * nuchildren_);
+    memset(counts, 0, sizeof(int64_t) * numChildren_);
     unsigned char* tags = unionBatch.tags.data();
     notNull = unionBatch.hasNulls ? unionBatch.notNull.data() : nullptr;
     rle_->next(reinterpret_cast<char*>(tags), numValues, notNull);
@@ -1281,7 +1281,7 @@ namespace orc {
       }
     }
     // read the right number of each child column
-    for (size_t i = 0; i < nuchildren_; ++i) {
+    for (size_t i = 0; i < numChildren_; ++i) {
       if (childrenReader_[i] != nullptr) {
         if (encoded) {
           childrenReader_[i]->nextEncoded(*(unionBatch.children[i]),
@@ -1298,7 +1298,7 @@ namespace orc {
       std::unordered_map<uint64_t, PositionProvider>& positions) {
     ColumnReader::seekToRowGroup(positions);
     rle_->seek(positions.at(columnId));
-    for (size_t i = 0; i < nuchildren_; ++i) {
+    for (size_t i = 0; i < numChildren_; ++i) {
       if (childrenReader_[i] != nullptr) {
         childrenReader_[i]->seekToRowGroup(positions);
       }

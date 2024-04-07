@@ -547,8 +547,8 @@ namespace orc {
     DecimalConvertColumnReader(const Type& readType, const Type& fileType, StripeStreams& stripe,
                                bool throwOnOverflow)
         : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {
-      froprecision_ = fileType.getPrecision();
-      froscale_ = fileType.getScale();
+      fromPrecision_ = fileType.getPrecision();
+      fromScale_ = fileType.getScale();
       toPrecision_ = readType.getPrecision();
       toScale_ = readType.getScale();
     }
@@ -572,7 +572,7 @@ namespace orc {
       using ReadType = decltype(dstBatch.values[idx]);
 
       auto [overflows, resultI128] =
-          convertDecimal(srcBatch.values[idx], froscale_, toPrecision_, toScale_);
+          convertDecimal(srcBatch.values[idx], fromScale_, toPrecision_, toScale_);
       if (overflows) {
         handleOverflow<FileType, ReadType>(dstBatch, idx, throwOnOverflow);
       }
@@ -587,8 +587,8 @@ namespace orc {
       }
     }
 
-    int32_t froprecision_;
-    int32_t froscale_;
+    int32_t fromPrecision_;
+    int32_t fromScale_;
     int32_t toPrecision_;
     int32_t toScale_;
   };
