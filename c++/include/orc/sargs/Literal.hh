@@ -130,15 +130,15 @@ namespace orc {
      * Check if a literal is null
      */
     bool isNull() const {
-      return mIsNull_;
+      return isNull_;
     }
 
     PredicateDataType getType() const {
-      return mType_;
+      return type_;
     }
     std::string toString() const;
     size_t getHashCode() const {
-      return mHashCode_;
+      return hashCode_;
     }
 
    private:
@@ -158,13 +158,13 @@ namespace orc {
     };
 
    private:
-    LiteralVal mValue_;        // data value for this literal if not null
-    PredicateDataType mType_;  // data type of the literal
-    size_t mSize_;             // size of mValue if it is Buffer
-    int32_t mPrecision_;       // precision of decimal type
-    int32_t mScale_;           // scale of decimal type
-    bool mIsNull_;             // whether this literal is null
-    size_t mHashCode_;         // precomputed hash code for the literal
+    LiteralVal value_;        // data value for this literal if not null
+    PredicateDataType type_;  // data type of the literal
+    size_t size_;             // size of mValue if it is Buffer
+    int32_t precision_;       // precision of decimal type
+    int32_t scale_;           // scale of decimal type
+    bool isNull_;             // whether this literal is null
+    size_t hashCode_;         // precomputed hash code for the literal
   };
 
 }  // namespace orc
