@@ -437,4 +437,29 @@ namespace orc {
     }
   }
 
+  TEST(TestTimezone, testTzdbFromCondaEnv) {
+    const char* tzDirBackup = std::getenv("TZDIR");
+    // test only makes sense if TZDIR exists
+    if (tzDirBackup != nullptr) {
+      ASSERT_TRUE(delEnv("TZDIR"));
+
+      // remove "/share/zoneinfo" from TZDIR to get (equivalent of) CONDA_PREFIX
+      std::string condaPrefix(tzDirBackup)
+      condaPrefix += "/../.."
+      ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
+
+      // small sample to ensure tzbd loads correctly with CONDA_PREFIX, even without TZDIR
+      const Timezone* la1 = &getTimezoneByName("America/Los_Angeles");
+      const Timezone* la2 = &getTimezoneByName("America/Los_Angeles");
+      EXPECT_EQ(la1, la2);
+      EXPECT_EQ("PST", getVariantFromZone(*la1, "1974-01-06 09:59:59"));
+      EXPECT_EQ("PDT", getVariantFromZone(*la1, "1974-01-06 10:00:00"));
+      EXPECT_EQ("PDT", getVariantFromZone(*la1, "1974-10-27 08:59:59"));
+      EXPECT_EQ("PST", getVariantFromZone(*la1, "1974-10-27 09:00:00"));
+
+      ASSERT_TRUE(delEnv("CONDA_PREFIX"));
+      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
+    }
+  }
+
 }  // namespace orc
