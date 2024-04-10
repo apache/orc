@@ -420,9 +420,20 @@ namespace orc {
 #endif
   }
 
+  char * deepcopy(const char* name) {
+    // this allocates a new buffer that must be freed after use
+#ifdef _MSC_VER
+    return _strdup(name);
+#else
+    return strdup(name);
+#endif
+  }
+
   TEST(TestTimezone, testMissingTZDB) {
-    const char* tzDirBackup = std::getenv("TZDIR");
-    if (tzDirBackup != nullptr) {
+    const char* tzDir = std::getenv("TZDIR");
+    char* tzDirBackup = nullptr;
+    if (tzDir != nullptr) {
+      tzDirBackup = deepcopy(tzDir);
       ASSERT_TRUE(delEnv("TZDIR"));
     }
     ASSERT_TRUE(setEnv("TZDIR", "/path/to/wrong/tzdb"));
@@ -432,15 +443,17 @@ namespace orc {
                     " Please install IANA time zone database and set TZDIR env.")));
     if (tzDirBackup != nullptr) {
       ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
+      free(tzDirBackup);
     } else {
       ASSERT_TRUE(delEnv("TZDIR"));
     }
   }
 
   TEST(TestTimezone, testTzdbFromCondaEnv) {
-    const char* tzDirBackup = std::getenv("TZDIR");
+    const char* tzDir = std::getenv("TZDIR");
     // test only makes sense if TZDIR exists
-    if (tzDirBackup != nullptr) {
+    if (tzDir != nullptr) {
+      char* tzDirBackup = deepcopy(tzDir);
       // remove "/share/zoneinfo" from TZDIR (as set through TZDATA_DIR) to get
       // the equivalent of CONDA_PREFIX, relative to the location of the tzdb
       std::string condaPrefix(tzDirBackup);
@@ -459,6 +472,7 @@ namespace orc {
 
       ASSERT_TRUE(delEnv("CONDA_PREFIX"));
       ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
+      free(tzDirBackup);
     }
   }
 
