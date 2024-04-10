@@ -421,21 +421,13 @@ namespace orc {
 #endif
   }
 
-  char* deepcopy(const char* name) {
-    // this allocates a new buffer that must be freed after use
-#ifdef _MSC_VER
-    return _strdup(name);
-#else
-    return strdup(name);
-#endif
-  }
-
   TEST(TestTimezone, testMissingTZDB) {
     const char* tzDir = std::getenv("TZDIR");
-    char* tzDirBackup = nullptr;
+    std::string tzDirBackup = nullptr;
     if (tzDir != nullptr) {
-      // avoid that unsetting environment variable wrecks pointer to tzDir
-      tzDirBackup = deepcopy(tzDir);
+      // std::string creates a deepcopy of buffer, which avoids that
+      // unsetting environment variable wrecks pointer to tzDir
+      tzDirBackup = tzDir;
       ASSERT_TRUE(delEnv("TZDIR"));
     }
     ASSERT_TRUE(setEnv("TZDIR", "/path/to/wrong/tzdb"));
@@ -444,8 +436,7 @@ namespace orc {
                     "Time zone file /path/to/wrong/tzdb/America/Los_Angeles does not exist."
                     " Please install IANA time zone database and set TZDIR env.")));
     if (tzDirBackup != nullptr) {
-      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
-      free(tzDirBackup);
+      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup.c_str()));
     } else {
       ASSERT_TRUE(delEnv("TZDIR"));
     }
@@ -455,7 +446,7 @@ namespace orc {
     const char* tzDir = std::getenv("TZDIR");
     // test only makes sense if TZDIR exists
     if (tzDir != nullptr) {
-      char* tzDirBackup = deepcopy(tzDir);
+      std::string tzDirBackup = tzDir;
       ASSERT_TRUE(delEnv("TZDIR"));
 
       // remove "/share/zoneinfo" from TZDIR (as set through TZDATA_DIR in CI) to
@@ -488,8 +479,7 @@ namespace orc {
 
       // restore state of environment variables
       ASSERT_TRUE(delEnv("CONDA_PREFIX"));
-      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
-      free(tzDirBackup);
+      ASSERT_TRUE(setEnv("TZDIR", tzDirBackup.c_str()));
     }
   }
 

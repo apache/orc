@@ -669,8 +669,7 @@ namespace orc {
         dir = DEFAULT_TZDIR;
       }
     }
-    std::string tzDir(dir);
-    return tzDir;
+    return dir;
   }
 
   /**
