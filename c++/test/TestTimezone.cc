@@ -476,13 +476,13 @@ namespace orc {
       // CONDA_PREFIX contains backslashes on windows; test that this doesn't blow up
       std::replace(condaPrefix.begin(), condaPrefix.end(), '/', '\\');
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
-      const Timezone* la1 = &getTimezoneByName("America/Los_Angeles");
-      const Timezone* la2 = &getTimezoneByName("America/Los_Angeles");
-      EXPECT_EQ(la1, la2);
-      EXPECT_EQ("PST", getVariantFromZone(*la1, "1974-01-06 09:59:59"));
-      EXPECT_EQ("PDT", getVariantFromZone(*la1, "1974-01-06 10:00:00"));
-      EXPECT_EQ("PDT", getVariantFromZone(*la1, "1974-10-27 08:59:59"));
-      EXPECT_EQ("PST", getVariantFromZone(*la1, "1974-10-27 09:00:00"));
+      const Timezone* la3 = &getTimezoneByName("America/Los_Angeles");
+      const Timezone* la4 = &getTimezoneByName("America/Los_Angeles");
+      EXPECT_EQ(la3, la4);
+      EXPECT_EQ("PST", getVariantFromZone(*la3, "1974-01-06 09:59:59"));
+      EXPECT_EQ("PDT", getVariantFromZone(*la3, "1974-01-06 10:00:00"));
+      EXPECT_EQ("PDT", getVariantFromZone(*la3, "1974-10-27 08:59:59"));
+      EXPECT_EQ("PST", getVariantFromZone(*la3, "1974-10-27 09:00:00"));
 
       ASSERT_TRUE(delEnv("CONDA_PREFIX"));
       ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
