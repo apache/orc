@@ -454,6 +454,8 @@ namespace orc {
     // test only makes sense if TZDIR exists
     if (tzDir != nullptr) {
       char* tzDirBackup = deepcopy(tzDir);
+      ASSERT_TRUE(delEnv("TZDIR"));
+
       // remove "/share/zoneinfo" from TZDIR (as set through TZDATA_DIR) to get
       // the equivalent of CONDA_PREFIX, relative to the location of the tzdb
       std::string condaPrefix(tzDirBackup);
@@ -461,7 +463,6 @@ namespace orc {
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
 
       // small sample to ensure tzbd loads correctly with CONDA_PREFIX, even without TZDIR
-      ASSERT_TRUE(delEnv("TZDIR"));
       const Timezone* la1 = &getTimezoneByName("America/Los_Angeles");
       const Timezone* la2 = &getTimezoneByName("America/Los_Angeles");
       EXPECT_EQ(la1, la2);
