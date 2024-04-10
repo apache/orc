@@ -433,6 +433,7 @@ namespace orc {
     const char* tzDir = std::getenv("TZDIR");
     char* tzDirBackup = nullptr;
     if (tzDir != nullptr) {
+      // avoid that unsetting environment variable wrecks pointer to tzDir
       tzDirBackup = deepcopy(tzDir);
       ASSERT_TRUE(delEnv("TZDIR"));
     }
