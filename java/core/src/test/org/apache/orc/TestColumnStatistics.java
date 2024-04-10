@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -697,6 +698,28 @@ public class TestColumnStatistics {
         "Incorrect maximum value");
     assertEquals(new BigDecimal("-88888.88"), statistics.getMaximum().bigDecimalValue(),
         "Incorrect minimum value");
+  }
+
+  @Test
+  public void testBinaryMerge() {
+    TypeDescription schema = TypeDescription.createBinary();
+
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.increment(3);
+    stats1.updateBinary(new BytesWritable("bob".getBytes(StandardCharsets.UTF_8)));
+    stats1.updateBinary(new BytesWritable("david".getBytes(StandardCharsets.UTF_8)));
+    stats1.updateBinary(new BytesWritable("charles".getBytes(StandardCharsets.UTF_8)));
+    stats2.increment(2);
+    stats2.updateBinary(new BytesWritable("anne".getBytes(StandardCharsets.UTF_8)));
+    stats2.updateBinary(new BytesWritable("abcdef".getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(15, ((BinaryColumnStatistics) stats1).getSum());
+    assertEquals(10, ((BinaryColumnStatistics) stats2).getSum());
+
+    stats1.merge(stats2);
+
+    assertEquals(25, ((BinaryColumnStatistics) stats1).getSum());
   }
 
 
