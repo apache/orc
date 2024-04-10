@@ -660,11 +660,11 @@ namespace orc {
     const char* dir = getenv("TZDIR");
     if (!dir) {
       // this is present if we're in an activated conda environment
-      const char* conda_prefix = getenv("CONDA_PREFIX");
-      if (conda_prefix) {
-        std::string conda_dir(conda_prefix);
-        conda_dir += "/share/zoneinfo";
-        dir = conda_dir.c_str();
+      const char* condaPrefix = getenv("CONDA_PREFIX");
+      if (condaPrefix) {
+        std::string condaDir(condaPrefix);
+        condaDir += "/share/zoneinfo";
+        dir = condaDir.c_str();
       } else {
         dir = DEFAULT_TZDIR;
       }
