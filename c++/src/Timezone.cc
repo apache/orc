@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <filesystem>
 #include <map>
 #include <sstream>
 
@@ -675,7 +674,7 @@ namespace orc {
     if (itr != timezoneCache.end()) {
       return *(itr->second).get();
     }
-    if (!std::filesystem::exists(std::filesystem::path(filename))) {
+    if (!fileExists(filename.c_str())) {
       std::stringstream ss;
       ss << "Time zone file " << filename << " does not exist."
          << " Please install IANA time zone database and set TZDIR env.";
