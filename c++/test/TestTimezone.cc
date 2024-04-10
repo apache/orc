@@ -444,8 +444,8 @@ namespace orc {
       ASSERT_TRUE(delEnv("TZDIR"));
 
       // remove "/share/zoneinfo" from TZDIR to get (equivalent of) CONDA_PREFIX
-      std::string condaPrefix(tzDirBackup)
-      condaPrefix += "/../.."
+      std::string condaPrefix(tzDirBackup);
+      condaPrefix += "/../..";
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
 
       // small sample to ensure tzbd loads correctly with CONDA_PREFIX, even without TZDIR
