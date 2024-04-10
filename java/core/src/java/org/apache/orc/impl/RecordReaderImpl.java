@@ -575,43 +575,35 @@ public class RecordReaderImpl implements RecordReader {
                                   boolean useUTCTimestamp) {
     if (index.getNumberOfValues() == 0) {
       return new ValueRange<>(predicate, index.hasNull());
-    } else if (index instanceof IntegerColumnStatistics) {
-      IntegerColumnStatistics stats = (IntegerColumnStatistics) index;
+    } else if (index instanceof IntegerColumnStatistics stats) {
       Long min = stats.getMinimum();
       Long max = stats.getMaximum();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    } else if (index instanceof CollectionColumnStatistics) {
-      CollectionColumnStatistics stats = (CollectionColumnStatistics) index;
+    } else if (index instanceof CollectionColumnStatistics stats) {
       Long min = stats.getMinimumChildren();
       Long max = stats.getMaximumChildren();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    }else if (index instanceof DoubleColumnStatistics) {
-      DoubleColumnStatistics stats = (DoubleColumnStatistics) index;
+    }else if (index instanceof DoubleColumnStatistics stats) {
       Double min = stats.getMinimum();
       Double max = stats.getMaximum();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    } else if (index instanceof StringColumnStatistics) {
-      StringColumnStatistics stats = (StringColumnStatistics) index;
+    } else if (index instanceof StringColumnStatistics stats) {
       return new ValueRange<>(predicate, stats.getLowerBound(),
           stats.getUpperBound(), stats.hasNull(), stats.getMinimum() == null,
           stats.getMaximum() == null);
-    } else if (index instanceof DateColumnStatistics) {
-      DateColumnStatistics stats = (DateColumnStatistics) index;
+    } else if (index instanceof DateColumnStatistics stats) {
       ChronoLocalDate min = stats.getMinimumLocalDate();
       ChronoLocalDate max = stats.getMaximumLocalDate();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    } else if (index instanceof DecimalColumnStatistics) {
-      DecimalColumnStatistics stats = (DecimalColumnStatistics) index;
+    } else if (index instanceof DecimalColumnStatistics stats) {
       HiveDecimal min = stats.getMinimum();
       HiveDecimal max = stats.getMaximum();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    } else if (index instanceof TimestampColumnStatistics) {
-      TimestampColumnStatistics stats = (TimestampColumnStatistics) index;
+    } else if (index instanceof TimestampColumnStatistics stats) {
       Timestamp min = useUTCTimestamp ? stats.getMinimumUTC() : stats.getMinimum();
       Timestamp max = useUTCTimestamp ? stats.getMaximumUTC() : stats.getMaximum();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    } else if (index instanceof BooleanColumnStatistics) {
-      BooleanColumnStatistics stats = (BooleanColumnStatistics) index;
+    } else if (index instanceof BooleanColumnStatistics stats) {
       Boolean min = stats.getFalseCount() == 0;
       Boolean max = stats.getTrueCount() != 0;
       return new ValueRange<>(predicate, min, max, stats.hasNull());
