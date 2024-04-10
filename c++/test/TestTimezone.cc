@@ -420,7 +420,7 @@ namespace orc {
 #endif
   }
 
-  char * deepcopy(const char* name) {
+  char* deepcopy(const char* name) {
     // this allocates a new buffer that must be freed after use
 #ifdef _MSC_VER
     return _strdup(name);
