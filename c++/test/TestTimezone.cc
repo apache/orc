@@ -21,8 +21,8 @@
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
@@ -458,13 +458,13 @@ namespace orc {
       char* tzDirBackup = deepcopy(tzDir);
       ASSERT_TRUE(delEnv("TZDIR"));
 
-      // remove "/share/zoneinfo" from TZDIR (as set through TZDATA_DIR) to get
-      // the equivalent of CONDA_PREFIX, relative to the location of the tzdb
+      // remove "/share/zoneinfo" from TZDIR (as set through TZDATA_DIR in CI) to
+      // get the equivalent of CONDA_PREFIX, relative to the location of the tzdb
       std::string condaPrefix(tzDirBackup);
       condaPrefix += "/../..";
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
 
-      // small sample to ensure tzbd loads correctly with CONDA_PREFIX, even without TZDIR
+      // small test sample to ensure tzbd loads with CONDA_PREFIX, even without TZDIR
       const Timezone* la1 = &getTimezoneByName("America/Los_Angeles");
       const Timezone* la2 = &getTimezoneByName("America/Los_Angeles");
       EXPECT_EQ(la1, la2);
@@ -476,6 +476,8 @@ namespace orc {
       // CONDA_PREFIX contains backslashes on windows; test that this doesn't blow up
       std::replace(condaPrefix.begin(), condaPrefix.end(), '/', '\\');
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
+
+      // as above
       const Timezone* la3 = &getTimezoneByName("America/Los_Angeles");
       const Timezone* la4 = &getTimezoneByName("America/Los_Angeles");
       EXPECT_EQ(la3, la4);
@@ -484,6 +486,7 @@ namespace orc {
       EXPECT_EQ("PDT", getVariantFromZone(*la3, "1974-10-27 08:59:59"));
       EXPECT_EQ("PST", getVariantFromZone(*la3, "1974-10-27 09:00:00"));
 
+      // restore state of environment variables
       ASSERT_TRUE(delEnv("CONDA_PREFIX"));
       ASSERT_TRUE(setEnv("TZDIR", tzDirBackup));
       free(tzDirBackup);
