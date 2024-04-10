@@ -993,8 +993,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void merge(ColumnStatisticsImpl other) {
-      if (other instanceof BinaryColumnStatistics) {
-        BinaryStatisticsImpl bin = (BinaryStatisticsImpl) other;
+      if (other instanceof BinaryStatisticsImpl bin) {
         sum += bin.sum;
       } else {
         if (isStatsExists() && sum != 0) {
