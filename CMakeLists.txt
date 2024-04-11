@@ -210,3 +210,5 @@ if (BUILD_CPP_TESTS)
     )
   endif ()
 endif ()
+
+INCLUDE(CheckFormat)

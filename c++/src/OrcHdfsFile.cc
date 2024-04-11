@@ -42,23 +42,23 @@ namespace orc {
 
   class HdfsFileInputStream : public InputStream {
    private:
-    std::string filename;
-    std::unique_ptr<hdfs::FileHandle> file;
-    std::unique_ptr<hdfs::FileSystem> file_system;
-    uint64_t totalLength;
-    const uint64_t READ_SIZE = 1024 * 1024;  // 1 MB
-    ReaderMetrics* metrics;
+    std::string filename_;
+    std::unique_ptr<hdfs::FileHandle> file_;
+    std::unique_ptr<hdfs::FileSystem> file_system_;
+    uint64_t totalLength_;
+    const uint64_t READ_SIZE_ = 1024 * 1024;  // 1 MB
+    ReaderMetrics* metrics_;
 
    public:
-    HdfsFileInputStream(std::string _filename, ReaderMetrics* _metrics) : metrics(_metrics) {
-      filename = _filename;
+    HdfsFileInputStream(std::string filename, ReaderMetrics* metrics) : metrics_(metrics) {
+      filename_ = filename;
 
       // Building a URI object from the given uri_path
       hdfs::URI uri;
       try {
-        uri = hdfs::URI::parse_from_string(filename);
+        uri = hdfs::URI::parse_from_string(filename_);
       } catch (const hdfs::uri_parse_error&) {
-        throw ParseError("Malformed URI: " + filename);
+        throw ParseError("Malformed URI: " + filename_);
       }
 
       // This sets conf path to default "$HADOOP_CONF_DIR" or "/etc/hadoop/conf"
@@ -82,9 +82,9 @@ namespace orc {
       }
       hdfs::IoService* io_service = hdfs::IoService::New();
       // Wrapping file_system into a unique pointer to guarantee deletion
-      file_system =
+      file_system_ =
           std::unique_ptr<hdfs::FileSystem>(hdfs::FileSystem::New(io_service, "", options));
-      if (file_system.get() == nullptr) {
+      if (file_system_.get() == nullptr) {
         throw ParseError("Can't create FileSystem object. ");
       }
       hdfs::Status status;
@@ -92,13 +92,13 @@ namespace orc {
       if (!uri.get_host().empty()) {
         // Using port if supplied, otherwise using "" to look up port in configs
         std::string port = uri.has_port() ? std::to_string(uri.get_port()) : "";
-        status = file_system->Connect(uri.get_host(), port);
+        status = file_system_->Connect(uri.get_host(), port);
         if (!status.ok()) {
           throw ParseError("Can't connect to " + uri.get_host() + ":" + port + ". " +
                            status.ToString());
         }
       } else {
-        status = file_system->ConnectToDefaultFs();
+        status = file_system_->ConnectToDefaultFs();
         if (!status.ok()) {
           if (!options.defaultFS.get_host().empty()) {
             throw ParseError("Error connecting to " + options.defaultFS.str() + ". " +
@@ -110,32 +110,32 @@ namespace orc {
         }
       }
 
-      if (file_system.get() == nullptr) {
+      if (file_system_.get() == nullptr) {
         throw ParseError("Can't connect the file system. ");
       }
 
       hdfs::FileHandle* file_raw = nullptr;
-      status = file_system->Open(uri.get_path(true), &file_raw);
+      status = file_system_->Open(uri.get_path(true), &file_raw);
       if (!status.ok()) {
         throw ParseError("Can't open " + uri.get_path(true) + ". " + status.ToString());
       }
       // Wrapping file_raw into a unique pointer to guarantee deletion
-      file.reset(file_raw);
+      file_.reset(file_raw);
 
       hdfs::StatInfo stat_info;
-      status = file_system->GetFileInfo(uri.get_path(true), stat_info);
+      status = file_system_->GetFileInfo(uri.get_path(true), stat_info);
       if (!status.ok()) {
         throw ParseError("Can't stat " + uri.get_path(true) + ". " + status.ToString());
       }
-      totalLength = stat_info.length;
+      totalLength_ = stat_info.length;
     }
 
     uint64_t getLength() const override {
-      return totalLength;
+      return totalLength_;
     }
 
     uint64_t getNaturalReadSize() const override {
-      return READ_SIZE;
+      return READ_SIZE_;
     }
 
     void read(void* buf, uint64_t length, uint64_t offset) override {
@@ -151,8 +151,8 @@ namespace orc {
 
       do {
         status =
-            file->PositionRead(buf_ptr, static_cast<size_t>(length) - total_bytes_read,
-                               static_cast<off_t>(offset + total_bytes_read), &last_bytes_read);
+            file_->PositionRead(buf_ptr, static_cast<size_t>(length) - total_bytes_read,
+                                static_cast<off_t>(offset + total_bytes_read), &last_bytes_read);
         if (!status.ok()) {
           throw ParseError("Error reading the file: " + status.ToString());
         }
@@ -162,7 +162,7 @@ namespace orc {
     }
 
     const std::string& getName() const override {
-      return filename;
+      return filename_;
     }
 
     ~HdfsFileInputStream() override;

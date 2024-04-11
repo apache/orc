@@ -166,22 +166,22 @@ jobs:
         cd java
         ./mvnw install -DskipTests
         ./mvnw javadoc:javadoc
-
+          
   formatting-check:
     name: "C++ format check"
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        path:
-          - 'c++'
-          - 'tools'
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Run clang-format style check for C++ code
-      uses: jidicula/clang-format-action@v4.9.0
-      with:
-        clang-format-version: '13'
-        check-path: ${{ matrix.path }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+      - name: Check clang-tidy
+        run: make check-clang-tify
+      - name: check clang-format
+        run: make check-format
 
   license-check:
     name: "License Check"

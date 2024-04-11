@@ -29,5 +29,5 @@ CheckOptions:
   ]
 
 WarningsAsErrors: ''
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '(orc/c\+\+/|orc/tools)'
 FormatStyle: none
