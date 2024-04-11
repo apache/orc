@@ -456,26 +456,22 @@ namespace orc {
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
 
       // small test sample to ensure tzbd loads with CONDA_PREFIX, even without TZDIR
-      const Timezone* la1 = &getTimezoneByName("America/Los_Angeles");
-      const Timezone* la2 = &getTimezoneByName("America/Los_Angeles");
-      EXPECT_EQ(la1, la2);
-      EXPECT_EQ("PST", getVariantFromZone(*la1, "1974-01-06 09:59:59"));
-      EXPECT_EQ("PDT", getVariantFromZone(*la1, "1974-01-06 10:00:00"));
-      EXPECT_EQ("PDT", getVariantFromZone(*la1, "1974-10-27 08:59:59"));
-      EXPECT_EQ("PST", getVariantFromZone(*la1, "1974-10-27 09:00:00"));
+      const Timezone* zrh = &getTimezoneByName("Europe/Zurich");
+      EXPECT_EQ("CET", getVariantFromZone(*zrh, "2024-03-31 01:59:59"));
+      EXPECT_EQ("CEST", getVariantFromZone(*zrh, "2024-03-31 02:00:00"));
+      EXPECT_EQ("CEST", getVariantFromZone(*zrh, "2024-10-27 00:59:59"));
+      EXPECT_EQ("CET", getVariantFromZone(*zrh, "2024-10-27 01:00:00"));
 
       // CONDA_PREFIX contains backslashes on windows; test that this doesn't blow up
       std::replace(condaPrefix.begin(), condaPrefix.end(), '/', '\\');
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
 
       // as above
-      const Timezone* la3 = &getTimezoneByName("America/Los_Angeles");
-      const Timezone* la4 = &getTimezoneByName("America/Los_Angeles");
-      EXPECT_EQ(la3, la4);
-      EXPECT_EQ("PST", getVariantFromZone(*la3, "1974-01-06 09:59:59"));
-      EXPECT_EQ("PDT", getVariantFromZone(*la3, "1974-01-06 10:00:00"));
-      EXPECT_EQ("PDT", getVariantFromZone(*la3, "1974-10-27 08:59:59"));
-      EXPECT_EQ("PST", getVariantFromZone(*la3, "1974-10-27 09:00:00"));
+      const Timezone* syd = &getTimezoneByName("Australia/Sydney");
+      EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-04-06 15:59:59"));
+      EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-04-06 16:00:00"));
+      EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-10-05 16:59:59"));
+      EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-10-05 17:00:00"));
 
       // restore state of environment variables
       ASSERT_TRUE(delEnv("CONDA_PREFIX"));
