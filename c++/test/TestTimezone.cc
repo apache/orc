@@ -423,7 +423,7 @@ namespace orc {
 
   TEST(TestTimezone, testMissingTZDB) {
     const char* tzDir = std::getenv("TZDIR");
-    std::string tzDirBackup = nullptr;
+    std::string tzDirBackup;
     if (tzDir != nullptr) {
       // std::string creates a deepcopy of buffer, which avoids that
       // unsetting environment variable wrecks pointer to tzDir
@@ -435,7 +435,7 @@ namespace orc {
                 testing::ThrowsMessage<TimezoneError>(testing::HasSubstr(
                     "Time zone file /path/to/wrong/tzdb/America/Los_Angeles does not exist."
                     " Please install IANA time zone database and set TZDIR env.")));
-    if (tzDirBackup != nullptr) {
+    if (!tzDirBackup.empty()) {
       ASSERT_TRUE(setEnv("TZDIR", tzDirBackup.c_str()));
     } else {
       ASSERT_TRUE(delEnv("TZDIR"));
