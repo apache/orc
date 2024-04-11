@@ -466,7 +466,7 @@ namespace orc {
       std::replace(condaPrefix.begin(), condaPrefix.end(), '/', '\\');
       ASSERT_TRUE(setEnv("CONDA_PREFIX", condaPrefix.c_str()));
 
-      // as above
+      // as above, but different timezone to avoid hitting cache
       const Timezone* syd = &getTimezoneByName("Australia/Sydney");
       EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-04-06 15:59:59"));
       EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-04-06 16:00:00"));
