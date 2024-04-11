@@ -457,10 +457,10 @@ namespace orc {
 
       // small test sample to ensure tzbd loads with CONDA_PREFIX, even without TZDIR
       const Timezone* zrh = &getTimezoneByName("Europe/Zurich");
-      EXPECT_EQ("CET", getVariantFromZone(*zrh, "2024-03-31 01:59:59"));
-      EXPECT_EQ("CEST", getVariantFromZone(*zrh, "2024-03-31 02:00:00"));
-      EXPECT_EQ("CEST", getVariantFromZone(*zrh, "2024-10-27 00:59:59"));
-      EXPECT_EQ("CET", getVariantFromZone(*zrh, "2024-10-27 01:00:00"));
+      EXPECT_EQ("CET", getVariantFromZone(*zrh, "2024-03-31 00:59:59"));
+      EXPECT_EQ("CEST", getVariantFromZone(*zrh, "2024-03-31 01:00:00"));
+      EXPECT_EQ("CEST", getVariantFromZone(*zrh, "2024-10-26 23:59:59"));
+      EXPECT_EQ("CET", getVariantFromZone(*zrh, "2024-10-27 00:00:00"));
 
       // CONDA_PREFIX contains backslashes on windows; test that this doesn't blow up
       std::replace(condaPrefix.begin(), condaPrefix.end(), '/', '\\');
@@ -468,10 +468,10 @@ namespace orc {
 
       // as above
       const Timezone* syd = &getTimezoneByName("Australia/Sydney");
-      EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-04-06 15:59:59"));
-      EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-04-06 16:00:00"));
-      EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-10-05 16:59:59"));
-      EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-10-05 17:00:00"));
+      EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-04-06 14:59:59"));
+      EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-04-06 15:00:00"));
+      EXPECT_EQ("AEST", getVariantFromZone(*syd, "2024-10-05 15:59:59"));
+      EXPECT_EQ("AEDT", getVariantFromZone(*syd, "2024-10-05 16:00:00"));
 
       // restore state of environment variables
       ASSERT_TRUE(delEnv("CONDA_PREFIX"));
