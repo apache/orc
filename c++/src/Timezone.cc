@@ -655,10 +655,18 @@ namespace orc {
     epoch_ = utcEpoch - getVariant(utcEpoch).gmtOffset;
   }
 
-  const char* getTimezoneDirectory() {
+  std::string getTimezoneDirectory() {
     const char* dir = getenv("TZDIR");
     if (!dir) {
-      dir = DEFAULT_TZDIR;
+      // this is present if we're in an activated conda environment
+      const char* condaPrefix = getenv("CONDA_PREFIX");
+      if (condaPrefix) {
+        std::string condaDir(condaPrefix);
+        condaDir += "/share/zoneinfo";
+        return condaDir;
+      } else {
+        dir = DEFAULT_TZDIR;
+      }
     }
     return dir;
   }
