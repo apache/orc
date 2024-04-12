@@ -179,9 +179,9 @@ jobs:
           cd build
           cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1
       - name: Check clang-tidy
-        run: make check-clang-tidy
+        run: cd build && make check-clang-tidy
       - name: Check clang-format
-        run: make check-format
+        run: cd build && make && make check-format
 
   license-check:
     name: "License Check"
