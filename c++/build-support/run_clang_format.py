@@ -116,7 +116,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     had_err = False
-    exclude_globs = [line.strip() for line in open(args.exclude_globs)]
+    exclude_globs = []
+    for line in open(args.exclude_globs):
+        if line.strip() == "":
+            continue
+        if line[0] == "#":
+            continue
+        exclude_globs.append(line.strip())
+
     for source_dir in args.source_dirs.split(','):
         if len(source_dir) > 0:
             had_err = had_err or check(args, source_dir)

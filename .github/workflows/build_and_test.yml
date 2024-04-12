@@ -166,7 +166,7 @@ jobs:
         cd java
         ./mvnw install -DskipTests
         ./mvnw javadoc:javadoc
-          
+
   formatting-check:
     name: "C++ format check"
     runs-on: ubuntu-latest
@@ -179,7 +179,7 @@ jobs:
           cd build
           cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1
       - name: Check clang-tidy
-        run: make check-clang-tify
+        run: make check-clang-tidy
       - name: check clang-format
         run: make check-format
 
