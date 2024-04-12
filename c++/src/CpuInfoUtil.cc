@@ -151,8 +151,7 @@ namespace orc {
       // HEX of "AuthenticAMD": 41757468 656E7469 63414D44
       if (cpuInfo[1] == 0x756e6547 && cpuInfo[3] == 0x49656e69 && cpuInfo[2] == 0x6c65746e) {
         *vendor = CpuInfo::Vendor::Intel;
-      } else if (cpuInfo[1] == 0x68747541 && cpuInfo[3] == 0x69746e65 &&
-                 cpuInfo[2] == 0x444d4163) {
+      } else if (cpuInfo[1] == 0x68747541 && cpuInfo[3] == 0x69746e65 && cpuInfo[2] == 0x444d4163) {
         *vendor = CpuInfo::Vendor::AMD;
       }
 

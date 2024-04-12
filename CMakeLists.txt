@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # For clang-tidy.
+
 cmake_minimum_required (VERSION 3.12.0)
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)

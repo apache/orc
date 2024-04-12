@@ -29,15 +29,15 @@ set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 set(BUILD_SUPPORT_DIR "${CMAKE_SOURCE_DIR}/c++/build-support")
 
 find_program(CLANG_FORMAT_BIN
-        NAMES clang-format clang-format-14
+        NAMES clang-format-13
         HINTS ${CLANG_SEARCH_PATH})
 
 find_program(CLANG_TIDY_BIN
-        NAMES clang-tidy clang-tidy-14
+        NAMES clang-tidy-13
         HINTS ${CLANG_SEARCH_PATH})
 
 find_program(CLANG_APPLY_REPLACEMENTS_BIN
-        NAMES clang-apply-replacements clang-apply-replacements-14
+        NAMES clang-apply-replacements-13
         HINTS ${CLANG_SEARCH_PATH})
 
 
@@ -96,7 +96,6 @@ add_custom_target(format
         ${PYTHON_EXECUTABLE}
         ${BUILD_SUPPORT_DIR}/run_clang_format.py
         ${CLANG_FORMAT_BIN}
-        ${BUILD_SUPPORT_DIR}/lint_exclusions.txt
         --source_dirs
         ${ORC_FORMAT_DIRS}
         --fix
@@ -107,7 +106,6 @@ add_custom_target(check-format
         ${PYTHON_EXECUTABLE}
         ${BUILD_SUPPORT_DIR}/run_clang_format.py
         ${CLANG_FORMAT_BIN}
-        ${BUILD_SUPPORT_DIR}/lint_exclusions.txt
         --source_dirs
         ${ORC_FORMAT_DIRS}
 )

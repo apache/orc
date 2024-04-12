@@ -99,7 +99,7 @@ if __name__ == "__main__":
         "there are any necessary changes")
     parser.add_argument("clang_format_binary",
                         help="Path to the clang-format binary")
-    parser.add_argument("exclude_globs",
+    parser.add_argument("--exclude_globs",
                         help="Filename containing globs for files "
                         "that should be excluded from the checks")
     parser.add_argument("--source_dirs",
@@ -117,12 +117,13 @@ if __name__ == "__main__":
 
     had_err = False
     exclude_globs = []
-    for line in open(args.exclude_globs):
-        if line.strip() == "":
-            continue
-        if line[0] == "#":
-            continue
-        exclude_globs.append(line.strip())
+    if args.exclude_globs:
+        for line in open(args.exclude_globs):
+            if line.strip() == "":
+                continue
+            if line[0] == "#":
+                continue
+            exclude_globs.append(line.strip())
 
     for source_dir in args.source_dirs.split(','):
         if len(source_dir) > 0:

@@ -180,7 +180,7 @@ jobs:
           cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1
       - name: Check clang-tidy
         run: make check-clang-tidy
-      - name: check clang-format
+      - name: Check clang-format
         run: make check-format
 
   license-check:

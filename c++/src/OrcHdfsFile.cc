@@ -44,9 +44,9 @@ namespace orc {
    private:
     std::string filename_;
     std::unique_ptr<hdfs::FileHandle> file_;
-    std::unique_ptr<hdfs::FileSystem> file_system_;
+    std::unique_ptr<hdfs::FileSystem> fileSystem_;
     uint64_t totalLength_;
-    const uint64_t READ_SIZE_ = 1024 * 1024;  // 1 MB
+    const uint64_t readSize_ = 1024 * 1024;  // 1 MB
     ReaderMetrics* metrics_;
 
    public:
@@ -82,9 +82,9 @@ namespace orc {
       }
       hdfs::IoService* io_service = hdfs::IoService::New();
       // Wrapping file_system into a unique pointer to guarantee deletion
-      file_system_ =
+      fileSystem_ =
           std::unique_ptr<hdfs::FileSystem>(hdfs::FileSystem::New(io_service, "", options));
-      if (file_system_.get() == nullptr) {
+      if (fileSystem_.get() == nullptr) {
         throw ParseError("Can't create FileSystem object. ");
       }
       hdfs::Status status;
@@ -92,13 +92,13 @@ namespace orc {
       if (!uri.get_host().empty()) {
         // Using port if supplied, otherwise using "" to look up port in configs
         std::string port = uri.has_port() ? std::to_string(uri.get_port()) : "";
-        status = file_system_->Connect(uri.get_host(), port);
+        status = fileSystem_->Connect(uri.get_host(), port);
         if (!status.ok()) {
           throw ParseError("Can't connect to " + uri.get_host() + ":" + port + ". " +
                            status.ToString());
         }
       } else {
-        status = file_system_->ConnectToDefaultFs();
+        status = fileSystem_->ConnectToDefaultFs();
         if (!status.ok()) {
           if (!options.defaultFS.get_host().empty()) {
             throw ParseError("Error connecting to " + options.defaultFS.str() + ". " +
@@ -110,12 +110,12 @@ namespace orc {
         }
       }
 
-      if (file_system_.get() == nullptr) {
+      if (fileSystem_.get() == nullptr) {
         throw ParseError("Can't connect the file system. ");
       }
 
       hdfs::FileHandle* file_raw = nullptr;
-      status = file_system_->Open(uri.get_path(true), &file_raw);
+      status = fileSystem_->Open(uri.get_path(true), &file_raw);
       if (!status.ok()) {
         throw ParseError("Can't open " + uri.get_path(true) + ". " + status.ToString());
       }
@@ -123,7 +123,7 @@ namespace orc {
       file_.reset(file_raw);
 
       hdfs::StatInfo stat_info;
-      status = file_system_->GetFileInfo(uri.get_path(true), stat_info);
+      status = fileSystem_->GetFileInfo(uri.get_path(true), stat_info);
       if (!status.ok()) {
         throw ParseError("Can't stat " + uri.get_path(true) + ". " + status.ToString());
       }
@@ -135,7 +135,7 @@ namespace orc {
     }
 
     uint64_t getNaturalReadSize() const override {
-      return READ_SIZE_;
+      return readSize_;
     }
 
     void read(void* buf, uint64_t length, uint64_t offset) override {

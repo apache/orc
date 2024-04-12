@@ -21,10 +21,11 @@ Checks: "-*,
 
 CheckOptions:
   [
+    { key: readability-identifier-naming.ParameterCase, value: "camelBack" },
+    { key: readability-identifier-naming.PrivateMemberCase, value: "camelBack"},
     { key: readability-identifier-naming.PrivateMemberSuffix, value: "_" },
     { key: readability-identifier-naming.ProtectedMemberSuffix, value: "" },
     { key: readability-identifier-naming.PublicMemberSuffix, value: "" },
-    { key: readability-identifier-naming.ParameterCase, value: "camelBack" },
     { key: readability-identifier-naming.ParameterIgnoredRegexp, value: "^[a-zA-Z]$" },
   ]
 
