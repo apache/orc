@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.5.12 Released</title>
+  <title>ORC 1.8.7 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -301,8 +301,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.5.12 Released
-    <a href="/news/2020/09/30/ORC-1.5.12/" class="permalink" title="Permalink">∞</a>
+    ORC 1.8.7 Released
+    <a href="/news/2024/04/14/ORC-1.8.7/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -311,44 +311,50 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      30 Sep 2020
+      14 Apr 2024
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
            width="24" height="24">
-      omalley
+      dongjoon
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.5.12.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.8.7.</p>
 
 <ul>
-  <li>Released: 30 September 2020</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.5.12/orc-1.5.12.tar.gz">orc-1.5.12.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.5.12/orc-1.5.12.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (AD1C5877)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.12">rel/release-1.5.12</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.12%22">ORC 1.5.12</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.5.12/orc-1.5.12.tar.gz.sha256">938e48eca6c83fcd…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.12%22&amp;tempMax=500">ORC-1.5.12</a></li>
+  <li>Released: 14 April 2024</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.7/orc-1.8.7.tar.gz">orc-1.8.7.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.8.7/orc-1.8.7.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.7">rel/release-1.8.7</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.7%22">ORC 1.8.7</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.7/orc-1.8.7.tar.gz.sha256">57c9d12bf74b2752…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.7%22&amp;tempMax=500">ORC-1.8.7</a></li>
 </ul>
 
-<p>The new features of ORC 1.5:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1528">ORC-1528</a>: Fix readBytes potential overflow in RecordReaderUtils.ChunkReader#create</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1602">ORC-1602</a>: [C++] limit compression block size</li>
 </ul>
 
-<p>Known issues:</p>
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1556">ORC-1556</a> Add Rocky Linux 9 Docker Test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1557">ORC-1557</a> Add GitHub Action CI for Docker Test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1560">ORC-1560</a> Remove Java11 and clang variants from docker/os-list.txt in branch-1.8</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1562">ORC-1562</a> Bump guava to 33.0.0-jre</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1578">ORC-1578</a> Fix SparkBenchmark on sales data according to SPARK-40918</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1621">ORC-1621</a> Switch to oraclelinux9 from rocky9</li>
+</ul>
 
+<p>The documentations:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1536">ORC-1536</a> Remove hive-storage-api link from maven-javadoc-plugin</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1563">ORC-1563</a> Fix orc.bloom.filter.fpp default value and orc.compress notes of Spark and Hive config docs</li>
+</ul>
 
   </div>
 </article>
@@ -368,7 +374,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (AD1C5
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2024/04/14/ORC-1.8.7/">Version 1.8.7</a>
       </li>
       
