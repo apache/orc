@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # For clang-tidy.
 
 cmake_minimum_required (VERSION 3.12.0)
 if (POLICY CMP0048)
@@ -33,6 +32,7 @@ SET(CPACK_PACKAGE_VERSION_MINOR "1")
 SET(CPACK_PACKAGE_VERSION_PATCH "0-SNAPSHOT")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # For clang-tidy.
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
