@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 cmake_minimum_required (VERSION 3.12.0)
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
