@@ -103,7 +103,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (other instanceof BooleanStatisticsImpl bkt) {
         trueCount += bkt.trueCount;
       } else {
-        throw new IllegalArgumentException("Incompatible merging of boolean column statistics");
+        if (isStatsExists() && trueCount != 0) {
+          throw new IllegalArgumentException("Incompatible merging of boolean column statistics");
+        }
       }
       super.merge(other);
     }
@@ -207,6 +209,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof CollectionColumnStatisticsImpl otherColl) {
+
         if(count == 0) {
           minimum = otherColl.minimum;
           maximum = otherColl.maximum;
@@ -220,7 +223,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         }
         sum += otherColl.sum;
       } else {
-        throw new IllegalArgumentException("Incompatible merging of collection column statistics");
+        if (isStatsExists()) {
+          throw new IllegalArgumentException("Incompatible merging of collection column statistics");
+        }
       }
       super.merge(other);
     }
@@ -393,7 +398,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
       } else {
-        throw new IllegalArgumentException("Incompatible merging of integer column statistics");
+        if (isStatsExists() && hasMinimum) {
+          throw new IllegalArgumentException("Incompatible merging of integer column statistics");
+        }
       }
       super.merge(other);
     }
@@ -554,7 +561,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         }
         sum += dbl.sum;
       } else {
-        throw new IllegalArgumentException("Incompatible merging of double column statistics");
+        if (isStatsExists() && hasMinimum) {
+          throw new IllegalArgumentException("Incompatible merging of double column statistics");
+        }
       }
       super.merge(other);
     }
@@ -755,7 +764,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         }
         sum += str.sum;
       } else {
-        throw new IllegalArgumentException("Incompatible merging of string column statistics");
+        if (isStatsExists()) {
+          throw new IllegalArgumentException("Incompatible merging of string column statistics");
+        }
       }
       super.merge(other);
     }
@@ -985,7 +996,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (other instanceof BinaryStatisticsImpl bin) {
         sum += bin.sum;
       } else {
-        throw new IllegalArgumentException("Incompatible merging of binary column statistics");
+        if (isStatsExists() && sum != 0) {
+          throw new IllegalArgumentException("Incompatible merging of binary column statistics");
+        }
       }
       super.merge(other);
     }
@@ -1115,7 +1128,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
       } else {
-        throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
+        if (isStatsExists() && minimum != null) {
+          throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
+        }
       }
       super.merge(other);
     }
@@ -1306,7 +1321,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
       } else {
-        throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
+        if (other.getNumberOfValues() != 0) {
+          throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
+        }
       }
       super.merge(other);
     }
@@ -1469,7 +1486,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         minimum = Math.min(minimum, dateStats.minimum);
         maximum = Math.max(maximum, dateStats.maximum);
       } else {
-        throw new IllegalArgumentException("Incompatible merging of date column statistics");
+        if (isStatsExists() && count != 0) {
+          throw new IllegalArgumentException("Incompatible merging of date column statistics");
+        }
       }
       super.merge(other);
     }
@@ -1679,7 +1698,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
       } else {
-        throw new IllegalArgumentException("Incompatible merging of timestamp column statistics");
+        if (isStatsExists() && count != 0) {
+          throw new IllegalArgumentException("Incompatible merging of timestamp column statistics");
+        }
       }
       super.merge(other);
     }

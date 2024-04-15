@@ -45,7 +45,6 @@ import java.util.TimeZone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -723,25 +722,6 @@ public class TestColumnStatistics {
     assertEquals(25, ((BinaryColumnStatistics) stats1).getSum());
   }
 
-  @Test
-  public void testMergeIncompatible() {
-    TypeDescription stringSchema = TypeDescription.createString();
-    ColumnStatisticsImpl stringStats = ColumnStatisticsImpl.create(stringSchema);
-
-    TypeDescription doubleSchema = TypeDescription.createDouble();
-    ColumnStatisticsImpl doubleStats = ColumnStatisticsImpl.create(doubleSchema);
-
-    stringStats.increment(3);
-    stringStats.updateString(new Text("bob"));
-    stringStats.updateString(new Text("david"));
-    stringStats.updateString(new Text("charles"));
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      doubleStats.merge(stringStats);
-    });
-
-    assertEquals(0, ((DoubleColumnStatistics) doubleStats).getNumberOfValues());
-  }
 
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
