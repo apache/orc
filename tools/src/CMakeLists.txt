@@ -34,14 +34,19 @@
 #   executable can just be removed, as it looks like it was written for testing
 #   alone.
 
-include_directories (
-  ${PROJECT_SOURCE_DIR}/c++/include
-  ${PROJECT_BINARY_DIR}/c++/include
-  ${PROJECT_SOURCE_DIR}/c++/src
-  ${PROJECT_BINARY_DIR}/c++/src
-  )
-
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${CXX17_FLAGS} ${WARN_FLAGS}")
+
+add_library (orc-tools-common INTERFACE)
+target_include_directories (orc-tools-common INTERFACE
+  ${CMAKE_SOURCE_DIR}/c++/include
+  ${CMAKE_BINARY_DIR}/c++/include
+  ${CMAKE_SOURCE_DIR}/c++/src
+  ${CMAKE_BINARY_DIR}/c++/src
+)
+target_link_libraries (orc-tools-common INTERFACE
+  orc
+  ${CMAKE_THREAD_LIBS_INIT}
+)
 
 add_executable (orc-contents
   FileContents.cc
@@ -49,8 +54,7 @@ add_executable (orc-contents
   )
 
 target_link_libraries (orc-contents
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
+  orc-tools-common
   )
 
 add_executable (orc-scan
@@ -59,8 +63,7 @@ add_executable (orc-scan
   )
 
 target_link_libraries (orc-scan
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
+  orc-tools-common
   )
 
 add_executable (orc-metadata
@@ -69,9 +72,8 @@ add_executable (orc-metadata
   )
 
 target_link_libraries (orc-metadata
-  orc
+  orc-tools-common
   orc::protobuf
-  ${CMAKE_THREAD_LIBS_INIT}
   )
 
  add_executable (orc-statistics
@@ -79,8 +81,7 @@ target_link_libraries (orc-metadata
   )
 
 target_link_libraries (orc-statistics
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
+  orc-tools-common
   )
 
 add_executable (orc-memory
@@ -89,8 +90,7 @@ add_executable (orc-memory
   )
 
 target_link_libraries (orc-memory
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
+  orc-tools-common
   )
 
 add_executable (timezone-dump
@@ -98,8 +98,7 @@ add_executable (timezone-dump
   )
 
 target_link_libraries (timezone-dump
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
+  orc-tools-common
   )
 
 add_executable (csv-import
@@ -107,8 +106,7 @@ add_executable (csv-import
   )
 
 target_link_libraries (csv-import
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
+  orc-tools-common
   )
 
 set(CPP_TOOL_NAMES
