@@ -15,11 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-include_directories (
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  "include"
-  )
-
 add_subdirectory(include)
 add_subdirectory(src)
 

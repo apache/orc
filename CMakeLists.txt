@@ -153,14 +153,6 @@ elseif (MSVC)
   set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
 endif ()
 
-if (BUILD_CPP_ENABLE_METRICS)
-  message(STATUS "Enable the metrics collection")
-  add_compile_definitions(ENABLE_METRICS=1)
-else ()
-  message(STATUS "Disable the metrics collection")
-  add_compile_definitions(ENABLE_METRICS=0)
-endif ()
-
 enable_testing()
 
 INCLUDE(CheckSourceCompiles)

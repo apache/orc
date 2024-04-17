@@ -138,12 +138,6 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   )
 
-include_directories (
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${LIBHDFSPP_INCLUDE_DIR}
-  )
-
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
    COMMAND ${PROTOBUF_EXECUTABLE}
         -I ../../orc-format_ep-prefix/src/orc-format_ep/src/main/proto/orc/proto
@@ -197,7 +191,6 @@ set(SOURCE_FILES
 
 if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)
-  add_definitions(-DBUILD_LIBHDFSPP)
 endif(BUILD_LIBHDFSPP)
 
 if(BUILD_ENABLE_AVX512)
@@ -216,6 +209,28 @@ target_link_libraries (orc
   orc::zstd
   ${LIBHDFSPP_LIBRARIES}
   )
+
+target_include_directories (orc
+  PUBLIC
+    ${CMAKE_SOURCE_DIR}/c++/include
+    ${CMAKE_BINARY_DIR}/c++/include
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${LIBHDFSPP_INCLUDE_DIR}
+)
+
+if (BUILD_LIBHDFSPP)
+  target_compile_definitions(orc PUBLIC -DBUILD_LIBHDFSPP)
+endif (BUILD_LIBHDFSPP)
+
+if (BUILD_CPP_ENABLE_METRICS)
+  message(STATUS "Enable the metrics collection")
+  target_compile_definitions(orc PUBLIC ENABLE_METRICS=1)
+else ()
+  message(STATUS "Disable the metrics collection")
+  target_compile_definitions(orc PUBLIC ENABLE_METRICS=0)
+endif ()
 
 add_dependencies(orc orc-format_ep)
 
