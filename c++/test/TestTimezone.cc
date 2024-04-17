@@ -431,7 +431,7 @@ namespace orc {
       ASSERT_TRUE(delEnv("TZDIR"));
     }
     ASSERT_TRUE(setEnv("TZDIR", "/path/to/wrong/tzdb"));
-    EXPECT_THAT([]() { getTimezoneByName("America/Los_Angeles"); },
+    EXPECT_THAT([]() { getTimezoneByName("America/Los_Angeles").getVersion(); },
                 testing::ThrowsMessage<TimezoneError>(testing::HasSubstr(
                     "Time zone file /path/to/wrong/tzdb/America/Los_Angeles does not exist."
                     " Please install IANA time zone database and set TZDIR env.")));
