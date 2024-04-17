@@ -15,18 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-configure_file (
-  "orc/orc-config.hh.in"
-  "orc/orc-config.hh"
-  )
+@PACKAGE_INIT@
 
-install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/orc/orc-config.hh"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/orc"
-  )
+include("${CMAKE_CURRENT_LIST_DIR}/orcTargets.cmake")
 
-install(DIRECTORY
-  "orc/"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/orc"
-  FILES_MATCHING PATTERN "*.hh"
-  )
+check_required_components(orc)

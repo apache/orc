@@ -202,18 +202,29 @@ endif(BUILD_ENABLE_AVX512)
 add_library (orc STATIC ${SOURCE_FILES})
 
 target_link_libraries (orc
-  orc::protobuf
-  orc::zlib
-  orc::snappy
-  orc::lz4
-  orc::zstd
-  ${LIBHDFSPP_LIBRARIES}
+  INTERFACE
+    $<INSTALL_INTERFACE:protobuf::libprotobuf>
+    $<INSTALL_INTERFACE:ZLIB::ZLIB>
+    $<INSTALL_INTERFACE:Snappy::snappy>
+    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_static>>
+    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_shared>>
+    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:zstd::libzstd_static>>
+    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:zstd::libzstd_shared>>
+  PUBLIC
+    $<BUILD_INTERFACE:orc::protobuf>
+    $<BUILD_INTERFACE:orc::zlib>
+    $<BUILD_INTERFACE:orc::snappy>
+    $<BUILD_INTERFACE:orc::lz4>
+    $<BUILD_INTERFACE:orc::zstd>
+    $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}> # Deprecated, do not add it to INSTALL_INTERFACE
   )
 
 target_include_directories (orc
+  INTERFACE
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PUBLIC
-    ${CMAKE_SOURCE_DIR}/c++/include
-    ${CMAKE_BINARY_DIR}/c++/include
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/c++/include>
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/c++/include>
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -234,4 +245,8 @@ endif ()
 
 add_dependencies(orc orc-format_ep)
 
-install(TARGETS orc DESTINATION lib)
+install(TARGETS orc EXPORT orc_targets)
+install(EXPORT orc_targets
+  DESTINATION ${ORC_INSTALL_CMAKE_DIR}
+  NAMESPACE "orc::"
+  FILE "orcTargets.cmake")
