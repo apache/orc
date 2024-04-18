@@ -206,10 +206,8 @@ target_link_libraries (orc
     $<INSTALL_INTERFACE:protobuf::libprotobuf>
     $<INSTALL_INTERFACE:ZLIB::ZLIB>
     $<INSTALL_INTERFACE:Snappy::snappy>
-    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_static>>
-    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_shared>>
-    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:zstd::libzstd_static>>
-    $<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:zstd::libzstd_shared>>
+    $<INSTALL_INTERFACE:LZ4::lz4>
+    $<INSTALL_INTERFACE:zstd::libzstd>
   PUBLIC
     $<BUILD_INTERFACE:orc::protobuf>
     $<BUILD_INTERFACE:orc::zlib>
