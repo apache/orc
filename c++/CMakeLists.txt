@@ -15,9 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-include(GNUInstallDirs)
-set(ORC_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/orc)
-
 add_subdirectory(include)
 add_subdirectory(src)
 
@@ -28,12 +25,13 @@ endif ()
 # Generate cmake package configuration files
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-        orcConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/orcConfig.cmake
-        INSTALL_DESTINATION ${ORC_INSTALL_CMAKE_DIR})
+  orcConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/orcConfig.cmake
+  INSTALL_DESTINATION ${ORC_INSTALL_CMAKE_DIR})
 write_basic_package_version_file(
-        ${CMAKE_CURRENT_BINARY_DIR}/orcConfigVersion.cmake
-        VERSION ${ORC_VERSION}
-        COMPATIBILITY SameMajorVersion)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/orcConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/orcConfigVersion.cmake
-        DESTINATION ${ORC_INSTALL_CMAKE_DIR})
+  ${CMAKE_CURRENT_BINARY_DIR}/orcConfigVersion.cmake
+  VERSION ${ORC_VERSION}
+  COMPATIBILITY SameMajorVersion)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/orcConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/orcConfigVersion.cmake
+  DESTINATION ${ORC_INSTALL_CMAKE_DIR})

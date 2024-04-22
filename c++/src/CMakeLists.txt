@@ -203,18 +203,14 @@ add_library (orc STATIC ${SOURCE_FILES})
 
 target_link_libraries (orc
   INTERFACE
-    $<INSTALL_INTERFACE:protobuf::libprotobuf>
-    $<INSTALL_INTERFACE:ZLIB::ZLIB>
-    $<INSTALL_INTERFACE:Snappy::snappy>
-    $<INSTALL_INTERFACE:LZ4::lz4>
-    $<INSTALL_INTERFACE:zstd::libzstd>
-  PUBLIC
+    ${ORC_INSTALL_INTERFACE_TARGETS}
+  PRIVATE
     $<BUILD_INTERFACE:orc::protobuf>
     $<BUILD_INTERFACE:orc::zlib>
     $<BUILD_INTERFACE:orc::snappy>
     $<BUILD_INTERFACE:orc::lz4>
     $<BUILD_INTERFACE:orc::zstd>
-    $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}> # Deprecated, do not add it to INSTALL_INTERFACE
+    $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}>
   )
 
 target_include_directories (orc

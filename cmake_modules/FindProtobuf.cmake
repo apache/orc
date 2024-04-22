@@ -25,6 +25,9 @@
 # PROTOC_STATIC_LIB: location of protoc.a
 # PROTOBUF_EXECUTABLE: location of protoc
 
+if (DEFINED ENV{PROTOBUF_HOME} AND NOT PROTOBUF_HOME)
+  set (PROTOBUF_HOME "$ENV{PROTOBUF_HOME}")
+endif ()
 
 if( NOT "${PROTOBUF_HOME}" STREQUAL "")
     file (TO_CMAKE_PATH "${PROTOBUF_HOME}" _protobuf_path)
@@ -125,3 +128,10 @@ mark_as_advanced (
   PROTOC_STATIC_LIB
   PROTOC_LIBRARY
 )
+
+if(PROTOBUF_FOUND AND NOT TARGET protobuf::libprotobuf)
+  add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
+  set_target_properties(protobuf::libprotobuf
+                        PROPERTIES IMPORTED_LOCATION "${PROTOBUF_LIBRARY}"
+                                   INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
+endif()

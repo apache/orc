@@ -22,6 +22,10 @@
 # ZLIB_STATIC_LIB: path to zlib.a
 # ZLIB_FOUND: whether ZLIB has been found
 
+if (DEFINED ENV{ZLIB_HOME} AND NOT ZLIB_HOME)
+  set (ZLIB_HOME "$ENV{ZLIB_HOME}")
+endif ()
+
 if( NOT "${ZLIB_HOME}" STREQUAL "")
     file (TO_CMAKE_PATH "${ZLIB_HOME}" _zlib_path)
 endif()
@@ -78,3 +82,10 @@ mark_as_advanced (
   ZLIB_STATIC_LIB
   ZLIB_LIBRARY
 )
+
+if(ZLIB_FOUND AND NOT TARGET ZLIB::ZLIB)
+  add_library(ZLIB::ZLIB UNKNOWN IMPORTED)
+  set_target_properties(ZLIB::ZLIB
+                        PROPERTIES IMPORTED_LOCATION "${ZLIB_LIBRARY}"
+                                   INTERFACE_INCLUDE_DIRECTORIES "${ZLIB_INCLUDE_DIR}")
+endif()

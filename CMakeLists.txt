@@ -155,6 +155,9 @@ endif ()
 
 enable_testing()
 
+INCLUDE(GNUInstallDirs)  # Put it before ThirdpartyToolchain to make CMAKE_INSTALL_LIBDIR available.
+set(ORC_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/orc)
+
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
 

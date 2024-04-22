@@ -17,6 +17,27 @@
 
 @PACKAGE_INIT@
 
+set(ORC_SYSTEM_DEPENDENCIES "@ORC_SYSTEM_DEPENDENCIES@")
+
+if(DEFINED CMAKE_MODULE_PATH)
+  set(ORC_CMAKE_MODULE_PATH_OLD ${CMAKE_MODULE_PATH})
+else()
+  unset(ORC_CMAKE_MODULE_PATH_OLD)
+endif()
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+include(CMakeFindDependencyMacro)
+foreach(dependency ${ORC_SYSTEM_DEPENDENCIES})
+  find_dependency(${dependency})
+endforeach()
+
+if(DEFINED ORC_CMAKE_MODULE_PATH_OLD)
+  set(CMAKE_MODULE_PATH ${ORC_CMAKE_MODULE_PATH_OLD})
+  unset(ORC_CMAKE_MODULE_PATH_OLD)
+else()
+  unset(CMAKE_MODULE_PATH)
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/orcTargets.cmake")
 
 check_required_components(orc)
