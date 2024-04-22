@@ -191,8 +191,10 @@ public class AvroReader implements BatchReader {
 
   private static class DecimalConverter implements AvroConverter {
     final int scale;
+    final double multiplier;
     DecimalConverter(int scale) {
       this.scale = scale;
+      this.multiplier = Math.pow(10.0, this.scale);
     }
     public void convert(ColumnVector cv, int row, Object value) {
       if (value == null) {
@@ -200,7 +202,11 @@ public class AvroReader implements BatchReader {
         cv.isNull[row] = true;
       } else {
         DecimalColumnVector tc = (DecimalColumnVector) cv;
-        tc.vector[row].set(getHiveDecimalFromByteBuffer((ByteBuffer) value, scale));
+        if (value instanceof ByteBuffer) {
+          tc.vector[row].set(getHiveDecimalFromByteBuffer((ByteBuffer) value, scale));
+        } else {
+          tc.vector[row].set(HiveDecimal.create(Math.round((double) value * multiplier)));
+        }
       }
     }
   }
