@@ -44,7 +44,11 @@ include("${CMAKE_CURRENT_LIST_DIR}/orcTargets.cmake")
 get_target_property(orc_static_configurations orc::orc IMPORTED_CONFIGURATIONS)
 
 foreach(dependency ${ORC_VENDOR_DEPENDENCIES})
-  string(REPLACE ":" ";" dependency_pair ${dependency})
+  string(REPLACE "|" ";" dependency_pair ${dependency})
+  list(LENGTH dependency_pair dependency_pair_length)
+  if(NOT dependency_pair_length EQUAL 2)
+    message(FATAL_ERROR "Invalid vendor dependency: ${dependency}")
+  endif()
   list(GET dependency_pair 0 target_name)
   list(GET dependency_pair 1 static_lib_name)
 

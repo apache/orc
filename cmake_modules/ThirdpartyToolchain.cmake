@@ -155,8 +155,8 @@ else ()
 
   add_built_library (snappy_ep orc_snappy ${SNAPPY_STATIC_LIB} ${SNAPPY_INCLUDE_DIR})
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc_vendored_snappy:${SNAPPY_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc_vendored_snappy>")
+  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_snappy|${SNAPPY_STATIC_LIB_NAME}")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_snappy>")
 endif ()
 
 add_library (orc::snappy ALIAS orc_snappy)
@@ -207,8 +207,8 @@ else ()
 
   add_built_library (zlib_ep orc_zlib ${ZLIB_STATIC_LIB} ${ZLIB_INCLUDE_DIR})
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc_vendored_zlib:${ZLIB_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc_vendored_zlib>")
+  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_zlib|${ZLIB_STATIC_LIB_NAME}")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_zlib>")
 endif ()
 
 add_library (orc::zlib ALIAS orc_zlib)
@@ -267,8 +267,8 @@ else ()
 
   add_built_library (zstd_ep orc_zstd ${ZSTD_STATIC_LIB} ${ZSTD_INCLUDE_DIR})
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc_vendored_zstd:${ZSTD_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc_vendored_zstd>")
+  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_zstd|${ZSTD_STATIC_LIB_NAME}")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_zstd>")
 endif ()
 
 add_library (orc::zstd ALIAS orc_zstd)
@@ -318,8 +318,8 @@ else ()
 
   add_built_library (lz4_ep orc_lz4 ${LZ4_STATIC_LIB} ${LZ4_INCLUDE_DIR})
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc_vendored_lz4:${LZ4_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc_vendored_lz4>")
+  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_lz4|${LZ4_STATIC_LIB_NAME}")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_lz4>")
 endif ()
 
 add_library (orc::lz4 ALIAS orc_lz4)
@@ -493,8 +493,8 @@ else ()
   add_built_library (protobuf_ep orc_protobuf ${PROTOBUF_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
   add_built_library (protobuf_ep orc_protoc ${PROTOC_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc_vendored_protobuf:${PROTOBUF_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc_vendored_protobuf>")
+  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_protobuf|${PROTOBUF_STATIC_LIB_NAME}")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_protobuf>")
 endif ()
 
 add_library (orc::protobuf ALIAS orc_protobuf)
