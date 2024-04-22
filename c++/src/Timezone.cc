@@ -695,21 +695,18 @@ namespace orc {
    private:
     std::string filename_;
     mutable std::unique_ptr<TimezoneImpl> impl_;
-    mutable std::atomic<bool> initialized_;
+    mutable std::once_flag initialized_;
 
     TimezoneImpl* getImpl() const {
-      if (!initialized_) {
-        std::lock_guard<std::mutex> timezone_lock(timezone_mutex);
-        if (!initialized_) {
-          auto buffer = loadTZDB(filename_);
-          impl_.reset(new TimezoneImpl(filename_, std::move(buffer)));
-        }
-      }
+      std::call_once(initialized_, [&]() {
+        auto buffer = loadTZDB(filename_);
+        impl_ = std::make_unique<TimezoneImpl>(filename_, std::move(buffer));
+      });
       return impl_.get();
     }
 
    public:
-    LazyTimezone(const std::string& filename) : filename_(filename), initialized_(false) {}
+    LazyTimezone(const std::string& filename) : filename_(filename) {}
 
     const TimezoneVariant& getVariant(int64_t clk) const override {
       return getImpl()->getVariant(clk);
