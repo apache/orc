@@ -54,8 +54,15 @@ public class ParquetReader implements BatchReader {
         break;
       }
       int row = batch.size++;
-      for(int c=0; c < converters.length; ++c) {
-        converters[c].convert(batch.cols[c], row, value.get(c));
+      for (int c = 0; c < converters.length; ++c) {
+        Object o = value.get(c);
+        String fieldSchema = value.getSchema().getFields().get(c).schema().toString();
+        // The data format of taxi is parquet, and timestamp uses microseconds,
+        // which is inconsistent with the milliseconds of Java's java.sql.Timestamp.
+        if (fieldSchema.equals("[\"null\",{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}]")) {
+          o = (Long) o / 1000;
+        }
+        converters[c].convert(batch.cols[c], row, o);
       }
     }
     return batch.size != 0;
