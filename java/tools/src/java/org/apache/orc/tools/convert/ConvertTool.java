@@ -199,7 +199,7 @@ public class ConvertTool {
     this.csvHeaderLines = getIntOption(opts, 'H', 0);
     this.csvNullString = opts.getOptionValue('n', "");
     this.timestampFormat = opts.getOptionValue("t", DEFAULT_TIMESTAMP_FORMAT);
-    this.bloomFilterColumns = opts.getOptionValue('b', null);
+    this.bloomFilterColumns = opts.getOptionValue('b');
     this.unionTag = opts.getOptionValue("union-tag", "tag");
     this.unionValue = opts.getOptionValue("union-value", "value");
     String outFilename = opts.hasOption('o')
