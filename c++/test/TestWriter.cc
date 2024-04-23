@@ -2201,6 +2201,52 @@ namespace orc {
                  std::invalid_argument);
   }
 
+  TEST_P(WriterTest, testLazyLoadTZDB) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+
+    uint64_t stripeSize = 1024;            // 1K
+    uint64_t compressionBlockSize = 1024;  // 1k
+
+    std::unique_ptr<Writer> writer =
+        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
+                     &memStream, fileVersion, 0, "/ERROR/TIMEZONE");
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(10);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
+
+    for (uint64_t j = 0; j < 10; ++j) {
+      for (uint64_t i = 0; i < 10; ++i) {
+        longBatch->data[i] = static_cast<int64_t>(i);
+      }
+      structBatch->numElements = 10;
+      longBatch->numElements = 10;
+
+      writer->add(*batch);
+    }
+
+    writer->close();
+
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), "/ERROR/TIMEZONE");
+    EXPECT_EQ(100, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(10);
+    for (uint64_t j = 0; j < 10; ++j) {
+      EXPECT_TRUE(rowReader->next(*batch));
+      EXPECT_EQ(10, batch->numElements);
+
+      for (uint64_t i = 0; i < 10; ++i) {
+        structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+        longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
+        EXPECT_EQ(i, longBatch->data[i]);
+      }
+    }
+    EXPECT_FALSE(rowReader->next(*batch));
+  }
+
   INSTANTIATE_TEST_SUITE_P(OrcTest, WriterTest,
                            Values(FileVersion::v_0_11(), FileVersion::v_0_12(),
                                   FileVersion::UNSTABLE_PRE_2_0()));
