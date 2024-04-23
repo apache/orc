@@ -14,6 +14,21 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# This config sets the following variables in your project::
+#
+#   orc_VERSION - version of the found ORC
+#   orc_FOUND - true if ORC found on the system
+#
+# This config sets the following targets in your project::
+#
+#   orc::orc - for linked as static library
+#
+# For backward compatibility, this config also sets the following variables:
+#
+#   ORC_STATIC_LIB - static library of the found ORC
+#   ORC_INCLUDE_DIR - include directory of the found ORC
+#   ORC_INCLUDE_DIRs - same as ORC_INCLUDE_DIRS above
 
 @PACKAGE_INIT@
 
@@ -68,3 +83,20 @@ foreach(dependency ${ORC_VENDOR_DEPENDENCIES})
 endforeach()
 
 check_required_components(orc)
+
+foreach(BUILD_TYPE_SUFFIX
+        "_RELEASE"
+        "_RELWITHDEBINFO"
+        "_MINSIZEREL"
+        "_DEBUG"
+        "")
+  if(NOT ORC_STATIC_LIB)
+    get_target_property(ORC_STATIC_LIB orc::orc IMPORTED_LOCATION${BUILD_TYPE_SUFFIX})
+  endif()
+endforeach()
+
+get_target_property(ORC_INCLUDE_DIR orc::orc INTERFACE_INCLUDE_DIRECTORIES)
+
+set(ORC_FOUND TRUE)
+set(ORC_VERSION ${orc_VERSION})
+set(ORC_INCLUDE_DIRS ${ORC_INCLUDE_DIR})
