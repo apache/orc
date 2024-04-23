@@ -29,6 +29,7 @@
 #   ORC_STATIC_LIB - static library of the found ORC
 #   ORC_INCLUDE_DIR - include directory of the found ORC
 #   ORC_INCLUDE_DIRs - same as ORC_INCLUDE_DIRS above
+#   ORC_FOUND - same as orc_FOUND above
 
 @PACKAGE_INIT@
 
