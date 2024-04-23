@@ -66,7 +66,7 @@ else()
       NO_DEFAULT_PATH
       PATH_SUFFIXES "include")
 
-    find_library (PROTOBUF_LIBRARY NAMES protobuf HINTS
+    find_library (PROTOBUF_LIBRARY NAMES protobuf libprotobuf HINTS
       ${_protobuf_path}
       PATH_SUFFIXES "lib")
 
@@ -74,7 +74,7 @@ else()
       ${_protobuf_path}
       PATH_SUFFIXES "lib")
 
-    find_library (PROTOC_LIBRARY NAMES protoc HINTS
+    find_library (PROTOC_LIBRARY NAMES protoc libprotoc HINTS
       ${_protobuf_path}
       PATH_SUFFIXES "lib")
 
