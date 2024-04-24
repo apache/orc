@@ -17,7 +17,7 @@
 
 # PROTOBUF_HOME environmental variable is used to check for Protobuf headers and static library
 
-# PROTOBUF_FOUND is set if Protobuf is found
+# Protobuf_FOUND is set if Protobuf is found
 # PROTOBUF_INCLUDE_DIR: directory containing headers
 # PROTOBUF_LIBRARY: location of libprotobuf
 # PROTOBUF_STATIC_LIB: location of protobuf.a
@@ -89,14 +89,14 @@ else()
 endif ()
 
 if (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY AND PROTOC_LIBRARY AND PROTOBUF_EXECUTABLE)
-  set (PROTOBUF_FOUND TRUE)
+  set (Protobuf_FOUND TRUE)
   set (PROTOBUF_LIB_NAME protobuf)
   set (PROTOC_LIB_NAME protoc)
 else ()
-  set (PROTOBUF_FOUND FALSE)
+  set (Protobuf_FOUND FALSE)
 endif ()
 
-if (PROTOBUF_FOUND)
+if (Protobuf_FOUND)
   message (STATUS "Found the Protobuf headers: ${PROTOBUF_INCLUDE_DIR}")
   message (STATUS "Found the Protobuf library: ${PROTOBUF_LIBRARY}")
   message (STATUS "Found the Protoc library: ${PROTOC_LIBRARY}")
@@ -129,7 +129,7 @@ mark_as_advanced (
   PROTOC_LIBRARY
 )
 
-if(PROTOBUF_FOUND AND NOT TARGET protobuf::libprotobuf)
+if(Protobuf_FOUND AND NOT TARGET protobuf::libprotobuf)
   add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
   set_target_properties(protobuf::libprotobuf
                         PROPERTIES IMPORTED_LOCATION "${PROTOBUF_LIBRARY}"
