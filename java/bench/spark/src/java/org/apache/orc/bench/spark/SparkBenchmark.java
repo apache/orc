@@ -195,6 +195,9 @@ public class SparkBenchmark implements OrcBenchmark {
       case "orc":
         options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
         break;
+      case "parquet":
+        options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
+        break;
       default:
         break;
     }
@@ -226,6 +229,9 @@ public class SparkBenchmark implements OrcBenchmark {
       case "avro":
         throw new IllegalArgumentException(source.format + " can't handle projection");
       case "orc":
+        options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
+        break;
+      case "parquet":
         options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
         break;
       default:
@@ -301,6 +307,9 @@ public class SparkBenchmark implements OrcBenchmark {
       case "avro":
         throw new IllegalArgumentException(source.format + " can't handle pushdown");
       case "orc":
+        options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
+        break;
+      case "parquet":
         options.add(new Tuple2<>("returning_batch", "true")); // SPARK-40918
         break;
       default:
