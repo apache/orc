@@ -25,8 +25,14 @@
 # PROTOC_STATIC_LIB: location of protoc.a
 # PROTOBUF_EXECUTABLE: location of protoc
 
-if (DEFINED ENV{PROTOBUF_HOME} AND NOT PROTOBUF_HOME)
-  set (PROTOBUF_HOME "$ENV{PROTOBUF_HOME}")
+if (NOT PROTOBUF_HOME)
+  if (DEFINED ENV{PROTOBUF_HOME})
+    set (PROTOBUF_HOME "$ENV{PROTOBUF_HOME}")
+  elseif (Protobuf_ROOT)
+    set (PROTOBUF_HOME "${Protobuf_ROOT}")
+  elseif (DEFINED ENV{Protobuf_ROOT})
+    set (PROTOBUF_HOME "$ENV{Protobuf_ROOT}")
+  endif ()
 endif ()
 
 if( NOT "${PROTOBUF_HOME}" STREQUAL "")

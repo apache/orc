@@ -22,8 +22,14 @@
 # ZLIB_STATIC_LIB: path to zlib.a
 # ZLIB_FOUND: whether ZLIB has been found
 
-if (DEFINED ENV{ZLIB_HOME} AND NOT ZLIB_HOME)
-  set (ZLIB_HOME "$ENV{ZLIB_HOME}")
+if (NOT ZLIB_HOME)
+  if (DEFINED ENV{ZLIB_HOME})
+    set (ZLIB_HOME "$ENV{ZLIB_HOME}")
+  elseif (ZLIB_ROOT)
+    set (ZLIB_HOME "${ZLIB_ROOT}")
+  elseif (DEFINED ENV{ZLIB_ROOT})
+    set (ZLIB_HOME "$ENV{ZLIB_ROOT}")
+  endif ()
 endif ()
 
 if( NOT "${ZLIB_HOME}" STREQUAL "")

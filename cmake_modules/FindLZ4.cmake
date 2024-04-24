@@ -22,8 +22,14 @@
 # LZ4_STATIC_LIB: path to lz4.a
 # LZ4_FOUND: whether LZ4 has been found
 
-if (DEFINED ENV{LZ4_HOME} AND NOT LZ4_HOME)
-  set (LZ4_HOME "$ENV{LZ4_HOME}")
+if (NOT LZ4_HOME)
+  if (DEFINED ENV{LZ4_HOME})
+    set (LZ4_HOME "$ENV{LZ4_HOME}")
+  elseif (LZ4_ROOT)
+    set (LZ4_HOME "${LZ4_ROOT}")
+  elseif (DEFINED ENV{LZ4_ROOT})
+    set (LZ4_HOME "$ENV{LZ4_ROOT}")
+  endif ()
 endif ()
 
 if( NOT "${LZ4_HOME}" STREQUAL "")

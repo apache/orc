@@ -22,8 +22,14 @@
 # SNAPPY_STATIC_LIB: path to libsnappy.a
 # Snappy_FOUND: whether snappy has been found
 
-if (DEFINED ENV{SNAPPY_HOME} AND NOT SNAPPY_HOME)
-  set (SNAPPY_HOME "$ENV{SNAPPY_HOME}")
+if (NOT SNAPPY_HOME)
+  if (DEFINED ENV{SNAPPY_HOME})
+    set (SNAPPY_HOME "$ENV{SNAPPY_HOME}")
+  elseif (Snappy_ROOT)
+    set (SNAPPY_HOME "${Snappy_ROOT}")
+  elseif (DEFINED ENV{Snappy_ROOT})
+    set (SNAPPY_HOME "$ENV{Snappy_ROOT}")
+  endif ()
 endif ()
 
 if( NOT "${SNAPPY_HOME}" STREQUAL "")

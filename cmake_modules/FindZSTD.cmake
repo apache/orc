@@ -22,8 +22,14 @@
 # ZSTD_STATIC_LIB: path to libzstd.a
 # ZSTD_FOUND: whether zstd has been found
 
-if (DEFINED ENV{ZSTD_HOME} AND NOT ZSTD_HOME)
-  set (ZSTD_HOME "$ENV{ZSTD_HOME}")
+if (NOT ZSTD_HOME)
+  if (DEFINED ENV{ZSTD_HOME})
+    set (ZSTD_HOME "$ENV{ZSTD_HOME}")
+  elseif (ZSTD_ROOT)
+    set (ZSTD_HOME "${ZSTD_ROOT}")
+  elseif (DEFINED ENV{ZSTD_ROOT})
+    set (ZSTD_HOME "$ENV{ZSTD_ROOT}")
+  endif ()
 endif ()
 
 if( NOT "${ZSTD_HOME}" STREQUAL "")
