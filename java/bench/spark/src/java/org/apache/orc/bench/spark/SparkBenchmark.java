@@ -61,9 +61,9 @@ import scala.Function1;
 import scala.Tuple2;
 import scala.collection.Iterator;
 import scala.collection.JavaConverters;
-import scala.collection.Seq;
 import scala.collection.immutable.Map;
 import scala.collection.immutable.Map$;
+import scala.collection.immutable.Seq;
 
 import java.io.IOException;
 import java.sql.Timestamp;
