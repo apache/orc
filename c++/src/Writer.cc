@@ -437,7 +437,7 @@ namespace orc {
     // Write file header
     const static size_t magicIdLength = strlen(WriterImpl::magicId);
     {
-      SCOPED_STOPWATCH(options.getWriterMetrics(), IOBlockingLatencyUs, IOCount);
+      SCOPED_STOPWATCH(options_.getWriterMetrics(), IOBlockingLatencyUs, IOCount);
       outStream_->write(WriterImpl::magicId, magicIdLength);
     }
     currentOffset_ += magicIdLength;
@@ -585,7 +585,7 @@ namespace orc {
       throw std::logic_error("Failed to write post script.");
     }
     unsigned char psLength = static_cast<unsigned char>(bufferedStream_->flush());
-    SCOPED_STOPWATCH(options.getWriterMetrics(), IOBlockingLatencyUs, IOCount);
+    SCOPED_STOPWATCH(options_.getWriterMetrics(), IOBlockingLatencyUs, IOCount);
     outStream_->write(&psLength, sizeof(unsigned char));
   }
 

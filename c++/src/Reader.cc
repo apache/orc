@@ -1117,7 +1117,7 @@ namespace orc {
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
-    SCOPED_STOPWATCH(contents->readerMetrics, ReaderInclusiveLatencyUs, ReaderCall);
+    SCOPED_STOPWATCH(contents_->readerMetrics, ReaderInclusiveLatencyUs, ReaderCall);
     if (currentStripe_ >= lastStripe_) {
       data.numElements = 0;
       markEndOfFile();
