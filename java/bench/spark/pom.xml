@@ -171,9 +171,8 @@
                     <exclude>META-INF/NOTICE-binary</exclude>
                     <exclude>META-INF/NOTICE.md</exclude>
                     <exclude>META-INF/NOTICE.txt</exclude>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>META-INF/DUMMY.SF</exclude>
+                    <exclude>META-INF/DUMMY.DSA</exclude>
                     <exclude>LICENSE</exclude>
                     <exclude>NOTICE</exclude>
                     <exclude>THIRD-PARTY</exclude>
