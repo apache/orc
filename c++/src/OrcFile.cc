@@ -79,7 +79,7 @@ namespace orc {
     }
 
     void read(void* buf, uint64_t length, uint64_t offset) override {
-      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
+      SCOPED_STOPWATCH(metrics_, IOBlockingLatencyUs, IOCount);
       if (!buf) {
         throw ParseError("Buffer is null");
       }

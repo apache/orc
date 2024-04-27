@@ -177,7 +177,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+          cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DBUILD_CPP_ENABLE_METRICS=1
           make
       - name: Check clang-tidy
         run: cd build && make check-clang-tidy
