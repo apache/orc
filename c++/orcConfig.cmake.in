@@ -20,7 +20,7 @@
 #   orc_VERSION - version of the found ORC
 #   orc_FOUND - true if ORC found on the system
 #
-# This config sets the following targets in your project::
+# This config sets the following targets in your project:
 #
 #   orc::orc - for linked as static library
 #
