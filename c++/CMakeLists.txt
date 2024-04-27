@@ -21,3 +21,17 @@ add_subdirectory(src)
 if (BUILD_CPP_TESTS)
   add_subdirectory(test)
 endif ()
+
+# Generate cmake package configuration files
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  orcConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/orcConfig.cmake
+  INSTALL_DESTINATION ${ORC_INSTALL_CMAKE_DIR})
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/orcConfigVersion.cmake
+  VERSION ${ORC_VERSION}
+  COMPATIBILITY SameMajorVersion)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/orcConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/orcConfigVersion.cmake
+  DESTINATION ${ORC_INSTALL_CMAKE_DIR})

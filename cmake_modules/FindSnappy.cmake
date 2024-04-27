@@ -20,7 +20,21 @@
 # SNAPPY_INCLUDE_DIR: directory containing headers
 # SNAPPY_LIBRARY: path to libsnappy
 # SNAPPY_STATIC_LIB: path to libsnappy.a
-# SNAPPY_FOUND: whether snappy has been found
+# Snappy_FOUND: whether snappy has been found
+
+if (NOT SNAPPY_HOME)
+  if (DEFINED ENV{SNAPPY_HOME})
+    set (SNAPPY_HOME "$ENV{SNAPPY_HOME}")
+  elseif (Snappy_ROOT)
+    set (SNAPPY_HOME "${Snappy_ROOT}")
+  elseif (DEFINED ENV{Snappy_ROOT})
+    set (SNAPPY_HOME "$ENV{Snappy_ROOT}")
+  elseif (SNAPPY_ROOT)
+    set (SNAPPY_HOME "${SNAPPY_ROOT}")
+  elseif (DEFINED ENV{SNAPPY_ROOT})
+    set (SNAPPY_HOME "$ENV{SNAPPY_ROOT}")
+  endif ()
+endif ()
 
 if( NOT "${SNAPPY_HOME}" STREQUAL "")
     file (TO_CMAKE_PATH "${SNAPPY_HOME}" _snappy_path)
@@ -42,14 +56,14 @@ find_library (SNAPPY_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}${SNAPPY_LIB
   PATH_SUFFIXES "lib" "lib64")
 
 if (SNAPPY_INCLUDE_DIR AND SNAPPY_LIBRARY)
-  set (SNAPPY_FOUND TRUE)
+  set (Snappy_FOUND TRUE)
   set (SNAPPY_HEADER_NAME snappy.h)
   set (SNAPPY_HEADER ${SNAPPY_INCLUDE_DIR}/${SNAPPY_HEADER_NAME})
 else ()
-  set (SNAPPY_FOUND FALSE)
+  set (Snappy_FOUND FALSE)
 endif ()
 
-if (SNAPPY_FOUND)
+if (Snappy_FOUND)
   message (STATUS "Found the Snappy header: ${SNAPPY_HEADER}")
   message (STATUS "Found the Snappy library: ${SNAPPY_LIBRARY}")
   if (SNAPPY_STATIC_LIB)
@@ -74,3 +88,10 @@ mark_as_advanced (
   SNAPPY_STATIC_LIB
   SNAPPY_LIBRARY
 )
+
+if(Snappy_FOUND AND NOT TARGET Snappy::snappy)
+  add_library(Snappy::snappy UNKNOWN IMPORTED)
+  set_target_properties(Snappy::snappy
+                        PROPERTIES IMPORTED_LOCATION "${SNAPPY_LIBRARY}"
+                                   INTERFACE_INCLUDE_DIRECTORIES "${SNAPPY_INCLUDE_DIR}")
+endif()

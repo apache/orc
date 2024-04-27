@@ -22,10 +22,11 @@ configure_file (
 
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/orc/orc-config.hh"
-  DESTINATION "include/orc"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/orc"
   )
 
 install(DIRECTORY
-        "orc/"
-        DESTINATION "include/orc"
-        FILES_MATCHING PATTERN "*.hh")
+  "orc/"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/orc"
+  FILES_MATCHING PATTERN "*.hh"
+  )

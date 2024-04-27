@@ -22,6 +22,16 @@
 # LZ4_STATIC_LIB: path to lz4.a
 # LZ4_FOUND: whether LZ4 has been found
 
+if (NOT LZ4_HOME)
+  if (DEFINED ENV{LZ4_HOME})
+    set (LZ4_HOME "$ENV{LZ4_HOME}")
+  elseif (LZ4_ROOT)
+    set (LZ4_HOME "${LZ4_ROOT}")
+  elseif (DEFINED ENV{LZ4_ROOT})
+    set (LZ4_HOME "$ENV{LZ4_ROOT}")
+  endif ()
+endif ()
+
 if( NOT "${LZ4_HOME}" STREQUAL "")
     file (TO_CMAKE_PATH "${LZ4_HOME}" _lz4_path)
 endif()
@@ -33,7 +43,7 @@ find_path (LZ4_INCLUDE_DIR lz4.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (LZ4_LIBRARY NAMES lz4 HINTS
+find_library (LZ4_LIBRARY NAMES lz4 liblz4 HINTS
   ${_lz4_path}
   PATH_SUFFIXES "lib" "lib64")
 
@@ -74,3 +84,10 @@ mark_as_advanced (
   LZ4_STATIC_LIB
   LZ4_LIBRARY
 )
+
+if(LZ4_FOUND AND NOT TARGET LZ4::lz4)
+  add_library(LZ4::lz4 UNKNOWN IMPORTED)
+  set_target_properties(LZ4::lz4
+                        PROPERTIES IMPORTED_LOCATION "${LZ4_LIBRARY}"
+                                   INTERFACE_INCLUDE_DIRECTORIES "${LZ4_INCLUDE_DIR}")
+endif()

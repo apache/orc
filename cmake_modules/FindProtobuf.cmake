@@ -17,7 +17,7 @@
 
 # PROTOBUF_HOME environmental variable is used to check for Protobuf headers and static library
 
-# PROTOBUF_FOUND is set if Protobuf is found
+# Protobuf_FOUND is set if Protobuf is found
 # PROTOBUF_INCLUDE_DIR: directory containing headers
 # PROTOBUF_LIBRARY: location of libprotobuf
 # PROTOBUF_STATIC_LIB: location of protobuf.a
@@ -25,6 +25,19 @@
 # PROTOC_STATIC_LIB: location of protoc.a
 # PROTOBUF_EXECUTABLE: location of protoc
 
+if (NOT PROTOBUF_HOME)
+  if (DEFINED ENV{PROTOBUF_HOME})
+    set (PROTOBUF_HOME "$ENV{PROTOBUF_HOME}")
+  elseif (Protobuf_ROOT)
+    set (PROTOBUF_HOME "${Protobuf_ROOT}")
+  elseif (DEFINED ENV{Protobuf_ROOT})
+    set (PROTOBUF_HOME "$ENV{Protobuf_ROOT}")
+  elseif (PROTOBUF_ROOT)
+    set (PROTOBUF_HOME "${PROTOBUF_ROOT}")
+  elseif (DEFINED ENV{PROTOBUF_ROOT})
+    set (PROTOBUF_HOME "$ENV{PROTOBUF_ROOT}")
+  endif ()
+endif ()
 
 if( NOT "${PROTOBUF_HOME}" STREQUAL "")
     file (TO_CMAKE_PATH "${PROTOBUF_HOME}" _protobuf_path)
@@ -63,7 +76,7 @@ else()
       NO_DEFAULT_PATH
       PATH_SUFFIXES "include")
 
-    find_library (PROTOBUF_LIBRARY NAMES protobuf HINTS
+    find_library (PROTOBUF_LIBRARY NAMES protobuf libprotobuf HINTS
       ${_protobuf_path}
       PATH_SUFFIXES "lib")
 
@@ -71,7 +84,7 @@ else()
       ${_protobuf_path}
       PATH_SUFFIXES "lib")
 
-    find_library (PROTOC_LIBRARY NAMES protoc HINTS
+    find_library (PROTOC_LIBRARY NAMES protoc libprotoc HINTS
       ${_protobuf_path}
       PATH_SUFFIXES "lib")
 
@@ -86,14 +99,14 @@ else()
 endif ()
 
 if (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY AND PROTOC_LIBRARY AND PROTOBUF_EXECUTABLE)
-  set (PROTOBUF_FOUND TRUE)
+  set (Protobuf_FOUND TRUE)
   set (PROTOBUF_LIB_NAME protobuf)
   set (PROTOC_LIB_NAME protoc)
 else ()
-  set (PROTOBUF_FOUND FALSE)
+  set (Protobuf_FOUND FALSE)
 endif ()
 
-if (PROTOBUF_FOUND)
+if (Protobuf_FOUND)
   message (STATUS "Found the Protobuf headers: ${PROTOBUF_INCLUDE_DIR}")
   message (STATUS "Found the Protobuf library: ${PROTOBUF_LIBRARY}")
   message (STATUS "Found the Protoc library: ${PROTOC_LIBRARY}")
@@ -125,3 +138,10 @@ mark_as_advanced (
   PROTOC_STATIC_LIB
   PROTOC_LIBRARY
 )
+
+if(Protobuf_FOUND AND NOT TARGET protobuf::libprotobuf)
+  add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
+  set_target_properties(protobuf::libprotobuf
+                        PROPERTIES IMPORTED_LOCATION "${PROTOBUF_LIBRARY}"
+                                   INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
+endif()
