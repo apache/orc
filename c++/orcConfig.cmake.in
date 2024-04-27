@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# This config sets the following variables in your project::
+# This config sets the following variables in your project:
 #
 #   orc_VERSION - version of the found ORC
 #   orc_FOUND - true if ORC found on the system
