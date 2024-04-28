@@ -118,4 +118,41 @@ namespace orc {
     // test block size > natural write size
     writeToOutputStream(4096);
   }
+
+  TEST(TestBlockBuffer, requestBuffer) {
+    MemoryPool* pool = getDefaultPool();
+    BlockBuffer buffer(*pool, 1024);
+
+    EXPECT_EQ(buffer.getBlockNumber(), 0);
+    buffer.resize(0);
+    for (uint64_t i = 0; i < 10; ++i) {
+      char* srcData;
+      int srcSize;
+      buffer.requestBuffer(reinterpret_cast<void**>(&srcData), &srcSize);
+      EXPECT_EQ(buffer.getBlockNumber(), i + 1);
+      for (uint64_t j = 0; j < srcSize; ++j) {
+        if (i % 2 == 0) {
+          srcData[j] = static_cast<char>('A' + (i + j) % 26);
+        } else {
+          srcData[j] = static_cast<char>('a' + (i + j) % 26);
+        }
+      }
+    }
+
+    char* srcData;
+    uint64_t srcSize;
+    uint64_t blockId = 0;
+    int i = 0;
+    // verify the block data
+    while (buffer.getBlockData(blockId++, reinterpret_cast<void**>(&srcData), &srcSize)) {
+      for (uint64_t j = 0; j < srcSize; ++j) {
+        if (i % 2 == 0) {
+          EXPECT_EQ(srcData[j], 'A' + (i + j) % 26);
+        } else {
+          EXPECT_EQ(srcData[j], 'a' + (i + j) % 26);
+        }
+      }
+      i++;
+    }
+  }
 }  // namespace orc

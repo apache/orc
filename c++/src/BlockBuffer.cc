@@ -44,7 +44,7 @@ namespace orc {
     if (blockIndex >= getBlockNumber()) {
       throw std::out_of_range("Block index out of range");
     }
-    return Block(blocks_[blockIndex], std::min(currentSize_ - blockIndex * blockSize_, blockSize_));
+    return Block(blocks_[blockIndex], getBlockSize(blockIndex));
   }
 
   BlockBuffer::Block BlockBuffer::getNextBlock() {
@@ -128,4 +128,37 @@ namespace orc {
       metrics->IOCount.fetch_add(ioCount);
     }
   }
+
+  uint64_t BlockBuffer::getBlockSize(uint64_t blockId) const {
+    return std::min(currentSize_ - blockId * blockSize_, blockSize_);
+  }
+
+  bool BlockBuffer::getBlockData(uint64_t blockIndex, void** data, uint64_t* size) const {
+    if (blockIndex >= getBlockNumber()) {
+      return false;
+    }
+    *size = getBlockSize(blockIndex);
+    if (*size == 0) {
+      return false;
+    }
+    *data = &(blocks_[blockIndex][0]);
+    return true;
+  }
+
+  bool BlockBuffer::requestBuffer(void** buffer, int* size) {
+    if (currentSize_ == currentCapacity_) {
+      char* memptr = memoryPool_.malloc(blockSize_);
+      blocks_.push_back(memptr);
+      currentCapacity_ += blockSize_;
+      currentSize_ += blockSize_;
+      *buffer = blocks_.back();
+      *size = static_cast<int>(blockSize_);
+    } else {
+      *buffer = &(blocks_[currentSize_ / blockSize_][currentSize_ % blockSize_]);
+      *size = static_cast<int>(blockSize_ - currentSize_ % blockSize_);
+      currentSize_ += static_cast<uint64_t>(*size);
+    }
+    return true;
+  }
+
 }  // namespace orc

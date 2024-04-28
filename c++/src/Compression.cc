@@ -55,11 +55,11 @@ namespace orc {
                           uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics);
 
     virtual bool Next(void** data, int* size) override = 0;
-    virtual void BackUp(int count) override;
+    virtual void BackUp(int count) override = 0;
 
     virtual std::string getName() const override = 0;
-    virtual uint64_t flush() override;
-    virtual void suppress() override;
+    virtual uint64_t flush() override = 0;
+    virtual void suppress() override = 0;
 
     virtual bool isCompressed() const override {
       return true;
@@ -77,9 +77,6 @@ namespace orc {
 
     // ensure enough room for compression block header
     void ensureHeader();
-
-    // Buffer to hold uncompressed data until user calls Next()
-    DataBuffer<unsigned char> rawInputBuffer;
 
     // Compress level
     int level;
@@ -105,7 +102,6 @@ namespace orc {
                                                uint64_t capacity, uint64_t blockSize,
                                                MemoryPool& pool, WriterMetrics* metrics)
       : BufferedOutputStream(pool, outStream, capacity, blockSize, metrics),
-        rawInputBuffer(pool, blockSize),
         level(compressionLevel),
         outputBuffer(nullptr),
         bufferSize(0),
@@ -113,30 +109,6 @@ namespace orc {
         outputSize(0) {
     // init header pointer array
     header.fill(nullptr);
-  }
-
-  void CompressionStreamBase::BackUp(int count) {
-    if (count > bufferSize) {
-      throw std::logic_error("Can't backup that much!");
-    }
-    bufferSize -= count;
-  }
-
-  uint64_t CompressionStreamBase::flush() {
-    void* data;
-    int size;
-    if (!Next(&data, &size)) {
-      throw std::runtime_error("Failed to flush compression buffer.");
-    }
-    BufferedOutputStream::BackUp(outputSize - outputPosition);
-    bufferSize = outputSize = outputPosition = 0;
-    return BufferedOutputStream::flush();
-  }
-
-  void CompressionStreamBase::suppress() {
-    outputBuffer = nullptr;
-    bufferSize = outputPosition = outputSize = 0;
-    BufferedOutputStream::suppress();
   }
 
   uint64_t CompressionStreamBase::getSize() const {
@@ -161,6 +133,8 @@ namespace orc {
       offset += currentSize;
       outputPosition += currentSize;
     }
+    BufferedOutputStream::BackUp(outputSize - outputPosition);
+    outputPosition = outputSize = 0;
   }
 
   void CompressionStreamBase::ensureHeader() {
@@ -187,27 +161,62 @@ namespace orc {
 
     virtual bool Next(void** data, int* size) override;
     virtual std::string getName() const override = 0;
+    virtual void BackUp(int count) override;
+    virtual void suppress() override;
+    virtual uint64_t flush() override;
 
    protected:
     // return total compressed size
     virtual uint64_t doStreamingCompression() = 0;
+
+    // Buffer to hold uncompressed data until user calls Next()
+    BlockBuffer rawInputBuffer;
   };
+
+  void CompressionStream::BackUp(int count) {
+    uint64_t backup = static_cast<uint64_t>(count);
+    uint64_t currSize = rawInputBuffer.size();
+    if (backup > currSize) {
+      throw std::logic_error("Can't backup that much!");
+    }
+    rawInputBuffer.resize(currSize - backup);
+  }
+
+  uint64_t CompressionStream::flush() {
+    void* data;
+    int size;
+    if (!Next(&data, &size)) {
+      throw std::runtime_error("Failed to flush compression buffer.");
+    }
+    BufferedOutputStream::BackUp(outputSize - outputPosition);
+    rawInputBuffer.resize(0);
+    outputSize = outputPosition = 0;
+    return BufferedOutputStream::flush();
+  }
+
+  void CompressionStream::suppress() {
+    outputBuffer = nullptr;
+    outputPosition = outputSize = 0;
+    rawInputBuffer.resize(0);
+    BufferedOutputStream::suppress();
+  }
 
   CompressionStream::CompressionStream(OutputStream* outStream, int compressionLevel,
                                        uint64_t capacity, uint64_t blockSize, MemoryPool& pool,
                                        WriterMetrics* metrics)
-      : CompressionStreamBase(outStream, compressionLevel, capacity, blockSize, pool, metrics) {
+      : CompressionStreamBase(outStream, compressionLevel, capacity, blockSize, pool, metrics),
+        rawInputBuffer(pool, blockSize) {
     // PASS
   }
 
   bool CompressionStream::Next(void** data, int* size) {
-    if (bufferSize != 0) {
+    if (rawInputBuffer.size() != 0) {
       ensureHeader();
 
       uint64_t preSize = getSize();
       uint64_t totalCompressedSize = doStreamingCompression();
-      if (totalCompressedSize >= static_cast<unsigned long>(bufferSize)) {
-        writeHeader(static_cast<size_t>(bufferSize), true);
+      if (totalCompressedSize >= static_cast<unsigned long>(rawInputBuffer.size())) {
+        writeHeader(static_cast<size_t>(rawInputBuffer.size()), true);
         // reset output buffer
         outputBuffer = nullptr;
         outputPosition = outputSize = 0;
@@ -215,17 +224,18 @@ namespace orc {
         BufferedOutputStream::BackUp(static_cast<int>(backup));
 
         // copy raw input buffer into block buffer
-        writeData(rawInputBuffer.data(), bufferSize);
+        uint64_t blockNumber = rawInputBuffer.getBlockNumber();
+        for (uint64_t i = 0; i < blockNumber; ++i) {
+          auto block = rawInputBuffer.getBlock(i);
+          writeData(reinterpret_cast<const unsigned char*>(block.data), block.size);
+        }
       } else {
         writeHeader(totalCompressedSize, false);
       }
+      rawInputBuffer.resize(0);
     }
 
-    *data = rawInputBuffer.data();
-    *size = static_cast<int>(rawInputBuffer.size());
-    bufferSize = *size;
-
-    return true;
+    return rawInputBuffer.requestBuffer(data, size);
   }
 
   class ZlibCompressionStream : public CompressionStream {
@@ -260,31 +270,53 @@ namespace orc {
       throw std::runtime_error("Failed to reset inflate.");
     }
 
-    strm_.avail_in = static_cast<unsigned int>(bufferSize);
-    strm_.next_in = rawInputBuffer.data();
+    // reset output buffer
+    if (outputPosition != 0) {
+      BufferedOutputStream::BackUp(outputSize - outputPosition);
+    }
+    outputBuffer = nullptr;
+    outputPosition = outputSize = 0;
+
+    // iterate through all blocks
+    unsigned char* src = nullptr;
+    uint64_t len = 0;
+    uint64_t blockId = 0;
+    bool finish = false;
 
     do {
-      if (outputPosition >= outputSize) {
-        if (!BufferedOutputStream::Next(reinterpret_cast<void**>(&outputBuffer), &outputSize)) {
-          throw std::runtime_error("Failed to get next output buffer from output stream.");
-        }
-        outputPosition = 0;
-      }
-      strm_.next_out = reinterpret_cast<unsigned char*>(outputBuffer + outputPosition);
-      strm_.avail_out = static_cast<unsigned int>(outputSize - outputPosition);
-
-      int ret = deflate(&strm_, Z_FINISH);
-      outputPosition = outputSize - static_cast<int>(strm_.avail_out);
-
-      if (ret == Z_STREAM_END) {
-        break;
-      } else if (ret == Z_OK) {
-        // needs more buffer so will continue the loop
+      if (rawInputBuffer.getBlockData(blockId++, reinterpret_cast<void**>(&src), &len)) {
+        // set input buffer
+        strm_.avail_in = static_cast<unsigned int>(len);
+        strm_.next_in = src;
       } else {
-        throw std::runtime_error("Failed to deflate input data.");
+        // cannot find any uncompressed data, finish the stream
+        finish = true;
+        strm_.avail_in = 0;
+        strm_.next_in = nullptr;
       }
-    } while (strm_.avail_out == 0);
 
+      do {
+        if (outputPosition >= outputSize) {
+          if (!BufferedOutputStream::Next(reinterpret_cast<void**>(&outputBuffer), &outputSize)) {
+            throw std::runtime_error("Failed to get next output buffer from output stream.");
+          }
+          outputPosition = 0;
+        }
+        strm_.next_out = reinterpret_cast<unsigned char*>(outputBuffer + outputPosition);
+        strm_.avail_out = static_cast<unsigned int>(outputSize - outputPosition);
+
+        int ret = deflate(&strm_, finish ? Z_FINISH : Z_NO_FLUSH);
+        outputPosition = outputSize - static_cast<int>(strm_.avail_out);
+
+        if (ret == Z_STREAM_END) {
+          break;
+        } else if (ret == Z_OK) {
+          // needs more buffer so will continue the loop
+        } else {
+          throw std::runtime_error("Failed to deflate input data.");
+        }
+      } while (strm_.avail_out == 0);
+    } while (!finish);
     return strm_.total_out;
   }
 
@@ -882,12 +914,15 @@ namespace orc {
     BlockCompressionStream(OutputStream* outStream, int compressionLevel, uint64_t capacity,
                            uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics)
         : CompressionStreamBase(outStream, compressionLevel, capacity, blockSize, pool, metrics),
-          compressorBuffer(pool) {
+          compressorBuffer(pool),
+          rawInputBuffer(pool, blockSize) {
       // PASS
     }
 
     virtual bool Next(void** data, int* size) override;
     virtual void suppress() override;
+    virtual void BackUp(int count) override;
+    virtual uint64_t flush() override;
     virtual std::string getName() const override = 0;
 
    protected:
@@ -900,7 +935,28 @@ namespace orc {
 
     // should allocate max possible compressed size
     DataBuffer<unsigned char> compressorBuffer;
+
+    // Buffer to hold uncompressed data until user calls Next()
+    DataBuffer<unsigned char> rawInputBuffer;
   };
+
+  void BlockCompressionStream::BackUp(int count) {
+    if (count > bufferSize) {
+      throw std::logic_error("Can't backup that much!");
+    }
+    bufferSize -= count;
+  }
+
+  uint64_t BlockCompressionStream::flush() {
+    void* data;
+    int size;
+    if (!Next(&data, &size)) {
+      throw std::runtime_error("Failed to flush compression buffer.");
+    }
+    BufferedOutputStream::BackUp(outputSize - outputPosition);
+    bufferSize = outputSize = outputPosition = 0;
+    return BufferedOutputStream::flush();
+  }
 
   bool BlockCompressionStream::Next(void** data, int* size) {
     if (bufferSize != 0) {
@@ -935,7 +991,9 @@ namespace orc {
 
   void BlockCompressionStream::suppress() {
     compressorBuffer.resize(0);
-    CompressionStreamBase::suppress();
+    outputBuffer = nullptr;
+    bufferSize = outputPosition = outputSize = 0;
+    BufferedOutputStream::suppress();
   }
 
   /**
