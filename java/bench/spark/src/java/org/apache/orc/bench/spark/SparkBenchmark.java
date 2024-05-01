@@ -74,7 +74,8 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @AutoService(OrcBenchmark.class)
-@Fork(jvmArgsAppend = "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
+@Fork(jvmArgsAppend = {"--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED"})
 public class SparkBenchmark implements OrcBenchmark {
 
   private static final Path root = Utilities.getBenchmarkRoot();
