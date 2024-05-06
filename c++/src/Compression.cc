@@ -235,7 +235,10 @@ namespace orc {
       rawInputBuffer.resize(0);
     }
 
-    return rawInputBuffer.requestBuffer(data, size);
+    auto block = rawInputBuffer.getNextBlock();
+    *data = block.data;
+    *size = static_cast<int>(block.size);
+    return true;
   }
 
   class ZlibCompressionStream : public CompressionStream {
@@ -278,21 +281,18 @@ namespace orc {
     outputPosition = outputSize = 0;
 
     // iterate through all blocks
-    unsigned char* src = nullptr;
-    uint64_t len = 0;
     uint64_t blockId = 0;
     bool finish = false;
 
     do {
-      if (rawInputBuffer.getBlockData(blockId++, reinterpret_cast<void**>(&src), &len)) {
-        // set input buffer
-        strm_.avail_in = static_cast<unsigned int>(len);
-        strm_.next_in = src;
-      } else {
-        // cannot find any uncompressed data, finish the stream
+      if (blockId == rawInputBuffer.getBlockNumber()) {
         finish = true;
         strm_.avail_in = 0;
         strm_.next_in = nullptr;
+      } else {
+        auto block = rawInputBuffer.getBlock(blockId++);
+        strm_.avail_in = static_cast<unsigned int>(block.size);
+        strm_.next_in = reinterpret_cast<unsigned char*>(block.data);
       }
 
       do {

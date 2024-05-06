@@ -107,8 +107,6 @@ namespace orc {
 
     void resize(uint64_t size);
 
-    uint64_t getBlockSize(uint64_t blockId) const;
-
     /**
      * Requests the BlockBuffer to contain at least newCapacity bytes.
      * Reallocation happens if there is need of more space.
@@ -122,23 +120,6 @@ namespace orc {
      * @param metrics the metrics of the writer
      */
     void writeTo(OutputStream* output, WriterMetrics* metrics);
-
-    /**
-     * Get the block data by block index
-     * @param blockIndex the index of blocks
-     * @param data the pointer to the block data
-     * @param size the size of the block data
-     * @return true if the block data is successfully retrieved
-     */
-    bool getBlockData(uint64_t blockIndex, void** data, uint64_t* size) const;  // add ut
-
-    /**
-     * Get next availiable memory block
-     * @param data the pointer to the block data
-     * @param size the size of the block data
-     * @return true if the block data is successfully retrieved
-     */
-    bool requestBuffer(void** buffer, int* size);  // add ut
   };
 }  // namespace orc
 
