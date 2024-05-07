@@ -128,5 +128,4 @@ namespace orc {
       metrics->IOCount.fetch_add(ioCount);
     }
   }
-
 }  // namespace orc
