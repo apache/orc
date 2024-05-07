@@ -133,8 +133,6 @@ namespace orc {
       offset += currentSize;
       outputPosition += currentSize;
     }
-    BufferedOutputStream::BackUp(outputSize - outputPosition);
-    outputPosition = outputSize = 0;
   }
 
   void CompressionStreamBase::ensureHeader() {
@@ -272,13 +270,6 @@ namespace orc {
     if (deflateReset(&strm_) != Z_OK) {
       throw std::runtime_error("Failed to reset inflate.");
     }
-
-    // reset output buffer
-    if (outputPosition != 0) {
-      BufferedOutputStream::BackUp(outputSize - outputPosition);
-    }
-    outputBuffer = nullptr;
-    outputPosition = outputSize = 0;
 
     // iterate through all blocks
     uint64_t blockId = 0;
