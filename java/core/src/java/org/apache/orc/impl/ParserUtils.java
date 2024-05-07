@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class ParserUtils {
+  private static final TypeDescription.Category[] TYPE_DESCRIPTION_CATEGORY_VALUES
+      = TypeDescription.Category.values();
 
   static TypeDescription.Category parseCategory(ParserUtils.StringPosition source) {
     StringBuilder word = new StringBuilder();
@@ -56,7 +58,7 @@ public class ParserUtils {
       catString = catString.trim();
     }
     if (!catString.isEmpty()) {
-      for (TypeDescription.Category cat : TypeDescription.Category.values()) {
+      for (TypeDescription.Category cat : TYPE_DESCRIPTION_CATEGORY_VALUES) {
         if (cat.getName().equals(catString)) {
           return cat;
         }
