@@ -19,6 +19,7 @@
 package org.apache.orc.bench.hive;
 
 import com.google.auto.service.AutoService;
+import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -38,6 +39,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.Utilities;
+import org.apache.orc.bench.core.convert.GenerateVariants;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -47,6 +49,7 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.net.URI;
 import java.util.List;
@@ -78,7 +81,13 @@ public class ColumnProjectionBenchmark implements OrcBenchmark {
 
   @Override
   public void run(String[] args) throws Exception {
-    new Runner(Utilities.parseOptions(args, getClass())).run();
+    CommandLine cmds = GenerateVariants.parseCommandLine(args);
+    new Runner(new OptionsBuilder()
+        .parent(Utilities.parseOptions(args, this.getClass()))
+        .param("compression", cmds.getOptionValue("compress", "snappy,gz,zstd").split(","))
+        .param("dataset", cmds.getOptionValue("data", "github,sales,taxi").split(","))
+        .build()
+    ).run();
   }
 
   @Benchmark
