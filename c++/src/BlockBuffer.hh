@@ -106,12 +106,14 @@ namespace orc {
     }
 
     void resize(uint64_t size);
+
     /**
      * Requests the BlockBuffer to contain at least newCapacity bytes.
      * Reallocation happens if there is need of more space.
      * @param newCapacity new capacity of BlockBuffer
      */
     void reserve(uint64_t newCapacity);
+
     /**
      * Write the BlockBuffer content into OutputStream
      * @param output the output stream to write to
