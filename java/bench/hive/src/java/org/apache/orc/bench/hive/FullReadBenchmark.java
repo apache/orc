@@ -25,6 +25,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.FsInput;
+import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -45,6 +46,7 @@ import org.apache.orc.bench.core.CompressionKind;
 import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.Utilities;
+import org.apache.orc.bench.core.convert.GenerateVariants;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -54,6 +56,7 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -87,7 +90,13 @@ public class FullReadBenchmark implements OrcBenchmark {
 
   @Override
   public void run(String[] args) throws Exception {
-    new Runner(Utilities.parseOptions(args, getClass())).run();
+    CommandLine cmds = GenerateVariants.parseCommandLine(args);
+    new Runner(new OptionsBuilder()
+        .parent(Utilities.parseOptions(args, this.getClass()))
+        .param("compression", cmds.getOptionValue("compress", "gz,snappy,zstd").split(","))
+        .param("dataset", cmds.getOptionValue("data", "taxi,sales,github").split(","))
+        .build()
+    ).run();
   }
 
   @Benchmark
