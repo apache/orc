@@ -24,6 +24,8 @@ github:
     merge: false
     squash: true
     rebase: true
+  collaborators:
+    - ffacs
   labels:
     - apache
     - orc
