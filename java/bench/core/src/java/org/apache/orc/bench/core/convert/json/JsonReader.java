@@ -172,8 +172,7 @@ public class JsonReader implements BatchReader {
         vect.isNull[row] = true;
       } else {
         TimestampColumnVector vector = (TimestampColumnVector) vect;
-        vector.set(row, Timestamp.valueOf(value.getAsString()
-            .replaceAll("[TZ]", " ")));
+        vector.set(row, new Timestamp(value.getAsLong()));
       }
     }
   }
