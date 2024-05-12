@@ -80,7 +80,7 @@ namespace orc {
     if (readType.getKind() == fileType.getKind()) {
       ret.isValid = true;
       if (fileType.getKind() == CHAR || fileType.getKind() == VARCHAR) {
-        ret.isValid = readType.getMaximumLength() == fileType.getMaximumLength();
+        ret.needConvert = readType.getMaximumLength() != fileType.getMaximumLength();
       } else if (fileType.getKind() == DECIMAL) {
         ret.needConvert = readType.getPrecision() != fileType.getPrecision() ||
                           readType.getScale() != fileType.getScale();
@@ -105,7 +105,10 @@ namespace orc {
         }
         case STRING:
         case CHAR:
-        case VARCHAR:
+        case VARCHAR: {
+          ret.isValid = ret.needConvert = isStringVariant(readType) || isNumeric(readType);
+          break;
+        }
         case TIMESTAMP:
         case TIMESTAMP_INSTANT:
         case DATE:
