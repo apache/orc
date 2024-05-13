@@ -267,8 +267,6 @@ namespace orc {
 
     /**
      * Set the initial block size of input buffer in the class CompressionStream.
-     * Each column contains one or more BufferOutputStream depending on its type,
-     * and these buffers will automatically expand when more memory is required.
      */
     WriterOptions& setMemoryBlockSize(uint64_t capacity);
 
