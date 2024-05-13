@@ -53,7 +53,7 @@ namespace orc {
 
     WriterOptions options;
     options.setStripeSize(1024);
-    options.setCompressionBlockSize(1024);
+    options.setMemoryBlockSize(1024);
     options.setCompression(CompressionKind_ZLIB);
     options.setMemoryPool(pool);
     options.setDictionaryKeySizeThreshold(threshold);
@@ -109,7 +109,7 @@ namespace orc {
 
     WriterOptions options;
     options.setStripeSize(1024);
-    options.setCompressionBlockSize(1024);
+    options.setMemoryBlockSize(1024);
     options.setCompression(CompressionKind_ZLIB);
     options.setMemoryPool(pool);
     options.setDictionaryKeySizeThreshold(threshold);
@@ -170,7 +170,7 @@ namespace orc {
 
     WriterOptions options;
     options.setStripeSize(1024);
-    options.setCompressionBlockSize(1024);
+    options.setMemoryBlockSize(1024);
     options.setCompression(CompressionKind_ZLIB);
     options.setMemoryPool(pool);
     options.setDictionaryKeySizeThreshold(threshold);
@@ -233,7 +233,7 @@ namespace orc {
 
     WriterOptions options;
     options.setStripeSize(1024);
-    options.setCompressionBlockSize(1024);
+    options.setMemoryBlockSize(1024);
     options.setCompression(CompressionKind_ZLIB);
     options.setMemoryPool(pool);
     options.setDictionaryKeySizeThreshold(threshold);
@@ -302,7 +302,8 @@ namespace orc {
 
     WriterOptions options;
     options.setStripeSize(1);
-    options.setCompressionBlockSize(1024);
+    options.setMemoryBlockSize(1024);
+    options.setCompressionBlockSize(2 * 1024);
     options.setCompression(CompressionKind_ZLIB);
     options.setMemoryPool(pool);
     options.setDictionaryKeySizeThreshold(threshold);

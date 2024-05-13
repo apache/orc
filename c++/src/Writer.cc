@@ -45,11 +45,11 @@ namespace orc {
     std::string timezone;
     WriterMetrics* metrics;
     bool useTightNumericVector;
-    uint64_t outputBufferCapacity;
+    uint64_t memoryBlockSize;
 
     WriterOptionsPrivate() : fileVersion(FileVersion::v_0_12()) {  // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024;                               // 64M
-      compressionBlockSize = 64 * 1024;                            // 64K
+      compressionBlockSize = 256 * 1024;                           // 256K
       rowIndexStride = 10000;
       compression = CompressionKind_ZSTD;
       compressionStrategy = CompressionStrategy_SPEED;
@@ -66,7 +66,7 @@ namespace orc {
       timezone = "GMT";
       metrics = nullptr;
       useTightNumericVector = false;
-      outputBufferCapacity = 1024 * 1024;
+      memoryBlockSize = 64 * 1024;                                  // 64K
     }
   };
 
@@ -278,13 +278,13 @@ namespace orc {
     return privateBits_->useTightNumericVector;
   }
 
-  WriterOptions& WriterOptions::setOutputBufferCapacity(uint64_t capacity) {
-    privateBits_->outputBufferCapacity = capacity;
+  WriterOptions& WriterOptions::setMemoryBlockSize(uint64_t capacity) {
+    privateBits_->memoryBlockSize = capacity;
     return *this;
   }
 
-  uint64_t WriterOptions::getOutputBufferCapacity() const {
-    return privateBits_->outputBufferCapacity;
+  uint64_t WriterOptions::getMemoryBlockSize() const {
+    return privateBits_->memoryBlockSize;
   }
 
   Writer::~Writer() {
@@ -355,7 +355,7 @@ namespace orc {
     // compression stream for stripe footer, file footer and metadata
     compressionStream_ =
         createCompressor(options_.getCompression(), outStream_, options_.getCompressionStrategy(),
-                         options_.getOutputBufferCapacity(), options_.getCompressionBlockSize(),
+                         options_.getMemoryBlockSize(), options_.getCompressionBlockSize(),
                          *options_.getMemoryPool(), options_.getWriterMetrics());
 
     // uncompressed stream for post script

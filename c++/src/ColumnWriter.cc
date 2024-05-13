@@ -50,7 +50,7 @@ namespace orc {
     return createCompressor(options_.getCompression(), outStream_,
                             options_.getCompressionStrategy(),
                             // BufferedOutputStream initial capacity
-                            options_.getOutputBufferCapacity(), options_.getCompressionBlockSize(),
+                            options_.getCompressionBlockSize(), options_.getMemoryBlockSize(),
                             *options_.getMemoryPool(), options_.getWriterMetrics());
   }
 

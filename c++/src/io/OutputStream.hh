@@ -69,6 +69,7 @@ namespace orc {
     virtual uint64_t getSize() const;
     virtual uint64_t flush();
     virtual void suppress();
+    virtual uint64_t getRawInputBufferSize() const;
 
     virtual bool isCompressed() const {
       return false;
