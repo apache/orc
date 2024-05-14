@@ -215,7 +215,7 @@ namespace orc {
   }
 
   void CompressionStream::compressWithRawFallback() {
-     if (rawInputBuffer.size() != 0) {
+    if (rawInputBuffer.size() != 0) {
       ensureHeader();
 
       uint64_t preSize = getSize();
