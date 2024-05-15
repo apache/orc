@@ -364,8 +364,6 @@ namespace orc {
     useTightNumericVector_ = opts.getUseTightNumericVector();
 
     if (options_.getCompressionBlockSize() % options_.getMemoryBlockSize() != 0) {
-      std::cerr << options_.getCompressionBlockSize() << " : " << options_.getMemoryBlockSize()
-                << std::endl;
       throw std::invalid_argument(
           "Compression block size must be a multiple of memory block size.");
     }
