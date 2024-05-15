@@ -99,9 +99,7 @@ namespace orc {
   }
 
   uint64_t BufferedOutputStream::getRawInputBufferSize() const {
-    // we're unable to determine the size of the raw input buffer
-    // simply return 0
-    return 0;
+    throw std::logic_error("getRawInputBufferSize is not supported.");
   }
 
   void AppendOnlyBufferedStream::write(const char* data, size_t size) {

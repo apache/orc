@@ -166,6 +166,7 @@ namespace orc {
     WriterOptions options;
     options.setStripeSize(1024 * 1024)
         .setCompressionBlockSize(1024)
+        .setMemoryBlockSize(64)
         .setCompression(CompressionKind_NONE)
         .setMemoryPool(pool)
         .setRowIndexStride(1000);
@@ -310,6 +311,7 @@ namespace orc {
     WriterOptions options;
     options.setStripeSize(1024 * 1024)
         .setCompressionBlockSize(1024)
+        .setMemoryBlockSize(64)
         .setCompression(CompressionKind_NONE)
         .setMemoryPool(pool)
         .setRowIndexStride(1000);
@@ -492,6 +494,7 @@ namespace orc {
     WriterOptions options;
     options.setStripeSize(1024 * 1024)
         .setCompressionBlockSize(1024)
+        .setMemoryBlockSize(64)
         .setCompression(CompressionKind_NONE)
         .setMemoryPool(pool)
         .setRowIndexStride(1000);
@@ -673,6 +676,7 @@ namespace orc {
       WriterOptions options;
       options.setStripeSize(1024 * 1024)
           .setCompressionBlockSize(1024)
+          .setMemoryBlockSize(64)
           .setCompression(CompressionKind_NONE)
           .setMemoryPool(pool)
           .setRowIndexStride(1000);

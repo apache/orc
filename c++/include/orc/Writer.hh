@@ -266,6 +266,19 @@ namespace orc {
     bool getUseTightNumericVector() const;
 
     /**
+     * Set the initial capacity of output buffer in the class BufferedOutputStream.
+     * Each column contains one or more BufferOutputStream depending on its type,
+     * and these buffers will automatically expand when more memory is required.
+     */
+    WriterOptions& setOutputBufferCapacity(uint64_t capacity);
+
+    /**
+     * Get the initial capacity of output buffer in the class BufferedOutputStream.
+     * @return if not set, return default value which is 1 MB.
+     */
+    uint64_t getOutputBufferCapacity() const;
+
+    /**
      * Set the initial block size of input buffer in the class CompressionStream.
      */
     WriterOptions& setMemoryBlockSize(uint64_t capacity);

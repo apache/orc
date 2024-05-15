@@ -50,6 +50,7 @@ namespace orc {
                                                          CompressionStrategy strategy,
                                                          uint64_t bufferCapacity,
                                                          uint64_t compressionBlockSize,
+                                                         uint64_t memoryBlockSize,
                                                          MemoryPool& pool, WriterMetrics* metrics);
 }  // namespace orc
 

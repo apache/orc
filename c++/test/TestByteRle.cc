@@ -1263,7 +1263,7 @@ namespace orc {
     MemoryOutputStream memStream(capacity);
     std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(
         createCompressor(CompressionKind_ZSTD, &memStream, CompressionStrategy_COMPRESSION,
-                         capacity, blockSize, *getDefaultPool(), nullptr));
+                         capacity, blockSize, blockSize, *getDefaultPool(), nullptr));
     encoder->add(data, numValues, nullptr);
     encoder->flush();
 

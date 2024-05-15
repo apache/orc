@@ -66,7 +66,7 @@ namespace orc {
                          CompressionStrategy strategy, uint64_t capacity, uint64_t block,
                          MemoryPool& pool, const char* data, size_t dataSize) {
     std::unique_ptr<BufferedOutputStream> compressStream =
-        createCompressor(kind, outStream, strategy, capacity, block, pool, nullptr);
+        createCompressor(kind, outStream, strategy, capacity, block, block, pool, nullptr);
 
     size_t pos = 0;
     char* compressBuffer;
@@ -205,7 +205,7 @@ namespace orc {
     }
 
     std::unique_ptr<BufferedOutputStream> compressStream = createCompressor(
-        kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, nullptr);
+        kind, &memStream, CompressionStrategy_SPEED, capacity, block, block, *pool, nullptr);
 
     EXPECT_TRUE(ps.SerializeToZeroCopyStream(compressStream.get()));
     compressStream->flush();
@@ -213,8 +213,8 @@ namespace orc {
     auto inputStream =
         std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
 
-    std::unique_ptr<SeekableInputStream> decompressStream =
-        createDecompressor(kind, std::move(inputStream), capacity, *pool, getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> decompressStream = createDecompressor(
+        kind, std::move(inputStream), capacity, *pool, getDefaultReaderMetrics());
 
     proto::PostScript ps2;
     ps2.ParseFromZeroCopyStream(decompressStream.get());
@@ -312,7 +312,7 @@ namespace orc {
     uint64_t batchSize = 1024, blockSize = 256;
 
     AppendOnlyBufferedStream outStream(createCompressor(
-        kind, &memStream, strategy, DEFAULT_MEM_STREAM_SIZE, blockSize, *pool, nullptr));
+        kind, &memStream, strategy, DEFAULT_MEM_STREAM_SIZE, blockSize, blockSize, *pool, nullptr));
 
     // write 3 batches of data and record positions between every batch
     size_t row = 0;

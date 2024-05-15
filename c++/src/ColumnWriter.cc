@@ -47,11 +47,11 @@ namespace orc {
     // In the future, we can decide compression strategy and modifier
     // based on stream kind. But for now we just use the setting from
     // WriterOption
-    return createCompressor(options_.getCompression(), outStream_,
-                            options_.getCompressionStrategy(),
-                            // BufferedOutputStream initial capacity
-                            options_.getCompressionBlockSize(), options_.getMemoryBlockSize(),
-                            *options_.getMemoryPool(), options_.getWriterMetrics());
+    return createCompressor(
+        options_.getCompression(), outStream_, options_.getCompressionStrategy(),
+        // BufferedOutputStream initial capacity
+        options_.getOutputBufferCapacity(), options_.getCompressionBlockSize(),
+        options_.getMemoryBlockSize(), *options_.getMemoryPool(), options_.getWriterMetrics());
   }
 
   std::unique_ptr<StreamsFactory> createStreamsFactory(const WriterOptions& options,
