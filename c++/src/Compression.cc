@@ -1242,18 +1242,18 @@ namespace orc {
       }
       case CompressionKind_ZSTD: {
         int level = (strategy == CompressionStrategy_SPEED) ? 1 : ZSTD_CLEVEL_DEFAULT;
-        return std::make_unique<ZSTDCompressionStream>(outStream, level, compressionBlockSize,
+        return std::make_unique<ZSTDCompressionStream>(outStream, level, bufferCapacity,
                                                        memoryBlockSize, pool, metrics);
       }
       case CompressionKind_LZ4: {
         int level = (strategy == CompressionStrategy_SPEED) ? LZ4_ACCELERATION_MAX
                                                             : LZ4_ACCELERATION_DEFAULT;
-        return std::make_unique<Lz4CompressionSteam>(outStream, level, compressionBlockSize,
+        return std::make_unique<Lz4CompressionSteam>(outStream, level, bufferCapacity,
                                                      memoryBlockSize, pool, metrics);
       }
       case CompressionKind_SNAPPY: {
         int level = 0;
-        return std::make_unique<SnappyCompressionStream>(outStream, level, compressionBlockSize,
+        return std::make_unique<SnappyCompressionStream>(outStream, level, bufferCapacity,
                                                          memoryBlockSize, pool, metrics);
       }
       case CompressionKind_LZO:

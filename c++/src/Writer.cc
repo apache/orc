@@ -373,13 +373,13 @@ namespace orc {
     // compression stream for stripe footer, file footer and metadata
     compressionStream_ = createCompressor(
         options_.getCompression(), outStream_, options_.getCompressionStrategy(),
-        options_.getOutputBufferCapacity(), options_.getMemoryBlockSize(),
-        options_.getCompressionBlockSize(), *options_.getMemoryPool(), options_.getWriterMetrics());
+        options_.getOutputBufferCapacity(), options_.getCompressionBlockSize(),
+        options_.getMemoryBlockSize(), *options_.getMemoryPool(), options_.getWriterMetrics());
 
     // uncompressed stream for post script
     bufferedStream_.reset(new BufferedOutputStream(*options_.getMemoryPool(), outStream_,
                                                    1024,  // buffer capacity: 1024 bytes
-                                                   options_.getCompressionBlockSize(),
+                                                   options_.getMemoryBlockSize(),
                                                    options_.getWriterMetrics()));
 
     init();
