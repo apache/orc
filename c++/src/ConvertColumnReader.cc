@@ -722,12 +722,17 @@ namespace orc {
     void convertToInteger(ReadTypeBatch& dstBatch, const StringVectorBatch& srcBatch,
                           uint64_t idx) {
       int64_t longValue = 0;
-      try {
+      if (throwOnOverflow) {
         longValue = std::stoll(std::string(srcBatch.data[idx], srcBatch.length[idx]));
-      } catch (...) {
-        handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
-        return;
+      } else {
+        try {
+          longValue = std::stoll(std::string(srcBatch.data[idx], srcBatch.length[idx]));
+        } catch (...) {
+          handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
+          return;
+        }
       }
+
       if constexpr (std::is_same_v<ReadType, bool>) {
         dstBatch.data[idx] = longValue == 0 ? 0 : 1;
       } else {
@@ -738,14 +743,22 @@ namespace orc {
     }
 
     void convertToDouble(ReadTypeBatch& dstBatch, const StringVectorBatch& srcBatch, uint64_t idx) {
-      try {
+      if (throwOnOverflow) {
         if constexpr (std::is_same_v<ReadType, float>) {
           dstBatch.data[idx] = std::stof(std::string(srcBatch.data[idx], srcBatch.length[idx]));
         } else {
           dstBatch.data[idx] = std::stod(std::string(srcBatch.data[idx], srcBatch.length[idx]));
         }
-      } catch (...) {
-        handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
+      } else {
+        try {
+          if constexpr (std::is_same_v<ReadType, float>) {
+            dstBatch.data[idx] = std::stof(std::string(srcBatch.data[idx], srcBatch.length[idx]));
+          } else {
+            dstBatch.data[idx] = std::stod(std::string(srcBatch.data[idx], srcBatch.length[idx]));
+          }
+        } catch (...) {
+          handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
+        }
       }
     }
   };
