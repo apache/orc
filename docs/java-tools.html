@@ -1004,11 +1004,13 @@ supports both the local file system and HDFS.</p>
 <p>The subcommands for the tools are:</p>
 
 <ul>
+  <li>check (since ORC 2.0.1) - check the index of the specified column</li>
   <li>convert (since ORC 1.4) - convert CSV/JSON/ORC files to ORC</li>
   <li>count (since ORC 1.6) - recursively find *.orc and print the number of rows</li>
   <li>data - print the data of an ORC file</li>
   <li>json-schema (since ORC 1.4) - determine the schema of JSON documents</li>
   <li>key (since ORC 1.5) - print information about the encryption keys</li>
+  <li>merge (since ORC 2.0.1) - merge multiple ORC files into a single ORC file</li>
   <li>meta - print the metadata of an ORC file</li>
   <li>scan (since ORC 1.3) - scan the data for benchmarking</li>
   <li>sizes (since ORC 1.7.2) - list size on disk of each column</li>
@@ -1018,6 +1020,21 @@ supports both the local file system and HDFS.</p>
 <p>The command line looks like:</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar &lt;sub-command&gt; &lt;args&gt;
+</code></pre></div></div>
+<h2 id="java-check">Java Check</h2>
+
+<p>The check command can check whether the specified value of the column specified by multiple ORC files can be filtered.</p>
+
+<p>Check statistics and bloom filter index on x column.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar check <span class="nt">--type</span> predicate /path/to/example.orc <span class="nt">--values</span> 1234 <span class="nt">--values</span> 5566 <span class="nt">--column</span> x
+</code></pre></div></div>
+
+<p>Check statistics on x column.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar check <span class="nt">--type</span> <span class="nb">stat</span> /path/to/example.orc <span class="nt">--values</span> 1234 <span class="nt">--values</span> 5566 <span class="nt">--column</span> x
+</code></pre></div></div>
+
+<p>Check bloom filter index on x column.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar check <span class="nt">--type</span> bloom-filter /path/to/example.orc <span class="nt">--values</span> 1234 <span class="nt">--values</span> 5566 <span class="nt">--column</span> x
 </code></pre></div></div>
 
 <h2 id="java-convert">Java Convert</h2>
