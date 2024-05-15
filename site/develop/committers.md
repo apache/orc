@@ -56,6 +56,7 @@ Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
 Yiqun Zhang             | yqzhang      | PMC
+Yuanping Wu             | ffacs        | Committer
 Aihua Xu                | zihuaxu      | Committer
 
 ## Emiritus Members
