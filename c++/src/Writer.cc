@@ -379,7 +379,7 @@ namespace orc {
     // uncompressed stream for post script
     bufferedStream_.reset(new BufferedOutputStream(*options_.getMemoryPool(), outStream_,
                                                    1024,  // buffer capacity: 1024 bytes
-                                                   options_.getMemoryBlockSize(),
+                                                   options_.getCompressionBlockSize(),
                                                    options_.getWriterMetrics()));
 
     init();
