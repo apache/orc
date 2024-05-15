@@ -1833,7 +1833,11 @@ namespace orc {
     uint64_t rowCount = 5000000;
     auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<c0:int>"));
     WriterOptions options;
-    options.setStripeSize(1024).setMemoryBlockSize(1024).setCompression(kind).setMemoryPool(pool);
+    options.setStripeSize(1024)
+        .setCompressionBlockSize(1024)
+        .setMemoryBlockSize(64)
+        .setCompression(kind)
+        .setMemoryPool(pool);
 
     auto writer = createWriter(*type, &memStream, options);
     auto batch = writer->createRowBatch(rowCount);
@@ -2157,7 +2161,8 @@ namespace orc {
       auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<col1:int>"));
       WriterOptions options;
       options.setStripeSize(16 * 1024)
-          .setMemoryBlockSize(1024)
+          .setCompressionBlockSize(1024)
+          .setMemoryBlockSize(64)
           .setCompression(CompressionKind_NONE)
           .setMemoryPool(pool)
           .setRowIndexStride(1000);
