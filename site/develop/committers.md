@@ -20,6 +20,7 @@ Deshan Xiao             | deshanxiao   | Committer
 Dongjoon Hyun           | dongjoon     | PMC
 Deepak Majeti           | mdeepak      | PMC
 Eugene Koifman          | ekoifman     | PMC
+Yuanping Wu             | ffacs        | Committer
 Gang Wu                 | gangwu       | PMC
 Gopal Vijayaraghavan    | gopalv       | PMC
 Gunther Hagleitner      | gunther      | Committer
@@ -56,7 +57,6 @@ Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
 Yiqun Zhang             | yqzhang      | PMC
-Yuanping Wu             | ffacs        | Committer
 Aihua Xu                | zihuaxu      | Committer
 
 ## Emiritus Members
