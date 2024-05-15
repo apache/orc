@@ -21,6 +21,7 @@ Deshan Xiao             | deshanxiao   | Committer
 Dongjoon Hyun           | dongjoon     | PMC
 Deepak Majeti           | mdeepak      | PMC
 Eugene Koifman          | ekoifman     | PMC
+Yuanping Wu             | ffacs        | Committer
 Gang Wu                 | gangwu       | PMC
 Gopal Vijayaraghavan    | gopalv       | PMC
 Gunther Hagleitner      | gunther      | Committer
