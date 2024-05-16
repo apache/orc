@@ -815,4 +815,165 @@ namespace orc {
     }
   }
 
+  TEST(ConvertColumnReader, TestConvertStringVariantToNumeric) {
+    constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
+    constexpr int TEST_CASES = 6;
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Type> fileType(
+        Type::buildTypeFromString("struct<c1:char(25),c2:varchar(25),c3:string>"));
+    std::shared_ptr<Type> readType(Type::buildTypeFromString("struct<c1:boolean,c2:int,c3:float>"));
+    WriterOptions options;
+    auto writer = createWriter(*fileType, &memStream, options);
+    auto batch = writer->createRowBatch(TEST_CASES);
+    auto structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    auto& c1 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[0]);
+    auto& c2 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[1]);
+    auto& c3 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[2]);
+    std::vector<std::string> raw1{"",     "123456", "0", "-1234567890", "999999999999999999999999",
+                                  "error"};
+    std::vector<std::string> raw2{"",     "123456", "0", "-1234567890", "999999999999999999999999",
+                                  "error"};
+    std::vector<std::string> raw3{
+        "",     "123456", "-0.0", "-123456789.0123", "1000000000000000000000000000000000000000",
+        "error"};
+
+    c1.notNull[0] = c2.notNull[0] = c3.notNull[0] = false;
+    for (int i = 1; i < TEST_CASES; i++) {
+      c1.data[i] = raw1[i].data();
+      c1.length[i] = raw1[i].length();
+      c1.notNull[i] = true;
+
+      c2.data[i] = raw2[i].data();
+      c2.length[i] = raw2[i].length();
+      c2.notNull[i] = true;
+
+      c3.data[i] = raw3[i].data();
+      c3.length[i] = raw3[i].length();
+      c3.notNull[i] = true;
+    }
+
+    structBatch->numElements = c1.numElements = c2.numElements = c3.numElements = TEST_CASES;
+    structBatch->hasNulls = c1.hasNulls = c2.hasNulls = c3.hasNulls = true;
+    writer->add(*batch);
+    writer->close();
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    auto pool = getDefaultPool();
+    auto reader = createReader(*pool, std::move(inStream));
+    RowReaderOptions rowReaderOptions;
+    rowReaderOptions.setUseTightNumericVector(true);
+    rowReaderOptions.setReadType(readType);
+    auto rowReader = reader->createRowReader(rowReaderOptions);
+    auto readBatch = rowReader->createRowBatch(TEST_CASES);
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+
+    auto& readSturctBatch = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& readC1 = dynamic_cast<BooleanVectorBatch&>(*readSturctBatch.fields[0]);
+    auto& readC2 = dynamic_cast<IntVectorBatch&>(*readSturctBatch.fields[1]);
+    auto& readC3 = dynamic_cast<FloatVectorBatch&>(*readSturctBatch.fields[2]);
+
+    EXPECT_FALSE(readC1.notNull[0]);
+    EXPECT_FALSE(readC2.notNull[0]);
+    EXPECT_FALSE(readC3.notNull[0]);
+
+    for (int i = 1; i < 4; i++) {
+      EXPECT_TRUE(readC1.notNull[i]);
+      EXPECT_TRUE(readC2.notNull[i]);
+      EXPECT_TRUE(readC3.notNull[i]);
+    }
+
+    for (int i = 4; i <= 5; i++) {
+      EXPECT_FALSE(readC1.notNull[i]) << i;
+      EXPECT_FALSE(readC2.notNull[i]) << i;
+      EXPECT_FALSE(readC3.notNull[i]) << i;
+    }
+
+    EXPECT_EQ(readC1.data[1], 1);
+    EXPECT_EQ(readC2.data[1], 123456);
+    EXPECT_FLOAT_EQ(readC3.data[1], 123456);
+
+    EXPECT_EQ(readC1.data[2], 0);
+    EXPECT_EQ(readC2.data[2], 0);
+    EXPECT_FLOAT_EQ(readC3.data[2], -0.0);
+
+    EXPECT_EQ(readC1.data[3], 1);
+    EXPECT_EQ(readC2.data[3], -1234567890);
+    EXPECT_FLOAT_EQ(readC3.data[3], -123456789.0123);
+  }
+
+  TEST(ConvertColumnReader, TestConvertStringVariant) {
+    constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
+    constexpr int TEST_CASES = 4;
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Type> fileType(
+        Type::buildTypeFromString("struct<c1:char(5),c2:varchar(5),c3:string>"));
+    std::shared_ptr<Type> readType(
+        Type::buildTypeFromString("struct<c1:string,c2:char(4),c3:varchar(4)>"));
+    WriterOptions options;
+    auto writer = createWriter(*fileType, &memStream, options);
+    auto batch = writer->createRowBatch(TEST_CASES);
+    auto structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    auto& c1 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[0]);
+    auto& c2 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[1]);
+    auto& c3 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[2]);
+
+    std::vector<std::string> raw1{"", "12345", "1", "1234"};
+    std::vector<std::string> raw2{"", "12345", "1", "1234"};
+    std::vector<std::string> raw3{"", "12345", "1", "1234"};
+
+    c1.notNull[0] = c2.notNull[0] = c3.notNull[0] = false;
+    for (int i = 1; i < TEST_CASES; i++) {
+      c1.data[i] = raw1[i].data();
+      c1.length[i] = raw1[i].length();
+      c1.notNull[i] = true;
+
+      c2.data[i] = raw2[i].data();
+      c2.length[i] = raw2[i].length();
+      c2.notNull[i] = true;
+
+      c3.data[i] = raw3[i].data();
+      c3.length[i] = raw3[i].length();
+      c3.notNull[i] = true;
+    }
+    structBatch->numElements = c1.numElements = c2.numElements = c3.numElements = TEST_CASES;
+    structBatch->hasNulls = c1.hasNulls = c2.hasNulls = c3.hasNulls = true;
+    writer->add(*batch);
+    writer->close();
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    auto pool = getDefaultPool();
+    auto reader = createReader(*pool, std::move(inStream));
+    RowReaderOptions rowReaderOptions;
+    rowReaderOptions.setUseTightNumericVector(true);
+    rowReaderOptions.setReadType(readType);
+    auto rowReader = reader->createRowReader(rowReaderOptions);
+    auto readBatch = rowReader->createRowBatch(TEST_CASES);
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+
+    auto& readSturctBatch = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& readC1 = dynamic_cast<StringVectorBatch&>(*readSturctBatch.fields[0]);
+    auto& readC2 = dynamic_cast<StringVectorBatch&>(*readSturctBatch.fields[1]);
+    auto& readC3 = dynamic_cast<StringVectorBatch&>(*readSturctBatch.fields[2]);
+
+    EXPECT_FALSE(readC1.notNull[0]);
+    EXPECT_FALSE(readC2.notNull[0]);
+    EXPECT_FALSE(readC3.notNull[0]);
+
+    for (int i = 1; i < TEST_CASES; i++) {
+      EXPECT_TRUE(readC1.notNull[i]);
+      EXPECT_TRUE(readC2.notNull[i]);
+      EXPECT_TRUE(readC3.notNull[i]);
+    }
+
+    EXPECT_EQ(std::string(readC1.data[1], readC1.length[1]), "12345");
+    EXPECT_EQ(std::string(readC2.data[1], readC2.length[1]), "1234");
+    EXPECT_EQ(std::string(readC3.data[1], readC3.length[1]), "1234");
+
+    EXPECT_EQ(std::string(readC1.data[2], readC1.length[2]), "1    ");
+    EXPECT_EQ(std::string(readC2.data[2], readC2.length[2]), "1   ");
+    EXPECT_EQ(std::string(readC3.data[2], readC3.length[2]), "1");
+
+    EXPECT_EQ(std::string(readC1.data[3], readC1.length[3]), "1234 ");
+    EXPECT_EQ(std::string(readC2.data[3], readC2.length[3]), "1234");
+    EXPECT_EQ(std::string(readC3.data[3], readC3.length[3]), "1234");
+  }
+
 }  // namespace orc

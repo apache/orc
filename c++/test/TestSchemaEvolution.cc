@@ -148,6 +148,22 @@ namespace orc {
       }
     }
 
+    // conversion from string variant to numeric
+    for (size_t i = 7; i <= 11; i++) {
+      for (size_t j = 0; j <= 6; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = true;
+      }
+    }
+
+    // conversion from string variant to string variant
+    for (size_t i = 7; i <= 11; i++) {
+      for (size_t j = 7; j <= 11; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = (i != j);
+      }
+    }
+
     for (size_t i = 0; i < typesSize; i++) {
       for (size_t j = 0; j < typesSize; j++) {
         testConvertReader(types[i], types[j], canConvert[i][j], needConvert[i][j]);

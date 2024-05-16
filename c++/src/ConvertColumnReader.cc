@@ -17,6 +17,7 @@
  */
 
 #include "ConvertColumnReader.hh"
+#include "Utils.hh"
 
 namespace orc {
 
@@ -694,6 +695,112 @@ namespace orc {
     const int32_t scale_;
   };
 
+  template <typename ReadTypeBatch, typename ReadType>
+  class StringVariantToNumericColumnReader : public ConvertColumnReader {
+   public:
+    StringVariantToNumericColumnReader(const Type& readType, const Type& fileType,
+                                       StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {}
+
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ConvertColumnReader::next(rowBatch, numValues, notNull);
+
+      const auto& srcBatch = *SafeCastBatchTo<const StringVectorBatch*>(data.get());
+      auto& dstBatch = *SafeCastBatchTo<ReadTypeBatch*>(&rowBatch);
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+          if constexpr (std::is_floating_point_v<ReadType>) {
+            convertToDouble(dstBatch, srcBatch, i);
+          } else {
+            convertToInteger(dstBatch, srcBatch, i);
+          }
+        }
+      }
+    }
+
+   private:
+    void convertToInteger(ReadTypeBatch& dstBatch, const StringVectorBatch& srcBatch,
+                          uint64_t idx) {
+      int64_t longValue = 0;
+      try {
+        longValue = std::stoll(std::string(srcBatch.data[idx], srcBatch.length[idx]));
+      } catch (...) {
+        handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
+        return;
+      }
+      if constexpr (std::is_same_v<ReadType, bool>) {
+        dstBatch.data[idx] = longValue == 0 ? 0 : 1;
+      } else {
+        if (!downCastToInteger(dstBatch.data[idx], longValue)) {
+          handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
+        }
+      }
+    }
+
+    void convertToDouble(ReadTypeBatch& dstBatch, const StringVectorBatch& srcBatch, uint64_t idx) {
+      try {
+        if constexpr (std::is_same_v<ReadType, float>) {
+          dstBatch.data[idx] = std::stof(std::string(srcBatch.data[idx], srcBatch.length[idx]));
+        } else {
+          dstBatch.data[idx] = std::stod(std::string(srcBatch.data[idx], srcBatch.length[idx]));
+        }
+      } catch (...) {
+        handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
+      }
+    }
+  };
+
+  class StringVariantConvertColumnReader : public ConvertToStringVariantColumnReader {
+   public:
+    StringVariantConvertColumnReader(const Type& readType, const Type& fileType,
+                                     StripeStreams& stripe, bool throwOnOverflow)
+        : ConvertToStringVariantColumnReader(readType, fileType, stripe, throwOnOverflow) {}
+
+    uint64_t convertToStrBuffer(ColumnVectorBatch& rowBatch, uint64_t numValues) override {
+      uint64_t size = 0;
+      strBuffer.resize(numValues);
+      const auto& srcBatch = *SafeCastBatchTo<const StringVectorBatch*>(data.get());
+      const auto maxLength = readType.getMaximumLength();
+      if (readType.getKind() == STRING) {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            strBuffer[i] = std::string(srcBatch.data[i], srcBatch.length[i]);
+            size += strBuffer[i].size();
+          }
+        }
+      } else if (readType.getKind() == VARCHAR) {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            const char* charData = srcBatch.data[i];
+            uint64_t originLength = srcBatch.length[i];
+            uint64_t itemLength = Utf8Utils::truncateBytesTo(maxLength, charData, originLength);
+            strBuffer[i] = std::string(charData, itemLength);
+            size += strBuffer[i].length();
+          }
+        }
+      } else if (readType.getKind() == CHAR) {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
+            const char* charData = srcBatch.data[i];
+            uint64_t originLength = srcBatch.length[i];
+            uint64_t charLength = Utf8Utils::charLength(charData, originLength);
+            auto itemLength = Utf8Utils::truncateBytesTo(maxLength, charData, originLength);
+            strBuffer[i] = std::string(srcBatch.data[i], itemLength);
+            // the padding is exactly 1 byte per char
+            if (charLength < maxLength) {
+              strBuffer[i].resize(itemLength + maxLength - charLength, ' ');
+            }
+            size += strBuffer[i].length();
+          }
+        }
+      } else {
+        throw SchemaEvolutionError("Invalid type for numeric to string conversion: " +
+                                   readType.toString());
+      }
+      return size;
+    }
+  };
+
 #define DEFINE_NUMERIC_CONVERT_READER(FROM, TO, TYPE) \
   using FROM##To##TO##ColumnReader =                  \
       NumericConvertColumnReader<FROM##VectorBatch, TO##VectorBatch, TYPE>;
@@ -729,6 +836,12 @@ namespace orc {
 #define DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(TO)                                        \
   using Decimal64To##TO##ColumnReader = DecimalToStringVariantColumnReader<Decimal64VectorBatch>; \
   using Decimal128To##TO##ColumnReader = DecimalToStringVariantColumnReader<Decimal128VectorBatch>;
+
+#define DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(FROM, TO, TYPE) \
+  using FROM##To##TO##ColumnReader = StringVariantToNumericColumnReader<TO##VectorBatch, TYPE>;
+
+#define DEFINE_STRING_VARIANT_CONVERT_READER(FROM, TO) \
+  using FROM##To##TO##ColumnReader = StringVariantConvertColumnReader;
 
   DEFINE_NUMERIC_CONVERT_READER(Boolean, Byte, int8_t)
   DEFINE_NUMERIC_CONVERT_READER(Boolean, Short, int16_t)
@@ -834,8 +947,41 @@ namespace orc {
   DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(Char)
   DEFINE_DECIMAL_CONVERT_TO_STRING_VARINT_READER(Varchar)
 
+  // String variant to numeric
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Boolean, bool)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Byte, int8_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Short, int16_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Int, int32_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Long, int64_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Float, float)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(String, Double, double)
+
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Boolean, bool)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Byte, int8_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Short, int16_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Int, int32_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Long, int64_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Float, float)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Char, Double, double)
+
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Boolean, bool)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Byte, int8_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Short, int16_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Int, int32_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Long, int64_t)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Float, float)
+  DEFINE_STRING_VARIANT_CONVERT_TO_NUMERIC_READER(Varchar, Double, double)
+
+  // String variant to string variant
+  DEFINE_STRING_VARIANT_CONVERT_READER(String, Char)
+  DEFINE_STRING_VARIANT_CONVERT_READER(String, Varchar)
+  DEFINE_STRING_VARIANT_CONVERT_READER(Char, String)
+  DEFINE_STRING_VARIANT_CONVERT_READER(Char, Varchar)
+  DEFINE_STRING_VARIANT_CONVERT_READER(Varchar, String)
+  DEFINE_STRING_VARIANT_CONVERT_READER(Varchar, Char)
+
 #define CREATE_READER(NAME) \
-  return std::make_unique<NAME>(_readType, fileType, stripe, throwOnOverflow);
+  return std::make_unique<NAME>(readType, fileType, stripe, throwOnOverflow);
 
 #define CASE_CREATE_READER(TYPE, CONVERT) \
   case TYPE:                              \
@@ -858,7 +1004,7 @@ namespace orc {
 
 #define CASE_CREATE_DECIMAL_READER(FROM)            \
   case DECIMAL: {                                   \
-    if (isDecimal64(_readType)) {                   \
+    if (isDecimal64(readType)) {                    \
       CREATE_READER(FROM##ToDecimal64ColumnReader)  \
     } else {                                        \
       CREATE_READER(FROM##ToDecimal128ColumnReader) \
@@ -868,7 +1014,7 @@ namespace orc {
 #define CASE_EXCEPTION                                                                 \
   default:                                                                             \
     throw SchemaEvolutionError("Cannot convert from " + fileType.toString() + " to " + \
-                               _readType.toString());
+                               readType.toString());
 
   std::unique_ptr<ColumnReader> buildConvertReader(const Type& fileType, StripeStreams& stripe,
                                                    bool useTightNumericVector,
@@ -878,11 +1024,11 @@ namespace orc {
           "SchemaEvolution only support tight vector, please create ColumnVectorBatch with "
           "option useTightNumericVector");
     }
-    const auto& _readType = *stripe.getSchemaEvolution()->getReadType(fileType);
+    const auto& readType = *stripe.getSchemaEvolution()->getReadType(fileType);
 
     switch (fileType.getKind()) {
       case BOOLEAN: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BYTE, BooleanToByte)
           CASE_CREATE_READER(SHORT, BooleanToShort)
           CASE_CREATE_READER(INT, BooleanToInt)
@@ -906,7 +1052,7 @@ namespace orc {
         }
       }
       case BYTE: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BOOLEAN, ByteToBoolean)
           CASE_CREATE_READER(SHORT, ByteToShort)
           CASE_CREATE_READER(INT, ByteToInt)
@@ -930,7 +1076,7 @@ namespace orc {
         }
       }
       case SHORT: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BOOLEAN, ShortToBoolean)
           CASE_CREATE_READER(BYTE, ShortToByte)
           CASE_CREATE_READER(INT, ShortToInt)
@@ -954,7 +1100,7 @@ namespace orc {
         }
       }
       case INT: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BOOLEAN, IntToBoolean)
           CASE_CREATE_READER(BYTE, IntToByte)
           CASE_CREATE_READER(SHORT, IntToShort)
@@ -978,7 +1124,7 @@ namespace orc {
         }
       }
       case LONG: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BOOLEAN, LongToBoolean)
           CASE_CREATE_READER(BYTE, LongToByte)
           CASE_CREATE_READER(SHORT, LongToShort)
@@ -1002,7 +1148,7 @@ namespace orc {
         }
       }
       case FLOAT: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BOOLEAN, FloatToBoolean)
           CASE_CREATE_READER(BYTE, FloatToByte)
           CASE_CREATE_READER(SHORT, FloatToShort)
@@ -1026,7 +1172,7 @@ namespace orc {
         }
       }
       case DOUBLE: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_READER(BOOLEAN, DoubleToBoolean)
           CASE_CREATE_READER(BYTE, DoubleToByte)
           CASE_CREATE_READER(SHORT, DoubleToShort)
@@ -1050,7 +1196,7 @@ namespace orc {
         }
       }
       case DECIMAL: {
-        switch (_readType.getKind()) {
+        switch (readType.getKind()) {
           CASE_CREATE_FROM_DECIMAL_READER(BOOLEAN, Boolean)
           CASE_CREATE_FROM_DECIMAL_READER(BYTE, Byte)
           CASE_CREATE_FROM_DECIMAL_READER(SHORT, Short)
@@ -1065,13 +1211,13 @@ namespace orc {
           CASE_CREATE_FROM_DECIMAL_READER(TIMESTAMP_INSTANT, Timestamp)
           case DECIMAL: {
             if (isDecimal64(fileType)) {
-              if (isDecimal64(_readType)) {
+              if (isDecimal64(readType)) {
                 CREATE_READER(Decimal64ToDecimal64ColumnReader)
               } else {
                 CREATE_READER(Decimal64ToDecimal128ColumnReader)
               }
             } else {
-              if (isDecimal64(_readType)) {
+              if (isDecimal64(readType)) {
                 CREATE_READER(Decimal128ToDecimal64ColumnReader)
               } else {
                 CREATE_READER(Decimal128ToDecimal128ColumnReader)
@@ -1087,7 +1233,78 @@ namespace orc {
             CASE_EXCEPTION
         }
       }
-      case STRING:
+      case STRING: {
+        switch (readType.getKind()) {
+          CASE_CREATE_READER(BOOLEAN, StringToBoolean)
+          CASE_CREATE_READER(BYTE, StringToByte)
+          CASE_CREATE_READER(SHORT, StringToShort)
+          CASE_CREATE_READER(INT, StringToInt)
+          CASE_CREATE_READER(LONG, StringToLong)
+          CASE_CREATE_READER(FLOAT, StringToFloat)
+          CASE_CREATE_READER(DOUBLE, StringToDouble)
+          CASE_CREATE_READER(CHAR, StringToChar)
+          CASE_CREATE_READER(VARCHAR, StringToVarchar)
+          case STRING:
+          case BINARY:
+          case TIMESTAMP:
+          case LIST:
+          case MAP:
+          case STRUCT:
+          case UNION:
+          case DATE:
+          case TIMESTAMP_INSTANT:
+          case DECIMAL:
+            CASE_EXCEPTION
+        }
+      }
+      case CHAR: {
+        switch (readType.getKind()) {
+          CASE_CREATE_READER(BOOLEAN, CharToBoolean)
+          CASE_CREATE_READER(BYTE, CharToByte)
+          CASE_CREATE_READER(SHORT, CharToShort)
+          CASE_CREATE_READER(INT, CharToInt)
+          CASE_CREATE_READER(LONG, CharToLong)
+          CASE_CREATE_READER(FLOAT, CharToFloat)
+          CASE_CREATE_READER(DOUBLE, CharToDouble)
+          CASE_CREATE_READER(STRING, CharToString)
+          CASE_CREATE_READER(VARCHAR, CharToVarchar)
+          case CHAR:
+          case BINARY:
+          case TIMESTAMP:
+          case LIST:
+          case MAP:
+          case STRUCT:
+          case UNION:
+          case DATE:
+          case TIMESTAMP_INSTANT:
+          case DECIMAL:
+            CASE_EXCEPTION
+        }
+      }
+      case VARCHAR: {
+        switch (readType.getKind()) {
+          CASE_CREATE_READER(BOOLEAN, VarcharToBoolean)
+          CASE_CREATE_READER(BYTE, VarcharToByte)
+          CASE_CREATE_READER(SHORT, VarcharToShort)
+          CASE_CREATE_READER(INT, VarcharToInt)
+          CASE_CREATE_READER(LONG, VarcharToLong)
+          CASE_CREATE_READER(FLOAT, VarcharToFloat)
+          CASE_CREATE_READER(DOUBLE, VarcharToDouble)
+          CASE_CREATE_READER(STRING, VarcharToString)
+          CASE_CREATE_READER(CHAR, VarcharToChar)
+          case VARCHAR:
+          case BINARY:
+          case TIMESTAMP:
+          case LIST:
+          case MAP:
+          case STRUCT:
+          case UNION:
+          case DATE:
+          case TIMESTAMP_INSTANT:
+          case DECIMAL:
+            CASE_EXCEPTION
+        }
+      }
       case BINARY:
       case TIMESTAMP:
       case LIST:
@@ -1095,21 +1312,9 @@ namespace orc {
       case STRUCT:
       case UNION:
       case DATE:
-      case VARCHAR:
-      case CHAR:
       case TIMESTAMP_INSTANT:
         CASE_EXCEPTION
     }
   }
-
-#undef DEFINE_NUMERIC_CONVERT_READER
-#undef DEFINE_NUMERIC_CONVERT_TO_STRING_VARINT_READER
-#undef DEFINE_NUMERIC_CONVERT_TO_DECIMAL_READER
-#undef DEFINE_NUMERIC_CONVERT_TO_TIMESTAMP_READER
-#undef DEFINE_DECIMAL_CONVERT_TO_NUMERIC_READER
-#undef DEFINE_DECIMAL_CONVERT_TO_DECIMAL_READER
-#undef CASE_CREATE_FROM_DECIMAL_READER
-#undef CASE_CREATE_READER
-#undef CASE_EXCEPTION
 
 }  // namespace orc
