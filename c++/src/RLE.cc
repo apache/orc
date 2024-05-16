@@ -108,8 +108,7 @@ namespace orc {
 
   void RleEncoder::recordPosition(PositionRecorder* recorder) const {
     uint64_t flushedSize = outputStream->getSize();
-    uint64_t unusedBufferSize =
-        static_cast<uint64_t>(bufferLength - bufferPosition);
+    uint64_t unusedBufferSize = static_cast<uint64_t>(bufferLength - bufferPosition);
     if (outputStream->isCompressed()) {
       recorder->add(flushedSize);
       // number of decompressed bytes that need to be consumed
