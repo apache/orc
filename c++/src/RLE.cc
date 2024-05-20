@@ -111,7 +111,9 @@ namespace orc {
     uint64_t unusedBufferSize = static_cast<uint64_t>(bufferLength - bufferPosition);
     if (outputStream->isCompressed()) {
       recorder->add(flushedSize);
-      // number of decompressed bytes that need to be consumed
+      // There are multiple blocks in the input buffer, but bufferPosition only records the
+      // effective length of the last block. We need rawInputBufferSize to record the total length
+      // of all variable blocks.
       recorder->add(outputStream->getRawInputBufferSize() - unusedBufferSize);
     } else {
       recorder->add(flushedSize - unusedBufferSize);

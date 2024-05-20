@@ -181,8 +181,7 @@ namespace orc {
     // Buffer to hold uncompressed data until user calls Next()
     BlockBuffer rawInputBuffer;
 
-    // compress with raw fallback
-    void compressWithRawFallback();
+    void compressInternal();
   };
 
   void CompressionStream::BackUp(int count) {
@@ -195,7 +194,7 @@ namespace orc {
   }
 
   uint64_t CompressionStream::flush() {
-    compressWithRawFallback();
+    compressInternal();
     BufferedOutputStream::BackUp(outputSize - outputPosition);
     rawInputBuffer.resize(0);
     outputSize = outputPosition = 0;
@@ -219,7 +218,7 @@ namespace orc {
     // PASS
   }
 
-  void CompressionStream::compressWithRawFallback() {
+  void CompressionStream::compressInternal() {
     if (rawInputBuffer.size() != 0) {
       ensureHeader();
 
@@ -250,15 +249,13 @@ namespace orc {
     if (rawInputBuffer.size() > compressionBlockSize) {
       std::stringstream ss;
       ss << "uncompressed data size " << rawInputBuffer.size() << " is larger than block size "
-         << compressionBlockSize
-         << ". compressionBlockSize should be set equal to multiply of "
-            "memoryBlockSize";
+         << compressionBlockSize;
       throw std::logic_error(ss.str());
     }
 
-    // triggle compress when rawInputBuffer is reach the capacity
+    // compress data in the rawInputBuffer when it is full
     if (rawInputBuffer.size() == compressionBlockSize) {
-      compressWithRawFallback();
+      compressInternal();
     }
 
     auto block = rawInputBuffer.getNextBlock();

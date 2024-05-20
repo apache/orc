@@ -42,8 +42,11 @@ namespace orc {
    * @param outStream the output stream that is the underlying target
    * @param strategy compression strategy
    * @param bufferCapacity compression stream buffer total capacity
-   * @param compressionBlockSize compression buffer block size
+   * @param compressionBlockSize compression is triggered when the original input buffer size
+   * reaches this size
+   * @param memoryBlockSize the block size for original input buffer
    * @param pool the memory pool
+   * @param metrics the writer metrics
    */
   std::unique_ptr<BufferedOutputStream> createCompressor(
       CompressionKind kind, OutputStream* outStream, CompressionStrategy strategy,
