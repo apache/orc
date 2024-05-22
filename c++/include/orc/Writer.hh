@@ -277,6 +277,19 @@ namespace orc {
      * @return if not set, return default value which is 1 MB.
      */
     uint64_t getOutputBufferCapacity() const;
+
+    /**
+     * Set the initial block size of original input buffer in the class CompressionStream.
+     * the input buffer is used to store raw data before compression, while the output buffer is
+     * dedicated to holding compressed data
+     */
+    WriterOptions& setMemoryBlockSize(uint64_t capacity);
+
+    /**
+     * Get the initial block size of original input buffer in the class CompressionStream.
+     * @return if not set, return default value which is 64 KB.
+     */
+    uint64_t getMemoryBlockSize() const;
   };
 
   class Writer {

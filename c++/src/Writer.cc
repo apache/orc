@@ -46,6 +46,7 @@ namespace orc {
     WriterMetrics* metrics;
     bool useTightNumericVector;
     uint64_t outputBufferCapacity;
+    uint64_t memoryBlockSize;
 
     WriterOptionsPrivate() : fileVersion(FileVersion::v_0_12()) {  // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024;                               // 64M
@@ -67,6 +68,7 @@ namespace orc {
       metrics = nullptr;
       useTightNumericVector = false;
       outputBufferCapacity = 1024 * 1024;
+      memoryBlockSize = 64 * 1024;  // 64K
     }
   };
 
@@ -287,6 +289,15 @@ namespace orc {
     return privateBits_->outputBufferCapacity;
   }
 
+  WriterOptions& WriterOptions::setMemoryBlockSize(uint64_t capacity) {
+    privateBits_->memoryBlockSize = capacity;
+    return *this;
+  }
+
+  uint64_t WriterOptions::getMemoryBlockSize() const {
+    return privateBits_->memoryBlockSize;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -352,11 +363,16 @@ namespace orc {
 
     useTightNumericVector_ = opts.getUseTightNumericVector();
 
+    if (options_.getCompressionBlockSize() % options_.getMemoryBlockSize() != 0) {
+      throw std::invalid_argument(
+          "Compression block size must be a multiple of memory block size.");
+    }
+
     // compression stream for stripe footer, file footer and metadata
-    compressionStream_ =
-        createCompressor(options_.getCompression(), outStream_, options_.getCompressionStrategy(),
-                         options_.getOutputBufferCapacity(), options_.getCompressionBlockSize(),
-                         *options_.getMemoryPool(), options_.getWriterMetrics());
+    compressionStream_ = createCompressor(
+        options_.getCompression(), outStream_, options_.getCompressionStrategy(),
+        options_.getOutputBufferCapacity(), options_.getCompressionBlockSize(),
+        options_.getMemoryBlockSize(), *options_.getMemoryPool(), options_.getWriterMetrics());
 
     // uncompressed stream for post script
     bufferedStream_.reset(new BufferedOutputStream(*options_.getMemoryPool(), outStream_,

@@ -98,6 +98,10 @@ namespace orc {
     dataBuffer_->resize(0);
   }
 
+  uint64_t BufferedOutputStream::getRawInputBufferSize() const {
+    throw std::logic_error("getRawInputBufferSize is not supported.");
+  }
+
   void AppendOnlyBufferedStream::write(const char* data, size_t size) {
     size_t dataOffset = 0;
     while (size > 0) {
@@ -128,16 +132,17 @@ namespace orc {
 
   void AppendOnlyBufferedStream::recordPosition(PositionRecorder* recorder) const {
     uint64_t flushedSize = outStream_->getSize();
-    uint64_t unflushedSize = static_cast<uint64_t>(bufferOffset_);
+    uint64_t unusedBufferSize = static_cast<uint64_t>(bufferLength_ - bufferOffset_);
     if (outStream_->isCompressed()) {
       // start of the compression chunk in the stream
       recorder->add(flushedSize);
-      // number of decompressed bytes that need to be consumed
-      recorder->add(unflushedSize);
+      // There are multiple blocks in the input buffer, but bufferPosition only records the
+      // effective length of the last block. We need rawInputBufferSize to record the total length
+      // of all variable blocks.
+      recorder->add(outStream_->getRawInputBufferSize() - unusedBufferSize);
     } else {
-      flushedSize -= static_cast<uint64_t>(bufferLength_);
       // byte offset of the start location
-      recorder->add(flushedSize + unflushedSize);
+      recorder->add(flushedSize - unusedBufferSize);
     }
   }
 

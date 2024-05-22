@@ -52,7 +52,8 @@ namespace orc {
   class CompressionStreamBase : public BufferedOutputStream {
    public:
     CompressionStreamBase(OutputStream* outStream, int compressionLevel, uint64_t capacity,
-                          uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics);
+                          uint64_t compressionBlockSize, uint64_t memoryBlockSize, MemoryPool& pool,
+                          WriterMetrics* metrics);
 
     virtual bool Next(void** data, int* size) override = 0;
     virtual void BackUp(int count) override = 0;
@@ -65,6 +66,7 @@ namespace orc {
       return true;
     }
     virtual uint64_t getSize() const override;
+    virtual uint64_t getRawInputBufferSize() const override = 0;
 
    protected:
     void writeData(const unsigned char* data, int size);
@@ -96,17 +98,22 @@ namespace orc {
     // Compression block header pointer array
     static const uint32_t HEADER_SIZE = 3;
     std::array<char*, HEADER_SIZE> header;
+
+    // Compression block size
+    uint64_t compressionBlockSize;
   };
 
   CompressionStreamBase::CompressionStreamBase(OutputStream* outStream, int compressionLevel,
-                                               uint64_t capacity, uint64_t blockSize,
-                                               MemoryPool& pool, WriterMetrics* metrics)
-      : BufferedOutputStream(pool, outStream, capacity, blockSize, metrics),
+                                               uint64_t capacity, uint64_t compressionBlockSize,
+                                               uint64_t memoryBlockSize, MemoryPool& pool,
+                                               WriterMetrics* metrics)
+      : BufferedOutputStream(pool, outStream, capacity, memoryBlockSize, metrics),
         level(compressionLevel),
         outputBuffer(nullptr),
         bufferSize(0),
         outputPosition(0),
-        outputSize(0) {
+        outputSize(0),
+        compressionBlockSize(compressionBlockSize) {
     // init header pointer array
     header.fill(nullptr);
   }
@@ -155,13 +162,17 @@ namespace orc {
   class CompressionStream : public CompressionStreamBase {
    public:
     CompressionStream(OutputStream* outStream, int compressionLevel, uint64_t capacity,
-                      uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics);
+                      uint64_t compressionBlockSize, uint64_t memoryBlockSize, MemoryPool& pool,
+                      WriterMetrics* metrics);
 
     virtual bool Next(void** data, int* size) override;
     virtual std::string getName() const override = 0;
     virtual void BackUp(int count) override;
     virtual void suppress() override;
     virtual uint64_t flush() override;
+    uint64_t getRawInputBufferSize() const override {
+      return rawInputBuffer.size();
+    }
 
    protected:
     // return total compressed size
@@ -169,6 +180,8 @@ namespace orc {
 
     // Buffer to hold uncompressed data until user calls Next()
     BlockBuffer rawInputBuffer;
+
+    void compressInternal();
   };
 
   void CompressionStream::BackUp(int count) {
@@ -181,11 +194,7 @@ namespace orc {
   }
 
   uint64_t CompressionStream::flush() {
-    void* data;
-    int size;
-    if (!Next(&data, &size)) {
-      throw std::runtime_error("Failed to flush compression buffer.");
-    }
+    compressInternal();
     BufferedOutputStream::BackUp(outputSize - outputPosition);
     rawInputBuffer.resize(0);
     outputSize = outputPosition = 0;
@@ -200,14 +209,16 @@ namespace orc {
   }
 
   CompressionStream::CompressionStream(OutputStream* outStream, int compressionLevel,
-                                       uint64_t capacity, uint64_t blockSize, MemoryPool& pool,
+                                       uint64_t capacity, uint64_t compressionBlockSize,
+                                       uint64_t memoryBlockSize, MemoryPool& pool,
                                        WriterMetrics* metrics)
-      : CompressionStreamBase(outStream, compressionLevel, capacity, blockSize, pool, metrics),
-        rawInputBuffer(pool, blockSize) {
+      : CompressionStreamBase(outStream, compressionLevel, capacity, compressionBlockSize,
+                              memoryBlockSize, pool, metrics),
+        rawInputBuffer(pool, memoryBlockSize) {
     // PASS
   }
 
-  bool CompressionStream::Next(void** data, int* size) {
+  void CompressionStream::compressInternal() {
     if (rawInputBuffer.size() != 0) {
       ensureHeader();
 
@@ -232,6 +243,20 @@ namespace orc {
       }
       rawInputBuffer.resize(0);
     }
+  }
+
+  bool CompressionStream::Next(void** data, int* size) {
+    if (rawInputBuffer.size() > compressionBlockSize) {
+      std::stringstream ss;
+      ss << "uncompressed data size " << rawInputBuffer.size()
+         << " is larger than compression block size " << compressionBlockSize;
+      throw std::logic_error(ss.str());
+    }
+
+    // compress data in the rawInputBuffer when it is full
+    if (rawInputBuffer.size() == compressionBlockSize) {
+      compressInternal();
+    }
 
     auto block = rawInputBuffer.getNextBlock();
     *data = block.data;
@@ -241,8 +266,9 @@ namespace orc {
 
   class ZlibCompressionStream : public CompressionStream {
    public:
-    ZlibCompressionStream(OutputStream* outStream, int compressionLevel, uint64_t capacity,
-                          uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics);
+    ZlibCompressionStream(OutputStream* outStream, int compressionLevel, uint64_t bufferCapacity,
+                          uint64_t compressionBlockSize, uint64_t memoryBlockSize, MemoryPool& pool,
+                          WriterMetrics* metrics);
 
     virtual ~ZlibCompressionStream() override {
       end();
@@ -260,9 +286,12 @@ namespace orc {
   };
 
   ZlibCompressionStream::ZlibCompressionStream(OutputStream* outStream, int compressionLevel,
-                                               uint64_t capacity, uint64_t blockSize,
-                                               MemoryPool& pool, WriterMetrics* metrics)
-      : CompressionStream(outStream, compressionLevel, capacity, blockSize, pool, metrics) {
+                                               uint64_t bufferCapacity,
+                                               uint64_t compressionBlockSize,
+                                               uint64_t memoryBlockSize, MemoryPool& pool,
+                                               WriterMetrics* metrics)
+      : CompressionStream(outStream, compressionLevel, bufferCapacity, compressionBlockSize,
+                          memoryBlockSize, pool, metrics) {
     init();
   }
 
@@ -904,7 +933,8 @@ namespace orc {
    public:
     BlockCompressionStream(OutputStream* outStream, int compressionLevel, uint64_t capacity,
                            uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics)
-        : CompressionStreamBase(outStream, compressionLevel, capacity, blockSize, pool, metrics),
+        : CompressionStreamBase(outStream, compressionLevel, capacity, blockSize, blockSize, pool,
+                                metrics),
           compressorBuffer(pool),
           rawInputBuffer(pool, blockSize) {
       // PASS
@@ -915,6 +945,9 @@ namespace orc {
     virtual void BackUp(int count) override;
     virtual uint64_t flush() override;
     virtual std::string getName() const override = 0;
+    uint64_t getRawInputBufferSize() const override {
+      return rawInputBuffer.size();
+    }
 
    protected:
     // compresses a block and returns the compressed size
@@ -1189,12 +1222,10 @@ namespace orc {
 
   DIAGNOSTIC_PUSH
 
-  std::unique_ptr<BufferedOutputStream> createCompressor(CompressionKind kind,
-                                                         OutputStream* outStream,
-                                                         CompressionStrategy strategy,
-                                                         uint64_t bufferCapacity,
-                                                         uint64_t compressionBlockSize,
-                                                         MemoryPool& pool, WriterMetrics* metrics) {
+  std::unique_ptr<BufferedOutputStream> createCompressor(
+      CompressionKind kind, OutputStream* outStream, CompressionStrategy strategy,
+      uint64_t bufferCapacity, uint64_t compressionBlockSize, uint64_t memoryBlockSize,
+      MemoryPool& pool, WriterMetrics* metrics) {
     switch (static_cast<int64_t>(kind)) {
       case CompressionKind_NONE: {
         return std::make_unique<BufferedOutputStream>(pool, outStream, bufferCapacity,
@@ -1203,8 +1234,8 @@ namespace orc {
       case CompressionKind_ZLIB: {
         int level =
             (strategy == CompressionStrategy_SPEED) ? Z_BEST_SPEED + 1 : Z_DEFAULT_COMPRESSION;
-        return std::make_unique<ZlibCompressionStream>(outStream, level, bufferCapacity,
-                                                       compressionBlockSize, pool, metrics);
+        return std::make_unique<ZlibCompressionStream>(
+            outStream, level, bufferCapacity, compressionBlockSize, memoryBlockSize, pool, metrics);
       }
       case CompressionKind_ZSTD: {
         int level = (strategy == CompressionStrategy_SPEED) ? 1 : ZSTD_CLEVEL_DEFAULT;

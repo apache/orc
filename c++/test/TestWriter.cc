@@ -41,11 +41,11 @@ namespace orc {
 
   const int DEFAULT_MEM_STREAM_SIZE = 100 * 1024 * 1024;  // 100M
 
-  std::unique_ptr<Writer> createWriter(uint64_t stripeSize, uint64_t compresionblockSize,
-                                       CompressionKind compression, const Type& type,
-                                       MemoryPool* memoryPool, OutputStream* stream,
-                                       FileVersion version, uint64_t stride = 0,
-                                       const std::string& timezone = "GMT",
+  std::unique_ptr<Writer> createWriter(uint64_t stripeSize, uint64_t memoryBlockSize,
+                                       uint64_t compresionblockSize, CompressionKind compression,
+                                       const Type& type, MemoryPool* memoryPool,
+                                       OutputStream* stream, FileVersion version,
+                                       uint64_t stride = 0, const std::string& timezone = "GMT",
                                        bool useTightNumericVector = false) {
     WriterOptions options;
     options.setStripeSize(stripeSize);
@@ -56,6 +56,7 @@ namespace orc {
     options.setFileVersion(version);
     options.setTimezoneName(timezone);
     options.setUseTightNumericVector(useTightNumericVector);
+    options.setMemoryBlockSize(memoryBlockSize);
     return createWriter(type, stream, options);
   }
 
@@ -107,10 +108,11 @@ namespace orc {
 
     uint64_t stripeSize = 16 * 1024;       // 16K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     writer->close();
 
     auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
@@ -135,10 +137,11 @@ namespace orc {
 
     uint64_t stripeSize = 16 * 1024;       // 16K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(1024);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -195,10 +198,11 @@ namespace orc {
 
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -241,13 +245,14 @@ namespace orc {
 
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     char dataBuffer[327675];
     uint64_t offset = 0;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     StringVectorBatch* strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
@@ -301,6 +306,7 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 655350;
+    uint64_t memoryBlockSize = 64;
 
     std::vector<double> data(rowCount);
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -308,8 +314,8 @@ namespace orc {
     }
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     DoubleVectorBatch* doubleBatch = dynamic_cast<DoubleVectorBatch*>(structBatch->fields[0]);
@@ -356,10 +362,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 65535;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* smallIntBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -406,10 +413,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 65535;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -446,10 +454,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 65535;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -486,10 +495,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 1024;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -527,10 +537,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 102400;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     TimestampVectorBatch* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
@@ -568,8 +579,8 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<a:timestamp>"));
-    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024, CompressionKind_ZLIB, *type, pool,
-                               &memStream, fileVersion);
+    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024, 256 * 1024, CompressionKind_ZLIB, *type,
+                               pool, &memStream, fileVersion);
     uint64_t batchCount = 5;
     auto batch = writer->createRowBatch(batchCount * 2);
     auto structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -638,10 +649,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 1;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion, 0, writerTimezone);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion, 0, writerTimezone);
     auto batch = writer->createRowBatch(rowCount);
     auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
     auto& tsBatch = dynamic_cast<TimestampVectorBatch&>(*structBatch.fields[0]);
@@ -734,10 +746,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 102400;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     TimestampVectorBatch* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
@@ -779,13 +792,14 @@ namespace orc {
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 65535;
+    uint64_t memoryBlockSize = 64;
 
     char dataBuffer[327675];
     uint64_t offset = 0;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -858,10 +872,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;       // 16K
     uint64_t compressionBlockSize = 1024;  // 1k
     uint64_t rowCount = 1024;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     Decimal64VectorBatch* decBatch = dynamic_cast<Decimal64VectorBatch*>(structBatch->fields[0]);
@@ -934,10 +949,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 1024;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     Decimal128VectorBatch* decBatch = dynamic_cast<Decimal128VectorBatch*>(structBatch->fields[0]);
@@ -1022,10 +1038,11 @@ namespace orc {
     uint64_t rowCount = 1024;
     uint64_t maxListLength = 10;
     uint64_t offset = 0;
+    uint64_t memoryBlockSize = 8 * 1024;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount * maxListLength);
 
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -1081,10 +1098,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 1024, maxListLength = 10, offset = 0;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount * maxListLength);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     MapVectorBatch* mapBatch = dynamic_cast<MapVectorBatch*>(structBatch->fields[0]);
@@ -1162,10 +1180,11 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 3333;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     UnionVectorBatch* unionBatch = dynamic_cast<UnionVectorBatch*>(structBatch->fields[0]);
@@ -1257,9 +1276,10 @@ namespace orc {
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 3;
+    uint64_t memoryBlockSize = 64;
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     StringVectorBatch* charBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
@@ -1326,10 +1346,11 @@ namespace orc {
 
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(4);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -1407,10 +1428,11 @@ namespace orc {
 
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
 
     // test data looks like below -
     // {0}
@@ -1485,12 +1507,13 @@ namespace orc {
 
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
+    uint64_t memoryBlockSize = 64;
 
     // 10000 rows with every 1000 row as an RG
     // Each RG has 100 null rows except that the 5th RG is all null
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion, 1000);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion, 1000);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(10000);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -1622,12 +1645,13 @@ namespace orc {
   TEST_P(WriterTest, testBloomFilter) {
     WriterOptions options;
     options.setStripeSize(1024)
-        .setCompressionBlockSize(64)
+        .setCompressionBlockSize(1024)
         .setCompression(CompressionKind_ZSTD)
         .setMemoryPool(getDefaultPool())
         .setRowIndexStride(10000)
         .setFileVersion(fileVersion)
-        .setColumnsUseBloomFilter({1, 2, 3});
+        .setColumnsUseBloomFilter({1, 2, 3})
+        .setMemoryBlockSize(64);
 
     // write 65535 rows of data
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
@@ -1716,7 +1740,7 @@ namespace orc {
       auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<col1:int,col2:int>"));
       WriterOptions options;
       options.setStripeSize(1024 * 1024)
-          .setCompressionBlockSize(1024)
+          .setMemoryBlockSize(1024)
           .setCompression(CompressionKind_NONE)
           .setMemoryPool(pool)
           .setRowIndexStride(1000);
@@ -1809,8 +1833,11 @@ namespace orc {
     uint64_t rowCount = 5000000;
     auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<c0:int>"));
     WriterOptions options;
-    options.setStripeSize(1024).setCompressionBlockSize(1024).setCompression(kind).setMemoryPool(
-        pool);
+    options.setStripeSize(1024)
+        .setCompressionBlockSize(1024)
+        .setMemoryBlockSize(64)
+        .setCompression(kind)
+        .setMemoryPool(pool);
 
     auto writer = createWriter(*type, &memStream, options);
     auto batch = writer->createRowBatch(rowCount);
@@ -1853,10 +1880,11 @@ namespace orc {
       WriterOptions options;
       options.setStripeSize(1024 * 1024)
           .setCompressionBlockSize(64 * 1024)
+          .setMemoryBlockSize(1024)
           .setCompression(CompressionKind_NONE)
           .setMemoryPool(pool)
           .setRowIndexStride(1000)
-          .setOutputBufferCapacity(capacity);
+          .setCompressionBlockSize(capacity);
 
       auto writer = createWriter(*type, &memStream, options);
       auto batch = writer->createRowBatch(rowCount);
@@ -1913,6 +1941,7 @@ namespace orc {
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 65530;
+    uint64_t memoryBlockSize = 64;
 
     std::vector<double> data(rowCount);
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -1920,8 +1949,8 @@ namespace orc {
     }
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion, 0, "GMT", true);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion, 0, "GMT", true);
     // start from here/
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount / 2);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -2010,10 +2039,11 @@ namespace orc {
 
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -2065,10 +2095,11 @@ namespace orc {
 
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -2131,6 +2162,7 @@ namespace orc {
       WriterOptions options;
       options.setStripeSize(16 * 1024)
           .setCompressionBlockSize(1024)
+          .setMemoryBlockSize(64)
           .setCompression(CompressionKind_NONE)
           .setMemoryPool(pool)
           .setRowIndexStride(1000);
@@ -2208,10 +2240,11 @@ namespace orc {
 
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
-                     &memStream, fileVersion, 0, "/ERROR/TIMEZONE");
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion, 0, "/ERROR/TIMEZONE");
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(10);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
