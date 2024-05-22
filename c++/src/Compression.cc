@@ -248,8 +248,8 @@ namespace orc {
   bool CompressionStream::Next(void** data, int* size) {
     if (rawInputBuffer.size() > compressionBlockSize) {
       std::stringstream ss;
-      ss << "uncompressed data size " << rawInputBuffer.size() << " is larger than block size "
-         << compressionBlockSize;
+      ss << "uncompressed data size " << rawInputBuffer.size()
+         << " is larger than compression block size " << compressionBlockSize;
       throw std::logic_error(ss.str());
     }
 

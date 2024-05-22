@@ -190,7 +190,9 @@ namespace orc {
     if (outputStream->isCompressed()) {
       // start of the compression chunk in the stream
       recorder->add(flushedSize);
-      // number of decompressed bytes that need to be consumed
+      // There are multiple blocks in the input buffer, but bufferPosition only records the
+      // effective length of the last block. We need rawInputBufferSize to record the total length
+      // of all variable blocks.
       recorder->add(outputStream->getRawInputBufferSize() - unusedBufferSize);
     } else {
       // byte offset of the RLE run’s start location
