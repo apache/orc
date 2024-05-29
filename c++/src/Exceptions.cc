@@ -84,4 +84,36 @@ namespace orc {
   SchemaEvolutionError::~SchemaEvolutionError() noexcept {
     // PASS
   }
+
+  CompressionError::CompressionError(const std::string& whatArg) : runtime_error(whatArg) {
+    // PASS
+  }
+
+  CompressionError::CompressionError(const char* whatArg) : runtime_error(whatArg) {
+    // PASS
+  }
+
+  CompressionError::CompressionError(const CompressionError& error) : runtime_error(error) {
+    // PASS
+  }
+
+  CompressionError::~CompressionError() noexcept {
+    // PASS
+  }
+
+  DecompressionError::DecompressionError(const std::string& whatArg) : runtime_error(whatArg) {
+    // PASS
+  }
+
+  DecompressionError::DecompressionError(const char* whatArg) : runtime_error(whatArg) {
+    // PASS
+  }
+
+  DecompressionError::DecompressionError(const DecompressionError& error) : runtime_error(error) {
+    // PASS
+  }
+
+  DecompressionError::~DecompressionError() noexcept {
+    // PASS
+  }
 }  // namespace orc
