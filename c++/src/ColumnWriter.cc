@@ -592,7 +592,7 @@ namespace orc {
         if (enableBloomFilter) {
           bloomFilter->addLong(data[i]);
         }
-        intStats->update(static_cast<int64_t>(byteData[i]), 1);
+        intStats->update(static_cast<int64_t>(static_cast<signed char>(byteData[i])), 1);
       }
     }
     intStats->increase(count);
