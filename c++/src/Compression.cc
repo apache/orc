@@ -700,16 +700,16 @@ namespace orc {
         break;
       case Z_MEM_ERROR:
         throw DecompressionError(
-            "Memory error from ZlibDecompressionStream::ZlibDecompressionStream");
+            "Memory error from ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
       case Z_VERSION_ERROR:
         throw DecompressionError(
-            "Version error from ZlibDecompressionStream::ZlibDecompressionStream");
+            "Version error from ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
       case Z_STREAM_ERROR:
         throw DecompressionError(
-            "Stream error from ZlibDecompressionStream::ZlibDecompressionStream");
+            "Stream error from ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
       default:
         throw DecompressionError(
-            "Unknown error from  ZlibDecompressionStream::ZlibDecompressionStream");
+            "Unknown error from  ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
     }
   }
 
