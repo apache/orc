@@ -804,8 +804,8 @@ length of 4 (3) as [0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde, 0xad,
 The patched base encoding is used for integer sequences whose bit
 widths varies a lot. The minimum signed value of the sequence is found
 and subtracted from the other values. The bit width of those adjusted
-values is analyzed and the 90 percentile of the bit width is chosen
-as W. The 10\% of values larger than W use patches from a patch list
+values is analyzed and the 95 percentile of the bit width is chosen
+as W. The 5% of values larger than W use patches from a patch list
 to set the additional bits. Patches are encoded as a list of gaps in
 the index values and the additional value bits.
 
@@ -830,8 +830,8 @@ the index values and the additional value bits.
   patch, and a patch value. Patches are applied by logically or'ing
   the data values with the relevant patch shifted W bits left. If a
   patch is 0, it was introduced to skip over more than 255 items. The
-  combined length of each patch (PGW + PW) must be less or equal to
-  64. (PGW + PW) is padded to the closest fixed bit size according to the
+  combined length of each patch (PGW + PW) must be less or equal to 64.
+  (PGW + PW) is padded to the closest fixed bit size according to the
   below table before being encoded in the patch list.
 
 (PGW + PW)    | closestFixedBits(PGW + PW)
