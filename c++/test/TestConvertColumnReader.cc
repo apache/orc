@@ -976,23 +976,6 @@ namespace orc {
     EXPECT_EQ(std::string(readC3.data[3], readC3.length[3]), "1234");
   }
 
-  static std::string timestampToString(int64_t seconds, int64_t nanos,
-                                       const std::string& zoneName) {
-    auto& timezone = getTimezoneByName(zoneName);
-    seconds = timezone.convertToUTC(seconds);
-    time_t t = static_cast<time_t>(seconds);
-    auto timeinfo = std::gmtime(&t);
-    char buffer[100];
-    ::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
-    std::string result(buffer);
-    if (nanos) {
-      while (nanos % 10 == 0) nanos /= 10;
-      result = result + "." + std::to_string(nanos);
-    }
-    result = result + " " + zoneName;
-    return result;
-  }
-
   TEST(ConvertColumnReader, TestConvertStringVariantToTimestamp) {
     constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
     constexpr int TEST_CASES = 1024;
@@ -1010,7 +993,15 @@ namespace orc {
     auto& c1 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[0]);
     auto& c2 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[1]);
 
+    auto convertToSeconds = [](const Timezone& writerTimezone, const std::string& date) {
+      tm timeStruct;
+      if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct) == nullptr) {
+        throw TimezoneError("bad time " + date);
+      }
+      return writerTimezone.convertFromUTC(timegm(&timeStruct));
+    };
     std::vector<std::string> raw1, raw2;
+    std::vector<int64_t> ts1, ts2;
 
     for (int i = 0; i < TEST_CASES; i++) {
       char buff[100];
@@ -1022,6 +1013,9 @@ namespace orc {
       c1.length[i] = raw1.back().length();
       c2.data[i] = const_cast<char*>(raw2.back().c_str());
       c2.length[i] = raw2.back().length();
+
+      ts1.push_back(convertToSeconds(getTimezoneByName("GMT"), raw1.back()));
+      ts2.push_back(convertToSeconds(getTimezoneByName(writerTimezone), raw2.back()));
     }
     structBatch->numElements = c1.numElements = c2.numElements = TEST_CASES;
     structBatch->hasNulls = c1.hasNulls = c2.hasNulls = false;
@@ -1037,6 +1031,9 @@ namespace orc {
       c1.length[i] = raw1.back().length();
       c2.data[i] = const_cast<char*>(raw2.back().c_str());
       c2.length[i] = raw2.back().length();
+
+      ts1.push_back(convertToSeconds(getTimezoneByName("GMT"), raw1.back()));
+      ts2.push_back(convertToSeconds(getTimezoneByName(writerTimezone), raw2.back()));
     }
     structBatch->numElements = c1.numElements = c2.numElements = TEST_CASES;
     structBatch->hasNulls = c1.hasNulls = c2.hasNulls = false;
@@ -1084,9 +1081,10 @@ namespace orc {
     for (int i = 0; i < TEST_CASES * 2; i++) {
       EXPECT_TRUE(readC1.notNull[i]);
       EXPECT_TRUE(readC2.notNull[i]);
-      EXPECT_EQ(raw1[i] + " " + readerTimezone,
-                timestampToString(readC1.data[i], readC1.nanoseconds[i], readerTimezone));
-      EXPECT_EQ(raw2[i], timestampToString(readC2.data[i], readC2.nanoseconds[i], writerTimezone));
+      EXPECT_EQ(getTimezoneByName(readerTimezone).convertToUTC(readC1.data[i]), ts1[i]);
+      EXPECT_EQ(readC1.nanoseconds[i], i < TEST_CASES ? 789000000 : 0);
+      EXPECT_EQ(readC2.data[i], ts2[i]);
+      EXPECT_EQ(readC2.nanoseconds[i], i < TEST_CASES ? 789000000 : 0);
     }
 
     EXPECT_EQ(true, rowReader->next(*readBatch));
