@@ -980,7 +980,8 @@ namespace orc {
                                        const std::string& zoneName) {
     auto& timezone = getTimezoneByName(zoneName);
     seconds = timezone.convertToUTC(seconds);
-    auto timeinfo = std::gmtime(&seconds);
+    time_t t = static_cast<time_t>(seconds);
+    auto timeinfo = std::gmtime(&t);
     char buffer[100];
     ::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
     std::string result(buffer);
