@@ -79,16 +79,6 @@ namespace orc {
     CompressionError& operator=(const CompressionError&);
   };
 
-  class DecompressionError : public std::runtime_error {
-   public:
-    explicit DecompressionError(const std::string& whatArg);
-    explicit DecompressionError(const char* whatArg);
-    ~DecompressionError() noexcept override;
-    DecompressionError(const DecompressionError&);
-
-   private:
-    DecompressionError& operator=(const DecompressionError&);
-  };
 }  // namespace orc
 
 #endif

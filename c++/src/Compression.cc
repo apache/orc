@@ -557,7 +557,7 @@ namespace orc {
     } else if (state == DECOMPRESS_START) {
       NextDecompress(data, size, availableSize);
     } else {
-      throw DecompressionError(
+      throw CompressionError(
           "Unknown compression state in "
           "DecompressionStream::Next");
     }
@@ -571,7 +571,7 @@ namespace orc {
 
   void DecompressionStream::BackUp(int count) {
     if (outputBuffer == nullptr || outputBufferLength != 0) {
-      throw DecompressionError("Backup without previous Next in " + getName());
+      throw CompressionError("Backup without previous Next in " + getName());
     }
     outputBuffer -= static_cast<size_t>(count);
     outputBufferLength = static_cast<size_t>(count);
@@ -699,16 +699,16 @@ namespace orc {
       case Z_OK:
         break;
       case Z_MEM_ERROR:
-        throw DecompressionError(
+        throw CompressionError(
             "Memory error from ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
       case Z_VERSION_ERROR:
-        throw DecompressionError(
+        throw CompressionError(
             "Version error from ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
       case Z_STREAM_ERROR:
-        throw DecompressionError(
+        throw CompressionError(
             "Stream error from ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
       default:
-        throw DecompressionError(
+        throw CompressionError(
             "Unknown error from  ZlibDecompressionStream::ZlibDecompressionStream inflateInit2");
     }
   }
@@ -730,7 +730,7 @@ namespace orc {
     zstream_.next_out = reinterpret_cast<Bytef*>(const_cast<char*>(outputBuffer));
     zstream_.avail_out = static_cast<uInt>(outputDataBuffer.capacity());
     if (inflateReset(&zstream_) != Z_OK) {
-      throw DecompressionError(
+      throw CompressionError(
           "Bad inflateReset in "
           "ZlibDecompressionStream::NextDecompress");
     }
@@ -750,19 +750,19 @@ namespace orc {
         case Z_STREAM_END:
           break;
         case Z_BUF_ERROR:
-          throw DecompressionError(
+          throw CompressionError(
               "Buffer error in "
               "ZlibDecompressionStream::NextDecompress");
         case Z_DATA_ERROR:
-          throw DecompressionError(
+          throw CompressionError(
               "Data error in "
               "ZlibDecompressionStream::NextDecompress");
         case Z_STREAM_ERROR:
-          throw DecompressionError(
+          throw CompressionError(
               "Stream error in "
               "ZlibDecompressionStream::NextDecompress");
         default:
-          throw DecompressionError(
+          throw CompressionError(
               "Unknown error in "
               "ZlibDecompressionStream::NextDecompress");
       }
@@ -868,7 +868,7 @@ namespace orc {
     }
 
     if (outLength > maxOutputLength) {
-      throw DecompressionError("Snappy length exceeds block size");
+      throw CompressionError("Snappy length exceeds block size");
     }
 
     if (!snappy::RawUncompress(input, length, output)) {
@@ -970,7 +970,7 @@ namespace orc {
 
   void BlockCompressionStream::BackUp(int count) {
     if (count > bufferSize) {
-      throw DecompressionError("Can't backup that much!");
+      throw CompressionError("Can't backup that much!");
     }
     bufferSize -= count;
   }
@@ -1215,7 +1215,7 @@ namespace orc {
   void ZSTDDecompressionStream::init() {
     dctx_ = ZSTD_createDCtx();
     if (!dctx_) {
-      throw DecompressionError("Error while calling ZSTD_createDCtx() for zstd.");
+      throw CompressionError("Error while calling ZSTD_createDCtx() for zstd.");
     }
   }
 

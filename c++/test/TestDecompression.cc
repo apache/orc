@@ -545,7 +545,7 @@ namespace orc {
         *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
-    ASSERT_THROW(result->BackUp(20), DecompressionError);
+    ASSERT_THROW(result->BackUp(20), CompressionError);
     ASSERT_EQ(true, result->Next(&ptr, &length));
     ASSERT_EQ(30, length);
     for (int i = 0; i < 10; ++i) {
@@ -554,7 +554,7 @@ namespace orc {
       }
     }
     result->BackUp(10);
-    ASSERT_THROW(result->BackUp(2), DecompressionError);
+    ASSERT_THROW(result->BackUp(2), CompressionError);
     ASSERT_EQ(true, result->Next(&ptr, &length));
     ASSERT_EQ(10, length);
     for (int i = 0; i < 10; ++i) {
