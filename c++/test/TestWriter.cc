@@ -422,8 +422,11 @@ namespace orc {
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
 
+    int64_t sum = 0;
     for (uint64_t i = 0; i < rowCount; ++i) {
-      byteBatch->data[i] = static_cast<int8_t>(i);
+      int8_t x = static_cast<int8_t>(i);
+      byteBatch->data[i] = x;
+      sum += x;
     }
     structBatch->numElements = rowCount;
     byteBatch->numElements = rowCount;
@@ -444,6 +447,18 @@ namespace orc {
     for (uint64_t i = 0; i < rowCount; ++i) {
       EXPECT_EQ(static_cast<int8_t>(i), static_cast<int8_t>(byteBatch->data[i]));
     }
+
+    auto col_stats = reader->getColumnStatistics(1);
+    ASSERT_NE(col_stats, nullptr);
+    EXPECT_EQ(col_stats->getNumberOfValues(), rowCount);
+    EXPECT_FALSE(col_stats->hasNull());
+    auto int_stats = dynamic_cast<const IntegerColumnStatistics *>(col_stats.get());
+    ASSERT_NE(int_stats, nullptr);
+    EXPECT_TRUE(int_stats->hasMinimum() && int_stats->hasMaximum());
+    EXPECT_EQ(int_stats->getMinimum(), -128);
+    EXPECT_EQ(int_stats->getMaximum(), 127);
+    EXPECT_TRUE(int_stats->hasSum());
+    EXPECT_EQ(int_stats->getSum(), sum);
   }
 
   TEST_P(WriterTest, writeBooleanColumn) {
