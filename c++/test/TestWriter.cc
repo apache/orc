@@ -452,7 +452,7 @@ namespace orc {
     ASSERT_NE(col_stats, nullptr);
     EXPECT_EQ(col_stats->getNumberOfValues(), rowCount);
     EXPECT_FALSE(col_stats->hasNull());
-    auto int_stats = dynamic_cast<const IntegerColumnStatistics *>(col_stats.get());
+    auto int_stats = dynamic_cast<const IntegerColumnStatistics*>(col_stats.get());
     ASSERT_NE(int_stats, nullptr);
     EXPECT_TRUE(int_stats->hasMinimum() && int_stats->hasMaximum());
     EXPECT_EQ(int_stats->getMinimum(), -128);
