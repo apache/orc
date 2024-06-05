@@ -67,6 +67,18 @@ namespace orc {
     SchemaEvolutionError(const SchemaEvolutionError&);
     SchemaEvolutionError& operator=(const SchemaEvolutionError&) = delete;
   };
+
+  class CompressionError : public std::runtime_error {
+   public:
+    explicit CompressionError(const std::string& whatArg);
+    explicit CompressionError(const char* whatArg);
+    ~CompressionError() noexcept override;
+    CompressionError(const CompressionError&);
+
+   private:
+    CompressionError& operator=(const CompressionError&);
+  };
+
 }  // namespace orc
 
 #endif
