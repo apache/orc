@@ -117,6 +117,10 @@ public class TestJsonFileDump {
       writer.addRowBatch(batch);
     }
 
+    writer.addUserMetadata("hive.acid.key.index",
+        StandardCharsets.UTF_8.encode("1,1,1;2,3,5;"));
+    writer.addUserMetadata("some.user.property",
+        StandardCharsets.UTF_8.encode("foo#bar$baz&"));
     writer.close();
     PrintStream origOut = System.out;
     String outputFilename = "orc-file-dump.json";
