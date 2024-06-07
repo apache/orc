@@ -17,6 +17,7 @@
  */
 
 #include "ConvertColumnReader.hh"
+#include <optional>
 #include "Utils.hh"
 
 namespace orc {
@@ -840,30 +841,47 @@ namespace orc {
     }
 
    private:
+    // Algorithm: http://howardhinnant.github.io/date_algorithms.html
+    int64_t days_from_epoch(int32_t y, int32_t m, int32_t d) {
+      y -= m <= 2;
+      int32_t era = y / 400;
+      int32_t yoe = y - era * 400;                                   // [0, 399]
+      int32_t doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;  // [0, 365]
+      int32_t doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;           // [0, 146096]
+      return 1ll * era * 146097 + doe - 719468;
+    }
+
+    std::optional<std::pair<int64_t, int64_t>> tryBestToParseFromString(
+        const std::string& timeStr) {
+      // timestamp_instant: yyyy-mm-dd hh:mm:ss[.xxx] timezone
+      // timestamp        : yyyy-mm-dd hh:mm:ss[.xxx]
+      int32_t year, month, day, hour, min, sec, nanos = 0;
+      int32_t matched = std::sscanf(timeStr.c_str(), "%4d-%2d-%2d %2d:%2d:%2d.%d", &year, &month,
+                                    &day, &hour, &min, &sec, &nanos);
+      if (matched != 6 && matched != 7) {
+        return std::nullopt;
+      }
+      if (nanos) {
+        if (nanos < 0 || nanos >= 1e9) {
+          return std::nullopt;
+        }
+        while (nanos < static_cast<int64_t>(1e8)) {
+          nanos *= 10;
+        }
+      }
+      int64_t daysSinceEpoch = days_from_epoch(year, month, day);
+      int64_t secondSinceEpoch = 60ll * (60 * (24L * daysSinceEpoch + hour) + min) + sec;
+      return std::make_optional(std::pair<int64_t, int64_t>{secondSinceEpoch, nanos});
+    }
+
     void convertToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx,
                             const std::string& timeStr) {
-      const char* TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S";
-      struct tm timeinfo;
-      if (nullptr == ::strptime(timeStr.c_str(), TIMESTAMP_FORMAT, &timeinfo)) {
+      auto timestamp = tryBestToParseFromString(timeStr);
+      if (!timestamp.has_value()) {
         handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp", timeStr);
         return;
       }
-      // timestamp_instant: yyyy-mm-dd hh:mm:ss[.xxx] timezone
-      // timestamp        : yyyy-mm-dd hh:mm:ss[.xxx]
-      int64_t timestamp = timegm(&timeinfo);
-      size_t dotPos = 0;
-      if ((dotPos = timeStr.find('.')) != std::string::npos) {
-        dotPos++;
-        size_t rightMost = dotPos;
-        while (rightMost + 1 < timeStr.length() && std::isdigit(timeStr[rightMost + 1])) {
-          rightMost++;
-        }
-        std::string fraction = timeStr.substr(dotPos, rightMost - dotPos + 1);
-        fraction.resize(9, '0');
-        dstBatch.nanoseconds[idx] = std::stoll(fraction);
-      } else {
-        dstBatch.nanoseconds[idx] = 0;
-      }
+      auto& [second, nanos] = timestamp.value();
 
       if (isInstant) {
         size_t pos = 0;  // get the name of timezone
@@ -877,17 +895,18 @@ namespace orc {
         size_t subStrLength = timeStr.length() - pos;
         try {
           const auto& writerTimezone = getTimezoneByName(timeStr.substr(pos, subStrLength));
-          timestamp = writerTimezone.convertFromUTC(timestamp);
+          second = writerTimezone.convertFromUTC(second);
         } catch (const TimezoneError&) {
           handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr);
           return;
         }
       } else {
         if (needConvertTimezone) {
-          timestamp = readerTimezone->convertFromUTC(timestamp);
+          second = readerTimezone->convertFromUTC(second);
         }
       }
-      dstBatch.data[idx] = timestamp;
+      dstBatch.data[idx] = second;
+      dstBatch.nanoseconds[idx] = nanos;
     }
   };
 
@@ -920,11 +939,20 @@ namespace orc {
       int32_t fromScale = 0;
       uint32_t start = 0;
       bool negative = false;
+      if (decimalStr.empty()) {
+        handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Decimal", decimalStr);
+        return;
+      }
       auto dotPos = decimalStr.find('.');
       if (dotPos == std::string::npos) {
         fromScale = 0;
         fromPrecision = decimalStr.length();
+        dotPos = decimalStr.length();
       } else {
+        if (dotPos + 1 == decimalStr.length()) {
+          handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Decimal", decimalStr);
+          return;
+        }
         fromPrecision = decimalStr.length() - 1;
         fromScale = decimalStr.length() - dotPos - 1;
       }
@@ -934,12 +962,8 @@ namespace orc {
         fromPrecision--;
       }
       const std::string integerPortion = decimalStr.substr(start, dotPos - start);
-      const std::string fractionPortion = decimalStr.substr(dotPos + 1, fromScale);
       if (dotPos == start || fromPrecision > MAX_PRECISION_128 || fromPrecision <= 0 ||
-          !std::all_of(integerPortion.begin(), integerPortion.end(), ::isdigit) ||
-          (dotPos != std::string::npos &&
-           (fromScale == 0 ||
-            !std::all_of(fractionPortion.begin(), fractionPortion.end(), ::isdigit)))) {
+          !std::all_of(integerPortion.begin(), integerPortion.end(), ::isdigit)) {
         handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Decimal", decimalStr);
         return;
       }
@@ -950,15 +974,23 @@ namespace orc {
         i128 = Int128(integerPortion);
         // overflow won't happen
         i128 *= scaleUpInt128ByPowerOfTen(Int128(1), fromScale, overflow);
-        i128 += Int128(fractionPortion);
       } catch (const std::exception& e) {
         handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Decimal", decimalStr);
         return;
+      }
+      if (dotPos + 1 < decimalStr.length()) {
+        const std::string fractionPortion = decimalStr.substr(dotPos + 1, fromScale);
+        if (!std::all_of(fractionPortion.begin(), fractionPortion.end(), ::isdigit)) {
+          handleOverflow<std::string, Int128>(dstBatch, idx, throwOnOverflow);
+          return;
+        }
+        i128 += Int128(fractionPortion);
       }
 
       auto [overflow, result] = convertDecimal(i128, fromScale, precision_, scale_);
       if (overflow) {
         handleOverflow<std::string, Int128>(dstBatch, idx, throwOnOverflow);
+        return;
       }
       if (negative) {
         result.negate();

@@ -1050,7 +1050,7 @@ namespace orc {
       c1.notNull[1] = false;
       c2.notNull[1] = false;
 
-      raw1.push_back("2024-13-14 00:01:02");
+      raw1.push_back("2024-12-14 00:01:02.-1");
       raw2.push_back("2024-01-02 03:04:05.678");
       c1.data[2] = const_cast<char*>(raw1.back().c_str());
       c1.length[2] = raw1.back().length();
