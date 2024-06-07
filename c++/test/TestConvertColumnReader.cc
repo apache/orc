@@ -976,6 +976,54 @@ namespace orc {
     EXPECT_EQ(std::string(readC3.data[3], readC3.length[3]), "1234");
   }
 
+  // Returns year/month/day triple in civil calendar
+  // Preconditions:  z is number of days since 1970-01-01 and is in the range:
+  //                   [numeric_limits<Int>::min(), numeric_limits<Int>::max()-719468].
+  template <class Int>
+  constexpr std::tuple<int, unsigned, unsigned> civil_from_days(Int z) noexcept {
+    static_assert(std::numeric_limits<unsigned>::digits >= 18,
+                  "This algorithm has not been ported to a 16 bit unsigned integer");
+    static_assert(std::numeric_limits<Int>::digits >= 20,
+                  "This algorithm has not been ported to a 16 bit signed integer");
+    z += 719468;
+    const Int era = (z >= 0 ? z : z - 146096) / 146097;
+    const unsigned doe = static_cast<unsigned>(z - era * 146097);                // [0, 146096]
+    const unsigned yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
+    const Int y = static_cast<Int>(yoe) + era * 400;
+    const unsigned doy = doe - (365 * yoe + yoe / 4 - yoe / 100);  // [0, 365]
+    const unsigned mp = (5 * doy + 2) / 153;                       // [0, 11]
+    const unsigned d = doy - (153 * mp + 2) / 5 + 1;               // [1, 31]
+    const unsigned m = mp < 10 ? mp + 3 : mp - 9;                  // [1, 12]
+    return std::tuple<int, unsigned, unsigned>(y + (m <= 2), m, d);
+  }
+
+  static std::string timestampToString(int64_t seconds, int64_t nanos,
+                                       const std::string& zoneName) {
+    auto& timezone = getTimezoneByName(zoneName);
+    seconds = timezone.convertToUTC(seconds);
+    time_t t = static_cast<time_t>(seconds);
+    char buffer[100];
+    constexpr auto SECOND_IN_DAY = 3600 * 24;
+    auto day = t < 0 ? (t - SECOND_IN_DAY + 1) / SECOND_IN_DAY : t / SECOND_IN_DAY;
+
+    auto [y, m, d] = civil_from_days(day);
+    auto second_in_day = t % (3600 * 24);
+    if (second_in_day < 0) {
+      second_in_day += 3600 * 24;
+    }
+    auto h = second_in_day % (3600 * 24) / 3600;
+    auto min = second_in_day % 3600 / 60;
+    auto s = second_in_day % 60;
+    std::snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02ld:%02ld:%02ld", y, m, d, h, min, s);
+    std::string result(buffer);
+    if (nanos) {
+      while (nanos % 10 == 0) nanos /= 10;
+      result = result + "." + std::to_string(nanos);
+    }
+    result = result + " " + zoneName;
+    return result;
+  }
+
   TEST(ConvertColumnReader, TestConvertStringVariantToTimestamp) {
     constexpr int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;
     constexpr int TEST_CASES = 1024;
@@ -993,14 +1041,9 @@ namespace orc {
     auto& c1 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[0]);
     auto& c2 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[1]);
 
-    auto convertToSeconds = [](const Timezone& writerTimezone, const std::string& date) {
-      tm timeStruct;
-      if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct) == nullptr) {
-        throw TimezoneError("bad time " + date);
-      }
-      return writerTimezone.convertFromUTC(timegm(&timeStruct));
-    };
     std::vector<std::string> raw1, raw2;
+    raw1.reserve(TEST_CASES * 3);
+    raw2.reserve(TEST_CASES * 3);
     std::vector<int64_t> ts1, ts2;
 
     for (int i = 0; i < TEST_CASES; i++) {
@@ -1013,9 +1056,6 @@ namespace orc {
       c1.length[i] = raw1.back().length();
       c2.data[i] = const_cast<char*>(raw2.back().c_str());
       c2.length[i] = raw2.back().length();
-
-      ts1.push_back(convertToSeconds(getTimezoneByName("GMT"), raw1.back()));
-      ts2.push_back(convertToSeconds(getTimezoneByName(writerTimezone), raw2.back()));
     }
     structBatch->numElements = c1.numElements = c2.numElements = TEST_CASES;
     structBatch->hasNulls = c1.hasNulls = c2.hasNulls = false;
@@ -1031,9 +1071,6 @@ namespace orc {
       c1.length[i] = raw1.back().length();
       c2.data[i] = const_cast<char*>(raw2.back().c_str());
       c2.length[i] = raw2.back().length();
-
-      ts1.push_back(convertToSeconds(getTimezoneByName("GMT"), raw1.back()));
-      ts2.push_back(convertToSeconds(getTimezoneByName(writerTimezone), raw2.back()));
     }
     structBatch->numElements = c1.numElements = c2.numElements = TEST_CASES;
     structBatch->hasNulls = c1.hasNulls = c2.hasNulls = false;
@@ -1082,10 +1119,9 @@ namespace orc {
     for (int i = 0; i < TEST_CASES * 2; i++) {
       EXPECT_TRUE(readC1.notNull[i]);
       EXPECT_TRUE(readC2.notNull[i]);
-      EXPECT_EQ(getTimezoneByName(readerTimezone).convertToUTC(readC1.data[i]), ts1[i]);
-      EXPECT_EQ(readC1.nanoseconds[i], i < TEST_CASES ? 789000000 : 0);
-      EXPECT_EQ(readC2.data[i], ts2[i]);
-      EXPECT_EQ(readC2.nanoseconds[i], i < TEST_CASES ? 789000000 : 0);
+      EXPECT_EQ(raw1[i] + " " + readerTimezone,
+                timestampToString(readC1.data[i], readC1.nanoseconds[i], readerTimezone));
+      EXPECT_EQ(raw2[i], timestampToString(readC2.data[i], readC2.nanoseconds[i], writerTimezone));
     }
 
     rowReaderOptions.throwOnSchemaEvolutionOverflow(false);

@@ -82,7 +82,7 @@ namespace orc {
       dstBatch.hasNulls = true;
     } else {
       std::ostringstream ss;
-      ss << "Failed to parse" << typeName << " from string:" << str;
+      ss << "Failed to parse " << typeName << " from string:" << str;
       throw SchemaEvolutionError(ss.str());
     }
   }
