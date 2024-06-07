@@ -1070,6 +1070,7 @@ namespace orc {
     rowReaderOptions.setUseTightNumericVector(true);
     rowReaderOptions.setReadType(readType);
     rowReaderOptions.setTimezoneName(readerTimezone);
+    rowReaderOptions.throwOnSchemaEvolutionOverflow(true);
     auto rowReader = reader->createRowReader(rowReaderOptions);
     auto readBatch = rowReader->createRowBatch(TEST_CASES * 2);
     EXPECT_EQ(true, rowReader->next(*readBatch));
@@ -1087,6 +1088,9 @@ namespace orc {
       EXPECT_EQ(readC2.nanoseconds[i], i < TEST_CASES ? 789000000 : 0);
     }
 
+    rowReaderOptions.throwOnSchemaEvolutionOverflow(false);
+    rowReader = reader->createRowReader(rowReaderOptions);
+    EXPECT_EQ(true, rowReader->next(*readBatch));
     EXPECT_EQ(true, rowReader->next(*readBatch));
     EXPECT_EQ(3, readBatch->numElements);
     EXPECT_FALSE(readC1.notNull[0]);

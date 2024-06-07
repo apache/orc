@@ -894,8 +894,7 @@ namespace orc {
         pos += 1;
         size_t subStrLength = timeStr.length() - pos;
         try {
-          const auto& writerTimezone = getTimezoneByName(timeStr.substr(pos, subStrLength));
-          second = writerTimezone.convertFromUTC(second);
+          second = getTimezoneByName(timeStr.substr(pos, subStrLength)).convertFromUTC(second);
         } catch (const TimezoneError&) {
           handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr);
           return;
