@@ -660,7 +660,8 @@ namespace orc {
       std::pair<std::string, size_t> nameRes = parseName(input, pos, end);
       pos = nameRes.second;
       if (input[pos] != ':') {
-        throw std::logic_error("Invalid struct type. No field name set.");
+        throw std::logic_error("Invalid struct type. Field name can not contain '" +
+                               std::string(1, input[pos]) + "'.");
       }
       std::pair<std::unique_ptr<Type>, size_t> typeRes = TypeImpl::parseType(input, ++pos, end);
       result->addStructField(nameRes.first, std::move(typeRes.first));
