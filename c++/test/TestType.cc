@@ -325,7 +325,7 @@ namespace orc {
     expectLogicErrorDuringParse("int<>", "Invalid < after int type.");
     expectLogicErrorDuringParse("array(int)", "Missing < after array.");
     expectLogicErrorDuringParse("struct<struct<bigint>>",
-                                "Invalid struct type. No field name set.");
+                                "Invalid struct type. Field name can not contain '<'.");
     expectLogicErrorDuringParse("struct<a:bigint;b:string>", "Missing comma after field.");
   }
 
