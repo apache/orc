@@ -128,6 +128,11 @@ $ ./mvnw test -pl core -Dtest=TestRecordReaderImpl#testFindColumn
 ~~~~
 
 ## Approving a pull request
+It is recommended to use an interactive script to merge pull requests, which can be automatically associated with the JIRA.
+
+~~~~
+% ./dev/merge_orc_pr.py
+~~~~
 
 Fetch the current state of the project:
 
