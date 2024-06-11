@@ -135,6 +135,11 @@ namespace orc {
     }
   }
 
+  void RleEncoderV1::finishEncode() {
+    writeValues();
+    RleEncoder::finishEncode();
+  }
+
   signed char RleDecoderV1::readByte() {
     SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
     if (bufferStart_ == bufferEnd_) {

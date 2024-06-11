@@ -84,8 +84,8 @@ namespace orc {
         std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength()),
         isSinged, version, *getDefaultPool(), getDefaultReaderMetrics());
 
-    int64_t* decodedData = new int64_t[numValues];
-    decoder->next(decodedData, numValues, notNull);
+    std::vector<int64_t> decodedData(numValues);
+    decoder->next(decodedData.data(), numValues, notNull);
 
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
@@ -93,7 +93,12 @@ namespace orc {
       }
     }
 
-    delete[] decodedData;
+    decoder->next(decodedData.data(), numValues, notNull);
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!notNull || notNull[i]) {
+        EXPECT_EQ(data[i], decodedData[i]);
+      }
+    }
   }
 
   std::unique_ptr<RleEncoder> RleTest::getEncoder(RleVersion version, MemoryOutputStream& memStream,
@@ -128,6 +133,9 @@ namespace orc {
     char* notNull = numNulls == 0 ? nullptr : new char[numValues];
     int64_t* data = new int64_t[numValues];
     generateData(numValues, start, delta, random, data, numNulls, notNull);
+    encoder->add(data, numValues, notNull);
+    encoder->finishEncode();
+
     encoder->add(data, numValues, notNull);
     encoder->flush();
 
@@ -243,6 +251,9 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
+    encoder->add(data, numValues, nullptr);
+    encoder->finishEncode();
+
     encoder->add(data, numValues, nullptr);
     encoder->flush();
 

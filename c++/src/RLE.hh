@@ -84,6 +84,8 @@ namespace orc {
 
     virtual void write(int64_t val) = 0;
 
+    virtual void finishEncode();
+
    protected:
     std::unique_ptr<BufferedOutputStream> outputStream;
     size_t bufferPosition;

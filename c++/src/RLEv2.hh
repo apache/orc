@@ -108,6 +108,8 @@ namespace orc {
 
     void write(int64_t val) override;
 
+    void finishEncode() override;
+
    private:
     const bool alignedBitPacking_;
     uint32_t fixedRunLength_;

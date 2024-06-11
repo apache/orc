@@ -59,6 +59,11 @@ namespace orc {
      * suppress the data and reset to initial state
      */
     virtual void suppress() = 0;
+
+    /**
+     * finish current encoding
+     */
+    virtual void finishEncode() = 0;
   };
 
   class ByteRleDecoder {

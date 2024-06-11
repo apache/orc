@@ -67,6 +67,7 @@ namespace orc {
     }
     virtual uint64_t getSize() const override;
     virtual uint64_t getRawInputBufferSize() const override = 0;
+    virtual void finishStream() override = 0;
 
    protected:
     void writeData(const unsigned char* data, int size);
@@ -172,6 +173,9 @@ namespace orc {
     virtual uint64_t flush() override;
     uint64_t getRawInputBufferSize() const override {
       return rawInputBuffer.size();
+    }
+    virtual void finishStream() override {
+      compressInternal();
     }
 
    protected:
@@ -953,6 +957,8 @@ namespace orc {
       return rawInputBuffer.size();
     }
 
+    virtual void finishStream() override;
+
    protected:
     // compresses a block and returns the compressed size
     virtual uint64_t doBlockCompression() = 0;
@@ -1022,6 +1028,10 @@ namespace orc {
     outputBuffer = nullptr;
     bufferSize = outputPosition = outputSize = 0;
     BufferedOutputStream::suppress();
+  }
+
+  void BlockCompressionStream::finishStream() {
+    doBlockCompression();
   }
 
   /**

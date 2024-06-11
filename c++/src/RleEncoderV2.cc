@@ -440,31 +440,8 @@ namespace orc {
   }
 
   uint64_t RleEncoderV2::flush() {
-    if (numLiterals != 0) {
-      EncodingOption option = {};
-      if (variableRunLength_ != 0) {
-        determineEncoding(option);
-        writeValues(option);
-      } else if (fixedRunLength_ != 0) {
-        if (fixedRunLength_ < MIN_REPEAT) {
-          variableRunLength_ = fixedRunLength_;
-          fixedRunLength_ = 0;
-          determineEncoding(option);
-          writeValues(option);
-        } else if (fixedRunLength_ >= MIN_REPEAT && fixedRunLength_ <= MAX_SHORT_REPEAT_LENGTH) {
-          option.encoding = SHORT_REPEAT;
-          writeValues(option);
-        } else {
-          option.encoding = DELTA;
-          option.isFixedDelta = true;
-          writeValues(option);
-        }
-      }
-    }
-
-    outputStream->BackUp(static_cast<int>(bufferLength - bufferPosition));
+    finishEncode();
     uint64_t dataSize = outputStream->flush();
-    bufferLength = bufferPosition = 0;
     return dataSize;
   }
 
@@ -778,5 +755,31 @@ namespace orc {
     literals[numLiterals++] = val;
     fixedRunLength_ = 1;
     variableRunLength_ = 1;
+  }
+
+  void RleEncoderV2::finishEncode() {
+    if (numLiterals != 0) {
+      EncodingOption option = {};
+      if (variableRunLength_ != 0) {
+        determineEncoding(option);
+        writeValues(option);
+      } else if (fixedRunLength_ != 0) {
+        if (fixedRunLength_ < MIN_REPEAT) {
+          variableRunLength_ = fixedRunLength_;
+          fixedRunLength_ = 0;
+          determineEncoding(option);
+          writeValues(option);
+        } else if (fixedRunLength_ >= MIN_REPEAT && fixedRunLength_ <= MAX_SHORT_REPEAT_LENGTH) {
+          option.encoding = SHORT_REPEAT;
+          writeValues(option);
+        } else {
+          option.encoding = DELTA;
+          option.isFixedDelta = true;
+          writeValues(option);
+        }
+      }
+    }
+
+    RleEncoder::finishEncode();
   }
 }  // namespace orc
