@@ -102,6 +102,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof BooleanStatisticsImpl bkt) {
         trueCount += bkt.trueCount;
+      } else if (!(other instanceof BooleanColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of boolean column statistics");
       } else {
         if (isStatsExists() && trueCount != 0) {
           throw new IllegalArgumentException("Incompatible merging of boolean column statistics");
@@ -222,6 +224,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
         sum += otherColl.sum;
+      } else if (!(other instanceof CollectionColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of collection column statistics");
       } else {
         if (isStatsExists()) {
           throw new IllegalArgumentException("Incompatible merging of collection column statistics");
@@ -397,6 +401,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             overflow = true;
           }
         }
+      } else if (!(other instanceof IntegerColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of integer column statistics");
       } else {
         if (isStatsExists() && hasMinimum) {
           throw new IllegalArgumentException("Incompatible merging of integer column statistics");
@@ -560,6 +566,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
         sum += dbl.sum;
+      } else if (!(other instanceof DoubleColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of double column statistics");
       } else {
         if (isStatsExists() && hasMinimum) {
           throw new IllegalArgumentException("Incompatible merging of double column statistics");
@@ -763,6 +771,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
         sum += str.sum;
+      } else if (!(other instanceof StringColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of string column statistics");
       } else {
         if (isStatsExists()) {
           throw new IllegalArgumentException("Incompatible merging of string column statistics");
@@ -993,9 +1003,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void merge(ColumnStatisticsImpl other) {
-      if (other instanceof BinaryColumnStatistics) {
-        BinaryStatisticsImpl bin = (BinaryStatisticsImpl) other;
+      if (other instanceof BinaryStatisticsImpl bin) {
         sum += bin.sum;
+      } else if (!(other instanceof BinaryColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of binary column statistics");
       } else {
         if (isStatsExists() && sum != 0) {
           throw new IllegalArgumentException("Incompatible merging of binary column statistics");
@@ -1128,6 +1139,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             sum.mutateAdd(dec.sum);
           }
         }
+      } else if (!(other instanceof DecimalColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
       } else {
         if (isStatsExists() && minimum != null) {
           throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
@@ -1321,6 +1334,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             hasSum = false;
           }
         }
+      } else if (!(other instanceof DecimalColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
       } else {
         if (other.getNumberOfValues() != 0) {
           throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
@@ -1486,6 +1501,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (other instanceof DateStatisticsImpl dateStats) {
         minimum = Math.min(minimum, dateStats.minimum);
         maximum = Math.max(maximum, dateStats.maximum);
+      } else if (!(other instanceof DateColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of date column statistics");
       } else {
         if (isStatsExists() && count != 0) {
           throw new IllegalArgumentException("Incompatible merging of date column statistics");
@@ -1698,6 +1715,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             maximum = timestampStats.maximum;
           }
         }
+      } else if (!(other instanceof TimestampColumnStatistics)) {
+        throw new IllegalArgumentException("Incompatible merging of timestamp column statistics");
       } else {
         if (isStatsExists() && count != 0) {
           throw new IllegalArgumentException("Incompatible merging of timestamp column statistics");

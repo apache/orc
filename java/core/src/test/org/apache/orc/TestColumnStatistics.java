@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,7 @@ import java.util.TimeZone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -699,6 +701,47 @@ public class TestColumnStatistics {
         "Incorrect minimum value");
   }
 
+  @Test
+  public void testBinaryMerge() {
+    TypeDescription schema = TypeDescription.createBinary();
+
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.increment(3);
+    stats1.updateBinary(new BytesWritable("bob".getBytes(StandardCharsets.UTF_8)));
+    stats1.updateBinary(new BytesWritable("david".getBytes(StandardCharsets.UTF_8)));
+    stats1.updateBinary(new BytesWritable("charles".getBytes(StandardCharsets.UTF_8)));
+    stats2.increment(2);
+    stats2.updateBinary(new BytesWritable("anne".getBytes(StandardCharsets.UTF_8)));
+    stats2.updateBinary(new BytesWritable("abcdef".getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(15, ((BinaryColumnStatistics) stats1).getSum());
+    assertEquals(10, ((BinaryColumnStatistics) stats2).getSum());
+
+    stats1.merge(stats2);
+
+    assertEquals(25, ((BinaryColumnStatistics) stats1).getSum());
+  }
+
+  @Test
+  public void testMergeIncompatible() {
+    TypeDescription stringSchema = TypeDescription.createString();
+    ColumnStatisticsImpl stringStats = ColumnStatisticsImpl.create(stringSchema);
+
+    TypeDescription doubleSchema = TypeDescription.createDouble();
+    ColumnStatisticsImpl doubleStats = ColumnStatisticsImpl.create(doubleSchema);
+
+    stringStats.increment(3);
+    stringStats.updateString(new Text("bob"));
+    stringStats.updateString(new Text("david"));
+    stringStats.updateString(new Text("charles"));
+
+    assertThrows(IllegalArgumentException.class, () -> {
+      doubleStats.merge(stringStats);
+    });
+
+    assertEquals(0, ((DoubleColumnStatistics) doubleStats).getNumberOfValues());
+  }
 
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
