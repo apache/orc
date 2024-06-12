@@ -78,8 +78,11 @@ public class AvroSchemaUtils {
       case DECIMAL:
         String precision = String.valueOf(typeInfo.getPrecision());
         String scale = String.valueOf(typeInfo.getScale());
+        int bytes = PRECISION_TO_BYTE_COUNT[typeInfo.getPrecision() - 1];
         schema = getSchemaFor("{" +
-            "\"type\":\"bytes\"," +
+            "\"type\":\"fixed\"," +
+            "\"name\":\"" + typeInfo.getFullFieldName() + "\"," +
+            "\"size\":" + bytes + "," +
             "\"logicalType\":\"decimal\"," +
             "\"precision\":" + precision + "," +
             "\"scale\":" + scale + "}");
@@ -188,5 +191,17 @@ public class AvroSchemaUtils {
   private static Schema getSchemaFor(String str) {
     Schema.Parser parser = new Schema.Parser();
     return parser.parse(str);
+  }
+
+  // org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
+  // Map precision to the number bytes needed for binary conversion.
+  public static final int[] PRECISION_TO_BYTE_COUNT = new int[38];
+
+  static {
+    for (int prec = 1; prec <= 38; prec++) {
+      // Estimated number of bytes needed.
+      PRECISION_TO_BYTE_COUNT[prec - 1] = (int)
+          Math.ceil((Math.log(Math.pow(10, prec) - 1) / Math.log(2) + 1) / 8);
+    }
   }
 }

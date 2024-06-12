@@ -40,7 +40,6 @@ import org.apache.orc.bench.core.CompressionKind;
 import org.apache.orc.bench.core.convert.BatchWriter;
 
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -166,8 +165,12 @@ public class AvroWriter implements BatchWriter {
   }
 
   private static class DecimalConverter implements AvroConverter {
+    final Schema avroSchema;
+    final int precision;
     final int scale;
-    DecimalConverter(int scale) {
+    DecimalConverter(Schema avroSchema, int precision, int scale) {
+      this.avroSchema = avroSchema;
+      this.precision = precision;
       this.scale = scale;
     }
     public Object convert(ColumnVector cv, int row) {
@@ -176,8 +179,7 @@ public class AvroWriter implements BatchWriter {
       }
       if (cv.noNulls || !cv.isNull[row]) {
         DecimalColumnVector vector = (DecimalColumnVector) cv;
-        return getBufferFromDecimal(
-            vector.vector[row].getHiveDecimal(), scale);
+        return decimalToBinary(vector.vector[row].getHiveDecimal(), avroSchema, precision, scale);
       } else {
         return null;
       }
@@ -270,7 +272,7 @@ public class AvroWriter implements BatchWriter {
       case TIMESTAMP:
         return new TimestampConverter();
       case DECIMAL:
-        return new DecimalConverter(types.getScale());
+        return new DecimalConverter(avroSchema, types.getPrecision(), types.getScale());
       case LIST:
         return new ListConverter(types, avroSchema);
       case STRUCT:
@@ -356,11 +358,28 @@ public class AvroWriter implements BatchWriter {
     writer.close();
   }
 
-  static Buffer getBufferFromDecimal(HiveDecimal dec, int scale) {
-    if (dec == null) {
-      return null;
+  // org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.DecimalDataWriter.decimalToBinary()
+  private static GenericData.Fixed decimalToBinary(HiveDecimal hiveDecimal,
+                                                   Schema avroSchema, int prec, int scale) {
+    byte[] decimalBytes = hiveDecimal.setScale(scale).unscaledValue().toByteArray();
+
+    // Estimated number of bytes needed.
+    int precToBytes = AvroSchemaUtils.PRECISION_TO_BYTE_COUNT[prec - 1];
+    if (precToBytes == decimalBytes.length) {
+      // No padding needed.
+      return new GenericData.Fixed(avroSchema, decimalBytes);
     }
 
-    return ByteBuffer.wrap(dec.bigIntegerBytesScaled(scale));
+    byte[] tgt = new byte[precToBytes];
+    if (hiveDecimal.signum() == -1) {
+      // For negative number, initializing bits to 1
+      for (int i = 0; i < precToBytes; i++) {
+        tgt[i] |= 0xFF;
+      }
+    }
+
+    System.arraycopy(decimalBytes, 0, tgt, precToBytes - decimalBytes.length,
+        decimalBytes.length); // Padding leading zeroes/ones.
+    return new GenericData.Fixed(avroSchema, tgt);
   }
 }
