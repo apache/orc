@@ -34,6 +34,7 @@ public class ParquetReader implements BatchReader {
   private final org.apache.parquet.hadoop.ParquetReader<GenericData.Record>
       reader;
   private final AvroReader.AvroConverter[] converters;
+  private final Boolean[] convertMicroseconds;
 
   public ParquetReader(Path path,
                        TypeDescription schema,
@@ -42,6 +43,7 @@ public class ParquetReader implements BatchReader {
     reader = AvroParquetReader.<GenericData.Record>builder(inputFile)
         .withCompatibility(true).build();
     converters = AvroReader.buildConverters(schema);
+    convertMicroseconds = new Boolean[converters.length];
   }
 
   @Override
@@ -54,8 +56,19 @@ public class ParquetReader implements BatchReader {
         break;
       }
       int row = batch.size++;
-      for(int c=0; c < converters.length; ++c) {
-        converters[c].convert(batch.cols[c], row, value.get(c));
+      for (int c = 0; c < converters.length; ++c) {
+        Object o = value.get(c);
+        if (convertMicroseconds[c] == null) {
+          String fieldSchema = value.getSchema().getFields().get(c).schema().toString();
+          convertMicroseconds[c] = fieldSchema.equals(
+              "[\"null\",{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}]");
+        }
+        if (convertMicroseconds[c]) {
+          // The data format of taxi is parquet, and timestamp uses microseconds,
+          // which is inconsistent with the milliseconds of Java's java.sql.Timestamp.
+          o = (Long) o / 1000;
+        }
+        converters[c].convert(batch.cols[c], row, o);
       }
     }
     return batch.size != 0;
