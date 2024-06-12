@@ -20,9 +20,9 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      # Pin gson to 2.2.4 because of Hive
+      # Pin gson to 2.9.0 because of Hive
       - dependency-name: "com.google.code.gson:gson"
-        versions: "[2.3,)"
+        versions: "[2.9,1)"
       # Pin jodd-core to 3.5.2
       - dependency-name: "org.jodd:jodd-core"
         versions: "[3.5.3,)"
