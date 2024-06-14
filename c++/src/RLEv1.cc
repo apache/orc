@@ -74,10 +74,8 @@ namespace orc {
   }
 
   uint64_t RleEncoderV1::flush() {
-    writeValues();
-    outputStream->BackUp(static_cast<int>(bufferLength - bufferPosition));
+    finishEncode();
     uint64_t dataSize = outputStream->flush();
-    bufferLength = bufferPosition = 0;
     return dataSize;
   }
 
