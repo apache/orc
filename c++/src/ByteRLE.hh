@@ -61,7 +61,9 @@ namespace orc {
     virtual void suppress() = 0;
 
     /**
-     * finish current encoding
+     * Finalize the encoding process. This function should be called after all data required for
+     * encoding has been added. It ensures that any remaining data is processed and the final state
+     * of the encoder is set.
      */
     virtual void finishEncode() = 0;
   };

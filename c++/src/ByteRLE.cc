@@ -63,9 +63,6 @@ namespace orc {
 
     virtual void suppress() override;
 
-    /**
-     * Finish encoding the stream.
-     */
     virtual void finishEncode() override;
 
     /**
