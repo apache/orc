@@ -61,6 +61,10 @@ namespace orc {
     }
   }
 
+  void BufferedOutputStream::finishStream() {
+    // PASS
+  }
+
   google::protobuf::int64 BufferedOutputStream::ByteCount() const {
     return static_cast<google::protobuf::int64>(dataBuffer_->size());
   }

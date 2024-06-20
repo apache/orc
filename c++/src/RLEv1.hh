@@ -38,6 +38,8 @@ namespace orc {
 
     void write(int64_t val) override;
 
+    void finishEncode() override;
+
    private:
     int64_t delta_;
     bool repeat_;

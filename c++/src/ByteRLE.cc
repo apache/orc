@@ -63,6 +63,8 @@ namespace orc {
 
     virtual void suppress() override;
 
+    virtual void finishEncode() override;
+
     /**
      * Reset to initial state
      */
@@ -214,6 +216,13 @@ namespace orc {
     // written data can be just ignored because they are only flushed in memory
     outputStream->suppress();
     reset();
+  }
+
+  void ByteRleEncoderImpl::finishEncode() {
+    writeValues();
+    outputStream->BackUp(bufferLength - bufferPosition);
+    outputStream->finishStream();
+    bufferLength = bufferPosition = 0;
   }
 
   std::unique_ptr<ByteRleEncoder> createByteRleEncoder(
