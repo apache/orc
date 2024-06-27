@@ -211,9 +211,22 @@ void checkForError(const std::string& filename, const std::string& errorMsg) {
   EXPECT_NE(std::string::npos, error.find(errorMsg)) << error;
 }
 
+void checkForError(const std::string& filename, const std::string& errorMsg1,
+                   const std::string& errorMsg2) {
+  const std::string pgm = findProgram("tools/src/orc-scan");
+  std::string output;
+  std::string error;
+  EXPECT_EQ(1, runProgram({pgm, filename}, output, error));
+  EXPECT_EQ("", output);
+  if (error.find(errorMsg1) == std::string::npos && error.find(errorMsg2) == std::string::npos) {
+    FAIL() << error;
+  }
+}
+
 TEST(TestFileScan, testErrorHandling) {
   checkForError(findExample("corrupt/stripe_footer_bad_column_encodings.orc"),
-                "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0");
+                "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0",
+                "bad StripeFooter from zlib");
   checkForError(findExample("corrupt/negative_dict_entry_lengths.orc"),
                 "Negative dictionary entry length");
   checkForError(findExample("corrupt/missing_length_stream_in_string_dict.orc"),
