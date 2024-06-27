@@ -47,7 +47,7 @@ message (STATUS "PROTOBUF_HOME: ${PROTOBUF_HOME}")
 
 find_package (Protobuf CONFIG)
 if (Protobuf_FOUND)
-  if(TARGET protobuf::libprotobuf)
+  if (TARGET protobuf::libprotobuf)
     set (PROTOBUF_LIBRARY protobuf::libprotobuf)
     set (PROTOBUF_STATIC_LIB PROTOBUF_STATIC_LIB-NOTFOUND)
     set (PROTOC_LIBRARY protobuf::libprotoc)
