@@ -106,7 +106,8 @@ namespace orc {
         case STRING:
         case CHAR:
         case VARCHAR: {
-          ret.isValid = ret.needConvert = isStringVariant(readType) || isNumeric(readType);
+          ret.isValid = ret.needConvert = isStringVariant(readType) || isNumeric(readType) ||
+                                          isTimestamp(readType) || isDecimal(readType);
           break;
         }
         case TIMESTAMP:

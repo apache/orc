@@ -45,17 +45,17 @@ namespace orc {
       directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
       EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
 
-      EXPECT_CALL(streams, getStreamProxy(testing::_, testing::_, testing::_))
-          .WillRepeatedly(testing::Return(nullptr));
-
       std::string dummyStream("dummy");
-      ON_CALL(streams, getStreamProxy(1, proto::Stream_Kind_SECONDARY, testing::_))
-          .WillByDefault(testing::Return(
-              new SeekableArrayInputStream(dummyStream.c_str(), dummyStream.length())));
+      EXPECT_CALL(streams, getStreamProxy(testing::_, testing::_, testing::_))
+          .WillRepeatedly(testing::ReturnNew<SeekableArrayInputStream>(dummyStream.c_str(),
+                                                                       dummyStream.length()));
 
+      EXPECT_CALL(streams, isDecimalAsLong()).WillRepeatedly(testing::Return(false));
       EXPECT_CALL(streams, getSchemaEvolution()).WillRepeatedly(testing::Return(&se));
+      EXPECT_CALL(streams, getSelectedColumns())
+          .WillRepeatedly(testing::Return(std::vector<bool>{true, true}));
 
-      EXPECT_TRUE(buildReader(*fileType, streams) != nullptr);
+      EXPECT_TRUE(buildReader(*fileType, streams, true) != nullptr);
     }
     return true;
   }
@@ -66,8 +66,8 @@ namespace orc {
         {2, "struct<t1:smallint>"},       {3, "struct<t1:int>"},
         {4, "struct<t1:bigint>"},         {5, "struct<t1:float>"},
         {6, "struct<t1:double>"},         {7, "struct<t1:string>"},
-        {8, "struct<t1:char(5)>"},        {9, "struct<t1:varchar(5)>"},
-        {10, "struct<t1:char(3)>"},       {11, "struct<t1:varchar(3)>"},
+        {8, "struct<t1:char(6)>"},        {9, "struct<t1:varchar(6)>"},
+        {10, "struct<t1:char(5)>"},       {11, "struct<t1:varchar(5)>"},
         {12, "struct<t1:decimal(25,2)>"}, {13, "struct<t1:decimal(15,2)>"},
         {14, "struct<t1:timestamp>"},     {15, "struct<t1:timestamp with local time zone>"},
         {16, "struct<t1:date>"}};
@@ -159,6 +159,22 @@ namespace orc {
     // conversion from string variant to string variant
     for (size_t i = 7; i <= 11; i++) {
       for (size_t j = 7; j <= 11; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = (i != j);
+      }
+    }
+
+    // conversion from string variant to decimal
+    for (size_t i = 7; i <= 11; i++) {
+      for (size_t j = 12; j <= 13; j++) {
+        canConvert[i][j] = true;
+        needConvert[i][j] = (i != j);
+      }
+    }
+
+    // conversion from string variant to timestamp
+    for (size_t i = 7; i <= 11; i++) {
+      for (size_t j = 14; j <= 15; j++) {
         canConvert[i][j] = true;
         needConvert[i][j] = (i != j);
       }
