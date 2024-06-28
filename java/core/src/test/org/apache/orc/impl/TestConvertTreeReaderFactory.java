@@ -724,7 +724,7 @@ public class TestConvertTreeReaderFactory {
     assertEquals(expected, options.toString());
     assertEquals(batch.cols.length, 1);
     assertEquals(batch.cols[0].getClass(), expectedColumnType);
-    assertTrue(batch.cols[0].isRepeating);
+    assertFalse(batch.cols[0].isRepeating);
     StringBuilder sb3 = new StringBuilder();
     batch.cols[0].stringifyValue(sb3, 1023);
     assertEquals(sb3.toString(), expectedResult[2]);
