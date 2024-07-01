@@ -197,3 +197,30 @@ jobs:
         with:
           config: .github/.licenserc.yaml
 
+  macos-c++-check:
+    name: "C++ Test on macOS"
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [12, 14]
+
+    runs-on: macos-${{ matrix.version }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        brew update
+        brew install protobuf
+
+    - name: Test
+      run: |
+        CMAKE_PREFIX_PATH=$(brew --prefix protobuf)
+        mkdir build
+        cd build
+        cmake .. -DBUILD_JAVA=OFF -DPROTOBUF_HOME=${CMAKE_PREFIX_PATH}
+      run: cmake --build build
+      run: ctest --test-dir build --output-on-failure
+
