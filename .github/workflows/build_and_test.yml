@@ -218,9 +218,8 @@ jobs:
     - name: Test
       run: |
         CMAKE_PREFIX_PATH=$(brew --prefix protobuf)
-        mkdir build
+        mkdir -p build
         cd build
         cmake .. -DBUILD_JAVA=OFF -DPROTOBUF_HOME=${CMAKE_PREFIX_PATH}
-      run: cmake --build build
-      run: ctest --test-dir build --output-on-failure
+        make package test-out
 
