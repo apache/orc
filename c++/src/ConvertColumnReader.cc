@@ -17,8 +17,9 @@
  */
 
 #include "ConvertColumnReader.hh"
-#include <optional>
 #include "Utils.hh"
+
+#include <optional>
 
 namespace orc {
 
@@ -76,13 +77,17 @@ namespace orc {
 
   static inline void handleParseFromStringError(ColumnVectorBatch& dstBatch, uint64_t idx,
                                                 bool shouldThrow, const std::string& typeName,
-                                                const std::string& str) {
+                                                const std::string& str,
+                                                const std::string& expectedFormat = "") {
     if (!shouldThrow) {
       dstBatch.notNull.data()[idx] = 0;
       dstBatch.hasNulls = true;
     } else {
       std::ostringstream ss;
       ss << "Failed to parse " << typeName << " from string:" << str;
+      if (expectedFormat != "") {
+        ss << " the following format \"" << expectedFormat << "\" is expected";
+      }
       throw SchemaEvolutionError(ss.str());
     }
   }
@@ -741,7 +746,6 @@ namespace orc {
       try {
         longValue = std::stoll(longStr);
       } catch (...) {
-        handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
         handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Long", longStr);
         return;
       }
@@ -763,7 +767,6 @@ namespace orc {
           dstBatch.data[idx] = std::stod(floatValue);
         }
       } catch (...) {
-        handleOverflow<std::string, ReadType>(dstBatch, idx, throwOnOverflow);
         handleParseFromStringError(dstBatch, idx, throwOnOverflow, typeid(readType).name(),
                                    floatValue);
       }
@@ -842,7 +845,8 @@ namespace orc {
 
    private:
     // Algorithm: http://howardhinnant.github.io/date_algorithms.html
-    int64_t days_from_epoch(int32_t y, int32_t m, int32_t d) {
+    // The algorithm implements a proleptic Gregorian calendar.
+    int64_t daysFromProlepticGregorianCalendar(int32_t y, int32_t m, int32_t d) {
       y -= m <= 2;
       int32_t era = y / 400;
       int32_t yoe = y - era * 400;                                   // [0, 399]
@@ -853,8 +857,6 @@ namespace orc {
 
     std::optional<std::pair<int64_t, int64_t>> tryBestToParseFromString(
         const std::string& timeStr) {
-      // timestamp_instant: yyyy-mm-dd hh:mm:ss[.xxx] timezone
-      // timestamp        : yyyy-mm-dd hh:mm:ss[.xxx]
       int32_t year, month, day, hour, min, sec, nanos = 0;
       int32_t matched = std::sscanf(timeStr.c_str(), "%4d-%2d-%2d %2d:%2d:%2d.%d", &year, &month,
                                     &day, &hour, &min, &sec, &nanos);
@@ -869,18 +871,31 @@ namespace orc {
           nanos *= 10;
         }
       }
-      int64_t daysSinceEpoch = days_from_epoch(year, month, day);
+      int64_t daysSinceEpoch = daysFromProlepticGregorianCalendar(year, month, day);
       int64_t secondSinceEpoch = 60ll * (60 * (24L * daysSinceEpoch + hour) + min) + sec;
       return std::make_optional(std::pair<int64_t, int64_t>{secondSinceEpoch, nanos});
     }
 
     void convertToTimestamp(TimestampVectorBatch& dstBatch, uint64_t idx,
                             const std::string& timeStr) {
+      // Expected timestamp_instant format string : yyyy-mm-dd hh:mm:ss[.xxx] timezone
+      // Eg. "2019-07-09 13:11:00 America/Los_Angeles"
+      // Expected timestamp format string         : yyyy-mm-dd hh:mm:ss[.xxx]
+      // Eg. "2019-07-09 13:11:00"
+      static std::string expectedTimestampInstantFormat = "yyyy-mm-dd hh:mm:ss[.xxx] timezone";
+      static std::string expectedTimestampFormat = "yyyy-mm-dd hh:mm:ss[.xxx]";
       auto timestamp = tryBestToParseFromString(timeStr);
       if (!timestamp.has_value()) {
-        handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp", timeStr);
+        if (!isInstant) {
+          handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp", timeStr,
+                                     expectedTimestampFormat);
+          return;
+        }
+        handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr,
+                                   expectedTimestampInstantFormat);
         return;
       }
+
       auto& [second, nanos] = timestamp.value();
 
       if (isInstant) {
@@ -888,7 +903,8 @@ namespace orc {
         pos = timeStr.find(' ', pos) + 1;
         pos = timeStr.find(' ', pos);
         if (pos == std::string::npos) {
-          handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr);
+          handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr,
+                                     expectedTimestampInstantFormat);
           return;
         }
         pos += 1;
@@ -896,7 +912,8 @@ namespace orc {
         try {
           second = getTimezoneByName(timeStr.substr(pos, subStrLength)).convertFromUTC(second);
         } catch (const TimezoneError&) {
-          handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr);
+          handleParseFromStringError(dstBatch, idx, throwOnOverflow, "Timestamp_Instant", timeStr,
+                                     expectedTimestampInstantFormat);
           return;
         }
       } else {
@@ -914,10 +931,9 @@ namespace orc {
    public:
     StringVariantToDecimalColumnReader(const Type& readType, const Type& fileType,
                                        StripeStreams& stripe, bool throwOnOverflow)
-        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow) {
-      precision_ = static_cast<int32_t>(readType.getPrecision());
-      scale_ = static_cast<int32_t>(readType.getScale());
-    }
+        : ConvertColumnReader(readType, fileType, stripe, throwOnOverflow),
+          precision_(static_cast<int32_t>(readType.getPrecision())),
+          scale_(static_cast<int32_t>(readType.getScale())) {}
 
     void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
       ConvertColumnReader::next(rowBatch, numValues, notNull);
@@ -1007,8 +1023,8 @@ namespace orc {
       }
     }
 
-    int32_t precision_;
-    int32_t scale_;
+    const int32_t precision_;
+    const int32_t scale_;
   };
 
 #define DEFINE_NUMERIC_CONVERT_READER(FROM, TO, TYPE) \

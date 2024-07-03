@@ -1151,6 +1151,7 @@ namespace orc {
     auto& c1 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[0]);
     auto& c2 = dynamic_cast<StringVectorBatch&>(*structBatch->fields[1]);
 
+    // <source_string, failed_to_int64, failed_to_int128, expected_int64, expected_int128>
     std::vector<std::tuple<std::string, bool, bool, int64_t, Int128>> rawDataAndExpected;
 
     rawDataAndExpected = {
