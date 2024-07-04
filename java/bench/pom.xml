@@ -36,7 +36,7 @@
     <avro.version>1.11.3</avro.version>
     <hive.version>4.0.0</hive.version>
     <jmh.version>1.37</jmh.version>
-    <junit.version>5.10.2</junit.version>
+    <junit.version>5.10.3</junit.version>
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.13.1</parquet.version>
     <scala.binary.version>2.13</scala.binary.version>
