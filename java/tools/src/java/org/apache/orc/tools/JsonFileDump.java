@@ -49,6 +49,8 @@ import org.apache.orc.util.BloomFilterIO;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -221,6 +223,17 @@ public class JsonFileDump {
           writer.name("numInserts").value(acidStats.inserts);
           writer.name("numDeletes").value(acidStats.deletes);
           writer.name("numUpdates").value(acidStats.updates);
+        }
+        List<String> keys = reader.getMetadataKeys();
+        keys.remove(OrcAcidUtils.ACID_STATS);
+        if (!keys.isEmpty()) {
+          writer.name("userMetadata").beginObject();
+          for (String key : keys) {
+            writer.name(key);
+            ByteBuffer byteBuffer = reader.getMetadataValue(key);
+            writer.value(String.valueOf(StandardCharsets.UTF_8.decode(byteBuffer)));
+          }
+          writer.endObject();
         }
         writer.name("status").value("OK");
         rows.close();

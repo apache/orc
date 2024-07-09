@@ -1380,5 +1380,9 @@
   "rawDataSize": 2144730,
   "paddingLength": 0,
   "paddingRatio": 0.0,
+  "userMetadata": {
+    "hive.acid.key.index": "1,1,1;2,3,5;",
+    "some.user.property": "foo#bar$baz&"
+  },
   "status": "OK"
 }
