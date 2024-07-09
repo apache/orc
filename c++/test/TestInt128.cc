@@ -555,6 +555,11 @@ namespace orc {
 
     num = Int128("-12345678901122334455667788990011122233");
     EXPECT_EQ("-12345678901122334455667788990011122233", num.toString());
+
+    num = Int128::maximumValue();
+    EXPECT_EQ("170141183460469231731687303715884105727", num.toString());
+    num = Int128::minimumValue();
+    EXPECT_EQ("-170141183460469231731687303715884105728", num.toString());
   }
 
   TEST(Int128, testToDecimalString) {
