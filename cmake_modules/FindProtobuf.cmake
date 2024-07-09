@@ -83,7 +83,7 @@ if (Protobuf_FOUND)
     set (PROTOBUF_LIBRARY ${Protobuf_LIBRARIES})
     set (PROTOBUF_INCLUDE_DIR ${Protobuf_INCLUDE_DIRS})
     if (NOT PROTOBUF_INCLUDE_DIR)
-      message(FATAL_ERROR "Cannot determine Protobuf include directory.")
+      message (FATAL_ERROR "Cannot determine Protobuf include directory.")
     endif ()
 
     if (Protobuf_LIBRARIES MATCHES "\\${CMAKE_STATIC_LIBRARY_SUFFIX}$")
