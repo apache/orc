@@ -204,6 +204,9 @@ public class AvroReader implements BatchReader {
         DecimalColumnVector tc = (DecimalColumnVector) cv;
         if (value instanceof ByteBuffer) {
           tc.vector[row].set(getHiveDecimalFromByteBuffer((ByteBuffer) value, scale));
+        } else if (value instanceof GenericData.Fixed) {
+          tc.vector[row].set(getHiveDecimalFromByteBuffer(
+              ByteBuffer.wrap(((GenericData.Fixed) value).bytes()), scale));
         } else {
           tc.vector[row].set(HiveDecimal.create(Math.round((double) value * multiplier)));
         }
