@@ -1551,8 +1551,6 @@ public class TreeReaderFactory {
       HiveDecimalWritable[] vector = result.vector;
       HiveDecimalWritable decWritable;
       if (result.noNulls) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           decWritable = vector[r];
           if (!decWritable.serializationUtilsRead(
@@ -1563,12 +1561,7 @@ public class TreeReaderFactory {
           }
           setIsRepeatingIfNeeded(result, r);
         }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
-        }
       } else if (!result.isRepeating || !result.isNull[0]) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             decWritable = vector[r];
@@ -1580,9 +1573,6 @@ public class TreeReaderFactory {
             }
           }
           setIsRepeatingIfNeeded(result, r);
-        }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
         }
       }
     }
@@ -1603,8 +1593,6 @@ public class TreeReaderFactory {
       HiveDecimalWritable[] vector = result.vector;
       HiveDecimalWritable decWritable;
       if (result.noNulls) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); ++r) {
           int idx = filterContext.getSelected()[r];
@@ -1621,13 +1609,8 @@ public class TreeReaderFactory {
           setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
         }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
-        }
         skipStreamRows(batchSize - previousIdx);
       } else if (!result.isRepeating || !result.isNull[0]) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); ++r) {
           int idx = filterContext.getSelected()[r];
@@ -1645,9 +1628,6 @@ public class TreeReaderFactory {
           }
           setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
-        }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
         }
         skipStreamRows(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
       }
@@ -1667,28 +1647,18 @@ public class TreeReaderFactory {
       // read the scales
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       if (result.noNulls) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
           result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
           setIsRepeatingIfNeeded(result, r);
         }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
-        }
       } else if (!result.isRepeating || !result.isNull[0]) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
             result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
           }
           setIsRepeatingIfNeeded(result, r);
-        }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
         }
       }
       result.precision = (short) precision;
@@ -1710,8 +1680,6 @@ public class TreeReaderFactory {
       // Read all the scales
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       if (result.noNulls) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); r++) {
           int idx = filterContext.getSelected()[r];
@@ -1725,13 +1693,8 @@ public class TreeReaderFactory {
           setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
         }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
-        }
         skipStreamRows(batchSize - previousIdx);
       } else if (!result.isRepeating || !result.isNull[0]) {
-        boolean preIsRepeating = result.isRepeating;
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); r++) {
           int idx = filterContext.getSelected()[r];
@@ -1746,9 +1709,6 @@ public class TreeReaderFactory {
           }
           setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
-        }
-        if (!preIsRepeating && result.isRepeating) {
-          result.isRepeating = preIsRepeating;
         }
         skipStreamRows(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
       }
