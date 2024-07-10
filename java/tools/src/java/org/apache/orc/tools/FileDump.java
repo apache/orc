@@ -357,9 +357,10 @@ public final class FileDump {
     for (int n = 0; n < stripeStats.size(); n++) {
       System.out.println("  Stripe " + (n + 1) + ":");
       StripeStatistics ss = stripeStats.get(n);
-      for (int i = 0; i < ss.getColumnStatistics().length; ++i) {
+      ColumnStatistics[] columnStatistics = ss.getColumnStatistics();
+      for (int i = 0; i < columnStatistics.length; ++i) {
         System.out.println("    Column " + i + ": " +
-            ss.getColumnStatistics()[i].toString());
+            columnStatistics[i].toString());
       }
     }
     ColumnStatistics[] stats = reader.getStatistics();
