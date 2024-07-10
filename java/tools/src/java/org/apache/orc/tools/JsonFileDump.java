@@ -112,10 +112,11 @@ public class JsonFileDump {
           writer.name("stripeNumber").value(n + 1);
           StripeStatistics ss = stripeStatistics.get(n);
           writer.name("columnStatistics").beginArray();
-          for (int i = 0; i < ss.getColumnStatistics().length; i++) {
+          ColumnStatistics[] columnStatistics = ss.getColumnStatistics();
+          for (int i = 0; i < columnStatistics.length; i++) {
             writer.beginObject();
             writer.name("columnId").value(i);
-            writeColumnStatistics(writer, ss.getColumnStatistics()[i]);
+            writeColumnStatistics(writer, columnStatistics[i]);
             writer.endObject();
           }
           writer.endArray();
