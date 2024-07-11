@@ -142,6 +142,9 @@ equivalent to the Hive ORC File Dump command.
 `--backup-path <path>`
   : when used with --recover specifies the path where the recovered file is written (default: /tmp)
 
+`--column-type`
+  : Print the column id, name and type of each column
+
 `-d,--data`
   : Should the data be printed
 

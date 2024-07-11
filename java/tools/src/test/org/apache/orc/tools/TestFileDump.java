@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
@@ -58,6 +59,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -825,6 +827,74 @@ public class TestFileDump {
     assertEquals("{\"x\":NaN}", lines[0]);
     assertEquals("{\"x\":Infinity}", lines[1]);
     assertEquals("{\"x\":12.34}", lines[2]);
+  }
+
+  @Test
+  public void testDumpColumnType() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<a:boolean,b:tinyint,c:smallint,d:int,e:bigint," +
+            "f:float,g:double,h:string,i:date,j:timestamp,k:binary,l:decimal(20,5),m:varchar(5)," +
+            "n:char(5)>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .fileSystem(fs)
+            .setSchema(schema));
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    LongColumnVector a = (LongColumnVector) batch.cols[0];
+    LongColumnVector b = (LongColumnVector) batch.cols[1];
+    LongColumnVector c = (LongColumnVector) batch.cols[2];
+    LongColumnVector d = (LongColumnVector) batch.cols[3];
+    LongColumnVector e = (LongColumnVector) batch.cols[4];
+    DoubleColumnVector f = (DoubleColumnVector) batch.cols[5];
+    DoubleColumnVector g = (DoubleColumnVector) batch.cols[6];
+    BytesColumnVector h = (BytesColumnVector) batch.cols[7];
+    DateColumnVector i = (DateColumnVector) batch.cols[8];
+    TimestampColumnVector j = (TimestampColumnVector) batch.cols[9];
+    BytesColumnVector k = (BytesColumnVector) batch.cols[10];
+    DecimalColumnVector l = (DecimalColumnVector) batch.cols[11];
+    BytesColumnVector m = (BytesColumnVector) batch.cols[12];
+    BytesColumnVector n = (BytesColumnVector) batch.cols[13];
+
+    for (int o = 0; o < VectorizedRowBatch.DEFAULT_SIZE * 2; o++) {
+      int row = batch.size++;
+      a.vector[row] = row % 2;
+      b.vector[row] = row % 128;
+      c.vector[row] = row;
+      d.vector[row] = row;
+      e.vector[row] = row * 10000000L;
+      f.vector[row] = row * 1.0f;
+      g.vector[row] = row * 1.0d;
+      byte[] bytes = String.valueOf(row).getBytes(StandardCharsets.UTF_8);
+      h.setRef(row, bytes, 0, bytes.length);
+      i.vector[row] = row;
+      j.time[row] = row * 1000L;
+      j.nanos[row] = row;
+      k.setRef(row, bytes, 0, bytes.length);
+      l.vector[row] = new HiveDecimalWritable(row);
+      m.setRef(row, bytes, 0, bytes.length);
+      bytes = String.valueOf(10000 - row).getBytes(StandardCharsets.UTF_8);
+      n.setRef(row, bytes, 0, bytes.length);
+
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    writer.close();
+    assertEquals(VectorizedRowBatch.DEFAULT_SIZE * 2, writer.getNumberOfRows());
+
+    PrintStream origOut = System.out;
+    String outputFilename = "orc-file-dump-column-type.out";
+    FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
+
+    // replace stdout and run command
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
+    FileDump.main(new String[]{testFilePath.toString(), "--column-type"});
+    System.out.flush();
+    System.setOut(origOut);
+
+    checkOutput(outputFilename, workDir + File.separator + outputFilename);
   }
 
   private static boolean contentEquals(String filePath, String otherFilePath) throws IOException {
