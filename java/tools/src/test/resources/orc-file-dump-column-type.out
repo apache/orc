@@ -1,0 +1,121 @@
+Structure for TestFileDump.testDump.orc
+File Version: 0.12 with ORC_14 by ORC Java 2.1.0-SNAPSHOT
+Rows: 2048
+Compression: ZSTD
+Compression size: 262144
+Calendar: Julian/Gregorian
+Type: struct<a:boolean,b:tinyint,c:smallint,d:int,e:bigint,f:float,g:double,h:string,i:date,j:timestamp,k:binary,l:decimal(20,5),m:varchar(5),n:char(5)>
+Columns type:
+  Column 0: field: 0 type: struct<a:boolean,b:tinyint,c:smallint,d:int,e:bigint,f:float,g:double,h:string,i:date,j:timestamp,k:binary,l:decimal(20,5),m:varchar(5),n:char(5)>
+  Column 1: field: a type: boolean
+  Column 2: field: b type: tinyint
+  Column 3: field: c type: smallint
+  Column 4: field: d type: int
+  Column 5: field: e type: bigint
+  Column 6: field: f type: float
+  Column 7: field: g type: double
+  Column 8: field: h type: string
+  Column 9: field: i type: date
+  Column 10: field: j type: timestamp
+  Column 11: field: k type: binary
+  Column 12: field: l type: decimal(20,5)
+  Column 13: field: m type: varchar(5)
+  Column 14: field: n type: char(5)
+
+Stripe Statistics:
+  Stripe 1:
+    Column 0: count: 2048 hasNull: false
+    Column 1: count: 2048 hasNull: false bytesOnDisk: 7 true: 1024
+    Column 2: count: 2048 hasNull: false bytesOnDisk: 152 min: 0 max: 127 sum: 130048
+    Column 3: count: 2048 hasNull: false bytesOnDisk: 21 min: 0 max: 1023 sum: 1047552
+    Column 4: count: 2048 hasNull: false bytesOnDisk: 21 min: 0 max: 1023 sum: 1047552
+    Column 5: count: 2048 hasNull: false bytesOnDisk: 35 min: 0 max: 10230000000 sum: 10475520000000
+    Column 6: count: 2048 hasNull: false bytesOnDisk: 2361 min: 0.0 max: 1023.0 sum: 1047552.0
+    Column 7: count: 2048 hasNull: false bytesOnDisk: 973 min: 0.0 max: 1023.0 sum: 1047552.0
+    Column 8: count: 2048 hasNull: false bytesOnDisk: 2988 min: 0 max: 999 sum: 5972
+    Column 9: count: 2048 hasNull: false bytesOnDisk: 21 min: Hybrid AD 1970-01-01 max: Hybrid AD 1972-10-20
+    Column 10: count: 2048 hasNull: false bytesOnDisk: 1626 min: 1969-12-31 16:00:00.0 max: 1969-12-31 16:17:03.000001023
+    Column 11: count: 2048 hasNull: false bytesOnDisk: 1404 sum: 5972
+    Column 12: count: 2048 hasNull: false bytesOnDisk: 1666 min: 0 max: 1023 sum: 1047552
+    Column 13: count: 2048 hasNull: false bytesOnDisk: 2988 min: 0 max: 999 sum: 5972
+    Column 14: count: 2048 hasNull: false bytesOnDisk: 1277 min: 10000 max: 9999  sum: 10240
+
+File Statistics:
+  Column 0: count: 2048 hasNull: false
+  Column 1: count: 2048 hasNull: false bytesOnDisk: 7 true: 1024
+  Column 2: count: 2048 hasNull: false bytesOnDisk: 152 min: 0 max: 127 sum: 130048
+  Column 3: count: 2048 hasNull: false bytesOnDisk: 21 min: 0 max: 1023 sum: 1047552
+  Column 4: count: 2048 hasNull: false bytesOnDisk: 21 min: 0 max: 1023 sum: 1047552
+  Column 5: count: 2048 hasNull: false bytesOnDisk: 35 min: 0 max: 10230000000 sum: 10475520000000
+  Column 6: count: 2048 hasNull: false bytesOnDisk: 2361 min: 0.0 max: 1023.0 sum: 1047552.0
+  Column 7: count: 2048 hasNull: false bytesOnDisk: 973 min: 0.0 max: 1023.0 sum: 1047552.0
+  Column 8: count: 2048 hasNull: false bytesOnDisk: 2988 min: 0 max: 999 sum: 5972
+  Column 9: count: 2048 hasNull: false bytesOnDisk: 21 min: Hybrid AD 1970-01-01 max: Hybrid AD 1972-10-20
+  Column 10: count: 2048 hasNull: false bytesOnDisk: 1626 min: 1969-12-31 16:00:00.0 max: 1969-12-31 16:17:03.000001023
+  Column 11: count: 2048 hasNull: false bytesOnDisk: 1404 sum: 5972
+  Column 12: count: 2048 hasNull: false bytesOnDisk: 1666 min: 0 max: 1023 sum: 1047552
+  Column 13: count: 2048 hasNull: false bytesOnDisk: 2988 min: 0 max: 999 sum: 5972
+  Column 14: count: 2048 hasNull: false bytesOnDisk: 1277 min: 10000 max: 9999  sum: 10240
+
+Stripes:
+  Stripe: offset: 3 data: 15540 rows: 2048 tail: 225 index: 464
+    Stream: column 0 section ROW_INDEX start: 3 length 12
+    Stream: column 1 section ROW_INDEX start: 15 length 24
+    Stream: column 2 section ROW_INDEX start: 39 length 28
+    Stream: column 3 section ROW_INDEX start: 67 length 28
+    Stream: column 4 section ROW_INDEX start: 95 length 28
+    Stream: column 5 section ROW_INDEX start: 123 length 35
+    Stream: column 6 section ROW_INDEX start: 158 length 45
+    Stream: column 7 section ROW_INDEX start: 203 length 45
+    Stream: column 8 section ROW_INDEX start: 248 length 30
+    Stream: column 9 section ROW_INDEX start: 278 length 24
+    Stream: column 10 section ROW_INDEX start: 302 length 35
+    Stream: column 11 section ROW_INDEX start: 337 length 24
+    Stream: column 12 section ROW_INDEX start: 361 length 39
+    Stream: column 13 section ROW_INDEX start: 400 length 30
+    Stream: column 14 section ROW_INDEX start: 430 length 37
+    Stream: column 1 section DATA start: 467 length 7
+    Stream: column 2 section DATA start: 474 length 152
+    Stream: column 3 section DATA start: 626 length 21
+    Stream: column 4 section DATA start: 647 length 21
+    Stream: column 5 section DATA start: 668 length 35
+    Stream: column 6 section DATA start: 703 length 2361
+    Stream: column 7 section DATA start: 3064 length 973
+    Stream: column 8 section DATA start: 4037 length 1575
+    Stream: column 8 section LENGTH start: 5612 length 47
+    Stream: column 8 section DICTIONARY_DATA start: 5659 length 1366
+    Stream: column 9 section DATA start: 7025 length 21
+    Stream: column 10 section DATA start: 7046 length 35
+    Stream: column 10 section SECONDARY start: 7081 length 1591
+    Stream: column 11 section DATA start: 8672 length 1368
+    Stream: column 11 section LENGTH start: 10040 length 36
+    Stream: column 12 section DATA start: 10076 length 1647
+    Stream: column 12 section SECONDARY start: 11723 length 19
+    Stream: column 13 section DATA start: 11742 length 1575
+    Stream: column 13 section LENGTH start: 13317 length 47
+    Stream: column 13 section DICTIONARY_DATA start: 13364 length 1366
+    Stream: column 14 section DATA start: 14730 length 753
+    Stream: column 14 section LENGTH start: 15483 length 11
+    Stream: column 14 section DICTIONARY_DATA start: 15494 length 513
+    Encoding column 0: DIRECT
+    Encoding column 1: DIRECT
+    Encoding column 2: DIRECT
+    Encoding column 3: DIRECT_V2
+    Encoding column 4: DIRECT_V2
+    Encoding column 5: DIRECT_V2
+    Encoding column 6: DIRECT
+    Encoding column 7: DIRECT
+    Encoding column 8: DICTIONARY_V2[1024]
+    Encoding column 9: DIRECT_V2
+    Encoding column 10: DIRECT_V2
+    Encoding column 11: DIRECT_V2
+    Encoding column 12: DIRECT_V2
+    Encoding column 13: DICTIONARY_V2[1024]
+    Encoding column 14: DICTIONARY_V2[1024]
+
+File length: 16919 bytes
+File raw data size: 1048404 bytes
+Padding length: 0 bytes
+Padding ratio: 0%
+________________________________________________________________________________________________________________________
+
