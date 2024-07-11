@@ -134,7 +134,9 @@ public final class FileDump {
         boolean prettyPrint = cli.hasOption('p');
         JsonFileDump.printJsonMetaData(filesInPath, conf, rowIndexCols, prettyPrint, printTimeZone);
       } else {
-        printMetaData(filesInPath, conf, rowIndexCols, printTimeZone, recover, backupPath);
+        boolean printColumnType = cli.hasOption("column-type");
+        printMetaData(filesInPath, conf, rowIndexCols, printTimeZone, recover, backupPath,
+            printColumnType);
       }
     }
   }
@@ -268,11 +270,11 @@ public final class FileDump {
 
   private static void printMetaData(List<String> files, Configuration conf,
       List<Integer> rowIndexCols, boolean printTimeZone, final boolean recover,
-      final String backupPath)
+      final String backupPath, final boolean printColumnType)
       throws IOException {
     List<String> corruptFiles = new ArrayList<>();
     for (String filename : files) {
-      printMetaDataImpl(filename, conf, rowIndexCols, printTimeZone, corruptFiles);
+      printMetaDataImpl(filename, conf, rowIndexCols, printTimeZone, corruptFiles, printColumnType);
       System.out.println(SEPARATOR);
     }
 
@@ -291,6 +293,15 @@ public final class FileDump {
         System.err.println(buffer);
         System.out.println(SEPARATOR);
       }
+    }
+  }
+
+  static void printColumnsType(TypeDescription schema) {
+    int maximumId = schema.getMaximumId();
+    for (int c = schema.getId(); c < maximumId + 1; ++c) {
+      TypeDescription type = schema.findSubtype(c);
+      System.out.println("  Column " + type.getId() + ": field: " + type.getFullFieldName() +
+          " type: " + type.toString());
     }
   }
 
@@ -329,7 +340,7 @@ public final class FileDump {
 
   private static void printMetaDataImpl(final String filename,
       final Configuration conf, List<Integer> rowIndexCols, final boolean printTimeZone,
-      final List<String> corruptFiles) throws IOException {
+      final List<String> corruptFiles, final boolean printColumnType) throws IOException {
     Path file = new Path(filename);
     Reader reader = getReader(file, conf, corruptFiles);
     // if we can create reader then footer is not corrupt and file will readable
@@ -351,6 +362,10 @@ public final class FileDump {
                            ? "Proleptic Gregorian"
                            : "Julian/Gregorian"));
     System.out.println("Type: " + reader.getSchema().toString());
+    if (printColumnType) {
+      System.out.println("Columns type:");
+      printColumnsType(reader.getSchema());
+    }
     printTypeAnnotations(reader.getSchema(), "root");
     System.out.println("\nStripe Statistics:");
     List<StripeStatistics> stripeStats = reader.getStripeStatistics();
@@ -834,6 +849,11 @@ public final class FileDump {
         .longOpt("backup-path")
         .desc("specify a backup path to store the corrupted files (default: /tmp)")
         .hasArg()
+        .build());
+
+    result.addOption(Option.builder()
+        .longOpt("column-type")
+        .desc("Print the column id, name and type of each column")
         .build());
     return result;
   }
