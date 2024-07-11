@@ -202,7 +202,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [12, 14]
+        version: [12, 13, 14]
     runs-on: macos-${{ matrix.version }}
     steps:
     - name: Checkout repository
