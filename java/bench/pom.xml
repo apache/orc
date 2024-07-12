@@ -40,8 +40,8 @@
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.13.1</parquet.version>
     <scala.binary.version>2.13</scala.binary.version>
-    <scala.version>2.13.8</scala.version>
-    <spark.version>3.5.1</spark.version>
+    <scala.version>2.13.14</scala.version>
+    <spark.version>4.0.0-preview1</spark.version>
   </properties>
 
   <dependencyManagement>
