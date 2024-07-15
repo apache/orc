@@ -12,7 +12,7 @@ The C++ library is supported on the following operating systems:
 * CentOS 7
 * Debian 10 to 12
 * MacOS 12 to 14
-* Ubuntu 20.04 to 24.04
+* Ubuntu 22.04 to 24.04
 
 You'll want to install the usual set of developer tools, but at least:
 
@@ -27,7 +27,6 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 
 * [Debian 11]({{ page.dockerUrl }}/debian11/Dockerfile)
 * [Debian 12]({{ page.dockerUrl }}/debian12/Dockerfile)
-* [Ubuntu 20]({{ page.dockerUrl }}/ubuntu20/Dockerfile)
 * [Ubuntu 22]({{ page.dockerUrl }}/ubuntu22/Dockerfile)
 * [Ubuntu 24]({{ page.dockerUrl }}/ubuntu24/Dockerfile)
 * [Fedora 37]({{ page.dockerUrl }}/fedora37/Dockerfile)
