@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2024/07/16/ORC-1.9.4/">ORC 1.9.4 Released</option>
+      
       <option value="/news/2024/05/14/ORC-2.0.1/">ORC 2.0.1 Released</option>
       
       <option value="/news/2024/05/13/add-shaoyun-and-yuanping/">Shaoyun Chen and Yuanping Wu added as committers</option>
@@ -304,6 +306,64 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2024/07/16/ORC-1.9.4/">
+      ORC 1.9.4 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      16 Jul 2024
+    </span>
+    <a href="https://people.apache.org/~william" class="post-author">
+      <img src="https://people.apache.org/~william//william.png"
+           class="avatar" alt="william avatar"
+           width="24" height="24">
+      william
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.9.4.</p>
+
+<ul>
+  <li>Released: 16 July 2024</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.4/orc-1.9.4.tar.gz">orc-1.9.4.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.4/orc-1.9.4.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.4">rel/release-1.9.4</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.4%22">ORC 1.9.4</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.4/orc-1.9.4.tar.gz.sha256">d9a6bcc00e07a6e5…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.4%22&amp;tempMax=500">ORC-1.9.4</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1696">ORC-1696</a> Fix ClassCastException when reading avro decimal type in bechmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1721">ORC-1721</a> Upgrade <code class="highlighter-rouge">aircompressor</code> to 0.27</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1738">ORC-1738</a> Wrong Int128 maximum value</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1619">ORC-1619</a> Add <code class="highlighter-rouge">MacOS 14</code> to GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1699">ORC-1699</a> Fix SparkBenchmark in Parquet format according to SPARK-40918</li>
+</ul>
+
+<p>The task changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1540">ORC-1540</a> Remove MacOS 11 from GitHub Action CI</li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2024/05/14/ORC-2.0.1/">
@@ -515,12 +575,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 20 March 2024</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.3/orc-1.9.3.tar.gz">orc-1.9.3.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.9.3/orc-1.9.3.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.9.3/orc-1.9.3.tar.gz">orc-1.9.3.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.9.3/orc-1.9.3.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Gang Wu (578F619B)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.3">rel/release-1.9.3</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.3%22">ORC 1.9.3</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.3/orc-1.9.3.tar.gz.sha256">f737d005d0c4deb6…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.9.3/orc-1.9.3.tar.gz.sha256">f737d005d0c4deb6…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.3%22&amp;tempMax=500">ORC-1.9.3</a></li>
 </ul>
 
@@ -6256,6 +6316,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2024/07/16/ORC-1.9.4/">Version 1.9.4</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2024/05/14/ORC-2.0.1/">Version 2.0.1</a>
       </li>
       
@@ -6271,13 +6335,11 @@ together with the Java implementation.</p>
         <a href="/news/2024/03/08/ORC-2.0.0/">Version 2.0.0</a>
       </li>
       
-      <li class="">
-        <a href="/news/2023/11/10/ORC-1.9.2/">Version 1.9.2</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
