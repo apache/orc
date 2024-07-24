@@ -28,6 +28,7 @@ import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -2709,6 +2710,73 @@ public class TestRecordReaderImpl {
         assertEquals(value, strVector.toString(r), "row " + (r + base));
       }
       base += batch.size;
+    }
+  }
+
+  @Test
+  public void testDecimalIsRepeatingFlag() throws IOException {
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+    Path testFilePath = new Path(workDir, "testDecimalIsRepeatingFlag.orc");
+    fs.delete(testFilePath, true);
+
+    Configuration decimalConf = new Configuration(conf);
+    decimalConf.set(OrcConf.STRIPE_ROW_COUNT.getAttribute(), "1024");
+    decimalConf.set(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), "1");
+    String typeStr = "decimal(20,10)";
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(decimalConf).setSchema(schema));
+
+    VectorizedRowBatch b = schema.createRowBatch();
+    DecimalColumnVector f1 = (DecimalColumnVector) b.cols[0];
+    for (int i = 0; i < 1024; i++) {
+      f1.set(i, HiveDecimal.create("-119.4594594595"));
+    }
+    b.size = 1024;
+    w.addRowBatch(b);
+
+    b.reset();
+    for (int i = 0; i < 1024; i++) {
+      f1.set(i, HiveDecimal.create("9318.4351351351"));
+    }
+    b.size = 1024;
+    w.addRowBatch(b);
+
+    b.reset();
+    for (int i = 0; i < 1024; i++) {
+      f1.set(i, HiveDecimal.create("-4298.1513513514"));
+    }
+    b.size = 1024;
+    w.addRowBatch(b);
+
+    b.reset();
+    w.close();
+
+    Reader.Options options = new Reader.Options();
+    try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+         RecordReader rows = reader.rows(options)) {
+      VectorizedRowBatch batch = schema.createRowBatch();
+
+      rows.nextBatch(batch);
+      assertEquals(1024, batch.size);
+      assertFalse(batch.cols[0].isRepeating);
+      for (HiveDecimalWritable hiveDecimalWritable : ((DecimalColumnVector) batch.cols[0]).vector) {
+        assertEquals(HiveDecimal.create("-119.4594594595"), hiveDecimalWritable.getHiveDecimal());
+      }
+
+      rows.nextBatch(batch);
+      assertEquals(1024, batch.size);
+      assertFalse(batch.cols[0].isRepeating);
+      for (HiveDecimalWritable hiveDecimalWritable : ((DecimalColumnVector) batch.cols[0]).vector) {
+        assertEquals(HiveDecimal.create("9318.4351351351"), hiveDecimalWritable.getHiveDecimal());
+      }
+
+      rows.nextBatch(batch);
+      assertEquals(1024, batch.size);
+      assertFalse(batch.cols[0].isRepeating);
+      for (HiveDecimalWritable hiveDecimalWritable : ((DecimalColumnVector) batch.cols[0]).vector) {
+        assertEquals(HiveDecimal.create("-4298.1513513514"), hiveDecimalWritable.getHiveDecimal());
+      }
     }
   }
 }
