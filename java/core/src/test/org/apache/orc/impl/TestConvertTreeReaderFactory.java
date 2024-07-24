@@ -707,7 +707,7 @@ public class TestConvertTreeReaderFactory {
     assertTrue(batch.cols[0].isRepeating);
     StringBuilder sb = new StringBuilder();
     batch.cols[0].stringifyValue(sb, 1023);
-    assertEquals(sb.toString(), expectedResult[0]);
+    assertEquals(expectedResult[0], sb.toString());
 
     rows.nextBatch(batch);
     assertEquals(1024, batch.size);
@@ -717,17 +717,17 @@ public class TestConvertTreeReaderFactory {
     assertFalse(batch.cols[0].isRepeating);
     StringBuilder sb2 = new StringBuilder();
     batch.cols[0].stringifyValue(sb2, 1023);
-    assertEquals(sb2.toString(), expectedResult[1]);
+    assertEquals(expectedResult[1], sb2.toString());
 
     rows.nextBatch(batch);
     assertEquals(1024, batch.size);
     assertEquals(expected, options.toString());
     assertEquals(batch.cols.length, 1);
     assertEquals(batch.cols[0].getClass(), expectedColumnType);
-    assertTrue(batch.cols[0].isRepeating);
+    assertFalse(batch.cols[0].isRepeating);
     StringBuilder sb3 = new StringBuilder();
     batch.cols[0].stringifyValue(sb3, 1023);
-    assertEquals(sb3.toString(), expectedResult[2]);
+    assertEquals(expectedResult[2], sb3.toString());
   }
 
   private void testDecimalConvertToLongInNullStripe() throws Exception {
