@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileRange;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
+import org.apache.hadoop.util.VersionInfo;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcProto;
@@ -48,7 +49,8 @@ import java.util.function.Supplier;
  */
 public class RecordReaderUtils {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
-  private static final boolean supportVectoredIO = SHIMS.supportVectoredIO();
+  private static final boolean supportVectoredIO =
+      SHIMS.supportVectoredIO(VersionInfo.getVersion());
   private static final Logger LOG = LoggerFactory.getLogger(RecordReaderUtils.class);
 
   private static class DefaultDataReader implements DataReader {

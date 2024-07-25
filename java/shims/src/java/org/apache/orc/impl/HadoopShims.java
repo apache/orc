@@ -20,7 +20,6 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.util.VersionInfo;
 import org.apache.orc.EncryptionAlgorithm;
 
 import java.io.Closeable;
@@ -132,9 +131,9 @@ public interface HadoopShims {
    */
   boolean endVariableLengthBlock(OutputStream output) throws IOException;
 
-  default boolean supportVectoredIO() {
+  default boolean supportVectoredIO(String version) {
     // HADOOP-18103 is available since Apache Hadoop 3.3.5+
-    String[] versionParts = VersionInfo.getVersion().split("[.]");
+    String[] versionParts = version.split("[.-]");
     int major = Integer.parseInt(versionParts[0]);
     int minor = Integer.parseInt(versionParts[1]);
     int patch = Integer.parseInt(versionParts[2]);
