@@ -347,6 +347,10 @@ namespace orc {
     return contents_->blockSize;
   }
 
+  ReaderEncryption* RowReaderImpl::getReaderEncryption() const {
+    return contents_->encryption.get();
+  }
+
   const std::vector<bool> RowReaderImpl::getSelectedColumns() const {
     return selectedColumns_;
   }
@@ -442,40 +446,62 @@ namespace orc {
 
     // obtain row indexes for selected columns
     uint64_t offset = currentStripeInfo_.offset();
-    for (int i = 0; i < currentStripeFooter_.streams_size(); ++i) {
-      const proto::Stream& pbStream = currentStripeFooter_.streams(i);
-      uint64_t colId = pbStream.column();
-      if (selectedColumns_[colId] && pbStream.has_kind() &&
-          (pbStream.kind() == proto::Stream_Kind_ROW_INDEX ||
-           pbStream.kind() == proto::Stream_Kind_BLOOM_FILTER_UTF8)) {
-        std::unique_ptr<SeekableInputStream> inStream = createDecompressor(
-            getCompression(),
-            std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-                contents_->stream.get(), offset, pbStream.length(), *contents_->pool)),
-            getCompressionSize(), *contents_->pool, contents_->readerMetrics);
-
-        if (pbStream.kind() == proto::Stream_Kind_ROW_INDEX) {
+    std::vector<std::shared_ptr<StreamInformation>> streams;
+    // Obtain a new list of index stream objects.
+    StripeStreamsImpl::findStreamsByArea(const_cast<proto::StripeFooter&>(currentStripeFooter_),
+                                         offset, Area::INDEX, contents_->encryption.get(), streams);
+    int num_streams = streams.size();
+    for (int i = 0; i < num_streams; ++i) {
+      // const proto::Stream& pbStream = currentStripeFooter.streams(i);
+      const StreamInformation* stream = streams.at(i).get();
+      proto::Stream_Kind streamKind = static_cast<proto::Stream_Kind>(stream->getKind());
+      uint64_t columnId = stream->getColumnId();
+      if (selectedColumns_[columnId] && (streamKind == proto::Stream_Kind_ROW_INDEX ||
+                                        streamKind == proto::Stream_Kind_BLOOM_FILTER_UTF8)) {
+        auto inputStream = std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+            contents_->stream.get(), stream->getOffset(), stream->getLength(), *contents_->pool));
+        ReaderEncryptionVariant* variant = contents_->encryption->getVariant(columnId);
+        std::unique_ptr<SeekableInputStream> pbStream = nullptr;
+        if (variant != nullptr) {
+          ReaderEncryptionKey* encryptionKey = variant->getKeyDescription();
+          const int ivLength = encryptionKey->getAlgorithm()->getIvLength();
+          std::vector<unsigned char> iv(ivLength);
+          const EVP_CIPHER* cipher = encryptionKey->getAlgorithm()->createCipher();
+          long originalStripeId = contents_->stripeList.at(currentStripe_)->getOriginalStripeId();
+          orc::CryptoUtil::modifyIvForStream(columnId, proto::Stream_Kind_ROW_INDEX,
+                                             originalStripeId, iv.data(), ivLength);
+          //Get the FooterKey of this column
+          std::vector<unsigned char> key = variant->getStripeKey(currentStripe_)->getEncoded();
+          pbStream = createDecompressorAndDecryption(
+              getCompression(), std::move(inputStream), getCompressionSize(), *contents_->pool,
+              contents_->readerMetrics, key, iv, const_cast<EVP_CIPHER*>(cipher));
+        } else {
+          pbStream =
+              createDecompressor(contents_->compression, std::move(inputStream), contents_->blockSize,
+                                 *(contents_->pool), contents_->readerMetrics);
+        }
+        if (streamKind == proto::Stream_Kind_ROW_INDEX) {
           proto::RowIndex rowIndex;
-          if (!rowIndex.ParseFromZeroCopyStream(inStream.get())) {
+          if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
             throw ParseError("Failed to parse the row index");
           }
-          rowIndexes_[colId] = rowIndex;
+          rowIndexes_[columnId] = rowIndex;
         } else if (!skipBloomFilters_) {  // Stream_Kind_BLOOM_FILTER_UTF8
           proto::BloomFilterIndex pbBFIndex;
-          if (!pbBFIndex.ParseFromZeroCopyStream(inStream.get())) {
+          if (!pbBFIndex.ParseFromZeroCopyStream(pbStream.get())) {
             throw ParseError("Failed to parse bloom filter index");
           }
           BloomFilterIndex bfIndex;
           for (int j = 0; j < pbBFIndex.bloom_filter_size(); j++) {
             bfIndex.entries.push_back(BloomFilterUTF8Utils::deserialize(
-                pbStream.kind(), currentStripeFooter_.columns(static_cast<int>(pbStream.column())),
+                streamKind, currentStripeFooter_.columns(static_cast<int>(columnId)),
                 pbBFIndex.bloom_filter(j)));
           }
           // add bloom filters to result for one column
-          bloomFilterIndex_[pbStream.column()] = bfIndex;
+          bloomFilterIndex_[columnId] = bfIndex;
         }
       }
-      offset += pbStream.length();
+      // offset += pbStream.length();
     }
   }
 
@@ -554,6 +580,16 @@ namespace orc {
     contents_->schema = convertType(footer_->types(0), *footer_);
     contents_->blockSize = getCompressionBlockSize(*contents_->postscript);
     contents_->compression = convertCompressionKind(*contents_->postscript);
+    //Encapsulate the stream information, it will be needed for decrypting the data later.
+    parseStripeList_();
+    if (options_.getKeyProvider() != nullptr && footer_->has_encryption()) {
+      contents_->encryption = std::unique_ptr<ReaderEncryption>(new ReaderEncryption(
+          contents_, getEncryptStripeStatisticsOffset(), options_.getKeyProvider()));
+      //If there is an encrypted column, the FileStat of the Footer needs to be updated.
+      updateCryptedFileStatistics_(contents_);
+    } else {
+      contents_->encryption = std::unique_ptr<ReaderEncryption>(new ReaderEncryption());
+    }
   }
 
   std::string ReaderImpl::getSerializedFileTail() const {
@@ -607,7 +643,19 @@ namespace orc {
         stripeInfo.footer_length(), stripeInfo.number_of_rows(), contents_->stream.get(),
         *contents_->pool, contents_->compression, contents_->blockSize, contents_->readerMetrics));
   }
-
+  void ReaderImpl::parseStripeList_() {
+    long previousStripeId = 0;
+    std::shared_ptr<std::vector<std::vector<unsigned char>>> previousKeys;
+    for (int i = 0; i < contents_->footer->stripes_size(); i++) {
+      proto::StripeInformation stripeProto = contents_->footer->stripes(i);
+      StripeInformation* stripe = new StripeInformationImpl(
+          &stripeProto,contents_->encryption.get(), previousStripeId, previousKeys, contents_->stream.get(),
+          *contents_->pool, contents_->compression, contents_->blockSize, contents_->readerMetrics);
+      contents_->stripeList.push_back(std::unique_ptr<StripeInformation>(stripe));
+      previousStripeId = stripe->getOriginalStripeId();
+      previousKeys = stripe->getEncryptedLocalKeys();
+    }
+  }
   FileVersion ReaderImpl::getFormatVersion() const {
     if (contents_->postscript->version_size() != 2) {
       return FileVersion::v_0_11();
@@ -672,6 +720,11 @@ namespace orc {
     return fileLength_;
   }
 
+  uint64_t ReaderImpl::getEncryptStripeStatisticsOffset() const {
+    return getFileLength() - 1 - getFilePostscriptLength() - getFileFooterLength() -
+           getStripeStatisticsLength() - getPostscript()->stripe_statistics_length();
+  }
+
   uint64_t ReaderImpl::getRowIndexStride() const {
     return footer_->row_index_stride();
   }
@@ -701,41 +754,63 @@ namespace orc {
       const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
       const proto::StripeFooter& currentStripeFooter,
       std::vector<std::vector<proto::ColumnStatistics>>* indexStats) const {
-    int num_streams = currentStripeFooter.streams_size();
-    uint64_t offset = stripeInfo.offset();
-    uint64_t indexEnd = stripeInfo.offset() + stripeInfo.index_length();
-    for (int i = 0; i < num_streams; i++) {
-      const proto::Stream& stream = currentStripeFooter.streams(i);
-      StreamKind streamKind = static_cast<StreamKind>(stream.kind());
-      uint64_t length = static_cast<uint64_t>(stream.length());
-      if (streamKind == StreamKind::StreamKind_ROW_INDEX) {
-        if (offset + length > indexEnd) {
-          std::stringstream msg;
-          msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
-              << ": streamOffset=" << offset << ", streamLength=" << length
-              << ", stripeOffset=" << stripeInfo.offset()
-              << ", stripeIndexLength=" << stripeInfo.index_length();
-          throw ParseError(msg.str());
-        }
-        std::unique_ptr<SeekableInputStream> pbStream =
-            createDecompressor(contents_->compression,
-                               std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-                                   contents_->stream.get(), offset, length, *contents_->pool)),
-                               contents_->blockSize, *(contents_->pool), contents_->readerMetrics);
-
-        proto::RowIndex rowIndex;
-        if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
-          throw ParseError("Failed to parse RowIndex from stripe footer");
-        }
-        int num_entries = rowIndex.entry_size();
-        size_t column = static_cast<size_t>(stream.column());
-        for (int j = 0; j < num_entries; j++) {
-          const proto::RowIndexEntry& entry = rowIndex.entry(j);
-          (*indexStats)[column].push_back(entry.statistics());
-        }
-      }
-      offset += length;
-    }
+       uint64_t offset = stripeInfo.offset();
+       uint64_t indexEnd = stripeInfo.offset() + stripeInfo.index_length();
+       std::vector<std::shared_ptr<StreamInformation>> streams;
+       // Search for the index stream, first encrypted and then unencrypted.
+       StripeStreamsImpl::findStreamsByArea(const_cast<proto::StripeFooter&>(currentStripeFooter),
+                                            offset, Area::INDEX, contents_->encryption.get(), streams);
+       int num_streams = streams.size();
+       for (int i = 0; i < num_streams; i++) {
+         const StreamInformation* stream = streams.at(i).get();
+         StreamKind streamKind = static_cast<StreamKind>(stream->getKind());
+         uint64_t length = static_cast<uint64_t>(stream->getLength());
+         if (streamKind == StreamKind::StreamKind_ROW_INDEX) {
+           if (offset + length > indexEnd) {
+             std::stringstream msg;
+             msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
+                 << ": streamOffset=" << offset << ", streamLength=" << length
+                 << ", stripeOffset=" << stripeInfo.offset()
+                 << ", stripeIndexLength=" << stripeInfo.index_length();
+             throw ParseError(msg.str());
+           }
+           auto inputStream = std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+               contents_->stream.get(), stream->getOffset(), stream->getLength(), *contents_->pool));
+           int columnId = stream->getColumnId();
+           // Check if this column is encrypted.
+           ReaderEncryptionVariant* variant = contents_->encryption->getVariant(columnId);
+           std::unique_ptr<SeekableInputStream> pbStream = nullptr;
+           if (variant != nullptr) {
+             ReaderEncryptionKey* encryptionKey = variant->getKeyDescription();
+             const int ivLength = encryptionKey->getAlgorithm()->getIvLength();
+             std::vector<unsigned char> iv(ivLength);
+             const EVP_CIPHER* cipher = encryptionKey->getAlgorithm()->createCipher();
+             long originalStripeId = contents_->stripeList.at(stripeIndex)->getOriginalStripeId();
+             orc::CryptoUtil::modifyIvForStream(columnId, proto::Stream_Kind_ROW_INDEX,
+                                                originalStripeId, iv.data(), ivLength);
+             // Obtain the FooterKey for this column
+             std::vector<unsigned char> key = variant->getStripeKey(stripeIndex)->getEncoded();
+             pbStream = createDecompressorAndDecryption(
+                 getCompression(), std::move(inputStream), getCompressionSize(), *contents_->pool,
+                 contents_->readerMetrics, key, iv, const_cast<EVP_CIPHER*>(cipher));
+           } else {
+             pbStream =
+                 createDecompressor(contents_->compression, std::move(inputStream), contents_->blockSize,
+                                    *(contents_->pool), contents_->readerMetrics);
+           }
+           proto::RowIndex rowIndex;
+           if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
+             throw ParseError("Failed to parse RowIndex from stripe footer");
+           }
+           int num_entries = rowIndex.entry_size();
+           size_t column = static_cast<size_t>(stream->getColumnId());
+           for (int j = 0; j < num_entries; j++) {
+             const proto::RowIndexEntry& entry = rowIndex.entry(j);
+             (*indexStats)[column].push_back(entry.statistics());
+           }
+         }
+         offset += length;
+       }
   }
 
   bool ReaderImpl::hasMetadataValue(const std::string& key) const {
@@ -750,7 +825,80 @@ namespace orc {
   const Type& ReaderImpl::getType() const {
     return *(contents_->schema.get());
   }
-
+  proto::ColumnStatistics* getStripeStatisticsFromVariant_(std::shared_ptr<FileContents> contents,
+                                                           ReaderEncryptionVariant* variant, uint64_t stripeIndex)  {
+    orc::proto::ColumnarStripeStatistics* stripeStatCache = variant->getAllEncryptStripeStatistics();
+    // If the strip stat for this variant has been previously read
+    if (stripeStatCache != nullptr) {
+      return stripeStatCache->mutable_col_stats(stripeIndex);
+    }
+    // create the objects
+    uint64_t offset = variant->getStripeStatsOffset();
+    // int root = variant->getColumn()->getColumnId();
+    const proto::EncryptionVariant& vproto = variant->getEncryptionVariantProto();
+    int size = vproto.stripe_statistics_size();
+    for (int i = 0; i < size; i++) {
+      proto::Stream stream = vproto.stripe_statistics(i);
+      uint64_t length = stream.length();
+      // int col = stream.column();
+      proto::Stream_Kind kind = stream.kind();
+      if (kind == proto::Stream_Kind::Stream_Kind_STRIPE_STATISTICS) {
+        const EVP_CIPHER* cipher = variant->getKeyDescription()->getAlgorithm()->createCipher();
+        const int ivLength = variant->getKeyDescription()->getAlgorithm()->getIvLength();
+        // Retrieve the FooterKey of this column."
+        std::vector<unsigned char> key = variant->getFileFooterKey()->getEncoded();
+        // Initialize IV
+        std::vector<unsigned char> iv(ivLength);
+        orc::CryptoUtil::modifyIvForStream(variant->getRoot()->getColumnId(),
+                                           proto::Stream_Kind_STRIPE_STATISTICS,
+                                           contents->stripeList.size() + 1, iv.data(), ivLength);
+        auto inputStream = std::make_unique<SeekableFileInputStream>(
+            contents->stream.get(), offset, length, *contents->pool, length);
+        // Put the data into the decryption stream.
+        std::unique_ptr<SeekableInputStream> decompressStream = createDecompressorAndDecryption(
+            contents->compression, std::move(inputStream), contents->blockSize, *contents->pool,
+            contents->readerMetrics, key, iv, const_cast<EVP_CIPHER*>(cipher));
+        // Read the decrypted and decompressed raw data, and perform deserialization.
+        orc::proto::ColumnarStripeStatistics* columnarStripeStatistics =
+            new orc::proto::ColumnarStripeStatistics();
+        bool success = columnarStripeStatistics->ParseFromZeroCopyStream(decompressStream.get());
+        if (success) {
+          // Cache the result.
+          variant->setAllEncryptStripeStatistics(columnarStripeStatistics);
+          return columnarStripeStatistics->mutable_col_stats(stripeIndex);
+        } else {
+          throw ParseError("decryptFileStats error " + std::to_string(variant->getVariantId()));
+        }
+      }
+      offset += length;
+    }
+    return nullptr;
+  }
+  void updateCryptedStripeStatistics_(std::shared_ptr<FileContents> contents,uint64_t stripeIndex)  {
+    ::orc::proto::StripeStatistics* statistics =
+        contents->metadata->mutable_stripe_stats(static_cast<int>(stripeIndex));
+    if (contents->encryption->getVariants().size() > 0) {
+      for (uint64_t c = contents->schema->getColumnId();
+           c <= contents->schema->getMaximumColumnId(); ++c) {
+        ReaderEncryptionVariant* variant = contents->encryption->getVariant(c);
+        if (variant != nullptr) {
+          Type* variantType = variant->getRoot();
+          // Read the element at the stripeIndex of the c-th column.
+          ::orc::proto::ColumnStatistics* colStats =
+              getStripeStatisticsFromVariant_(contents,variant,stripeIndex);
+          if (colStats != nullptr) {
+            for (uint64_t sub = c; sub <= variantType->getMaximumColumnId(); ++sub) {
+              //Update the statistic of the c-th column of the stripeIndex-th stripe.
+              ::orc::proto::ColumnStatistics* resultElem = statistics->mutable_col_stats(c);
+              resultElem->Clear();
+              resultElem->CopyFrom(*colStats);
+            }
+            c = variantType->getMaximumColumnId();
+          }
+        }
+      }
+    }
+  }
   std::unique_ptr<StripeStatistics> ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
     if (!isMetadataLoaded_) {
       readMetadata();
@@ -810,6 +958,10 @@ namespace orc {
       contents_->metadata.reset(new proto::Metadata());
       if (!contents_->metadata->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the metadata");
+      }
+      int size = contents_->metadata->stripe_stats().size();
+      for(int i= 0; i<size; i++){
+        updateCryptedStripeStatistics_(contents_, i);
       }
     }
     isMetadataLoaded_ = true;
@@ -1094,8 +1246,9 @@ namespace orc {
           currentStripeFooter_.has_writer_timezone()
               ? getTimezoneByName(currentStripeFooter_.writer_timezone())
               : localTimezone_;
-      StripeStreamsImpl stripeStreams(*this, currentStripe_, currentStripeInfo_,
-                                      currentStripeFooter_, currentStripeInfo_.offset(),
+      StripeInformation* stripeInformation = contents_->stripeList.at(currentStripe_).get();
+      StripeStreamsImpl stripeStreams(*this, currentStripe_,stripeInformation->getOriginalStripeId(),
+                                      currentStripeInfo_,currentStripeFooter_, currentStripeInfo_.offset(),
                                       *contents_->stream, writerTimezone, readerTimezone_);
       reader_ = buildReader(*contents_->schema, stripeStreams, useTightNumericVector_,
                             throwOnSchemaEvolutionOverflow_, /*convertToReadType=*/true);
@@ -1218,7 +1371,6 @@ namespace orc {
       getColumnIds(type->getSubtype(i), columnIds);
     }
   }
-
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
     // If the read type is specified, then check that the selected schema matches the read type
     // on the first call to createRowBatch.
@@ -1485,5 +1637,58 @@ namespace orc {
   InputStream::~InputStream(){
       // PASS
   };
+  orc::proto::FileStatistics* decryptFileStats(std::shared_ptr<FileContents> contents,
+                                               ReaderEncryptionVariant* variant){
+    //find from cache
+    orc::proto::FileStatistics* fileStatCache = variant->getFileStatistics();
+    if(fileStatCache != nullptr){
+      return variant->getFileStatistics();
+    }
+    const EVP_CIPHER* cipher = variant->getKeyDescription()->getAlgorithm()->createCipher();
+    std::string stats = contents->footer->encryption().variants(variant->getVariantId()).file_statistics();
+    // Place the raw data into a SeekableArrayInputStream.
+    auto inputStream = std::make_unique<SeekableArrayInputStream>(stats.c_str(), stats.size(),
+                                                                  contents->blockSize);
+    const int ivLength = variant->getKeyDescription()->getAlgorithm()->getIvLength();
+    std::vector<unsigned char> iv(ivLength);
+    orc::CryptoUtil::modifyIvForStream(variant->getRoot()->getColumnId(),
+                                       proto::Stream_Kind_FILE_STATISTICS,
+                                       contents->footer->stripes_size() + 1, iv.data(), ivLength);
 
+    std::vector<unsigned char> key = variant->getFileFooterKey()->getEncoded();
+    std::unique_ptr<SeekableInputStream> decompressStream = createDecompressorAndDecryption(
+        contents->compression, std::move(inputStream), contents->blockSize, *contents->pool,
+        contents->readerMetrics, key, iv, const_cast<EVP_CIPHER*>(cipher));
+
+    //Read, decrypt, decompress the raw data, and perform deserialization.
+    orc::proto::FileStatistics* fileStatistics = new orc::proto::FileStatistics();
+    bool success = fileStatistics->ParseFromZeroCopyStream(decompressStream.get());
+    if (success) {
+      variant->setFileStatistics(fileStatistics);
+      return fileStatistics;
+    } else {
+      throw ParseError("decryptFileStats error " + std::to_string(variant->getVariantId()));
+    }
+  }
+  void updateCryptedFileStatistics_(std::shared_ptr<FileContents> contents){
+    for(int i = 0; i < contents->footer->statistics_size(); i++) {
+      ReaderEncryptionVariant* variant = contents->encryption->getVariant(i);
+      if (variant != nullptr) {
+        //The lifecycle of fileStatistics is now managed by the variant
+        orc::proto::FileStatistics* fileStatistics = decryptFileStats(contents,variant);
+        ::orc::proto::ColumnStatistics* old = contents->footer->mutable_statistics(static_cast<int32_t>(i));
+        old->Clear();
+        old->CopyFrom(fileStatistics->column(0));
+        //return fileStatistics->mutable_column(0);
+      }
+    }
+  }
+  std::vector<orc::proto::ColumnStatistics*> getAllFileStat(std::shared_ptr<FileContents> contents){
+    std::vector<orc::proto::ColumnStatistics*> result ;
+    for(int i = 0; i < contents->footer->statistics_size(); i++) {
+      orc::proto::ColumnStatistics* stat = contents->footer->mutable_statistics(i);
+      result.push_back(stat);
+    }
+    return result;
+  }
 }  // namespace orc
