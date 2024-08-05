@@ -86,13 +86,13 @@ mark_as_advanced (
 )
 
 if(ZSTD_FOUND)
-  if(NOT TARGET zstd::libzstd_static AND ${ZSTD_STATIC_LIB})
+  if(NOT TARGET zstd::libzstd_static AND ZSTD_STATIC_LIB)
     add_library(zstd::libzstd_static STATIC IMPORTED)
     set_target_properties(zstd::libzstd_static
                           PROPERTIES IMPORTED_LOCATION "${ZSTD_STATIC_LIB}"
                                      INTERFACE_INCLUDE_DIRECTORIES "${ZSTD_INCLUDE_DIR}")
   endif()
-  if(NOT TARGET zstd::libzstd_shared AND NOT ${ZSTD_STATIC_LIB})
+  if(NOT TARGET zstd::libzstd_shared AND NOT ZSTD_STATIC_LIB)
     add_library(zstd::libzstd_shared SHARED IMPORTED)
     set_target_properties(zstd::libzstd_shared
                           PROPERTIES IMPORTED_LOCATION "${ZSTD_LIBRARY}"
