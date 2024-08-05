@@ -160,8 +160,7 @@ public class JsonWriter implements BatchWriter {
               (int) ((LongColumnVector) vector).vector[row]).toString());
           break;
         case TIMESTAMP:
-          writer.value(((TimestampColumnVector) vector)
-              .asScratchTimestamp(row).toString());
+          writer.value(((TimestampColumnVector) vector).getTimestampAsLong(row));
           break;
         case LIST:
           printList(writer, (ListColumnVector) vector, schema, row);
