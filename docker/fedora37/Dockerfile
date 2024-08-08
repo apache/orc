@@ -18,7 +18,8 @@
 #
 
 FROM fedora:37
-LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 RUN yum check-update || true
 RUN yum install -y \

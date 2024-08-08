@@ -18,7 +18,8 @@
 #
 
 FROM debian:bullseye
-LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 ARG jdk=17
 
 RUN apt-get update

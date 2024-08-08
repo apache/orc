@@ -18,7 +18,8 @@
 #
 
 FROM ubuntu:22.04
-LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 ARG jdk=17
 ARG cc=gcc
 
