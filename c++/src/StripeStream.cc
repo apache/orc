@@ -25,20 +25,39 @@
 
 namespace orc {
 
-  StripeStreamsImpl::StripeStreamsImpl(const RowReaderImpl& reader, uint64_t index,
-                                       const proto::StripeInformation& stripeInfo,
-                                       const proto::StripeFooter& footer, uint64_t stripeStart,
-                                       InputStream& input, const Timezone& writerTimezone,
-                                       const Timezone& readerTimezone)
-      : reader_(reader),
-        stripeInfo_(stripeInfo),
-        footer_(footer),
-        stripeIndex_(index),
-        stripeStart_(stripeStart),
-        input_(input),
-        writerTimezone_(writerTimezone),
-        readerTimezone_(readerTimezone) {
-    // PASS
+  StripeStreamsImpl::StripeStreamsImpl(const RowReaderImpl& _reader, uint64_t _index,long originalStripeId,
+                                       const proto::StripeInformation& _stripeInfo,
+                                       const proto::StripeFooter& _footer, uint64_t _stripeStart,
+                                       InputStream& _input, const Timezone& _writerTimezone,
+                                       const Timezone& _readerTimezone)
+      : reader_(_reader),
+        stripeInfo_(_stripeInfo),
+        footer_(_footer),
+        stripeIndex_(_index),
+        originalStripeId(originalStripeId),
+        stripeStart_(_stripeStart),
+        input_(_input),
+        writerTimezone_(_writerTimezone),
+        readerTimezone_(_readerTimezone) {
+    // +-----------------+---------------+-----------------+---------------+
+    // |                 |               |                 |               |
+    // |   unencrypted   |   encrypted   |   unencrypted   |   encrypted   |
+    // |      index      |     index     |      data       |     data      |
+    // |                 |               |                 |               |
+    // +-----------------+---------------+-----------------+---------------+
+    // The above refers to the storage layout of indexes and data, hence we need to follow this order to seek the stream.
+    // Look for the index stream, first encrypted stream and then unencrypted stream.
+    long currentOffset = _stripeStart;
+    currentOffset = StripeStreamsImpl::findStreamsByArea(const_cast<proto::StripeFooter&>(footer_),currentOffset, Area::INDEX,reader_.getReaderEncryption(),streams);
+    //Look for the data stream, first the encrypted stream and then the unencrypted stream.
+    findStreamsByArea(const_cast<proto::StripeFooter&>(footer_),currentOffset, Area::DATA,reader_.getReaderEncryption(),streams);
+
+    for (size_t i = 0; i < streams.size(); i++) {
+      std::shared_ptr<StreamInformation> stream = streams.at(i);
+      std::string key =
+          std::to_string(stream->getColumnId()) + ":" + std::to_string(stream->getKind());
+      streamMap.emplace(key, std::shared_ptr<StreamInformation>(stream));
+    }
   }
 
   StripeStreamsImpl::~StripeStreamsImpl() {
@@ -62,7 +81,14 @@ namespace orc {
   }
 
   proto::ColumnEncoding StripeStreamsImpl::getEncoding(uint64_t columnId) const {
-    return footer_.columns(static_cast<int>(columnId));
+    // The encoding of encrypted columns needs to be obtained in a special way.
+    ReaderEncryptionVariant* variant = this->reader_.getFileContents().encryption->getVariant(columnId);
+    if(variant != nullptr){
+      int subColumn = columnId - variant->getRoot()->getColumnId();
+      return footer_.encryption().Get(variant->getVariantId()).encoding(subColumn);
+    }else{
+      return footer_.columns(static_cast<int>(columnId));
+    }
   }
 
   const Timezone& StripeStreamsImpl::getWriterTimezone() const {
@@ -79,35 +105,33 @@ namespace orc {
 
   std::unique_ptr<SeekableInputStream> StripeStreamsImpl::getStream(uint64_t columnId,
                                                                     proto::Stream_Kind kind,
-                                                                    bool shouldStream) const {
-    uint64_t offset = stripeStart_;
-    uint64_t dataEnd =
-        stripeInfo_.offset() + stripeInfo_.index_length() + stripeInfo_.data_length();
-    MemoryPool* pool = reader_.getFileContents().pool;
-    for (int i = 0; i < footer_.streams_size(); ++i) {
-      const proto::Stream& stream = footer_.streams(i);
-      if (stream.has_kind() && stream.kind() == kind &&
-          stream.column() == static_cast<uint64_t>(columnId)) {
-        uint64_t streamLength = stream.length();
-        uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamLength;
-        if (offset + streamLength > dataEnd) {
-          std::stringstream msg;
-          msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex_
-              << ": streamOffset=" << offset << ", streamLength=" << streamLength
-              << ", stripeOffset=" << stripeInfo_.offset()
-              << ", stripeIndexLength=" << stripeInfo_.index_length()
-              << ", stripeDataLength=" << stripeInfo_.data_length();
-          throw ParseError(msg.str());
-        }
-        return createDecompressor(reader_.getCompression(),
-                                  std::make_unique<SeekableFileInputStream>(
-                                      &input_, offset, stream.length(), *pool, myBlock),
-                                  reader_.getCompressionSize(), *pool,
-                                  reader_.getFileContents().readerMetrics);
-      }
-      offset += stream.length();
+                                                                    bool shouldStream) const {    MemoryPool* pool = reader_.getFileContents().pool;
+    const std::string skey = std::to_string(columnId) + ":" + std::to_string(kind);
+    StreamInformation* streamInformation = streamMap[skey].get();
+    if(streamInformation == nullptr){
+      return nullptr;
     }
-    return nullptr;
+    uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamInformation->getLength();
+    auto inputStream = std::make_unique<SeekableFileInputStream>(
+        &input_, streamInformation->getOffset(), streamInformation->getLength(), *pool, myBlock);
+    ReaderEncryptionVariant* variant = reader_.getReaderEncryption()->getVariant(columnId);
+    if (variant != nullptr) {
+      ReaderEncryptionKey* encryptionKey = variant->getKeyDescription();
+      const int ivLength = encryptionKey->getAlgorithm()->getIvLength();
+      std::vector<unsigned char> iv(ivLength);
+      orc::CryptoUtil::modifyIvForStream(columnId, kind, originalStripeId, iv.data(), ivLength);
+      const EVP_CIPHER* cipher = encryptionKey->getAlgorithm()->createCipher();
+      std::vector<unsigned char> key = variant->getStripeKey(stripeIndex_)->getEncoded();
+      std::unique_ptr<SeekableInputStream> decompressStream = createDecompressorAndDecryption(
+          reader_.getCompression(), std::move(inputStream), reader_.getCompressionSize(), *pool,
+          reader_.getFileContents().readerMetrics, key,
+          iv, const_cast<EVP_CIPHER*>(cipher));
+      return decompressStream;
+    } else {
+      return createDecompressor(reader_.getCompression(),
+                                std::move(inputStream),
+                                reader_.getCompressionSize(), *pool,reader_.getFileContents().readerMetrics);
+    }
   }
 
   MemoryPool& StripeStreamsImpl::getMemoryPool() const {

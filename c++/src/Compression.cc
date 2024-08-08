@@ -1272,7 +1272,13 @@ namespace orc {
         throw NotImplementedYet("compression codec");
     }
   }
-
+  std::unique_ptr<SeekableInputStream> createDecompressorAndDecryption(
+      CompressionKind kind, std::unique_ptr<SeekableInputStream> input, uint64_t blockSize,
+      MemoryPool& pool, ReaderMetrics* metrics,std::vector<unsigned char> key,
+      std::vector<unsigned char> iv,const EVP_CIPHER* cipher){
+    auto dec = std::make_unique<DecryptionInputStream>(std::move(input),key,iv,cipher,pool);
+    return createDecompressor(kind,std::move(dec),blockSize,pool,metrics);
+  }
   std::unique_ptr<SeekableInputStream> createDecompressor(
       CompressionKind kind, std::unique_ptr<SeekableInputStream> input, uint64_t blockSize,
       MemoryPool& pool, ReaderMetrics* metrics) {

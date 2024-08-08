@@ -144,7 +144,6 @@ add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
         --cpp_out="${CMAKE_CURRENT_BINARY_DIR}"
         ../../orc-format_ep-prefix/src/orc-format_ep/src/main/proto/orc/proto/orc_proto.proto
 )
-
 set(SOURCE_FILES
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   orc_proto.pb.h
@@ -187,7 +186,10 @@ set(SOURCE_FILES
   Timezone.cc
   TypeImpl.cc
   Vector.cc
-  Writer.cc)
+  Writer.cc
+  security/InMemoryKeystore.cc
+  security/ReaderEncryption.cc
+)
 
 if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)
@@ -211,6 +213,8 @@ target_link_libraries (orc
     $<BUILD_INTERFACE:orc::lz4>
     $<BUILD_INTERFACE:orc::zstd>
     $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}>
+    ${OPENSSL_CRYPTO_LIBRARY}
+    ${OPENSSL_SSL_LIBRARY}
   )
 
 target_include_directories (orc
