@@ -18,7 +18,10 @@
 #
 
 FROM debian:bookworm
-LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL org.opencontainers.image.ref.name="Apache ORC on Debian 12"
+LABEL org.opencontainers.image.version=""
 ARG jdk=17
 
 RUN apt-get update
