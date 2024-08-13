@@ -233,8 +233,6 @@ namespace orc {
     getEncryptedLocalKeys() const = 0;
     /**
      *Get the Localkey for a specific column in this Stripe.
-     * @param col
-     * @return
      */
     virtual std::vector<unsigned char>& getEncryptedLocalKeyByVariantId(int col) const = 0;
     /**
