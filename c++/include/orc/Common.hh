@@ -243,7 +243,7 @@ namespace orc {
      * LocalKey, the values of stripeId and originalStripeId may not be equal.
      * @return
      */
-    virtual long getOriginalStripeId() const = 0;
+    virtual int64_t getOriginalStripeId() const = 0;
   };
 
   // Return true if val1 < val2; otherwise return false
