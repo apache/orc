@@ -234,7 +234,7 @@ namespace orc {
     /**
      *Get the Localkey for a specific column in this Stripe.
      */
-    virtual std::vector<unsigned char>& getEncryptedLocalKeyByVariantId(int col) const = 0;
+    virtual std::vector<unsigned char>& getEncryptedLocalKeyByVariantId(int32_t col) const = 0;
     /**
      * In general, only the first stripe in an ORC file will store the LocalKey.In this case, the
      * stripeId and originalStripeId are equal. If an ORC file has multiple stripes storing the
