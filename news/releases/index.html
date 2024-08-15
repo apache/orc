@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2024/08/15/ORC-2.0.2/">ORC 2.0.2 Released</option>
+      
       <option value="/news/2024/07/16/ORC-1.9.4/">ORC 1.9.4 Released</option>
       
       <option value="/news/2024/05/14/ORC-2.0.1/">ORC 2.0.1 Released</option>
@@ -308,6 +310,81 @@
         
   <article>
   <h2>
+    <a href="/news/2024/08/15/ORC-2.0.2/">
+      ORC 2.0.2 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      15 Aug 2024
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.0.2.</p>
+
+<ul>
+  <li>Released: 15 August 2024</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.2/orc-2.0.2.tar.gz">orc-2.0.2.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.0.2/orc-2.0.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.2">rel/release-2.0.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.2%22">ORC 2.0.2</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.2/orc-2.0.2.tar.gz.sha256">fabdee3e8acd64da…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.2%22&amp;tempMax=500">ORC-2.0.2</a></li>
+</ul>
+
+<p>The improvements (tools):</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1724">ORC-1724</a> JsonFileDump utility should print user metadata</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1740">ORC-1740</a> Avoid the dump tool repeatedly parsing ColumnStatistics</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1742">ORC-1742</a> Support print the id, name and type of each column in dump tool</li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1732">ORC-1732</a> [C++] Fix detecting Homebrew-installed Protobuf on MacOS</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1733">ORC-1733</a> [C++][CMake] Fix CMAKE_MODULE_PATH not to use PROJECT_SOURCE_DIR</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1738">ORC-1738</a> [C++] Fix wrong Int128 maximum value</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1741">ORC-1741</a> Respect decimal reader isRepeating flag</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1749">ORC-1749</a> Fix supportVectoredIO for hadoop version string with optional patch labels</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1751">ORC-1751</a> [C++] Fix syntax error in ThirdpartyToolchain</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1694">ORC-1694</a> Upgrade gson to 2.9.0 for Benchmarks Hive</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1697">ORC-1697</a> Fix IllegalArgumentException when reading json timestamp type in benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1700">ORC-1700</a> Write parquet decimal type data in Benchmark using FIXED_LEN_BYTE_ARRAY type</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1743">ORC-1743</a> Upgrade Spark to 4.0.0-preview1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1744">ORC-1744</a> Add ubuntu-24.04 to GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1746">ORC-1746</a> Bump netty-all to 4.1.110.Final in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1752">ORC-1752</a> Fix NumberFormatException when reading json timestamp type in benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1753">ORC-1753</a> Use Avro 1.12.0 in bench module</li>
+</ul>
+
+<p>The build and dependency changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1721">ORC-1721</a> Upgrade aircompressor to 0.27</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1747">ORC-1747</a> Upgrade zstd-jni to 1.5.6-4</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2024/07/16/ORC-1.9.4/">
       ORC 1.9.4 Released
     </a>
@@ -391,12 +468,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
 
 <ul>
   <li>Released: 14 May 2024</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.1/orc-2.0.1.tar.gz">orc-2.0.1.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.0.1/orc-2.0.1.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.0.1/orc-2.0.1.tar.gz">orc-2.0.1.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-2.0.1/orc-2.0.1.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.1">rel/release-2.0.1</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.1%22">ORC 2.0.1</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.1/orc-2.0.1.tar.gz.sha256">1ffac0228aa83f04…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.0.1/orc-2.0.1.tar.gz.sha256">1ffac0228aa83f04…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.1%22&amp;tempMax=500">ORC-2.0.1</a></li>
 </ul>
 
@@ -5369,6 +5446,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2024/08/15/ORC-2.0.2/">Version 2.0.2</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2024/07/16/ORC-1.9.4/">Version 1.9.4</a>
       </li>
       
@@ -5384,13 +5465,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2024/03/20/ORC-1.9.3/">Version 1.9.3</a>
       </li>
       
-      <li class="">
-        <a href="/news/2024/03/08/ORC-2.0.0/">Version 2.0.0</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
