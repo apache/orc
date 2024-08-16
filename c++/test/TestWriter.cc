@@ -1191,7 +1191,6 @@ namespace orc {
       }
     }
     if (enableAlignBlockBoundToRowGroup) {
-      std::cerr << "list column count: " << type->getSubtypeCount() << std::endl;
       verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
     }
   }
