@@ -290,6 +290,17 @@ namespace orc {
      * @return if not set, return default value which is 64 KB.
      */
     uint64_t getMemoryBlockSize() const;
+
+    /**
+     * Set whether the compression block should be aligned to row group boundary.
+     */
+    WriterOptions& setAlignBlockBoundToRowGroup(bool alignBlockBoundToRowGroup);
+
+    /**
+     * Get if the compression block should be aligned to row group boundary.
+     * @return if not set, return default value which is false.
+     */
+    bool getAlignBlockBoundToRowGroup() const;
   };
 
   class Writer {

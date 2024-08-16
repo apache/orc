@@ -245,6 +245,11 @@ namespace orc {
     const SchemaEvolution* getSchemaEvolution() const {
       return &schemaEvolution_;
     }
+
+    std::unordered_map<uint64_t, proto::RowIndex> getCurrentStripeRowIndexEntries() override {
+      loadStripeIndex();
+      return rowIndexes_;
+    }
   };
 
   class ReaderImpl : public Reader {

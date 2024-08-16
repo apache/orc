@@ -47,6 +47,7 @@ namespace orc {
     bool useTightNumericVector;
     uint64_t outputBufferCapacity;
     uint64_t memoryBlockSize;
+    bool alignBlockBoundToRowGroup;
 
     WriterOptionsPrivate() : fileVersion(FileVersion::v_0_12()) {  // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024;                               // 64M
@@ -69,6 +70,7 @@ namespace orc {
       useTightNumericVector = false;
       outputBufferCapacity = 1024 * 1024;
       memoryBlockSize = 64 * 1024;  // 64K
+      alignBlockBoundToRowGroup = false;
     }
   };
 
@@ -298,6 +300,15 @@ namespace orc {
     return privateBits_->memoryBlockSize;
   }
 
+  WriterOptions& WriterOptions::setAlignBlockBoundToRowGroup(bool alignBlockBoundToRowGroup) {
+    privateBits_->alignBlockBoundToRowGroup = alignBlockBoundToRowGroup;
+    return *this;
+  }
+
+  bool WriterOptions::getAlignBlockBoundToRowGroup() const {
+    return privateBits_->alignBlockBoundToRowGroup;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -401,6 +412,9 @@ namespace orc {
         stripeRows_ += chunkSize;
 
         if (indexRows_ >= rowIndexStride) {
+          if (options_.getAlignBlockBoundToRowGroup()) {
+            columnWriter_->finishStreams();
+          }
           columnWriter_->createRowIndexEntry();
           indexRows_ = 0;
         }

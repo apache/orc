@@ -57,6 +57,8 @@ namespace orc {
     options.setTimezoneName(timezone);
     options.setUseTightNumericVector(useTightNumericVector);
     options.setMemoryBlockSize(memoryBlockSize);
+    // enable align block bound to row group when stride is not 0
+    options.setAlignBlockBoundToRowGroup(true);
     return createWriter(type, stream, options);
   }
 
@@ -84,7 +86,51 @@ namespace orc {
     return reader->createRowReader(rowReaderOpts);
   }
 
-  class WriterTest : public TestWithParam<FileVersion> {
+  void verifyCompressionBlockAlignment(const std::unique_ptr<RowReader>& reader,
+                                       uint64_t columnCount) {
+    for (uint64_t i = 0; i < columnCount; ++i) {
+      auto rowIndex = reader->getCurrentStripeRowIndexEntries()[i + 1];
+      auto subType = reader->getSelectedType().getSubtype(i);
+      for (auto rowIndexEntry : rowIndex.entry()) {
+        // After we call finishStream(), unusedBufferSize is set to 0,
+        // so only the first position is valid in each recordPosition call.
+        for (int posIndex = 0; posIndex < rowIndexEntry.positions_size(); posIndex++) {
+          switch (subType->getKind()) {
+            case DECIMAL:
+            case STRING:
+            case BINARY:
+            case CHAR:
+            case VARCHAR: {
+              if (posIndex != 0 && posIndex != 2) {
+                EXPECT_EQ(rowIndexEntry.positions(posIndex), 0);
+              }
+              break;
+            }
+            case TIMESTAMP_INSTANT:
+            case TIMESTAMP: {
+              if (posIndex != 0 && posIndex != 3) {
+                EXPECT_EQ(rowIndexEntry.positions(posIndex), 0);
+              }
+              break;
+            }
+            default: {
+              if (posIndex != 0) {
+                EXPECT_EQ(rowIndexEntry.positions(posIndex), 0);
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  struct TestParams {
+    FileVersion fileVersion;
+    bool enableAlignBlockBoundToRowGroup;
+  };
+
+  class WriterTest : public TestWithParam<TestParams> {
     // You can implement all the usual fixture class members here.
     // To access the test parameter, call GetParam() from class
     // TestWithParam<T>.
@@ -92,13 +138,15 @@ namespace orc {
 
    protected:
     FileVersion fileVersion;
+    bool enableAlignBlockBoundToRowGroup;
 
    public:
-    WriterTest() : fileVersion(FileVersion::v_0_11()) {}
+    WriterTest() : fileVersion(FileVersion::v_0_11()), enableAlignBlockBoundToRowGroup(false) {}
   };
 
   void WriterTest::SetUp() {
-    fileVersion = GetParam();
+    fileVersion = GetParam().fileVersion;
+    enableAlignBlockBoundToRowGroup = GetParam().enableAlignBlockBoundToRowGroup;
   }
 
   TEST_P(WriterTest, writeEmptyFile) {
@@ -252,7 +300,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     StringVectorBatch* strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
@@ -294,6 +342,9 @@ namespace orc {
       EXPECT_EQ(i, static_cast<uint64_t>(atoi(str.c_str())));
       EXPECT_EQ(i, static_cast<uint64_t>(atoi(bin.c_str())));
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
 
     EXPECT_FALSE(rowReader->next(*batch));
   }
@@ -315,7 +366,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     DoubleVectorBatch* doubleBatch = dynamic_cast<DoubleVectorBatch*>(structBatch->fields[0]);
@@ -351,6 +402,10 @@ namespace orc {
                   0.000001f);
     }
     EXPECT_FALSE(rowReader->next(*batch));
+
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeShortIntLong) {
@@ -366,7 +421,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* smallIntBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -403,6 +458,9 @@ namespace orc {
       EXPECT_EQ(static_cast<int32_t>(i), intBatch->data[i]);
       EXPECT_EQ(static_cast<int64_t>(i), bigIntBatch->data[i]);
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeTinyint) {
@@ -417,7 +475,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -441,6 +499,9 @@ namespace orc {
 
     batch = rowReader->createRowBatch(rowCount);
     EXPECT_EQ(true, rowReader->next(*batch));
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
 
     structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -473,7 +534,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
@@ -500,6 +561,9 @@ namespace orc {
     for (uint64_t i = 0; i < rowCount; ++i) {
       EXPECT_EQ((i % 3) == 0 ? 1 : 0, byteBatch->data[i]);
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeDate) {
@@ -514,7 +578,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -542,6 +606,9 @@ namespace orc {
     for (uint64_t i = 0; i < rowCount; ++i) {
       EXPECT_EQ(static_cast<int32_t>(i), longBatch->data[i]);
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeTimestamp) {
@@ -556,7 +623,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     TimestampVectorBatch* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
@@ -588,14 +655,18 @@ namespace orc {
       EXPECT_EQ(times[i], tsBatch->data[i]);
       EXPECT_EQ(i * 1000, tsBatch->nanoseconds[i]);
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeNegativeTimestamp) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<a:timestamp>"));
-    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024, 256 * 1024, CompressionKind_ZLIB, *type,
-                               pool, &memStream, fileVersion);
+    auto writer =
+        createWriter(16 * 1024 * 1024, 64 * 1024, 256 * 1024, CompressionKind_ZLIB, *type, pool,
+                     &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     uint64_t batchCount = 5;
     auto batch = writer->createRowBatch(batchCount * 2);
     auto structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -644,6 +715,10 @@ namespace orc {
         EXPECT_EQ(seconds[i], tsBatch->data[i]);
       }
       EXPECT_EQ(1000000, tsBatch->nanoseconds[i]);
+    }
+
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
     }
   }
 
@@ -765,7 +840,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     TimestampVectorBatch* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
@@ -797,6 +872,9 @@ namespace orc {
       EXPECT_EQ(times[i], tsBatch->data[i]);
       EXPECT_EQ(i * 1000, tsBatch->nanoseconds[i]);
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeCharAndVarcharColumn) {
@@ -814,7 +892,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -876,6 +954,9 @@ namespace orc {
     }
 
     EXPECT_FALSE(rowReader->next(*batch));
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeDecimal64Column) {
@@ -891,7 +972,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     Decimal64VectorBatch* decBatch = dynamic_cast<Decimal64VectorBatch*>(structBatch->fields[0]);
@@ -953,6 +1034,9 @@ namespace orc {
       EXPECT_EQ(dec, decBatch->values[i]);
       EXPECT_EQ(-dec, decBatch->values[i + maxPrecision]);
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeDecimal128Column) {
@@ -968,7 +1052,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     Decimal128VectorBatch* decBatch = dynamic_cast<Decimal128VectorBatch*>(structBatch->fields[0]);
@@ -1040,6 +1124,9 @@ namespace orc {
       EXPECT_EQ(expected, decBatch->values[i].toString());
       EXPECT_EQ("-" + expected, decBatch->values[i + maxPrecision].toString());
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeListColumn) {
@@ -1057,7 +1144,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount * maxListLength);
 
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -1103,6 +1190,10 @@ namespace orc {
         EXPECT_EQ(static_cast<int64_t>(i), data[offsets[i] + j]);
       }
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      std::cerr << "list column count: " << type->getSubtypeCount() << std::endl;
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeMapColumn) {
@@ -1117,7 +1208,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount * maxListLength);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     MapVectorBatch* mapBatch = dynamic_cast<MapVectorBatch*>(structBatch->fields[0]);
@@ -1184,6 +1275,9 @@ namespace orc {
         EXPECT_EQ(static_cast<int64_t>(i), elemData[offsets[i] + j]);
       }
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeUnionColumn) {
@@ -1199,7 +1293,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     UnionVectorBatch* unionBatch = dynamic_cast<UnionVectorBatch*>(structBatch->fields[0]);
@@ -1281,6 +1375,9 @@ namespace orc {
           break;
       }
     }
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, writeUTF8CharAndVarcharColumn) {
@@ -1294,7 +1391,7 @@ namespace orc {
     uint64_t memoryBlockSize = 64;
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     StringVectorBatch* charBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
@@ -1352,6 +1449,9 @@ namespace orc {
     EXPECT_TRUE(memcmp(varcharBatch->data[2], expectedTwoChars, 4) == 0);
 
     EXPECT_FALSE(rowReader->next(*batch));
+    if (enableAlignBlockBoundToRowGroup) {
+      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+    }
   }
 
   TEST_P(WriterTest, testWriteListColumnWithNull) {
@@ -2295,7 +2395,12 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  INSTANTIATE_TEST_SUITE_P(OrcTest, WriterTest,
-                           Values(FileVersion::v_0_11(), FileVersion::v_0_12(),
-                                  FileVersion::UNSTABLE_PRE_2_0()));
+  std::vector<TestParams> testParams = {{FileVersion::v_0_11(), true},
+                                        {FileVersion::v_0_11(), false},
+                                        {FileVersion::v_0_12(), false},
+                                        {FileVersion::v_0_12(), true},
+                                        {FileVersion::UNSTABLE_PRE_2_0(), false},
+                                        {FileVersion::UNSTABLE_PRE_2_0(), true}};
+
+  INSTANTIATE_TEST_SUITE_P(OrcTest, WriterTest, ::testing::ValuesIn(testParams));
 }  // namespace orc

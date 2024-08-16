@@ -254,6 +254,10 @@ namespace orc {
     // PASS
   }
 
+  void ColumnWriter::finishStreams() {
+    notNullEncoder->finishEncode();
+  }
+
   class StructColumnWriter : public ColumnWriter {
    public:
     StructColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -282,6 +286,8 @@ namespace orc {
     virtual void writeDictionary() override;
 
     virtual void reset() override;
+
+    virtual void finishStreams() override;
 
    private:
     std::vector<std::unique_ptr<ColumnWriter>> children_;
@@ -416,6 +422,13 @@ namespace orc {
     }
   }
 
+  void StructColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    for (uint32_t i = 0; i < children_.size(); ++i) {
+      children_[i]->finishStreams();
+    }
+  }
+
   template <typename BatchType>
   class IntegerColumnWriter : public ColumnWriter {
    public:
@@ -432,6 +445,8 @@ namespace orc {
     virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void finishStreams() override;
 
    protected:
     std::unique_ptr<RleEncoder> rleEncoder;
@@ -529,6 +544,12 @@ namespace orc {
   }
 
   template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::finishStreams() {
+    ColumnWriter::finishStreams();
+    rleEncoder->finishEncode();
+  }
+
+  template <typename BatchType>
   class ByteColumnWriter : public ColumnWriter {
    public:
     ByteColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
@@ -543,6 +564,8 @@ namespace orc {
     virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void finishStreams() override;
 
    private:
     std::unique_ptr<ByteRleEncoder> byteRleEncoder_;
@@ -638,6 +661,12 @@ namespace orc {
   }
 
   template <typename BatchType>
+  void ByteColumnWriter<BatchType>::finishStreams() {
+    ColumnWriter::finishStreams();
+    byteRleEncoder_->finishEncode();
+  }
+
+  template <typename BatchType>
   class BooleanColumnWriter : public ColumnWriter {
    public:
     BooleanColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -653,6 +682,8 @@ namespace orc {
     virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void finishStreams() override;
 
    private:
     std::unique_ptr<ByteRleEncoder> rleEncoder_;
@@ -750,6 +781,12 @@ namespace orc {
     rleEncoder_->recordPosition(rowIndexPosition.get());
   }
 
+  template <typename BatchType>
+  void BooleanColumnWriter<BatchType>::finishStreams() {
+    ColumnWriter::finishStreams();
+    rleEncoder_->finishEncode();
+  }
+
   template <typename ValueType, typename BatchType>
   class FloatingColumnWriter : public ColumnWriter {
    public:
@@ -766,6 +803,8 @@ namespace orc {
     virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void finishStreams() override;
 
    private:
     bool isFloat_;
@@ -876,6 +915,12 @@ namespace orc {
   void FloatingColumnWriter<ValueType, BatchType>::recordPosition() const {
     ColumnWriter::recordPosition();
     dataStream_->recordPosition(rowIndexPosition.get());
+  }
+
+  template <typename ValueType, typename BatchType>
+  void FloatingColumnWriter<ValueType, BatchType>::finishStreams() {
+    ColumnWriter::finishStreams();
+    dataStream_->finishStream();
   }
 
   /**
@@ -1028,6 +1073,8 @@ namespace orc {
     virtual void writeDictionary() override;
 
     virtual void reset() override;
+
+    virtual void finishStreams() override;
 
    private:
     /**
@@ -1219,6 +1266,18 @@ namespace orc {
       if (enableIndex) {
         startOfRowGroups.push_back(dictionary.idxInDictBuffer_.size());
       }
+    }
+  }
+
+  void StringColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    if (useDictionary) {
+      dictDataEncoder->finishEncode();
+      dictLengthEncoder->finishEncode();
+      dictStream->finishStream();
+    } else {
+      directDataStream->finishStream();
+      directLengthEncoder->finishEncode();
     }
   }
 
@@ -1571,6 +1630,8 @@ namespace orc {
 
     virtual void recordPosition() const override;
 
+    virtual void finishStreams() override;
+
    protected:
     std::unique_ptr<RleEncoder> secRleEncoder, nanoRleEncoder;
 
@@ -1711,6 +1772,12 @@ namespace orc {
     nanoRleEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  void TimestampColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    secRleEncoder->finishEncode();
+    nanoRleEncoder->finishEncode();
+  }
+
   class DateColumnWriter : public IntegerColumnWriter<LongVectorBatch> {
    public:
     DateColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
@@ -1779,6 +1846,8 @@ namespace orc {
     virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void finishStreams() override;
 
    protected:
     RleVersion rleVersion;
@@ -1898,6 +1967,12 @@ namespace orc {
     scaleEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  void Decimal64ColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    valueStream->finishStream();
+    scaleEncoder->finishEncode();
+  }
+
   class Decimal64ColumnWriterV2 : public ColumnWriter {
    public:
     Decimal64ColumnWriterV2(const Type& type, const StreamsFactory& factory,
@@ -1913,6 +1988,8 @@ namespace orc {
     virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void finishStreams() override;
 
    protected:
     uint64_t precision;
@@ -2002,6 +2079,11 @@ namespace orc {
   void Decimal64ColumnWriterV2::recordPosition() const {
     ColumnWriter::recordPosition();
     valueEncoder->recordPosition(rowIndexPosition.get());
+  }
+
+  void Decimal64ColumnWriterV2::finishStreams() {
+    ColumnWriter::finishStreams();
+    valueEncoder->finishEncode();
   }
 
   class Decimal128ColumnWriter : public Decimal64ColumnWriter {
@@ -2118,6 +2200,8 @@ namespace orc {
     virtual void writeDictionary() override;
 
     virtual void reset() override;
+
+    virtual void finishStreams() override;
 
    private:
     std::unique_ptr<RleEncoder> lengthEncoder_;
@@ -2295,6 +2379,14 @@ namespace orc {
     }
   }
 
+  void ListColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    lengthEncoder_->finishEncode();
+    if (child_) {
+      child_->finishStreams();
+    }
+  }
+
   class MapColumnWriter : public ColumnWriter {
    public:
     MapColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
@@ -2326,6 +2418,8 @@ namespace orc {
     virtual void writeDictionary() override;
 
     virtual void reset() override;
+
+    virtual void finishStreams() override;
 
    private:
     std::unique_ptr<ColumnWriter> keyWriter_;
@@ -2545,6 +2639,17 @@ namespace orc {
     }
   }
 
+  void MapColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    lengthEncoder_->finishEncode();
+    if (keyWriter_) {
+      keyWriter_->finishStreams();
+    }
+    if (elemWriter_) {
+      elemWriter_->finishStreams();
+    }
+  }
+
   class UnionColumnWriter : public ColumnWriter {
    public:
     UnionColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -2576,6 +2681,8 @@ namespace orc {
     virtual void writeDictionary() override;
 
     virtual void reset() override;
+
+    virtual void finishStreams() override;
 
    private:
     std::unique_ptr<ByteRleEncoder> rleEncoder_;
@@ -2745,6 +2852,14 @@ namespace orc {
   void UnionColumnWriter::writeDictionary() {
     for (uint32_t i = 0; i < children_.size(); ++i) {
       children_[i]->writeDictionary();
+    }
+  }
+
+  void UnionColumnWriter::finishStreams() {
+    ColumnWriter::finishStreams();
+    rleEncoder_->finishEncode();
+    for (uint32_t i = 0; i < children_.size(); ++i) {
+      children_[i]->finishStreams();
     }
   }
 
