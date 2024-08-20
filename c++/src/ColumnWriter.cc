@@ -889,10 +889,16 @@ namespace orc {
       size_t length;
     };
 
+    struct DictEntryWithIndex {
+      DictEntryWithIndex(const char* str, size_t len, size_t index) : entry(str, len), index(index) {}
+      DictEntry entry;
+      size_t index;
+    };
+
     SortedStringDictionary() : totalLength_(0) {}
 
     // insert a new string into dictionary, return its insertion order
-    size_t insert(const char* data, size_t len);
+    size_t insert(const char* str, size_t len);
 
     // write dictionary data & length to output buffer
     void flush(AppendOnlyBufferedStream* dataStream, RleEncoder* lengthEncoder) const;
@@ -913,7 +919,9 @@ namespace orc {
 
    private:
     struct LessThan {
-      bool operator()(const DictEntry& left, const DictEntry& right) const {
+      bool operator()(const DictEntryWithIndex& l, const DictEntryWithIndex& r) {
+        const auto& left = l.entry;
+        const auto& right = r.entry;
         int ret = memcmp(left.data, right.data, std::min(left.length, right.length));
         if (ret != 0) {
           return ret < 0;
@@ -922,8 +930,8 @@ namespace orc {
       }
     };
 
-    std::map<DictEntry, size_t, LessThan> dict_;
-    std::vector<std::vector<char>> data_;
+    mutable std::vector<DictEntryWithIndex> flat_dict;
+    std::unordered_map<std::string, size_t> key_to_index;
     uint64_t totalLength_;
 
     // use friend class here to avoid being bothered by const function calls
@@ -936,14 +944,10 @@ namespace orc {
 
   // insert a new string into dictionary, return its insertion order
   size_t SortedStringDictionary::insert(const char* str, size_t len) {
-    auto ret = dict_.insert({DictEntry(str, len), dict_.size()});
+    size_t index = flat_dict.size();
+    auto ret = key_to_index.emplace(std::string(str, len), index);
     if (ret.second) {
-      // make a copy to internal storage
-      data_.push_back(std::vector<char>(len));
-      memcpy(data_.back().data(), str, len);
-      // update dictionary entry to link pointer to internal storage
-      DictEntry* entry = const_cast<DictEntry*>(&(ret.first->first));
-      entry->data = data_.back().data();
+      flat_dict.emplace_back(ret.first->first.data(), ret.first->first.size(), index);
       totalLength_ += len;
     }
     return ret.first->second;
@@ -952,9 +956,12 @@ namespace orc {
   // write dictionary data & length to output buffer
   void SortedStringDictionary::flush(AppendOnlyBufferedStream* dataStream,
                                      RleEncoder* lengthEncoder) const {
-    for (auto it = dict_.cbegin(); it != dict_.cend(); ++it) {
-      dataStream->write(it->first.data, it->first.length);
-      lengthEncoder->write(static_cast<int64_t>(it->first.length));
+    std::sort(flat_dict.begin(), flat_dict.end(), LessThan());
+
+    for (const auto& entry_with_index : flat_dict) {
+      const auto& entry = entry_with_index.entry;
+      dataStream->write(entry.data, entry.length);
+      lengthEncoder->write(static_cast<int64_t>(entry.length));
     }
   }
 
@@ -970,10 +977,9 @@ namespace orc {
    */
   void SortedStringDictionary::reorder(std::vector<int64_t>& idxBuffer) const {
     // iterate the dictionary to get mapping from insertion order to value order
-    std::vector<size_t> mapping(dict_.size());
-    size_t dictIdx = 0;
-    for (auto it = dict_.cbegin(); it != dict_.cend(); ++it) {
-      mapping[it->second] = dictIdx++;
+    std::vector<size_t> mapping(flat_dict.size());
+    for (size_t i = 0; i < flat_dict.size(); ++i) {
+      mapping[flat_dict[i].index] = i;
     }
 
     // do the transformation
@@ -985,15 +991,20 @@ namespace orc {
   // get dict entries in insertion order
   void SortedStringDictionary::getEntriesInInsertionOrder(
       std::vector<const DictEntry*>& entries) const {
-    entries.resize(dict_.size());
-    for (auto it = dict_.cbegin(); it != dict_.cend(); ++it) {
-      entries[it->second] = &(it->first);
+    std::sort(flat_dict.begin(), flat_dict.end(),
+              [](const DictEntryWithIndex& left, const DictEntryWithIndex& right) {
+                return left.index < right.index;
+              });
+
+    entries.resize(flat_dict.size());
+    for (size_t i = 0; i < flat_dict.size(); ++i) {
+      entries[i] = &(flat_dict[i].entry);
     }
   }
 
   // return count of entries
   size_t SortedStringDictionary::size() const {
-    return dict_.size();
+    return flat_dict.size();
   }
 
   // return total length of strings in the dictioanry
@@ -1003,8 +1014,8 @@ namespace orc {
 
   void SortedStringDictionary::clear() {
     totalLength_ = 0;
-    data_.clear();
-    dict_.clear();
+    key_to_index.clear();
+    flat_dict.clear();
   }
 
   class StringColumnWriter : public ColumnWriter {
