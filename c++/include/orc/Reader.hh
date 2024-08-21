@@ -26,7 +26,6 @@
 #include "orc/Vector.hh"
 #include "orc/orc-config.hh"
 #include "orc/sargs/SearchArgument.hh"
-#include "wrap/orc-proto-wrapper.hh"
 
 #include <atomic>
 #include <map>
@@ -660,11 +659,10 @@ namespace orc {
     virtual void seekToRow(uint64_t rowNumber) = 0;
 
     /**
-     * Get the row index entries of the current stripe.
-     * @return the row index entries
+     * Get the current stripe position entries for the specified column.
+     * @return the position entries for the specified column.
      */
-    virtual std::unordered_map<uint64_t, proto::RowIndex>
-        getCurrentStripeRowIndexEntries() = 0;
+    virtual std::vector<std::vector<int>> getCurrentStripePositionEntries(uint64_t columnId) = 0;
   };
 }  // namespace orc
 

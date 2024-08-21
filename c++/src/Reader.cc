@@ -1241,6 +1241,21 @@ namespace orc {
                                    useTightNumericVector_);
   }
 
+  std::vector<std::vector<int>> RowReaderImpl::getCurrentStripePositionEntries(uint64_t columnId) {
+    loadStripeIndex();
+    std::vector<std::vector<int>> result;
+    auto rowIndex = rowIndexes_[columnId];
+    for (auto rowIndexEntry : rowIndex.entry()) {
+      std::vector<int> posVector;
+      for (auto position : rowIndexEntry.positions()) {
+        posVector.push_back(position);
+      }
+      result.push_back(posVector);
+    }
+
+    return result;
+  }
+
   void ensureOrcFooter(InputStream* stream, DataBuffer<char>* buffer, uint64_t postscriptLength) {
     const std::string MAGIC("ORC");
     const uint64_t magicLength = MAGIC.length();
@@ -1482,8 +1497,8 @@ namespace orc {
     // PASS
   }
 
-  InputStream::~InputStream(){
-      // PASS
+  InputStream::~InputStream() {
+    // PASS
   };
 
 }  // namespace orc

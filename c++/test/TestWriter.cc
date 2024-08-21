@@ -89,39 +89,39 @@ namespace orc {
   void verifyCompressionBlockAlignment(const std::unique_ptr<RowReader>& reader,
                                        uint64_t columnCount) {
     for (uint64_t i = 0; i < columnCount; ++i) {
-      auto rowIndex = reader->getCurrentStripeRowIndexEntries()[i + 1];
+      auto posEntries = reader->getCurrentStripePositionEntries(i + 1);
       auto subType = reader->getSelectedType().getSubtype(i);
-      for (auto rowIndexEntry : rowIndex.entry()) {
-        // After we call finishStream(), unusedBufferSize is set to 0,
-        // so only the first position is valid in each recordPosition call.
-        for (int posIndex = 0; posIndex < rowIndexEntry.positions_size(); posIndex++) {
-          switch (subType->getKind()) {
-            case DECIMAL:
-            case STRING:
-            case BINARY:
-            case CHAR:
-            case VARCHAR: {
-              if (posIndex != 0 && posIndex != 2) {
-                EXPECT_EQ(rowIndexEntry.positions(posIndex), 0);
+      for (auto posVector : posEntries) {
+        for (uint64_t posIndex = 0; posIndex < posVector.size(); ++posIndex) {
+          // After we call finishStream(), unusedBufferSize is set to 0,
+          // so only the first position is valid in each recordPosition call.
+            switch (subType->getKind()) {
+              case DECIMAL:
+              case STRING:
+              case BINARY:
+              case CHAR:
+              case VARCHAR: {
+                if (posIndex != 0 && posIndex != 2) {
+                  EXPECT_EQ(posVector[posIndex], 0);
+                }
+                break;
               }
-              break;
-            }
-            case TIMESTAMP_INSTANT:
-            case TIMESTAMP: {
-              if (posIndex != 0 && posIndex != 3) {
-                EXPECT_EQ(rowIndexEntry.positions(posIndex), 0);
+              case TIMESTAMP_INSTANT:
+              case TIMESTAMP: {
+                if (posIndex != 0 && posIndex != 3) {
+                  EXPECT_EQ(posVector[posIndex], 0);
+                }
+                break;
               }
-              break;
-            }
-            default: {
-              if (posIndex != 0) {
-                EXPECT_EQ(rowIndexEntry.positions(posIndex), 0);
+              default: {
+                if (posIndex != 0) {
+                  EXPECT_EQ(posVector[posIndex], 0);
+                }
+                break;
               }
-              break;
             }
           }
         }
-      }
     }
   }
 

@@ -246,10 +246,7 @@ namespace orc {
       return &schemaEvolution_;
     }
 
-    std::unordered_map<uint64_t, proto::RowIndex> getCurrentStripeRowIndexEntries() override {
-      loadStripeIndex();
-      return rowIndexes_;
-    }
+    std::vector<std::vector<int>> getCurrentStripePositionEntries(uint64_t columnId) override;
   };
 
   class ReaderImpl : public Reader {
@@ -270,10 +267,9 @@ namespace orc {
     // internal methods
     void readMetadata() const;
     void checkOrcVersion();
-    void getRowIndexStatistics(
-        const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
-        const proto::StripeFooter& currentStripeFooter,
-        std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
+    void getRowIndexStatistics(const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
+                               const proto::StripeFooter& currentStripeFooter,
+                               std::vector<std::vector<proto::ColumnStatistics>>* indexStats) const;
 
     // metadata
     mutable bool isMetadataLoaded_;
