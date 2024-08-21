@@ -1114,6 +1114,12 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
     }
 
+    EncodedStringVectorBatch* encoded_string_batch =
+        dynamic_cast<EncodedStringVectorBatch*>(&rowBatch);
+    if (encoded_string_batch) {
+      encoded_string_batch->calculateDataAndLength();
+    }
+
     StringColumnStatisticsImpl* strStats =
         dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
     if (strStats == nullptr) {
@@ -1393,6 +1399,12 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
     }
 
+    EncodedStringVectorBatch* encoded_string_batch =
+        dynamic_cast<EncodedStringVectorBatch*>(&rowBatch);
+    if (encoded_string_batch) {
+      encoded_string_batch->calculateDataAndLength();
+    }
+
     StringColumnStatisticsImpl* strStats =
         dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
     if (strStats == nullptr) {
@@ -1469,6 +1481,12 @@ namespace orc {
     StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (charsBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
+    }
+
+    EncodedStringVectorBatch* encoded_string_batch =
+        dynamic_cast<EncodedStringVectorBatch*>(&rowBatch);
+    if (encoded_string_batch) {
+      encoded_string_batch->calculateDataAndLength();
     }
 
     StringColumnStatisticsImpl* strStats =

@@ -248,10 +248,15 @@ namespace orc {
     ~EncodedStringVectorBatch() override;
     std::string toString() const override;
     void resize(uint64_t capacity) override;
+
+    // Calculate data and length in StringVectorBatch from dictionary and index
+    void calculateDataAndLength();
+
     std::shared_ptr<StringDictionary> dictionary;
 
     // index for dictionary entry
     DataBuffer<int64_t> index;
+    std::atomic<bool> calculated{false};
   };
 
   struct StructVectorBatch : public ColumnVectorBatch {
