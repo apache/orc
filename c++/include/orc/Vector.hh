@@ -30,6 +30,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <atomic>
 
 namespace orc {
 
