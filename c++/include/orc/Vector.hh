@@ -23,6 +23,7 @@
 #include "MemoryPool.hh"
 #include "orc/orc-config.hh"
 
+#include <atomic>
 #include <cstdlib>
 #include <cstring>
 #include <list>
@@ -30,7 +31,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#include <atomic>
 
 namespace orc {
 

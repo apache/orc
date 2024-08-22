@@ -89,8 +89,7 @@ namespace orc {
   }
 
   void EncodedStringVectorBatch::calculateDataAndLength() {
-    if (calculated)
-        return;
+    if (calculated) return;
 
     size_t n = index.size();
     resize(n);

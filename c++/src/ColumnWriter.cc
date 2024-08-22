@@ -890,7 +890,8 @@ namespace orc {
     };
 
     struct DictEntryWithIndex {
-      DictEntryWithIndex(const char* str, size_t len, size_t index) : entry(str, len), index(index) {}
+      DictEntryWithIndex(const char* str, size_t len, size_t index)
+          : entry(str, len), index(index) {}
       DictEntry entry;
       size_t index;
     };
