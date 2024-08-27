@@ -89,6 +89,11 @@ namespace orc {
      */
     virtual bool hasVariableLength();
 
+    /**
+     * Decode dictionary into vector batch.
+     */
+    virtual void decodeDictionary() {}
+
    private:
     ColumnVectorBatch(const ColumnVectorBatch&);
     ColumnVectorBatch& operator=(const ColumnVectorBatch&);
@@ -251,13 +256,14 @@ namespace orc {
     void resize(uint64_t capacity) override;
 
     // Calculate data and length in StringVectorBatch from dictionary and index
-    void calculateDataAndLength();
+    void decodeDictionary() override;
 
     std::shared_ptr<StringDictionary> dictionary;
 
     // index for dictionary entry
     DataBuffer<int64_t> index;
-    std::atomic<bool> calculated{false};
+
+    std::atomic<bool> dictionary_encoded{false};
   };
 
   struct StructVectorBatch : public ColumnVectorBatch {
