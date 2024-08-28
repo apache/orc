@@ -263,7 +263,7 @@ namespace orc {
     // index for dictionary entry
     DataBuffer<int64_t> index;
 
-    std::atomic<bool> dictionary_encoded{false};
+    std::atomic<bool> dictionaryEncoded{false};
   };
 
   struct StructVectorBatch : public ColumnVectorBatch {

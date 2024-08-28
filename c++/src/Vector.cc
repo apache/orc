@@ -89,7 +89,7 @@ namespace orc {
   }
 
   void EncodedStringVectorBatch::decodeDictionary() {
-    if (dictionary_encoded) return;
+    if (dictionaryEncoded) return;
 
     size_t n = index.size();
     resize(n);
@@ -99,7 +99,7 @@ namespace orc {
         dictionary->getValueByIndex(index[i], data[i], length[i]);
       }
     }
-    dictionary_encoded = true;
+    dictionaryEncoded = true;
   }
 
   StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool)

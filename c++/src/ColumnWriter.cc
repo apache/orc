@@ -934,7 +934,7 @@ namespace orc {
     };
 
     mutable std::vector<DictEntryWithIndex> flatDict_;
-    std::unordered_map<std::string, size_t> keyToIndex;
+    std::unordered_map<std::string, size_t> keyToIndex_;
     uint64_t totalLength_;
 
     // use friend class here to avoid being bothered by const function calls
@@ -948,7 +948,7 @@ namespace orc {
   // insert a new string into dictionary, return its insertion order
   size_t SortedStringDictionary::insert(const char* str, size_t len) {
     size_t index = flatDict_.size();
-    auto ret = keyToIndex.emplace(std::string(str, len), index);
+    auto ret = keyToIndex_.emplace(std::string(str, len), index);
     if (ret.second) {
       flatDict_.emplace_back(ret.first->first.data(), ret.first->first.size(), index);
       totalLength_ += len;
@@ -961,8 +961,8 @@ namespace orc {
                                      RleEncoder* lengthEncoder) const {
     std::sort(flatDict_.begin(), flatDict_.end(), LessThan());
 
-    for (const auto& entry_with_index : flatDict_) {
-      const auto& entry = entry_with_index.entry;
+    for (const auto& entryWithIndex : flatDict_) {
+      const auto& entry = entryWithIndex.entry;
       dataStream->write(entry.data, entry.length);
       lengthEncoder->write(static_cast<int64_t>(entry.length));
     }
@@ -1017,7 +1017,7 @@ namespace orc {
 
   void SortedStringDictionary::clear() {
     totalLength_ = 0;
-    keyToIndex.clear();
+    keyToIndex_.clear();
     flatDict_.clear();
   }
 
