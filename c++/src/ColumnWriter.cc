@@ -1271,11 +1271,7 @@ namespace orc {
 
   void StringColumnWriter::finishStreams() {
     ColumnWriter::finishStreams();
-    if (useDictionary) {
-      dictDataEncoder->finishEncode();
-      dictLengthEncoder->finishEncode();
-      dictStream->finishStream();
-    } else {
+    if (!useDictionary) {
       directDataStream->finishStream();
       directLengthEncoder->finishEncode();
     }

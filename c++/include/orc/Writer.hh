@@ -293,6 +293,8 @@ namespace orc {
 
     /**
      * Set whether the compression block should be aligned to row group boundary.
+     * The boolean type may not be aligned to row group boundary due to the
+     * requirement of the Boolean RLE encoder to pack input bits into bytes
      */
     WriterOptions& setAlignBlockBoundToRowGroup(bool alignBlockBoundToRowGroup);
 

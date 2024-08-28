@@ -183,7 +183,8 @@ namespace orc {
      * Finalize the encoding and compressing process. This function should be
      * called after all data required for encoding has been added. It ensures
      * that any remaining data is processed and the final state of the streams
-     * is set.
+     * is set. Note: the boolean type may break this spec due to some trailing bits will be written
+     * to the next compression block.
      */
     virtual void finishStreams();
 
