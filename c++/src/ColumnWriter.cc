@@ -130,8 +130,6 @@ namespace orc {
         hasNullValue = true;
       }
     }
-
-    batch.decodeDictionary();
   }
 
   void ColumnWriter::flush(std::vector<proto::Stream>& streams) {

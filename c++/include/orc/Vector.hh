@@ -58,6 +58,8 @@ namespace orc {
     bool hasNulls;
     // whether the vector batch is encoded
     bool isEncoded;
+    // whther the dictionary is decoded into vector batch
+    bool dictionaryDecoded;
 
     // custom memory pool
     MemoryPool& memoryPool;
@@ -90,9 +92,12 @@ namespace orc {
     virtual bool hasVariableLength();
 
     /**
-     * Decode dictionary into vector batch.
+     * Decode possible dictionary into vector batch.
      */
-    virtual void decodeDictionary() {}
+    void decodeDictionary();
+
+   protected:
+    virtual void decodeDictionaryImpl() {}
 
    private:
     ColumnVectorBatch(const ColumnVectorBatch&);
@@ -256,14 +261,12 @@ namespace orc {
     void resize(uint64_t capacity) override;
 
     // Calculate data and length in StringVectorBatch from dictionary and index
-    void decodeDictionary() override;
+    void decodeDictionaryImpl() override;
 
     std::shared_ptr<StringDictionary> dictionary;
 
     // index for dictionary entry
     DataBuffer<int64_t> index;
-
-    std::atomic<bool> dictionaryDecoded{false};
   };
 
   struct StructVectorBatch : public ColumnVectorBatch {
@@ -276,6 +279,9 @@ namespace orc {
     bool hasVariableLength() override;
 
     std::vector<ColumnVectorBatch*> fields;
+
+   protected:
+    void decodeDictionaryImpl() override;
   };
 
   struct ListVectorBatch : public ColumnVectorBatch {
@@ -295,6 +301,9 @@ namespace orc {
 
     // the concatenated elements
     std::unique_ptr<ColumnVectorBatch> elements;
+
+   protected:
+    void decodeDictionaryImpl() override;
   };
 
   struct MapVectorBatch : public ColumnVectorBatch {
@@ -316,6 +325,9 @@ namespace orc {
     std::unique_ptr<ColumnVectorBatch> keys;
     // the concatenated elements
     std::unique_ptr<ColumnVectorBatch> elements;
+
+   protected:
+    void decodeDictionaryImpl() override;
   };
 
   struct UnionVectorBatch : public ColumnVectorBatch {
@@ -339,6 +351,9 @@ namespace orc {
 
     // the sub-columns
     std::vector<ColumnVectorBatch*> children;
+
+   protected:
+    void decodeDictionaryImpl() override;
   };
 
   struct Decimal {
