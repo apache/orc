@@ -23,10 +23,8 @@
 #include "MemoryPool.hh"
 #include "orc/orc-config.hh"
 
-#include <atomic>
 #include <cstdlib>
 #include <cstring>
-#include <list>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
