@@ -1497,8 +1497,8 @@ namespace orc {
     // PASS
   }
 
-  InputStream::~InputStream() {
-      // PASS
+  InputStream::~InputStream(){
+       // PASS
   };
 
 }  // namespace orc
