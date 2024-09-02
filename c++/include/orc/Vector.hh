@@ -57,7 +57,7 @@ namespace orc {
     bool hasNulls;
     // whether the vector batch is encoded
     bool isEncoded;
-    // whther the dictionary is decoded into vector batch
+    // whether the dictionary is decoded into vector batch
     bool dictionaryDecoded;
 
     // custom memory pool
