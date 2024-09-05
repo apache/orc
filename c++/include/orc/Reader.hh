@@ -659,7 +659,7 @@ namespace orc {
     virtual void seekToRow(uint64_t rowNumber) = 0;
 
     /**
-     * Get the current stripe position entries for the specified column.
+     * Get the row group positions of the specified column in the current stripe.
      * @return the position entries for the specified column.
      */
     virtual std::vector<std::vector<int>> getCurrentStripePositionEntries(uint64_t columnId) = 0;
