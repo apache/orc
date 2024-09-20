@@ -1241,16 +1241,18 @@ namespace orc {
                                    useTightNumericVector_);
   }
 
-  std::vector<std::vector<int>> RowReaderImpl::getCurrentStripePositionEntries(uint64_t columnId) {
+  std::vector<RowGroupPositions> RowReaderImpl::getPositionEntries(int columnId) {
     loadStripeIndex();
-    std::vector<std::vector<int>> result;
+    std::vector<RowGroupPositions> result;
     auto rowIndex = rowIndexes_[columnId];
+    RowGroupPositions rgPositions;
+    rgPositions.columnId = columnId;
     for (auto rowIndexEntry : rowIndex.entry()) {
-      std::vector<int> posVector;
+      auto posVector = rgPositions.positions;
       for (auto position : rowIndexEntry.positions()) {
         posVector.push_back(position);
       }
-      result.push_back(posVector);
+      result.push_back(rgPositions);
     }
 
     return result;

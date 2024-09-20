@@ -246,7 +246,7 @@ namespace orc {
       return &schemaEvolution_;
     }
 
-    std::vector<std::vector<int>> getCurrentStripePositionEntries(uint64_t columnId) override;
+    std::vector<RowGroupPositions> getPositionEntries(int columnId) override;
   };
 
   class ReaderImpl : public Reader {
