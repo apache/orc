@@ -37,7 +37,8 @@ namespace orc {
         stripeStart_(stripeStart),
         input_(input),
         writerTimezone_(writerTimezone),
-        readerTimezone_(readerTimezone) {
+        readerTimezone_(readerTimezone),
+        cachedSource(reader.getCachedSource()) {
     // PASS
   }
 
@@ -89,7 +90,6 @@ namespace orc {
       if (stream.has_kind() && stream.kind() == kind &&
           stream.column() == static_cast<uint64_t>(columnId)) {
         uint64_t streamLength = stream.length();
-        uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamLength;
         if (offset + streamLength > dataEnd) {
           std::stringstream msg;
           msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex_
@@ -99,9 +99,23 @@ namespace orc {
               << ", stripeDataLength=" << stripeInfo_.data_length();
           throw ParseError(msg.str());
         }
-        return createDecompressor(reader_.getCompression(),
-                                  std::make_unique<SeekableFileInputStream>(
-                                      &input_, offset, stream.length(), *pool, myBlock),
+
+        InputStream::BufferSlice slice;
+        if (cachedSource) {
+          ReadRange range{offset, streamLength};
+          slice = cachedSource->read(range);
+        }
+
+        uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamLength;
+        std::unique_ptr<SeekableInputStream> seekableInput;
+        if (slice.buffer) {
+          seekableInput = std::make_unique<SeekableArrayInputStream>(
+              slice.buffer->data() + slice.offset, slice.length);
+        } else {
+          seekableInput = std::make_unique<SeekableFileInputStream>(&input_, offset, streamLength,
+                                                                    *pool, myBlock);
+        }
+        return createDecompressor(reader_.getCompression(), std::move(seekableInput),
                                   reader_.getCompressionSize(), *pool,
                                   reader_.getFileContents().readerMetrics);
       }

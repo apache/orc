@@ -150,6 +150,7 @@ set(SOURCE_FILES
   orc_proto.pb.h
   io/InputStream.cc
   io/OutputStream.cc
+  io/Cache.cc
   sargs/ExpressionTree.cc
   sargs/Literal.cc
   sargs/PredicateLeaf.cc

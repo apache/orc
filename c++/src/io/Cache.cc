@@ -1,0 +1,77 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <cassert>
+
+#include "Cache.hh"
+
+namespace orc {
+
+  static std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges,
+                                                   uint64_t holeSizeLimit,
+                                                   uint64_t rangeSizeLimit) {
+    assert(range_size_limit > hole_size_limit);
+
+    ReadRangeCombiner combiner{holeSizeLimit, rangeSizeLimit};
+    return combiner.coalesce(std::move(ranges));
+  }
+
+  void ReadRangeCache::cache(std::vector<ReadRange> ranges) {
+    ranges =
+        coalesceReadRanges(std::move(ranges), options.hole_size_limit, options.range_size_limit);
+
+    std::vector<RangeCacheEntry> new_entries = makeCacheEntries(ranges);
+    // Add new entries, themselves ordered by offset
+    if (entries.size() > 0) {
+      size_t old_size = entries.size();
+      entries.resize(old_size + new_entries.size());
+      for (size_t i = 0; i < new_entries.size(); ++i) {
+        entries[old_size + i] = std::move(new_entries[i]);
+      }
+    } else {
+      entries = std::move(new_entries);
+    }
+  }
+
+  InputStream::BufferSlice ReadRangeCache::read(const ReadRange& range) {
+    if (range.length == 0) {
+      return {std::make_shared<InputStream::Buffer>(*memoryPool, 0), 0, 0};
+    }
+
+    const auto it = std::lower_bound(entries.begin(), entries.end(), range,
+                                     [](const RangeCacheEntry& entry, const ReadRange& range) {
+                                       return entry.range.offset + entry.range.length <
+                                              range.offset + range.length;
+                                     });
+
+    if (it == entries.end() || !it->range.contains(range)) {
+      return {};
+    }
+
+    auto buffer = it->future.get();
+    return InputStream::BufferSlice{buffer, range.offset - it->range.offset, range.length};
+  }
+
+  void ReadRangeCache::evictEntriesBefore(uint64_t boundary) {
+    auto it = std::lower_bound(entries.begin(), entries.end(), boundary,
+                               [](const RangeCacheEntry& entry, uint64_t offset) {
+                                 return entry.range.offset + entry.range.length < offset;
+                               });
+    entries.erase(entries.begin(), it);
+  }
+}  // namespace orc

@@ -19,6 +19,7 @@
 #ifndef ORC_STRIPE_STREAM_HH
 #define ORC_STRIPE_STREAM_HH
 
+#include "io/Cache.hh"
 #include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
@@ -45,6 +46,7 @@ namespace orc {
     InputStream& input_;
     const Timezone& writerTimezone_;
     const Timezone& readerTimezone_;
+    std::shared_ptr<ReadRangeCache> cachedSource;
 
    public:
     StripeStreamsImpl(const RowReaderImpl& reader, uint64_t index,

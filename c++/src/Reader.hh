@@ -19,6 +19,7 @@
 #ifndef ORC_READER_IMPL_HH
 #define ORC_READER_IMPL_HH
 
+#include "io/Cache.hh"
 #include "orc/Exceptions.hh"
 #include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
@@ -176,6 +177,8 @@ namespace orc {
     // match read and file types
     SchemaEvolution schemaEvolution_;
 
+    std::shared_ptr<ReadRangeCache> cachedSource_;
+
     // load stripe index if not done so
     void loadStripeIndex();
 
@@ -218,7 +221,8 @@ namespace orc {
      * @param contents of the file
      * @param options options for reading
      */
-    RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& options);
+    RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& options,
+                  std::shared_ptr<ReadRangeCache> cachedSource = {});
 
     // Select the columns from the options object
     const std::vector<bool> getSelectedColumns() const override;
@@ -245,6 +249,10 @@ namespace orc {
     const SchemaEvolution* getSchemaEvolution() const {
       return &schemaEvolution_;
     }
+
+    std::shared_ptr<ReadRangeCache> getCachedSource() const {
+      return cachedSource_;
+    }
   };
 
   class ReaderImpl : public Reader {
@@ -260,6 +268,9 @@ namespace orc {
     // footer
     proto::Footer* footer_;
     uint64_t numberOfStripes_;
+
+    // cached io ranges. only valid when preBuffer is invoked.
+    std::shared_ptr<ReadRangeCache> cachedSource_;
     uint64_t getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns);
 
     // internal methods
@@ -352,7 +363,7 @@ namespace orc {
       return contents_->blockSize;
     }
 
-    const proto::Footer* getFooter() const {
+    const proto::Footer* getFooter() const override {
       return contents_->footer.get();
     }
 
@@ -360,8 +371,12 @@ namespace orc {
       return contents_->schema.get();
     }
 
-    InputStream* getStream() const {
+    InputStream* getInputStream() const override {
       return contents_->stream.get();
+    }
+
+    const proto::Metadata* getMetadata() const override {
+      return contents_->metadata.get();
     }
 
     uint64_t getMemoryUse(int stripeIx = -1) override;
@@ -374,6 +389,10 @@ namespace orc {
 
     std::map<uint32_t, BloomFilterIndex> getBloomFilters(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
+
+    void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
+                   const CacheOptions& options) override;
+    void releaseBuffer(uint64_t boundary) override;
   };
 }  // namespace orc
 

@@ -246,7 +246,8 @@ namespace orc {
     buildTypeNameIdMap(contents_->schema.get());
   }
 
-  RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& opts)
+  RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& opts,
+                               std::shared_ptr<ReadRangeCache> cachedSource)
       : localTimezone_(getLocalTimezone()),
         contents_(contents),
         throwOnHive11DecimalOverflow_(opts.getThrowOnHive11DecimalOverflow()),
@@ -255,7 +256,8 @@ namespace orc {
         firstRowOfStripe_(*contents_->pool, 0),
         enableEncodedBlock_(opts.getEnableLazyDecoding()),
         readerTimezone_(getTimezoneByName(opts.getTimezoneName())),
-        schemaEvolution_(opts.getReadType(), contents_->schema.get()) {
+        schemaEvolution_(opts.getReadType(), contents_->schema.get()),
+        cachedSource_(std::move(cachedSource)) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer_->stripes_size());
     currentStripe_ = numberOfStripes;
@@ -838,7 +840,7 @@ namespace orc {
       // load stripe statistics for PPD
       readMetadata();
     }
-    return std::make_unique<RowReaderImpl>(contents_, opts);
+    return std::make_unique<RowReaderImpl>(contents_, opts, cachedSource_);
   }
 
   uint64_t maxStreamsForType(const proto::Type& type) {
@@ -1472,6 +1474,81 @@ namespace orc {
     }
 
     return ret;
+  }
+
+  void ReaderImpl::releaseBuffer(uint64_t boundary) {
+    if (cachedSource_) {
+      cachedSource_->evictEntriesBefore(boundary);
+    }
+  }
+
+
+  void ReaderImpl::preBuffer(const std::vector<int>& stripes,
+                             const std::list<uint64_t>& includeTypes,
+                             const CacheOptions& options) {
+    if (stripes.empty() || includeTypes.empty()) {
+      return;
+    }
+
+    orc::RowReaderOptions row_reader_options;
+    row_reader_options.includeTypes(includeTypes);
+    ColumnSelector column_selector(contents_.get());
+    std::vector<bool> selected_columns;
+    column_selector.updateSelected(selected_columns, row_reader_options);
+
+    std::vector<ReadRange> ranges;
+    ranges.reserve(includeTypes.size());
+    for (auto stripe: stripes)
+    {
+        // get stripe information
+        const auto& stripe_info = footer_->stripes(stripe);
+        uint64_t stripe_footer_start =
+            stripe_info.offset() + stripe_info.index_length() + stripe_info.data_length();
+        uint64_t stripe_footer_length = stripe_info.footer_length();
+
+        // get stripe footer
+        std::unique_ptr<SeekableInputStream> pb_stream = createDecompressor(
+            contents_->compression,
+            std::make_unique<SeekableFileInputStream>(contents_->stream.get(), stripe_footer_start,
+                                                      stripe_footer_length, *contents_->pool),
+            contents_->blockSize, *contents_->pool, contents_->readerMetrics);
+        proto::StripeFooter stripe_footer;
+        if (!stripe_footer.ParseFromZeroCopyStream(pb_stream.get())) {
+          throw ParseError(std::string("bad StripeFooter from ") + pb_stream->getName());
+        }
+
+        // traverse all streams in stripe footer, choose selected streams to prebuffer
+        uint64_t offset = stripe_info.offset();
+        for (int i = 0; i < stripe_footer.streams_size(); i++) {
+          const proto::Stream& stream = stripe_footer.streams(i);
+          if (offset + stream.length() > stripe_footer_start) {
+            std::stringstream msg;
+            msg << "Malformed stream meta at stream index " << i << " in stripe " << stripe
+                << ": streamOffset=" << offset << ", streamLength=" << stream.length()
+                << ", stripeOffset=" << stripe_info.offset()
+                << ", stripeIndexLength=" << stripe_info.index_length()
+                << ", stripeDataLength=" << stripe_info.data_length();
+            throw ParseError(msg.str());
+          }
+
+          if (stream.has_kind() && selected_columns[stream.column()]) {
+            const auto& kind = stream.kind();
+            if (kind == proto::Stream_Kind_DATA || kind == proto::Stream_Kind_DICTIONARY_DATA ||
+                kind == proto::Stream_Kind_PRESENT || kind == proto::Stream_Kind_LENGTH ||
+                kind == proto::Stream_Kind_SECONDARY) {
+              ranges.emplace_back(offset, stream.length());
+            }
+          }
+
+          offset += stream.length();
+        }
+
+        if (!cachedSource_)
+          cachedSource_ =
+              std::make_shared<ReadRangeCache>(getInputStream(), options, contents_->pool);
+
+        cachedSource_->cache(std::move(ranges));
+    }
   }
 
   RowReader::~RowReader() {
