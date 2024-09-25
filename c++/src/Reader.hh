@@ -29,6 +29,8 @@
 #include "SchemaEvolution.hh"
 #include "TypeImpl.hh"
 #include "sargs/SargsApplier.hh"
+#include "io/InputStream.hh"
+#include "security/ReaderEncryption.hh"
 
 namespace orc {
 
@@ -70,6 +72,10 @@ namespace orc {
     bool isDecimalAsLong;
     std::unique_ptr<proto::Metadata> metadata;
     ReaderMetrics* readerMetrics;
+    std::vector<std::shared_ptr<StripeInformation>> stripeList;
+    // encryption
+    std::unique_ptr<ReaderEncryption> encryption;
+    std::unique_ptr<proto::FileTail> tail;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -245,6 +251,7 @@ namespace orc {
     const SchemaEvolution* getSchemaEvolution() const {
       return &schemaEvolution_;
     }
+    ReaderEncryption* getReaderEncryption() const;
   };
 
   class ReaderImpl : public Reader {
@@ -269,7 +276,7 @@ namespace orc {
         const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
         const proto::StripeFooter& currentStripeFooter,
         std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
-
+    void parseStripeList_();
     // metadata
     mutable bool isMetadataLoaded_;
 
@@ -329,6 +336,7 @@ namespace orc {
     uint64_t getFileFooterLength() const override;
     uint64_t getFilePostscriptLength() const override;
     uint64_t getFileLength() const override;
+    uint64_t getEncryptStripeStatisticsOffset() const;
 
     std::unique_ptr<Statistics> getStatistics() const override;
 
@@ -375,6 +383,9 @@ namespace orc {
     std::map<uint32_t, BloomFilterIndex> getBloomFilters(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
   };
+  orc::proto::FileStatistics* decryptFileStats(std::shared_ptr<FileContents> contents,ReaderEncryptionVariant* variant);
+  void updateCryptedFileStatistics_(std::shared_ptr<FileContents> contents);
+  std::vector<orc::proto::ColumnStatistics*> getAllFileStat(std::shared_ptr<FileContents> contents);
 }  // namespace orc
 
 #endif
