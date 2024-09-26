@@ -68,6 +68,9 @@ namespace orc {
     virtual uint64_t getSize() const override;
     virtual uint64_t getRawInputBufferSize() const override = 0;
     virtual void finishStream() override = 0;
+    virtual bool isBlockCompressed() const override {
+      return false;
+    }
 
    protected:
     void writeData(const unsigned char* data, int size);
@@ -958,6 +961,10 @@ namespace orc {
     }
 
     virtual void finishStream() override;
+
+    virtual bool isBlockCompressed() const override {
+      return true;
+    }
 
    protected:
     // compresses a block and returns the compressed size
