@@ -64,7 +64,7 @@
     <brotli4j.version>1.17.0</brotli4j.version>
     <checkstyle.version>10.18.2</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
-    <hadoop.version>3.4.0</hadoop.version>
+    <hadoop.version>3.4.1</hadoop.version>
     <java.version>17</java.version>
     <javadoc.location>${project.basedir}/../target/javadoc</javadoc.location>
     <junit.version>5.11.2</junit.version>
@@ -304,6 +304,10 @@
       <id>central</id>
       <name>Maven Repository</name>
       <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
+      <id>hadoop</id>
+      <url>https://repository.apache.org/content/repositories/orgapachehadoop-1430</url>
     </repository>
   </repositories>
   <pluginRepositories>

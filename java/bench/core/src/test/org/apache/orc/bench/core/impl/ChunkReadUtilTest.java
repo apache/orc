@@ -21,6 +21,9 @@ package org.apache.orc.bench.core.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.VersionInfo;
+import org.apache.orc.impl.HadoopShims;
+import org.apache.orc.impl.HadoopShimsFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +41,9 @@ class ChunkReadUtilTest {
   private static long fileLength;
   private static final int ROW_COUNT = 524288;
   private static final int COL_COUNT = 16;
+  private static final HadoopShims SHIMS = HadoopShimsFactory.get();
+  private static final boolean supportVectoredIO =
+      SHIMS.supportVectoredIO(VersionInfo.getVersion());
 
   @BeforeAll
   public static void setup() throws IOException {
@@ -57,7 +63,7 @@ class ChunkReadUtilTest {
     Configuration conf = new Configuration();
     readStart();
     assertEquals(ROW_COUNT, ChunkReadUtil.readORCFile(filePath, conf, false));
-    assertTrue((readEnd().getBytesRead() / (double) fileLength) > 1);
+    assertTrue(supportVectoredIO || (readEnd().getBytesRead() / (double) fileLength) > 1);
   }
 
   @Test
@@ -75,7 +81,7 @@ class ChunkReadUtilTest {
     readStart();
     assertEquals(ROW_COUNT, ChunkReadUtil.readORCFile(filePath, conf, true));
     double readFraction = readEnd().getBytesRead() / (double) fileLength;
-    assertTrue(readFraction > 1 && readFraction < 1.01);
+    assertTrue(supportVectoredIO || (readFraction > 1 && readFraction < 1.01));
   }
 
   @Test
@@ -85,6 +91,6 @@ class ChunkReadUtilTest {
     readStart();
     assertEquals(ROW_COUNT, ChunkReadUtil.readORCFile(filePath, conf, true));
     double readFraction = readEnd().getBytesRead() / (double) fileLength;
-    assertTrue(readFraction > 1 && readFraction < 1.01);
+    assertTrue(supportVectoredIO || (readFraction > 1 && readFraction < 1.01));
   }
 }
