@@ -128,9 +128,7 @@ namespace orc {
   }
 
   uint64_t AppendOnlyBufferedStream::flush() {
-    outStream_->BackUp(bufferLength_ - bufferOffset_);
-    bufferOffset_ = bufferLength_ = 0;
-    buffer_ = nullptr;
+    finishStream();
     return outStream_->flush();
   }
 
@@ -148,6 +146,13 @@ namespace orc {
       // byte offset of the start location
       recorder->add(flushedSize - unusedBufferSize);
     }
+  }
+
+  void AppendOnlyBufferedStream::finishStream() {
+    outStream_->BackUp(bufferLength_ - bufferOffset_);
+    outStream_->finishStream();
+    bufferOffset_ = bufferLength_ = 0;
+    buffer_ = nullptr;
   }
 
 }  // namespace orc
