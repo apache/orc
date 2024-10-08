@@ -136,19 +136,13 @@ namespace orc {
 
   void AppendOnlyBufferedStream::recordPosition(PositionRecorder* recorder) const {
     uint64_t flushedSize = outStream_->getSize();
-    uint64_t unflushedSize = static_cast<uint64_t>(bufferOffset_);
     uint64_t unusedBufferSize = static_cast<uint64_t>(bufferLength_ - bufferOffset_);
     if (outStream_->isCompressed()) {
       recorder->add(flushedSize);
-      if (outStream_->isBlockCompressed()) {
-        // number of decompressed bytes that need to be consumed
-        recorder->add(unflushedSize);
-      } else {
-        // There are multiple blocks in the input buffer, but bufferPosition only records the
-        // effective length of the last block. We need rawInputBufferSize to record the total length
-        // of all variable blocks.
-        recorder->add(outStream_->getRawInputBufferSize() - unusedBufferSize);
-      }
+      // There are multiple blocks in the input buffer, but bufferPosition only records the
+      // effective length of the last block. We need rawInputBufferSize to record the total length
+      // of all variable blocks.
+      recorder->add(outStream_->getRawInputBufferSize() - unusedBufferSize);
     } else {
       recorder->add(flushedSize - unusedBufferSize);
     }

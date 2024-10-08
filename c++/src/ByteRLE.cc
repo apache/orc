@@ -188,19 +188,13 @@ namespace orc {
 
   void ByteRleEncoderImpl::recordPosition(PositionRecorder* recorder) const {
     uint64_t flushedSize = outputStream->getSize();
-    uint64_t unflushedSize = static_cast<uint64_t>(bufferPosition);
     uint64_t unusedBufferSize = static_cast<uint64_t>(bufferLength - bufferPosition);
     if (outputStream->isCompressed()) {
       recorder->add(flushedSize);
-      if (outputStream->isBlockCompressed()) {
-        // number of decompressed bytes that need to be consumed
-        recorder->add(unflushedSize);
-      } else {
-        // There are multiple blocks in the input buffer, but bufferPosition only records the
-        // effective length of the last block. We need rawInputBufferSize to record the total length
-        // of all variable blocks.
-        recorder->add(outputStream->getRawInputBufferSize() - unusedBufferSize);
-      }
+      // There are multiple blocks in the input buffer, but bufferPosition only records the
+      // effective length of the last block. We need rawInputBufferSize to record the total length
+      // of all variable blocks.
+      recorder->add(outputStream->getRawInputBufferSize() - unusedBufferSize);
     } else {
       // byte offset of the RLE run’s start location
       recorder->add(flushedSize - unusedBufferSize);
