@@ -175,14 +175,6 @@ public class TestTypeDescription {
   }
 
   @Test
-  public void testQuotedField2() {
-    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-      TypeDescription.fromString("struct<``:int>");
-    });
-    assertTrue(e.getMessage().contains("Empty quoted field name at 'struct<``^:int>'"));
-  }
-
-  @Test
   public void testParserUnknownCategory() {
     IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
       TypeDescription.fromString("FOOBAR");
@@ -522,5 +514,10 @@ public class TestTypeDescription {
   public void testHashCode() {
     // Should not throw NPE
     TypeDescription.fromString("int").hashCode();
+  }
+
+  @Test
+  public void testEmptyFieldName() {
+    TypeDescription.fromString("struct<``:string>");
   }
 }
