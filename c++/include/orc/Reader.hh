@@ -617,7 +617,7 @@ namespace orc {
     /**
      * Get the input stream for the ORC file.
      */
-    virtual InputStream* getInputStream() const = 0;
+    virtual InputStream* getStream() const = 0;
 
     /**
      * Get the footer of the ORC file.

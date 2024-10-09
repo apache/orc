@@ -33,33 +33,33 @@ namespace orc {
 
   void ReadRangeCache::cache(std::vector<ReadRange> ranges) {
     ranges =
-        coalesceReadRanges(std::move(ranges), options.hole_size_limit, options.range_size_limit);
+        coalesceReadRanges(std::move(ranges), options_.hole_size_limit, options_.range_size_limit);
 
     std::vector<RangeCacheEntry> new_entries = makeCacheEntries(ranges);
     // Add new entries, themselves ordered by offset
-    if (entries.size() > 0) {
-      size_t old_size = entries.size();
-      entries.resize(old_size + new_entries.size());
+    if (entries_.size() > 0) {
+      size_t old_size = entries_.size();
+      entries_.resize(old_size + new_entries.size());
       for (size_t i = 0; i < new_entries.size(); ++i) {
-        entries[old_size + i] = std::move(new_entries[i]);
+        entries_[old_size + i] = std::move(new_entries[i]);
       }
     } else {
-      entries = std::move(new_entries);
+      entries_ = std::move(new_entries);
     }
   }
 
   InputStream::BufferSlice ReadRangeCache::read(const ReadRange& range) {
     if (range.length == 0) {
-      return {std::make_shared<InputStream::Buffer>(*memoryPool, 0), 0, 0};
+      return {std::make_shared<InputStream::Buffer>(*memoryPool_, 0), 0, 0};
     }
 
-    const auto it = std::lower_bound(entries.begin(), entries.end(), range,
+    const auto it = std::lower_bound(entries_.begin(), entries_.end(), range,
                                      [](const RangeCacheEntry& entry, const ReadRange& range) {
                                        return entry.range.offset + entry.range.length <
                                               range.offset + range.length;
                                      });
 
-    if (it == entries.end() || !it->range.contains(range)) {
+    if (it == entries_.end() || !it->range.contains(range)) {
       return {};
     }
 
@@ -68,10 +68,10 @@ namespace orc {
   }
 
   void ReadRangeCache::evictEntriesBefore(uint64_t boundary) {
-    auto it = std::lower_bound(entries.begin(), entries.end(), boundary,
+    auto it = std::lower_bound(entries_.begin(), entries_.end(), boundary,
                                [](const RangeCacheEntry& entry, uint64_t offset) {
                                  return entry.range.offset + entry.range.length < offset;
                                });
-    entries.erase(entries.begin(), it);
+    entries_.erase(entries_.begin(), it);
   }
 }  // namespace orc

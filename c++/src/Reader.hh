@@ -371,7 +371,7 @@ namespace orc {
       return contents_->schema.get();
     }
 
-    InputStream* getInputStream() const override {
+    InputStream* getStream() const override {
       return contents_->stream.get();
     }
 

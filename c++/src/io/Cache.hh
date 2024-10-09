@@ -21,13 +21,12 @@
 #include <orc/MemoryPool.hh>
 #include <orc/OrcFile.hh>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <future>
-#include <memory>
 #include <utility>
 #include <vector>
-#include <algorithm>
 
 namespace orc {
   class InputStream;
@@ -190,7 +189,7 @@ namespace orc {
    public:
     /// Construct a read cache with given options
     explicit ReadRangeCache(InputStream* _stream, CacheOptions _options, MemoryPool* _memoryPool)
-        : stream(_stream), options(std::move(_options)), memoryPool(_memoryPool) {}
+        : stream_(_stream), options_(std::move(_options)), memoryPool_(_memoryPool) {}
 
     ~ReadRangeCache() = default;
 
@@ -211,18 +210,19 @@ namespace orc {
       std::vector<RangeCacheEntry> new_entries;
       new_entries.reserve(ranges.size());
       for (const auto& range : ranges) {
-        new_entries.emplace_back(range, stream->readAsync(range.offset, range.length, *memoryPool));
+        new_entries.emplace_back(range,
+                                 stream_->readAsync(range.offset, range.length, *memoryPool_));
       }
       return new_entries;
     }
 
-    InputStream* stream;
-    CacheOptions options;
+    InputStream* stream_;
+    CacheOptions options_;
 
     // Ordered by offset (so as to find a matching region by binary search)
-    std::vector<RangeCacheEntry> entries;
+    std::vector<RangeCacheEntry> entries_;
 
-    MemoryPool* memoryPool;
+    MemoryPool* memoryPool_;
   };
 
 }  // namespace orc
