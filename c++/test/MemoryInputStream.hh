@@ -22,8 +22,6 @@
 #include "io/InputStream.hh"
 #include "orc/OrcFile.hh"
 
-#include <iostream>
-
 namespace orc {
   class MemoryInputStream : public InputStream {
    public:
@@ -50,6 +48,14 @@ namespace orc {
 
     const char* getData() const {
       return buffer_;
+    }
+
+    std::future<BufferPtr> readAsync(uint64_t offset, uint64_t length, MemoryPool& pool) override {
+      return std::async(std::launch::async, [this, offset, length, &pool] {
+        auto buffer = std::make_shared<Buffer>(pool, length);
+        this->read(buffer->data(), length, offset);
+        return buffer;
+      });
     }
 
    private:

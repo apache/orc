@@ -17,6 +17,7 @@
  */
 
 #include <cassert>
+#include <iostream>
 
 #include "Cache.hh"
 
@@ -37,11 +38,10 @@ namespace orc {
     std::vector<RangeCacheEntry> new_entries = makeCacheEntries(ranges);
     // Add new entries, themselves ordered by offset
     if (entries_.size() > 0) {
-      size_t old_size = entries_.size();
-      entries_.resize(old_size + new_entries.size());
-      for (size_t i = 0; i < new_entries.size(); ++i) {
-        entries_[old_size + i] = std::move(new_entries[i]);
-      }
+      std::vector<RangeCacheEntry> merged(entries_.size() + new_entries.size());
+      std::merge(entries_.begin(), entries_.end(), new_entries.begin(), new_entries.end(),
+                 merged.begin());
+      entries_ = std::move(merged);
     } else {
       entries_ = std::move(new_entries);
     }
