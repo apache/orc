@@ -47,7 +47,7 @@ namespace orc {
     uint64_t length;
 
     ReadRange() = default;
-    ReadRange(uint64_t _offset, uint64_t _length) : offset(_offset), length(_length) {}
+    ReadRange(uint64_t offset, uint64_t length) : offset(offset), length(length) {}
 
     friend bool operator==(const ReadRange& left, const ReadRange& right) {
       return (left.offset == right.offset && left.length == right.length);
@@ -145,6 +145,8 @@ namespace orc {
     const uint64_t range_size_limit;
   };
 
+  std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
+                                            uint64_t rangeSizeLimit);
   struct RangeCacheEntry {
     using BufferPtr = InputStream::BufferPtr;
 

@@ -22,9 +22,8 @@
 
 namespace orc {
 
-  static std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges,
-                                                   uint64_t holeSizeLimit,
-                                                   uint64_t rangeSizeLimit) {
+  std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
+                                            uint64_t rangeSizeLimit) {
     assert(range_size_limit > hole_size_limit);
 
     ReadRangeCombiner combiner{holeSizeLimit, rangeSizeLimit};

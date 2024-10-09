@@ -34,7 +34,6 @@
 #include <string>
 #include <vector>
 
-
 namespace orc {
 
   // classes that hold data members so we can maintain binary compatibility
@@ -46,7 +45,7 @@ namespace orc {
   namespace proto {
     class Footer;
     class Metadata;
-  };
+  };  // namespace proto
 
   /**
    * Expose the reader metrics including the latency and
@@ -629,8 +628,7 @@ namespace orc {
      */
     virtual const proto::Metadata* getMetadata() const = 0;
 
-    virtual void preBuffer(const std::vector<int>& stripes,
-                           const std::list<uint64_t>& include_types,
+    virtual void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
                            const CacheOptions& options) = 0;
 
     virtual void releaseBuffer(uint64_t boundary) = 0;
@@ -686,7 +684,6 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
-
   };
 }  // namespace orc
 
