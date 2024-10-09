@@ -74,7 +74,6 @@ namespace orc {
     virtual bool isCompressed() const {
       return false;
     }
-
     virtual void finishStream();
   };
   DIAGNOSTIC_POP
