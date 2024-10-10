@@ -17,7 +17,6 @@
  */
 
 #include <cassert>
-#include <iostream>
 
 #include "Cache.hh"
 
@@ -25,7 +24,7 @@ namespace orc {
 
   std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
                                             uint64_t rangeSizeLimit) {
-    assert(range_size_limit > hole_size_limit);
+    assert(rangeSizeLimit > holeSizeLimit);
 
     ReadRangeCombiner combiner{holeSizeLimit, rangeSizeLimit};
     return combiner.coalesce(std::move(ranges));
@@ -33,7 +32,7 @@ namespace orc {
 
   void ReadRangeCache::cache(std::vector<ReadRange> ranges) {
     ranges =
-        coalesceReadRanges(std::move(ranges), options_.hole_size_limit, options_.range_size_limit);
+        coalesceReadRanges(std::move(ranges), options_.holeSizeLimit, options_.rangeSizeLimit);
 
     std::vector<RangeCacheEntry> new_entries = makeCacheEntries(ranges);
     // Add new entries, themselves ordered by offset

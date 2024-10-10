@@ -28,9 +28,9 @@ namespace orc {
 
   TEST(TestCoalesceReadRanges, testBasics) {
     auto check = [](std::vector<ReadRange> ranges, std::vector<ReadRange> expected) -> void {
-      const uint64_t hole_size_limit = 9;
-      const uint64_t range_size_limit = 99;
-      auto coalesced = coalesceReadRanges(ranges, hole_size_limit, range_size_limit);
+      const uint64_t holeSizeLimit = 9;
+      const uint64_t rangeSizeLimit = 99;
+      auto coalesced = coalesceReadRanges(ranges, holeSizeLimit, rangeSizeLimit);
       ASSERT_EQ(coalesced, expected);
     };
 
@@ -75,8 +75,8 @@ namespace orc {
     std::string data = "abcdefghijklmnopqrstuvwxyz";
 
     CacheOptions options;
-    options.hole_size_limit = 2;
-    options.range_size_limit = 10;
+    options.holeSizeLimit = 2;
+    options.rangeSizeLimit = 10;
 
     auto file = std::make_shared<MemoryInputStream>(data.data(), data.size());
     ReadRangeCache cache(file.get(), options, getDefaultPool());

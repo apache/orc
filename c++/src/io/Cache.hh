@@ -34,12 +34,12 @@ namespace orc {
   struct CacheOptions {
     /// The maximum distance in bytes between two consecutive
     /// ranges; beyond this value, ranges are not combined
-    uint64_t hole_size_limit = 8192;
+    uint64_t holeSizeLimit = 8192;
 
     /// The maximum size in bytes of a combined range; if
     /// combining two consecutive ranges would produce a range of a
     /// size greater than this, they are not combined
-    uint64_t range_size_limit = 32 * 1024 * 1024;
+    uint64_t rangeSizeLimit = 32 * 1024 * 1024;
   };
 
   struct ReadRange {
@@ -115,8 +115,8 @@ namespace orc {
         // Stop coalescing if:
         //   - coalesced range is too large, or
         //   - distance (hole/gap) between consecutive ranges is too large.
-        if (current_range_end - coalesced_start > range_size_limit ||
-            current_range_start - prev_range_end > hole_size_limit) {
+        if (current_range_end - coalesced_start > rangeSizeLimit ||
+            current_range_start - prev_range_end > holeSizeLimit) {
           assert(coalesced_start <= prev_range_end);
           // Append the coalesced range only if coalesced range size > 0.
           if (prev_range_end > coalesced_start) {
@@ -141,8 +141,8 @@ namespace orc {
       return coalesced;
     }
 
-    const uint64_t hole_size_limit;
-    const uint64_t range_size_limit;
+    const uint64_t holeSizeLimit;
+    const uint64_t rangeSizeLimit;
   };
 
   std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
