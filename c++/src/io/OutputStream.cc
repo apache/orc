@@ -138,12 +138,14 @@ namespace orc {
     uint64_t flushedSize = outStream_->getSize();
     uint64_t unusedBufferSize = static_cast<uint64_t>(bufferLength_ - bufferOffset_);
     if (outStream_->isCompressed()) {
+      // start of the compression chunk in the stream
       recorder->add(flushedSize);
       // There are multiple blocks in the input buffer, but bufferPosition only records the
       // effective length of the last block. We need rawInputBufferSize to record the total length
       // of all variable blocks.
       recorder->add(outStream_->getRawInputBufferSize() - unusedBufferSize);
     } else {
+      // byte offset of the start location
       recorder->add(flushedSize - unusedBufferSize);
     }
   }
