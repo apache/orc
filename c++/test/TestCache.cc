@@ -26,6 +26,15 @@
 
 namespace orc {
 
+  TEST(TestReadRangeCombiner, testBasics) {
+    ReadRangeCombiner combinator{0, 100};
+    /// Ranges with partial overlap and identical offsets
+    std::vector<ReadRange> ranges{{0, 15}, {5, 11}, {5, 15}};
+    std::vector<ReadRange> result = combinator.coalesce(std::move(ranges));
+    std::vector<ReadRange> expect{{0, 20}};
+    ASSERT_EQ(result, expect);
+  }
+
   TEST(TestCoalesceReadRanges, testBasics) {
     auto check = [](std::vector<ReadRange> ranges, std::vector<ReadRange> expected) -> void {
       const uint64_t holeSizeLimit = 9;

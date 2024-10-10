@@ -71,13 +71,13 @@ namespace orc {
       auto end = std::remove_if(ranges.begin(), ranges.end(),
                                 [](const ReadRange& range) { return range.length == 0; });
       // Sort in position order
-      std::sort(ranges.begin(), end,
-                [](const ReadRange& a, const ReadRange& b) { return a.offset < b.offset; });
+      std::sort(ranges.begin(), end, [](const ReadRange& a, const ReadRange& b) {
+        return a.offset != b.offset ? a.offset < b.offset : a.length > b.length;
+      });
 
       // Remove ranges that overlap 100%
       end = std::unique(ranges.begin(), end, [](const ReadRange& left, const ReadRange& right) {
-        return right.offset >= left.offset &&
-               right.offset + right.length <= left.offset + left.length;
+        return left.contains(right);
       });
       ranges.resize(end - ranges.begin());
 
@@ -115,8 +115,9 @@ namespace orc {
         // Stop coalescing if:
         //   - coalesced range is too large, or
         //   - distance (hole/gap) between consecutive ranges is too large.
-        if (current_range_end - coalesced_start > rangeSizeLimit ||
-            current_range_start - prev_range_end > holeSizeLimit) {
+        if ((current_range_end - coalesced_start > rangeSizeLimit) ||
+            (current_range_start >= prev_range_end &&
+             current_range_start - prev_range_end > holeSizeLimit)) {
           assert(coalesced_start <= prev_range_end);
           // Append the coalesced range only if coalesced range size > 0.
           if (prev_range_end > coalesced_start) {
