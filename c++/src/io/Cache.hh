@@ -116,8 +116,7 @@ namespace orc {
         //   - coalesced range is too large, or
         //   - distance (hole/gap) between consecutive ranges is too large.
         if ((current_range_end - coalesced_start > rangeSizeLimit) ||
-            (current_range_start >= prev_range_end &&
-             current_range_start - prev_range_end > holeSizeLimit)) {
+            (current_range_start > prev_range_end + holeSizeLimit)) {
           assert(coalesced_start <= prev_range_end);
           // Append the coalesced range only if coalesced range size > 0.
           if (prev_range_end > coalesced_start) {
