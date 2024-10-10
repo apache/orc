@@ -91,7 +91,7 @@ namespace orc {
         const auto& left = ranges[i];
         const auto& right = ranges[i + 1];
         assert(left.offset < right.offset);
-        assert(left.offset + left.length <= right.offset);
+        assert(!left.contains(right));
       }
 #endif
 
