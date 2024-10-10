@@ -31,8 +31,7 @@ namespace orc {
   }
 
   void ReadRangeCache::cache(std::vector<ReadRange> ranges) {
-    ranges =
-        coalesceReadRanges(std::move(ranges), options_.holeSizeLimit, options_.rangeSizeLimit);
+    ranges = coalesceReadRanges(std::move(ranges), options_.holeSizeLimit, options_.rangeSizeLimit);
 
     std::vector<RangeCacheEntry> new_entries = makeCacheEntries(ranges);
     // Add new entries, themselves ordered by offset
