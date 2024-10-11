@@ -43,6 +43,7 @@ namespace orc {
     MemoryPool* memoryPool;
     std::string serializedTail;
     ReaderMetrics* metrics;
+    std::shared_ptr<KeyProvider> keyProvider;
 
     ReaderOptionsPrivate() {
       tailLocation = std::numeric_limits<uint64_t>::max();
@@ -121,7 +122,14 @@ namespace orc {
   std::ostream* ReaderOptions::getErrorStream() const {
     return privateBits_->errorStream;
   }
+  ReaderOptions& ReaderOptions::setKeyProvider(std::shared_ptr<KeyProvider> keyProvider) {
+    privateBits_->keyProvider = keyProvider;
+    return *this;
+  }
 
+  std::shared_ptr<KeyProvider> ReaderOptions::getKeyProvider() const {
+    return privateBits_->keyProvider;
+  }
   /**
    * RowReaderOptions Implementation
    */
