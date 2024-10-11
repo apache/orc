@@ -100,6 +100,7 @@ namespace orc {
     void write(const char* data, size_t size);
     uint64_t getSize() const;
     uint64_t flush();
+    void finishStream();
 
     void recordPosition(PositionRecorder* recorder) const;
   };

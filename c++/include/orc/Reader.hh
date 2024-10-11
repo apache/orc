@@ -62,6 +62,11 @@ namespace orc {
   };
   ReaderMetrics* getDefaultReaderMetrics();
 
+  struct RowGroupPositions {
+    uint64_t columnId;
+    std::vector<int32_t> positions;
+  };
+
   /**
    * Options for creating a Reader.
    */
@@ -657,6 +662,12 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
+
+    /**
+     * Get the row group positions of the specified column in the current stripe.
+     * @return the position entries for the specified columns.
+     */
+    virtual std::vector<RowGroupPositions> getPositionEntries(int columnId) = 0;
   };
 }  // namespace orc
 

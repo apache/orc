@@ -1241,6 +1241,23 @@ namespace orc {
                                    useTightNumericVector_);
   }
 
+  std::vector<RowGroupPositions> RowReaderImpl::getPositionEntries(int columnId) {
+    loadStripeIndex();
+    std::vector<RowGroupPositions> result;
+    auto rowIndex = rowIndexes_[columnId];
+    RowGroupPositions rgPositions;
+    rgPositions.columnId = columnId;
+    for (auto rowIndexEntry : rowIndex.entry()) {
+      auto posVector = rgPositions.positions;
+      for (auto position : rowIndexEntry.positions()) {
+        posVector.push_back(position);
+      }
+      result.push_back(rgPositions);
+    }
+
+    return result;
+  }
+
   void ensureOrcFooter(InputStream* stream, DataBuffer<char>* buffer, uint64_t postscriptLength) {
     const std::string MAGIC("ORC");
     const uint64_t magicLength = MAGIC.length();
