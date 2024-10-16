@@ -39,6 +39,13 @@ namespace orc {
   // classes that hold data members so we can maintain binary compatibility
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
+  struct CacheOptions;
+  class InputStream;
+
+  namespace proto {
+    class Footer;
+    class Metadata;
+  };  // namespace proto
 
   /**
    * Expose the reader metrics including the latency and
@@ -605,6 +612,26 @@ namespace orc {
      */
     virtual std::map<uint32_t, BloomFilterIndex> getBloomFilters(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const = 0;
+
+    /**
+     * Get the input stream for the ORC file.
+     */
+    virtual InputStream* getStream() const = 0;
+
+    /**
+     * Get the footer of the ORC file.
+     */
+    virtual const proto::Footer* getFooter() const = 0;
+
+    /**
+     * Get the schema of the ORC file.
+     */
+    virtual const proto::Metadata* getMetadata() const = 0;
+
+    virtual void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
+                           const CacheOptions& options) = 0;
+
+    virtual void releaseBuffer(uint64_t boundary) = 0;
   };
 
   /**
