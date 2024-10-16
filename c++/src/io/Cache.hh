@@ -165,28 +165,6 @@ namespace orc {
   };
 
   /// A read cache designed to hide IO latencies when reading.
-  ///
-  /// This class takes multiple byte ranges that an application expects to read, and
-  /// coalesces them into fewer, larger read requests, which benefits performance on some
-  /// filesystems, particularly remote ones like Amazon S3. By default, it also issues
-  /// these read requests in parallel up front.
-  ///
-  /// To use:
-  /// 1. Cache() the ranges you expect to read in the future. Ideally, these ranges have
-  ///    the exact offset and length that will later be read. The cache will combine those
-  ///    ranges according to parameters (see constructor).
-  ///
-  ///    By default, the cache will also start fetching the combined ranges in parallel in
-  ///    the background, unless CacheOptions.lazy is set.
-  ///
-  /// 2. Call WaitFor() to be notified when the given ranges have been read. If
-  ///    CacheOptions.lazy is set, I/O will be triggered in the background here instead.
-  ///    This can be done in parallel (e.g. if parsing a file, call WaitFor() for each
-  ///    chunk of the file that can be parsed in parallel).
-  ///
-  /// 3. Call Read() to retrieve the actual data for the given ranges.
-  ///    A synchronous application may skip WaitFor() and just call Read() - it will still
-  ///    benefit from coalescing and parallel fetching.
   class ReadRangeCache {
    public:
     /// Construct a read cache with given options
