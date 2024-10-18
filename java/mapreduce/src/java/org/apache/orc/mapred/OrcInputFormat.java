@@ -21,7 +21,6 @@ package org.apache.orc.mapred;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
@@ -68,7 +67,7 @@ public class OrcInputFormat<V extends WritableComparable>
 
     boolean[] result = new boolean[schema.getMaximumId() + 1];
     result[0] = true;
-    if (StringUtils.isBlank(columnsStr)) {
+    if (columnsStr.isBlank()) {
       return result;
     }
 

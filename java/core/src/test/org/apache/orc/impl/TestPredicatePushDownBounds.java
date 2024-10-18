@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
@@ -54,26 +53,20 @@ public class TestPredicatePushDownBounds {
     BloomFilter bf = new BloomFilter(100);
     // FFF... to PPP...
     for (int i = 70; i <= 80; i++) {
-      final String inputString = StringUtils
-          .repeat(Character.toString((char) i), stringLength);
+      final String inputString = Character.toString((char) i).repeat(stringLength);
       bf.addString(inputString);
     }
 
-    final String longStringF = StringUtils
-        .repeat(Character.toString('F'), stringLength);
-    final String longStringP = StringUtils
-        .repeat(Character.toString('P'), stringLength);
+    final String longStringF = Character.toString('F').repeat(stringLength);
+    final String longStringP = Character.toString('P').repeat(stringLength);
 
     /* String that matches the upperbound value after truncation */
-    final String upperboundString =
-        StringUtils.repeat(Character.toString('P'), 1023) + "Q";
+    final String upperboundString = Character.toString('P').repeat(1023) + "Q";
     /* String that matches the lower value after truncation */
-    final String lowerboundString = StringUtils
-        .repeat(Character.toString('F'), 1024);
+    final String lowerboundString = Character.toString('F').repeat(1024);
 
-    final String shortStringF = StringUtils.repeat(Character.toString('F'), 50);
-    final String shortStringP =
-        StringUtils.repeat(Character.toString('P'), 50) + "Q";
+    final String shortStringF = Character.toString('F').repeat(50);
+    final String shortStringP = Character.toString('P').repeat(50) + "Q";
 
     /* Test for a case EQUALS where only upperbound is set */
     final PredicateLeaf predicateUpperBoundEquals = TestRecordReaderImpl
@@ -165,17 +158,13 @@ public class TestPredicatePushDownBounds {
     BloomFilter bf = new BloomFilter(100);
     // FFF... to PPP...
     for (int i = 70; i <= 80; i++) {
-      final String inputString = StringUtils
-          .repeat(Character.toString((char) i), bfStringLength);
+      final String inputString = Character.toString((char) i).repeat(bfStringLength);
       bf.addString(inputString);
     }
 
-    final String longStringF = StringUtils
-        .repeat(Character.toString('F'), stringLength);
-    final String longStringP = StringUtils
-        .repeat(Character.toString('P'), stringLength);
-    final String predicateString = StringUtils
-        .repeat(Character.toString('I'), 50);
+    final String longStringF = Character.toString('F').repeat(stringLength);
+    final String longStringP = Character.toString('P').repeat(stringLength);
+    final String predicateString = Character.toString('I').repeat(50);
 
 
     /* Test for a case where only upperbound is set */
@@ -215,26 +204,20 @@ public class TestPredicatePushDownBounds {
     final BloomFilter bf = new BloomFilter(100);
     // FFF... to PPP...
     for (int i = 70; i <= 80; i++) {
-      final String inputString = StringUtils
-          .repeat(Character.toString((char) i), stringLength);
+      final String inputString = Character.toString((char) i).repeat(stringLength);
       bf.addString(inputString);
     }
 
-    final String longStringF = StringUtils
-        .repeat(Character.toString('F'), stringLength);
-    final String longStringP = StringUtils
-        .repeat(Character.toString('P'), stringLength);
+    final String longStringF = Character.toString('F').repeat(stringLength);
+    final String longStringP = Character.toString('P').repeat(stringLength);
 
     /* String that matches the upperbound value after truncation */
-    final String upperboundString =
-        StringUtils.repeat(Character.toString('P'), 1023) + "Q";
+    final String upperboundString = Character.toString('P').repeat(1023) + "Q";
     /* String that matches the lower value after truncation */
-    final String lowerboundString = StringUtils
-        .repeat(Character.toString('F'), 1024);
+    final String lowerboundString = Character.toString('F').repeat(1024);
 
-    final String shortStringF = StringUtils.repeat(Character.toString('F'), 50);
-    final String shortStringP =
-        StringUtils.repeat(Character.toString('P'), 50) + "Q";
+    final String shortStringF = Character.toString('F').repeat(50);
+    final String shortStringP = Character.toString('P').repeat(50) + "Q";
 
     final List<Object> args = new ArrayList<Object>();
     args.add(upperboundString);

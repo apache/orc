@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileRange;
 import org.apache.hadoop.fs.FileSystem;
@@ -637,8 +636,8 @@ public class RecordReaderUtils {
 
       @Override
       public int hashCode() {
-        return new HashCodeBuilder().append(capacity).append(insertionGeneration)
-            .toHashCode();
+        // This is idential to the previous hashCode from HashCodeBuilder
+        return (17 * 37 + capacity) * 37 + (int) (insertionGeneration ^ insertionGeneration >> 32);
       }
     }
 
