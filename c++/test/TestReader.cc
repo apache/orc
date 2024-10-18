@@ -105,6 +105,15 @@ namespace orc {
                                                         nextSkippedRows));
   }
 
+  void prefetchAllStripes(Reader* reader) {
+    auto num_stripes = reader->getNumberOfStripes();
+    std::vector<int> stripes;
+    for (size_t i = 0; i < num_stripes; ++i) {
+      stripes.push_back(i);
+    }
+    reader->preBuffer(stripes, {0}, {});
+  }
+
   void CheckFileWithSargs(const char* fileName, const char* softwareVersion) {
     std::stringstream ss;
     if (const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
@@ -218,7 +227,9 @@ namespace orc {
     auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
-    return createReader(std::move(inStream), readerOptions);
+    auto reader = createReader(std::move(inStream), readerOptions);
+    prefetchAllStripes(reader.get());
+    return reader;
   }
 
   TEST(TestReadIntent, testListAll) {
@@ -389,7 +400,9 @@ namespace orc {
     auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
-    return createReader(std::move(inStream), readerOptions);
+    auto reader = createReader(std::move(inStream), readerOptions);
+    prefetchAllStripes(reader.get());
+    return reader;
   }
 
   TEST(TestReadIntent, testMapAll) {
@@ -566,7 +579,9 @@ namespace orc {
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     readerOptions.setReaderMetrics(nullptr);
-    return createReader(std::move(inStream), readerOptions);
+    auto reader = createReader(std::move(inStream), readerOptions);
+    prefetchAllStripes(reader.get());
+    return reader;
   }
 
   TEST(TestReadIntent, testUnionAll) {
@@ -738,6 +753,7 @@ namespace orc {
       ReaderOptions readerOptions;
       readerOptions.setMemoryPool(*pool);
       std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
+      prefetchAllStripes(reader.get());
       EXPECT_EQ(rowCount, reader->getNumberOfRows());
       std::unique_ptr<RowReader> rowReader = reader->createRowReader(RowReaderOptions());
       auto batch = rowReader->createRowBatch(1000);

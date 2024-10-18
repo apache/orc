@@ -19,6 +19,7 @@
 #ifndef ORC_FILE_HH
 #define ORC_FILE_HH
 
+#include <future>
 #include <string>
 
 #include "orc/Reader.hh"
@@ -36,6 +37,20 @@ namespace orc {
    */
   class InputStream {
    public:
+    using Buffer = DataBuffer<char>;
+    using BufferPtr = std::shared_ptr<Buffer>;
+
+    struct BufferSlice {
+      BufferSlice() : buffer(nullptr), offset(0), length(0) {}
+
+      BufferSlice(BufferPtr buffer, uint64_t offset, uint64_t length)
+          : buffer(std::move(buffer)), offset(offset), length(length) {}
+
+      BufferPtr buffer;
+      uint64_t offset;
+      uint64_t length;
+    };
+
     virtual ~InputStream();
 
     /**
@@ -57,6 +72,17 @@ namespace orc {
      * @param offset the position in the stream to read from.
      */
     virtual void read(void* buf, uint64_t length, uint64_t offset) = 0;
+
+    /**
+     * Read data asynchronously.
+     * @param offset the position in the stream to read from.
+     * @param length the number of bytes to read.
+     * @return a future that will be set to the buffer when the read is complete.
+     */
+    virtual std::future<BufferPtr> readAsync(uint64_t /*offset*/, uint64_t /*length*/,
+                                             MemoryPool& /*pool*/) {
+      throw NotImplementedYet("readAsync not supported yet");
+    }
 
     /**
      * Get the name of the stream for error messages.
