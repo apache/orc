@@ -305,10 +305,6 @@
       <name>Maven Repository</name>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
-    <repository>
-      <id>hadoop</id>
-      <url>https://repository.apache.org/content/repositories/orgapachehadoop-1430</url>
-    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
