@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -1446,6 +1445,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   }
 
   public static class StringGroupFromBinaryTreeReader extends ConvertTreeReader {
+    public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     private final TypeDescription readerType;
     private BytesColumnVector inBytesColVector;
     private BytesColumnVector outBytesColVector;
@@ -1461,7 +1461,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       byte[] bytes = inBytesColVector.vector[elementNum];
       int start = inBytesColVector.start[elementNum];
       int length = inBytesColVector.length[elementNum];
-      final byte[] string = (length == 0) ? ArrayUtils.EMPTY_BYTE_ARRAY : new byte[3 * length - 1];
+      final byte[] string = (length == 0) ? EMPTY_BYTE_ARRAY : new byte[3 * length - 1];
       for(int p = 0; p < string.length; p += 2) {
         if (p != 0) {
           string[p++] = ' ';
