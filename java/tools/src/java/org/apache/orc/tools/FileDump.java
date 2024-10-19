@@ -22,7 +22,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -61,7 +60,7 @@ import java.util.List;
  */
 public final class FileDump {
   public static final String UNKNOWN = "UNKNOWN";
-  public static final String SEPARATOR = StringUtils.repeat("_", 120) + "\n";
+  public static final String SEPARATOR = "_".repeat(120) + "\n";
   public static final String RECOVER_READ_SIZE = "orc.recover.read.size"; // only for testing
   public static final int DEFAULT_BLOCK_SIZE = 256 * 1024 * 1024;
   public static final String DEFAULT_BACKUP_PATH = System.getProperty("java.io.tmpdir");

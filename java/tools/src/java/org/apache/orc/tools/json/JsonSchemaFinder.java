@@ -29,7 +29,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.TypeDescriptionPrettyPrint;
@@ -40,6 +39,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -264,6 +265,15 @@ public class JsonSchemaFinder {
     }
   }
 
+  public static String getStackTrace(final Throwable throwable) {
+    if (throwable == null) {
+      return "";
+    }
+    final StringWriter sw = new StringWriter();
+    throwable.printStackTrace(new PrintWriter(sw, true));
+    return sw.toString();
+  }
+
   private void printParseExceptionMsg(JsonParseException e, String filename) {
     System.err.printf(
         "A JsonParseException was thrown while processing the %dth record of file %s.%n",
@@ -282,7 +292,7 @@ public class JsonSchemaFinder {
         System.exit(1);
       }
     }
-    System.err.printf("Please check the file.%n%n%s%n", ExceptionUtils.getStackTrace(e));
+    System.err.printf("Please check the file.%n%n%s%n", getStackTrace(e));
     System.exit(1);
   }
 
