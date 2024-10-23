@@ -62,9 +62,13 @@ namespace orc {
   };
   ReaderMetrics* getDefaultReaderMetrics();
 
-  struct RowGroupPositions {
-    uint64_t columnId;
-    std::vector<int32_t> positions;
+  // Row group index of a single column in a stripe.
+  struct RowGroupIndex {
+    // Positions are represented as a two-dimensional array where the first
+    // dimension is row group index and the second dimension is the position
+    // list of the row group. The size of the second dimension should be equal
+    // among all row groups.
+    std::vector<std::vector<uint64_t>> positions;
   };
 
   /**
@@ -610,6 +614,16 @@ namespace orc {
      */
     virtual std::map<uint32_t, BloomFilterIndex> getBloomFilters(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const = 0;
+
+    /**
+     * Get row group index of all selected columns in the specified stripe
+     * @param stripeIndex index of the stripe to be read for row group index.
+     * @param included index of selected columns to return (if not specified,
+     *        all columns will be returned).
+     * @return map of row group index keyed by its column index.
+     */
+    virtual std::map<uint32_t, RowGroupIndex> getRowGroupIndex(
+        uint32_t stripeIndex, const std::set<uint32_t>& included = {}) const = 0;
   };
 
   /**
@@ -663,11 +677,6 @@ namespace orc {
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
 
-    /**
-     * Get the row group positions of the specified column in the current stripe.
-     * @return the position entries for the specified columns.
-     */
-    virtual std::vector<RowGroupPositions> getPositionEntries(int columnId) = 0;
   };
 }  // namespace orc
 

@@ -86,38 +86,41 @@ namespace orc {
     return reader->createRowReader(rowReaderOpts);
   }
 
-  void verifyCompressionBlockAlignment(const std::unique_ptr<RowReader>& reader,
-                                       uint64_t columnCount) {
-    for (uint64_t i = 0; i < columnCount; ++i) {
-      auto posEntries = reader->getPositionEntries(i);
-      auto subType = reader->getSelectedType().getSubtype(i);
-      for (auto rowGroupPositions : posEntries) {
-        for (uint64_t posIndex = 0; posIndex < rowGroupPositions.positions.size(); ++posIndex) {
-          // After we call finishStream(), unusedBufferSize is set to 0,
-          // so only the first position is valid in each recordPosition call.
-          switch (subType->getKind()) {
-            case DECIMAL:
-            case STRING:
-            case BINARY:
-            case CHAR:
-            case VARCHAR: {
-              if (posIndex != 0 && posIndex != 2) {
-                EXPECT_EQ(rowGroupPositions.positions[posIndex], 0);
+  void verifyCompressionBlockAlignment(std::unique_ptr<Reader>& reader, uint64_t columnCount) {
+    auto stripeCount = reader->getNumberOfStripes();
+    for (uint64_t stripeIndex = 0; stripeIndex < stripeCount; ++stripeIndex) {
+      for (uint64_t i = 0; i < columnCount; ++i) {
+        auto rowGroupIndexMap = reader->getRowGroupIndex(stripeIndex);
+        auto rowGroupIndex = rowGroupIndexMap[columnCount];
+        auto subType = reader->getType().getSubtype(i);
+        for (auto rowGroupPositions : rowGroupIndex.positions) {
+          for (uint64_t posIndex = 0; posIndex < rowGroupPositions.size(); ++posIndex) {
+            // After we call finishStream(), unusedBufferSize is set to 0,
+            // so only the first position is valid in each recordPosition call.
+            switch (subType->getKind()) {
+              case DECIMAL:
+              case STRING:
+              case BINARY:
+              case CHAR:
+              case VARCHAR: {
+                if (posIndex != 0 && posIndex != 2) {
+                  EXPECT_EQ(rowGroupPositions[posIndex], 0);
+                }
+                break;
               }
-              break;
-            }
-            case TIMESTAMP_INSTANT:
-            case TIMESTAMP: {
-              if (posIndex != 0 && posIndex != 3) {
-                EXPECT_EQ(rowGroupPositions.positions[posIndex], 0);
+              case TIMESTAMP_INSTANT:
+              case TIMESTAMP: {
+                if (posIndex != 0 && posIndex != 3) {
+                  EXPECT_EQ(rowGroupPositions[posIndex], 0);
+                }
+                break;
               }
-              break;
-            }
-            default: {
-              if (posIndex != 0) {
-                EXPECT_EQ(rowGroupPositions.positions[posIndex], 0);
+              default: {
+                if (posIndex != 0) {
+                  EXPECT_EQ(rowGroupPositions[posIndex], 0);
+                }
+                break;
               }
-              break;
             }
           }
         }
@@ -343,7 +346,7 @@ namespace orc {
       EXPECT_EQ(i, static_cast<uint64_t>(atoi(bin.c_str())));
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
 
     EXPECT_FALSE(rowReader->next(*batch));
@@ -404,7 +407,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
 
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -459,7 +462,7 @@ namespace orc {
       EXPECT_EQ(static_cast<int64_t>(i), bigIntBatch->data[i]);
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -500,7 +503,7 @@ namespace orc {
     batch = rowReader->createRowBatch(rowCount);
     EXPECT_EQ(true, rowReader->next(*batch));
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
 
     structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
@@ -562,7 +565,7 @@ namespace orc {
       EXPECT_EQ((i % 3) == 0 ? 1 : 0, byteBatch->data[i]);
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -607,7 +610,7 @@ namespace orc {
       EXPECT_EQ(static_cast<int32_t>(i), longBatch->data[i]);
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -656,7 +659,7 @@ namespace orc {
       EXPECT_EQ(i * 1000, tsBatch->nanoseconds[i]);
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -718,7 +721,7 @@ namespace orc {
     }
 
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -873,7 +876,7 @@ namespace orc {
       EXPECT_EQ(i * 1000, tsBatch->nanoseconds[i]);
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -955,7 +958,7 @@ namespace orc {
 
     EXPECT_FALSE(rowReader->next(*batch));
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -1035,7 +1038,7 @@ namespace orc {
       EXPECT_EQ(-dec, decBatch->values[i + maxPrecision]);
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -1125,7 +1128,7 @@ namespace orc {
       EXPECT_EQ("-" + expected, decBatch->values[i + maxPrecision].toString());
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -1191,7 +1194,7 @@ namespace orc {
       }
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -1275,7 +1278,7 @@ namespace orc {
       }
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -1375,7 +1378,7 @@ namespace orc {
       }
     }
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
@@ -1449,7 +1452,7 @@ namespace orc {
 
     EXPECT_FALSE(rowReader->next(*batch));
     if (enableAlignBlockBoundToRowGroup) {
-      verifyCompressionBlockAlignment(rowReader, type->getSubtypeCount());
+      verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
   }
 
