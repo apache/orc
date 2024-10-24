@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl.mask;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -135,7 +134,7 @@ public class RedactMaskFactory extends MaskFactory {
     OTHER_NUMBER_REPLACEMENT = getNextCodepoint(param, DEFAULT_NUMBER_OTHER);
     OTHER_REPLACEMENT = getNextCodepoint(param, DEFAULT_OTHER);
     String[] timeParams;
-    if (params.length < 2 || StringUtils.isBlank(params[1])) {
+    if (params.length < 2 || params[1].isBlank()) {
       timeParams = null;
     } else {
       timeParams = params[1].split("\\W+");
@@ -154,7 +153,7 @@ public class RedactMaskFactory extends MaskFactory {
         (SECOND_REPLACEMENT != UNMASKED_DATE);
 
     /* un-mask range */
-    if(!(params.length < 3 || StringUtils.isBlank(params[2]))) {
+    if(!(params.length < 3 || params[2].isBlank())) {
       String[] unmaskIndexes = params[2].split(",");
 
       for(int i=0; i < unmaskIndexes.length; i++ ) {

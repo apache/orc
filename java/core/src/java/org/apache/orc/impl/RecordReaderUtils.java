@@ -17,12 +17,12 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileRange;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
+import org.apache.hadoop.util.VersionInfo;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcProto;
@@ -48,7 +48,8 @@ import java.util.function.Supplier;
  */
 public class RecordReaderUtils {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
-  private static final boolean supportVectoredIO = SHIMS.supportVectoredIO();
+  private static final boolean supportVectoredIO =
+      SHIMS.supportVectoredIO(VersionInfo.getVersion());
   private static final Logger LOG = LoggerFactory.getLogger(RecordReaderUtils.class);
 
   private static class DefaultDataReader implements DataReader {
@@ -635,8 +636,8 @@ public class RecordReaderUtils {
 
       @Override
       public int hashCode() {
-        return new HashCodeBuilder().append(capacity).append(insertionGeneration)
-            .toHashCode();
+        // This is idential to the previous hashCode from HashCodeBuilder
+        return (17 * 37 + capacity) * 37 + (int) (insertionGeneration ^ insertionGeneration >> 32);
       }
     }
 

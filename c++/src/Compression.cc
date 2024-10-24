@@ -954,7 +954,7 @@ namespace orc {
     virtual uint64_t flush() override;
     virtual std::string getName() const override = 0;
     uint64_t getRawInputBufferSize() const override {
-      return rawInputBuffer.size();
+      return bufferSize;
     }
 
     virtual void finishStream() override;

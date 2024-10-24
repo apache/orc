@@ -48,6 +48,8 @@ the values that are required for the current query.</description>
         <created>2022-12-02</created>
         <revision>1.8.1</revision>
       </Version>
+    </release>
+    <release>
       <Version>
         <name>Stable release</name>
         <created>2022-11-17</created>

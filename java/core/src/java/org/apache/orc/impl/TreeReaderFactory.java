@@ -1551,7 +1551,6 @@ public class TreeReaderFactory {
       HiveDecimalWritable[] vector = result.vector;
       HiveDecimalWritable decWritable;
       if (result.noNulls) {
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           decWritable = vector[r];
           if (!decWritable.serializationUtilsRead(
@@ -1563,7 +1562,6 @@ public class TreeReaderFactory {
           setIsRepeatingIfNeeded(result, r);
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             decWritable = vector[r];
@@ -1595,7 +1593,6 @@ public class TreeReaderFactory {
       HiveDecimalWritable[] vector = result.vector;
       HiveDecimalWritable decWritable;
       if (result.noNulls) {
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); ++r) {
           int idx = filterContext.getSelected()[r];
@@ -1614,7 +1611,6 @@ public class TreeReaderFactory {
         }
         skipStreamRows(batchSize - previousIdx);
       } else if (!result.isRepeating || !result.isNull[0]) {
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); ++r) {
           int idx = filterContext.getSelected()[r];
@@ -1651,14 +1647,12 @@ public class TreeReaderFactory {
       // read the scales
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       if (result.noNulls) {
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
           result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
           setIsRepeatingIfNeeded(result, r);
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
-        result.isRepeating = true;
         for (int r = 0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
@@ -1686,7 +1680,6 @@ public class TreeReaderFactory {
       // Read all the scales
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       if (result.noNulls) {
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); r++) {
           int idx = filterContext.getSelected()[r];
@@ -1702,7 +1695,6 @@ public class TreeReaderFactory {
         }
         skipStreamRows(batchSize - previousIdx);
       } else if (!result.isRepeating || !result.isNull[0]) {
-        result.isRepeating = true;
         int previousIdx = 0;
         for (int r = 0; r != filterContext.getSelectedSize(); r++) {
           int idx = filterContext.getSelected()[r];

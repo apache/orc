@@ -434,4 +434,57 @@ namespace orc {
     testDictionaryMultipleStripes(DICT_THRESHOLD, false);
     testDictionaryMultipleStripes(FALLBACK_THRESHOLD, false);
   }
+
+  TEST(DictionaryEncoding, decodeDictionary) {
+    size_t rowCount = 8192;
+    size_t dictionarySize = 100;
+    auto* memoryPool = getDefaultPool();
+
+    auto encodedStringBatch = std::make_shared<EncodedStringVectorBatch>(rowCount, *memoryPool);
+    EXPECT_FALSE(encodedStringBatch->dictionaryDecoded);
+    encodedStringBatch->numElements = rowCount;
+    encodedStringBatch->hasNulls = true;
+    encodedStringBatch->isEncoded = true;
+    encodedStringBatch->dictionary = std::make_shared<StringDictionary>(*memoryPool);
+
+    auto& dictionary = *encodedStringBatch->dictionary;
+    dictionary.dictionaryBlob.resize(3 * dictionarySize);
+    dictionary.dictionaryOffset.resize(dictionarySize + 1);
+    dictionary.dictionaryOffset[0] = 0;
+    for (uint64_t i = 0; i < dictionarySize; ++i) {
+      std::ostringstream oss;
+      oss << std::setw(3) << std::setfill('0') << i;
+
+      auto str = oss.str();
+      memcpy(&dictionary.dictionaryBlob[3 * i], str.data(), str.size());
+      dictionary.dictionaryOffset[i + 1] = 3 * (i + 1);
+    }
+
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      if (i % 10 == 0) {
+        encodedStringBatch->notNull[i] = 0;
+        encodedStringBatch->index[i] = 0;
+      } else {
+        encodedStringBatch->notNull[i] = 1;
+        encodedStringBatch->index[i] = i % dictionarySize;
+      }
+    }
+
+    encodedStringBatch->decodeDictionary();
+    EXPECT_TRUE(encodedStringBatch->dictionaryDecoded);
+    EXPECT_EQ(0, encodedStringBatch->blob.size());
+
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      if (encodedStringBatch->notNull[i]) {
+        auto index = encodedStringBatch->index[i];
+        char* buf = nullptr;
+        int64_t buf_size = 0;
+        dictionary.getValueByIndex(index, buf, buf_size);
+
+        EXPECT_EQ(buf, encodedStringBatch->data[i]);
+        EXPECT_EQ(buf_size, encodedStringBatch->length[i]);
+      }
+    }
+  }
+
 }  // namespace orc

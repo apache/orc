@@ -477,11 +477,11 @@ namespace orc {
     uint64_t memoryBlockSize = 64;
 
     std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
-                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZSTD, *type,
+                     pool, &memStream, fileVersion, 1024, "GMT", true);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-    LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
+    ByteVectorBatch* byteBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[0]);
 
     int64_t sum = 0;
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -501,15 +501,16 @@ namespace orc {
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(rowCount);
+    rowReader->seekToRow(20);
     EXPECT_EQ(true, rowReader->next(*batch));
     if (enableAlignBlockBoundToRowGroup) {
       verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
     }
 
     structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-    byteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
-    for (uint64_t i = 0; i < rowCount; ++i) {
-      EXPECT_EQ(static_cast<int8_t>(i), static_cast<int8_t>(byteBatch->data[i]));
+    auto outByteBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
+    for (uint64_t i = 0; i < rowCount - 20; ++i) {
+      EXPECT_EQ(static_cast<int8_t>(i + 20), static_cast<int8_t>(outByteBatch->data[i]));
     }
 
     auto col_stats = reader->getColumnStatistics(1);

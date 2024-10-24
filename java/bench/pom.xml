@@ -33,15 +33,15 @@
   </modules>
 
   <properties>
-    <avro.version>1.11.3</avro.version>
+    <avro.version>1.12.0</avro.version>
     <hive.version>4.0.0</hive.version>
     <jmh.version>1.37</jmh.version>
-    <junit.version>5.10.3</junit.version>
+    <junit.version>5.11.2</junit.version>
     <orc.version>${project.version}</orc.version>
-    <parquet.version>1.13.1</parquet.version>
+    <parquet.version>1.14.3</parquet.version>
     <scala.binary.version>2.13</scala.binary.version>
     <scala.version>2.13.14</scala.version>
-    <spark.version>4.0.0-preview1</spark.version>
+    <spark.version>4.0.0-preview2</spark.version>
   </properties>
 
   <dependencyManagement>
@@ -73,7 +73,7 @@
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>2.2.4</version>
+        <version>2.9.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
@@ -82,12 +82,12 @@
       <dependency>
         <groupId>commons-cli</groupId>
         <artifactId>commons-cli</artifactId>
-        <version>1.8.0</version>
+        <version>1.9.0</version>
       </dependency>
       <dependency>
         <groupId>io.airlift</groupId>
         <artifactId>aircompressor</artifactId>
-        <version>0.27</version>
+        <version>2.0.2</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
@@ -108,7 +108,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.11.0</version>
+        <version>1.12.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -277,7 +277,7 @@
       <dependency>
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
-        <version>1.1.10.5</version>
+        <version>1.1.10.7</version>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
