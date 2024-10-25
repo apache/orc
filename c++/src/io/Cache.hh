@@ -62,87 +62,10 @@ namespace orc {
   };
 
   struct ReadRangeCombiner {
-    std::vector<ReadRange> coalesce(std::vector<ReadRange> ranges) const {
-      if (ranges.empty()) {
-        return ranges;
-      }
-
-      // Remove zero-sized ranges
-      auto end = std::remove_if(ranges.begin(), ranges.end(),
-                                [](const ReadRange& range) { return range.length == 0; });
-      // Sort in position order
-      std::sort(ranges.begin(), end, [](const ReadRange& a, const ReadRange& b) {
-        return a.offset != b.offset ? a.offset < b.offset : a.length > b.length;
-      });
-
-      // Remove ranges that overlap 100%
-      end = std::unique(ranges.begin(), end, [](const ReadRange& left, const ReadRange& right) {
-        return left.contains(right);
-      });
-      ranges.resize(end - ranges.begin());
-
-      // Skip further processing if ranges is empty after removing zero-sized ranges.
-      if (ranges.empty()) {
-        return ranges;
-      }
-
-#ifndef NDEBUG
-      for (size_t i = 0; i < ranges.size() - 1; ++i) {
-        const auto& left = ranges[i];
-        const auto& right = ranges[i + 1];
-        assert(left.offset < right.offset);
-        assert(!left.contains(right));
-      }
-#endif
-
-      std::vector<ReadRange> coalesced;
-
-      auto itr = ranges.begin();
-      // Ensure ranges is not empty.
-      assert(itr <= ranges.end());
-      // Start of the current coalesced range and end (exclusive) of previous range.
-      // Both are initialized with the start of first range which is a placeholder value.
-      uint64_t coalesced_start = itr->offset;
-      uint64_t prev_range_end = coalesced_start;
-
-      for (; itr < ranges.end(); ++itr) {
-        const uint64_t current_range_start = itr->offset;
-        const uint64_t current_range_end = current_range_start + itr->length;
-        // We don't expect to have 0 sized ranges.
-        assert(current_range_start < current_range_end);
-
-        // At this point, the coalesced range is [coalesced_start, prev_range_end).
-        // Stop coalescing if:
-        //   - coalesced range is too large, or
-        //   - distance (hole/gap) between consecutive ranges is too large.
-        if ((current_range_end - coalesced_start > rangeSizeLimit) ||
-            (current_range_start > prev_range_end + holeSizeLimit)) {
-          assert(coalesced_start <= prev_range_end);
-          // Append the coalesced range only if coalesced range size > 0.
-          if (prev_range_end > coalesced_start) {
-            coalesced.push_back({coalesced_start, prev_range_end - coalesced_start});
-          }
-          // Start a new coalesced range.
-          coalesced_start = current_range_start;
-        }
-
-        // Update the prev_range_end with the current range.
-        prev_range_end = current_range_end;
-      }
-
-      // Append the coalesced range only if coalesced range size > 0.
-      if (prev_range_end > coalesced_start) {
-        coalesced.push_back({coalesced_start, prev_range_end - coalesced_start});
-      }
-
-      assert(coalesced.front().offset == ranges.front().offset);
-      assert(coalesced.back().offset + coalesced.back().length ==
-             ranges.back().offset + ranges.back().length);
-      return coalesced;
-    }
-
     const uint64_t holeSizeLimit;
     const uint64_t rangeSizeLimit;
+
+    std::vector<ReadRange> coalesce(std::vector<ReadRange> ranges) const;
   };
 
   std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
@@ -186,15 +109,7 @@ namespace orc {
     void evictEntriesBefore(uint64_t boundary);
 
    private:
-    std::vector<RangeCacheEntry> makeCacheEntries(const std::vector<ReadRange>& ranges) {
-      std::vector<RangeCacheEntry> new_entries;
-      new_entries.reserve(ranges.size());
-      for (const auto& range : ranges) {
-        new_entries.emplace_back(range,
-                                 stream_->readAsync(range.offset, range.length, *memoryPool_));
-      }
-      return new_entries;
-    }
+    std::vector<RangeCacheEntry> makeCacheEntries(const std::vector<ReadRange>& ranges);
 
     InputStream* stream_;
     CacheOptions options_;
