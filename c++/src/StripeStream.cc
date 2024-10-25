@@ -17,9 +17,9 @@
  */
 
 #include "StripeStream.hh"
-#include "io/Cache.hh"
 #include "RLE.hh"
 #include "Reader.hh"
+#include "io/Cache.hh"
 #include "orc/Exceptions.hh"
 
 #include "wrap/coded-stream-wrapper.h"
