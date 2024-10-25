@@ -701,6 +701,10 @@ namespace orc {
       }
     }
 
+    // files written by trino may lack of hasnull field.
+    if (!colStats.has_hasnull())
+      return TruthValue::YES_NO_NULL;
+
     bool allNull = colStats.has_null() && colStats.number_of_values() == 0;
     if (operator_ == Operator::IS_NULL ||
         ((operator_ == Operator::EQUALS || operator_ == Operator::NULL_SAFE_EQUALS) &&
