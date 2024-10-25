@@ -64,15 +64,17 @@ namespace orc {
     auto itr = ranges.begin();
     // Ensure ranges is not empty.
     assert(itr <= ranges.end());
+
     // Start of the current coalesced range and end (exclusive) of previous range.
     // Both are initialized with the start of first range which is a placeholder value.
     uint64_t coalescedStart = itr->offset;
-    uint64_t prevRangeEnd = coalescedStart;
+    uint64_t coalescedEnd = coalescedStart + itr->length;
 
-    for (; itr < ranges.end(); ++itr) {
+    for (++itr; itr < ranges.end(); ++itr) {
       const uint64_t currentRangeStart = itr->offset;
       const uint64_t currentRangeEnd = currentRangeStart + itr->length;
-      // We don't expect to have 0 sized ranges.
+
+      assert(coalescedStart < coalescedEnd);
       assert(currentRangeStart < currentRangeEnd);
 
       // At this point, the coalesced range is [coalesced_start, prev_range_end).
@@ -80,24 +82,15 @@ namespace orc {
       //   - coalesced range is too large, or
       //   - distance (hole/gap) between consecutive ranges is too large.
       if ((currentRangeEnd - coalescedStart > rangeSizeLimit) ||
-          (currentRangeStart > prevRangeEnd + holeSizeLimit)) {
-        assert(coalescedStart <= prevRangeEnd);
-        // Append the coalesced range only if coalesced range size > 0.
-        if (prevRangeEnd > coalescedStart) {
-          coalesced.push_back({coalescedStart, prevRangeEnd - coalescedStart});
-        }
-        // Start a new coalesced range.
+          (currentRangeStart > coalescedEnd + holeSizeLimit)) {
+        coalesced.push_back({coalescedStart, coalescedEnd - coalescedStart});
         coalescedStart = currentRangeStart;
       }
 
       // Update the prev_range_end with the current range.
-      prevRangeEnd = currentRangeEnd;
+      coalescedEnd = currentRangeEnd;
     }
-
-    // Append the coalesced range only if coalesced range size > 0.
-    if (prevRangeEnd > coalescedStart) {
-      coalesced.push_back({coalescedStart, prevRangeEnd - coalescedStart});
-    }
+    coalesced.push_back({coalescedStart, coalescedEnd - coalescedStart});
 
     assert(coalesced.front().offset == ranges.front().offset);
     assert(coalesced.back().offset + coalesced.back().length ==
@@ -155,14 +148,14 @@ namespace orc {
     entries_.erase(entries_.begin(), it);
   }
 
-    std::vector<RangeCacheEntry> ReadRangeCache::makeCacheEntries(const std::vector<ReadRange>& ranges) {
-      std::vector<RangeCacheEntry> newEntries;
-      newEntries.reserve(ranges.size());
-      for (const auto& range : ranges) {
-        newEntries.emplace_back(range,
-                                 stream_->readAsync(range.offset, range.length, *memoryPool_));
-      }
-      return newEntries;
+  std::vector<RangeCacheEntry> ReadRangeCache::makeCacheEntries(
+      const std::vector<ReadRange>& ranges) {
+    std::vector<RangeCacheEntry> newEntries;
+    newEntries.reserve(ranges.size());
+    for (const auto& range : ranges) {
+      newEntries.emplace_back(range, stream_->readAsync(range.offset, range.length, *memoryPool_));
     }
+    return newEntries;
+  }
 
 }  // namespace orc

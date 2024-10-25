@@ -619,11 +619,6 @@ namespace orc {
     virtual InputStream* getStream() const = 0;
 
     /**
-     * Get the footer of the ORC file.
-     */
-    virtual const proto::Footer* getFooter() const = 0;
-
-    /**
      * Get the schema of the ORC file.
      */
     virtual const proto::Metadata* getMetadata() const = 0;

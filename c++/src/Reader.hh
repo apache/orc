@@ -25,10 +25,10 @@
 #include "orc/Reader.hh"
 
 #include "ColumnReader.hh"
-#include "io/Cache.hh"
 #include "RLE.hh"
 #include "SchemaEvolution.hh"
 #include "TypeImpl.hh"
+#include "io/Cache.hh"
 #include "sargs/SargsApplier.hh"
 
 namespace orc {
@@ -361,10 +361,6 @@ namespace orc {
 
     uint64_t getBlockSize() const {
       return contents_->blockSize;
-    }
-
-    const proto::Footer* getFooter() const override {
-      return contents_->footer.get();
     }
 
     const Type* getSchema() const {
