@@ -247,7 +247,7 @@ namespace orc {
   }
 
   RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& opts,
-                               std::shared_ptr<ReadRangeCache> cachedSource)
+                               std::shared_ptr<ReadRangeCache> readCache)
       : localTimezone_(getLocalTimezone()),
         contents_(contents),
         throwOnHive11DecimalOverflow_(opts.getThrowOnHive11DecimalOverflow()),
@@ -257,7 +257,7 @@ namespace orc {
         enableEncodedBlock_(opts.getEnableLazyDecoding()),
         readerTimezone_(getTimezoneByName(opts.getTimezoneName())),
         schemaEvolution_(opts.getReadType(), contents_->schema.get()),
-        cachedSource_(std::move(cachedSource)) {
+        readCache_(std::move(readCache)) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer_->stripes_size());
     currentStripe_ = numberOfStripes;
@@ -840,7 +840,7 @@ namespace orc {
       // load stripe statistics for PPD
       readMetadata();
     }
-    return std::make_unique<RowReaderImpl>(contents_, opts, cachedSource_);
+    return std::make_unique<RowReaderImpl>(contents_, opts, readCache_);
   }
 
   uint64_t maxStreamsForType(const proto::Type& type) {
@@ -1477,8 +1477,8 @@ namespace orc {
   }
 
   void ReaderImpl::releaseBuffer(uint64_t boundary) {
-    if (cachedSource_) {
-      cachedSource_->evictEntriesBefore(boundary);
+    if (readCache_) {
+      readCache_->evictEntriesBefore(boundary);
     }
   }
 
@@ -1540,10 +1540,10 @@ namespace orc {
         offset += stream.length();
       }
 
-      if (!cachedSource_)
-        cachedSource_ = std::make_shared<ReadRangeCache>(getStream(), options, contents_->pool);
+      if (!readCache_)
+        readCache_ = std::make_shared<ReadRangeCache>(getStream(), options, contents_->pool);
 
-      cachedSource_->cache(std::move(ranges));
+      readCache_->cache(std::move(ranges));
     }
   }
 

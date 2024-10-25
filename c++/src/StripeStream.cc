@@ -17,6 +17,7 @@
  */
 
 #include "StripeStream.hh"
+#include "io/Cache.hh"
 #include "RLE.hh"
 #include "Reader.hh"
 #include "orc/Exceptions.hh"
@@ -38,7 +39,7 @@ namespace orc {
         input_(input),
         writerTimezone_(writerTimezone),
         readerTimezone_(readerTimezone),
-        cachedSource(reader.getCachedSource()) {
+        readCache_(reader.getReadCache()) {
     // PASS
   }
 
@@ -101,9 +102,9 @@ namespace orc {
         }
 
         InputStream::BufferSlice slice;
-        if (cachedSource) {
+        if (readCache_) {
           ReadRange range{offset, streamLength};
-          slice = cachedSource->read(range);
+          slice = readCache_->read(range);
         }
 
         uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamLength;

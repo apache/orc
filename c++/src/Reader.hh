@@ -19,13 +19,13 @@
 #ifndef ORC_READER_IMPL_HH
 #define ORC_READER_IMPL_HH
 
-#include "io/Cache.hh"
 #include "orc/Exceptions.hh"
 #include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
 
 #include "ColumnReader.hh"
+#include "io/Cache.hh"
 #include "RLE.hh"
 #include "SchemaEvolution.hh"
 #include "TypeImpl.hh"
@@ -177,7 +177,7 @@ namespace orc {
     // match read and file types
     SchemaEvolution schemaEvolution_;
 
-    std::shared_ptr<ReadRangeCache> cachedSource_;
+    std::shared_ptr<ReadRangeCache> readCache_;
 
     // load stripe index if not done so
     void loadStripeIndex();
@@ -222,7 +222,7 @@ namespace orc {
      * @param options options for reading
      */
     RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& options,
-                  std::shared_ptr<ReadRangeCache> cachedSource = {});
+                  std::shared_ptr<ReadRangeCache> readCache = {});
 
     // Select the columns from the options object
     const std::vector<bool> getSelectedColumns() const override;
@@ -250,8 +250,8 @@ namespace orc {
       return &schemaEvolution_;
     }
 
-    std::shared_ptr<ReadRangeCache> getCachedSource() const {
-      return cachedSource_;
+    std::shared_ptr<ReadRangeCache> getReadCache() const {
+      return readCache_;
     }
   };
 
@@ -270,7 +270,7 @@ namespace orc {
     uint64_t numberOfStripes_;
 
     // cached io ranges. only valid when preBuffer is invoked.
-    std::shared_ptr<ReadRangeCache> cachedSource_;
+    std::shared_ptr<ReadRangeCache> readCache_;
     uint64_t getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns);
 
     // internal methods
