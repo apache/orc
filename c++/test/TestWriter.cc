@@ -91,8 +91,10 @@ namespace orc {
     for (uint64_t stripeIndex = 0; stripeIndex < stripeCount; ++stripeIndex) {
       for (uint64_t i = 0; i < columnCount; ++i) {
         auto rowGroupIndexMap = reader->getRowGroupIndex(stripeIndex);
+        EXPECT_TRUE(rowGroupIndexMap.size() > 0);
         auto rowGroupIndex = rowGroupIndexMap[columnCount];
         auto subType = reader->getType().getSubtype(i);
+        EXPECT_TRUE(rowGroupIndex.positions.size() > 0);
         for (auto rowGroupPositions : rowGroupIndex.positions) {
           for (uint64_t posIndex = 0; posIndex < rowGroupPositions.size(); ++posIndex) {
             // After we call finishStream(), unusedBufferSize is set to 0,

@@ -1491,7 +1491,7 @@ namespace orc {
       const proto::Stream& stream = currentStripeFooter.streams(i);
       uint32_t column = static_cast<uint32_t>(stream.column());
       uint64_t length = static_cast<uint64_t>(stream.length());
-      RowGroupIndex rowGroupIndex = ret[column];
+      RowGroupIndex& rowGroupIndex = ret[column];
 
       if (stream.kind() == proto::Stream_Kind_ROW_INDEX &&
           (included.empty() || included.find(column) != included.end())) {
@@ -1503,7 +1503,9 @@ namespace orc {
 
         proto::RowIndex pbRowIndex;
         if (!pbRowIndex.ParseFromZeroCopyStream(pbStream.get())) {
-          throw ParseError("Failed to parse RowIndex");
+          std::stringstream errMsgBuffer;
+          errMsgBuffer << "Failed to parse RowIndex at column " << column << " in stripe " << stripeIndex;
+          throw ParseError(errMsgBuffer.str());
         }
 
         // add rowGroupIndex to result for one column

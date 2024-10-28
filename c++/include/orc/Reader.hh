@@ -676,7 +676,6 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
-
   };
 }  // namespace orc
 
