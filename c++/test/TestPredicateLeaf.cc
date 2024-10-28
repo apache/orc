@@ -170,7 +170,7 @@ namespace orc {
 
   static proto::ColumnStatistics createIncompleteNullStats() {
     proto::ColumnStatistics colStats;
-    colStats.set_numberofvalues(0);
+    colStats.set_number_of_values(0);
     return colStats;
   }
 
