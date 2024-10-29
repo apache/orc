@@ -168,6 +168,12 @@ namespace orc {
     return colStats;
   }
 
+  static proto::ColumnStatistics createIncompleteNullStats() {
+    proto::ColumnStatistics colStats;
+    colStats.set_number_of_values(0);
+    return colStats;
+  }
+
   static TruthValue evaluate(const PredicateLeaf& pred, const proto::ColumnStatistics& pbStats,
                              const BloomFilter* bf = nullptr) {
     return pred.evaluate(WriterVersion_ORC_135, pbStats, bf);
@@ -661,6 +667,12 @@ namespace orc {
                         Literal(2114380800, 1000000));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred8, createTimestampStats(2114380800, 1109000, 2114380800, 6789100)));
+  }
+
+  TEST(TestPredicateLeaf, testLackOfSataistics) {
+    PredicateLeaf pred(PredicateLeaf::Operator::IS_NULL, PredicateDataType::STRING, 1, {});
+    EXPECT_EQ(TruthValue::YES_NO, evaluate(pred, createStringStats("c", "d", true)));
+    EXPECT_EQ(TruthValue::YES_NO_NULL, evaluate(pred, createIncompleteNullStats()));
   }
 
 }  // namespace orc
