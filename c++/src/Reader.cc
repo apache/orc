@@ -1504,7 +1504,8 @@ namespace orc {
         proto::RowIndex pbRowIndex;
         if (!pbRowIndex.ParseFromZeroCopyStream(pbStream.get())) {
           std::stringstream errMsgBuffer;
-          errMsgBuffer << "Failed to parse RowIndex at column " << column << " in stripe " << stripeIndex;
+          errMsgBuffer << "Failed to parse RowIndex at column " << column << " in stripe "
+                       << stripeIndex;
           throw ParseError(errMsgBuffer.str());
         }
 
@@ -1531,7 +1532,7 @@ namespace orc {
   }
 
   InputStream::~InputStream() {
-    // PASS
+      // PASS
   };
 
 }  // namespace orc

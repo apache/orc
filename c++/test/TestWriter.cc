@@ -480,7 +480,7 @@ namespace orc {
 
     std::unique_ptr<Writer> writer =
         createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZSTD, *type,
-                     pool, &memStream, fileVersion, 1024, "GMT", true);
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0, "GMT", true);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     ByteVectorBatch* byteBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[0]);
