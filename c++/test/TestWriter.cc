@@ -478,9 +478,9 @@ namespace orc {
     uint64_t rowCount = 65535;
     uint64_t memoryBlockSize = 64;
 
-    std::unique_ptr<Writer> writer =
-        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZSTD, *type,
-                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0, "GMT", true);
+    std::unique_ptr<Writer> writer = createWriter(
+        stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZSTD, *type, pool,
+        &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0, "GMT", true);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     ByteVectorBatch* byteBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[0]);
