@@ -30,6 +30,9 @@ github:
     - java
     - cpp
     - big-data
+  protected_tags:
+    - "rel/*"
+    - "v*.*.*"
 notifications:
   pullrequests: issues@orc.apache.org
   issues: issues@orc.apache.org
