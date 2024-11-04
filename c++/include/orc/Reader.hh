@@ -614,18 +614,18 @@ namespace orc {
         uint32_t stripeIndex, const std::set<uint32_t>& included) const = 0;
 
     /**
-     * Get the input stream for the ORC file.
+     * Trigger IO prefetch and cache the prefetched contents asynchronously.
+     * @param stripes the stripes to prefetch
+     * @param includeTypes the types to prefetch
+     * @param options the cache options for prefetched contents
      */
-    virtual InputStream* getStream() const = 0;
-
-    /**
-     * Get the schema of the ORC file.
-     */
-    virtual const proto::Metadata* getMetadata() const = 0;
-
     virtual void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
                            const CacheOptions& options) = 0;
 
+    /**
+     * Release cache entries whose boundary is less than the given value.
+     * @param boundary the boundary value to release cache entries
+     */
     virtual void releaseBuffer(uint64_t boundary) = 0;
   };
 

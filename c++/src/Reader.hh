@@ -367,12 +367,8 @@ namespace orc {
       return contents_->schema.get();
     }
 
-    InputStream* getStream() const override {
+    InputStream* getStream() const {
       return contents_->stream.get();
-    }
-
-    const proto::Metadata* getMetadata() const override {
-      return contents_->metadata.get();
     }
 
     uint64_t getMemoryUse(int stripeIx = -1) override;
