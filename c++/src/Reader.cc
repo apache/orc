@@ -1488,47 +1488,47 @@ namespace orc {
       return;
     }
 
-    orc::RowReaderOptions row_reader_options;
-    row_reader_options.includeTypes(includeTypes);
-    ColumnSelector column_selector(contents_.get());
-    std::vector<bool> selected_columns;
-    column_selector.updateSelected(selected_columns, row_reader_options);
+    orc::RowReaderOptions rowReaderOptions;
+    rowReaderOptions.includeTypes(includeTypes);
+    ColumnSelector columnSelector(contents_.get());
+    std::vector<bool> selectedColumns;
+    columnSelector.updateSelected(selectedColumns, rowReaderOptions);
 
     std::vector<ReadRange> ranges;
     ranges.reserve(includeTypes.size());
     for (auto stripe : stripes) {
       // get stripe information
-      const auto& stripe_info = footer_->stripes(stripe);
+      const auto& stripeInfo = footer_->stripes(stripe);
       uint64_t stripe_footer_start =
-          stripe_info.offset() + stripe_info.index_length() + stripe_info.data_length();
-      uint64_t stripe_footer_length = stripe_info.footer_length();
+          stripeInfo.offset() + stripeInfo.index_length() + stripeInfo.data_length();
+      uint64_t stripe_footer_length = stripeInfo.footer_length();
 
       // get stripe footer
-      std::unique_ptr<SeekableInputStream> pb_stream = createDecompressor(
+      std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
           contents_->compression,
           std::make_unique<SeekableFileInputStream>(contents_->stream.get(), stripe_footer_start,
                                                     stripe_footer_length, *contents_->pool),
           contents_->blockSize, *contents_->pool, contents_->readerMetrics);
-      proto::StripeFooter stripe_footer;
-      if (!stripe_footer.ParseFromZeroCopyStream(pb_stream.get())) {
-        throw ParseError(std::string("bad StripeFooter from ") + pb_stream->getName());
+      proto::StripeFooter stripeFooter;
+      if (!stripeFooter.ParseFromZeroCopyStream(pbStream.get())) {
+        throw ParseError(std::string("bad StripeFooter from ") + pbStream->getName());
       }
 
       // traverse all streams in stripe footer, choose selected streams to prebuffer
-      uint64_t offset = stripe_info.offset();
-      for (int i = 0; i < stripe_footer.streams_size(); i++) {
-        const proto::Stream& stream = stripe_footer.streams(i);
+      uint64_t offset = stripeInfo.offset();
+      for (int i = 0; i < stripeFooter.streams_size(); i++) {
+        const proto::Stream& stream = stripeFooter.streams(i);
         if (offset + stream.length() > stripe_footer_start) {
           std::stringstream msg;
           msg << "Malformed stream meta at stream index " << i << " in stripe " << stripe
               << ": streamOffset=" << offset << ", streamLength=" << stream.length()
-              << ", stripeOffset=" << stripe_info.offset()
-              << ", stripeIndexLength=" << stripe_info.index_length()
-              << ", stripeDataLength=" << stripe_info.data_length();
+              << ", stripeOffset=" << stripeInfo.offset()
+              << ", stripeIndexLength=" << stripeInfo.index_length()
+              << ", stripeDataLength=" << stripeInfo.data_length();
           throw ParseError(msg.str());
         }
 
-        if (stream.has_kind() && selected_columns[stream.column()]) {
+        if (stream.has_kind() && selectedColumns[stream.column()]) {
           const auto& kind = stream.kind();
           if (kind == proto::Stream_Kind_DATA || kind == proto::Stream_Kind_DICTIONARY_DATA ||
               kind == proto::Stream_Kind_PRESENT || kind == proto::Stream_Kind_LENGTH ||
