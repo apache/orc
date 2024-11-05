@@ -39,7 +39,7 @@ namespace orc {
   // classes that hold data members so we can maintain binary compatibility
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
-
+  class KeyProvider;
   /**
    * Expose the reader metrics including the latency and
    * number of calls of the decompression/decoding/IO modules.
@@ -138,6 +138,10 @@ namespace orc {
      * Get the reader metrics.
      */
     ReaderMetrics* getReaderMetrics() const;
+
+    ReaderOptions& setKeyProvider(std::shared_ptr<KeyProvider> keyProvider);
+
+    std::shared_ptr<KeyProvider> getKeyProvider() const;
   };
 
   /**

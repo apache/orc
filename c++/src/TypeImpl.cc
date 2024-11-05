@@ -837,5 +837,4 @@ namespace orc {
     }
     return nullptr;
   }
-
 }  // namespace orc
