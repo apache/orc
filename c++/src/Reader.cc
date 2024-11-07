@@ -1426,17 +1426,10 @@ namespace orc {
       uint32_t stripeIndex, const std::set<uint32_t>& included) const {
     std::map<uint32_t, BloomFilterIndex> ret;
 
-    // find stripe info
-    if (stripeIndex >= static_cast<uint32_t>(footer_->stripes_size())) {
-      throw std::logic_error("Illegal stripe index: " +
-                             to_string(static_cast<int64_t>(stripeIndex)));
-    }
-    const proto::StripeInformation currentStripeInfo =
-        footer_->stripes(static_cast<int>(stripeIndex));
-    const proto::StripeFooter currentStripeFooter = getStripeFooter(currentStripeInfo, *contents_);
+    uint64_t offset;
+    auto currentStripeFooter = loadCurrentStripeFooter(stripeIndex, offset);
 
     // iterate stripe footer to get stream of bloom_filter
-    uint64_t offset = static_cast<uint64_t>(currentStripeInfo.offset());
     for (int i = 0; i < currentStripeFooter.streams_size(); i++) {
       const proto::Stream& stream = currentStripeFooter.streams(i);
       uint32_t column = static_cast<uint32_t>(stream.column());
@@ -1471,6 +1464,62 @@ namespace orc {
       offset += length;
     }
 
+    return ret;
+  }
+
+  proto::StripeFooter ReaderImpl::loadCurrentStripeFooter(uint32_t stripeIndex,
+                                                          uint64_t& offset) const {
+    // find stripe info
+    if (stripeIndex >= static_cast<uint32_t>(footer_->stripes_size())) {
+      throw std::logic_error("Illegal stripe index: " +
+                             to_string(static_cast<int64_t>(stripeIndex)));
+    }
+    const proto::StripeInformation currentStripeInfo =
+        footer_->stripes(static_cast<int>(stripeIndex));
+    offset = static_cast<uint64_t>(currentStripeInfo.offset());
+    return getStripeFooter(currentStripeInfo, *contents_);
+  }
+
+  std::map<uint32_t, RowGroupIndex> ReaderImpl::getRowGroupIndex(
+      uint32_t stripeIndex, const std::set<uint32_t>& included) const {
+    std::map<uint32_t, RowGroupIndex> ret;
+    uint64_t offset;
+    auto currentStripeFooter = loadCurrentStripeFooter(stripeIndex, offset);
+
+    // iterate stripe footer to get stream of row_index
+    for (int i = 0; i < currentStripeFooter.streams_size(); i++) {
+      const proto::Stream& stream = currentStripeFooter.streams(i);
+      uint32_t column = static_cast<uint32_t>(stream.column());
+      uint64_t length = static_cast<uint64_t>(stream.length());
+      RowGroupIndex& rowGroupIndex = ret[column];
+
+      if (stream.kind() == proto::Stream_Kind_ROW_INDEX &&
+          (included.empty() || included.find(column) != included.end())) {
+        std::unique_ptr<SeekableInputStream> pbStream =
+            createDecompressor(contents_->compression,
+                               std::make_unique<SeekableFileInputStream>(
+                                   contents_->stream.get(), offset, length, *contents_->pool),
+                               contents_->blockSize, *(contents_->pool), contents_->readerMetrics);
+
+        proto::RowIndex pbRowIndex;
+        if (!pbRowIndex.ParseFromZeroCopyStream(pbStream.get())) {
+          std::stringstream errMsgBuffer;
+          errMsgBuffer << "Failed to parse RowIndex at column " << column << " in stripe "
+                       << stripeIndex;
+          throw ParseError(errMsgBuffer.str());
+        }
+
+        // add rowGroupIndex to result for one column
+        for (auto& rowIndexEntry : pbRowIndex.entry()) {
+          std::vector<uint64_t> posVector;
+          for (auto& position : rowIndexEntry.positions()) {
+            posVector.push_back(position);
+          }
+          rowGroupIndex.positions.push_back(posVector);
+        }
+      }
+      offset += length;
+    }
     return ret;
   }
 
