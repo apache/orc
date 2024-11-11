@@ -1548,15 +1548,15 @@ namespace orc {
     for (auto stripe : stripes) {
       // get stripe information
       const auto& stripeInfo = footer_->stripes(stripe);
-      uint64_t stripe_footer_start =
+      uint64_t stripeFooterStart =
           stripeInfo.offset() + stripeInfo.index_length() + stripeInfo.data_length();
-      uint64_t stripe_footer_length = stripeInfo.footer_length();
+      uint64_t stripeFooterLength = stripeInfo.footer_length();
 
       // get stripe footer
       std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
           contents_->compression,
-          std::make_unique<SeekableFileInputStream>(contents_->stream.get(), stripe_footer_start,
-                                                    stripe_footer_length, *contents_->pool),
+          std::make_unique<SeekableFileInputStream>(contents_->stream.get(), stripeFooterStart,
+                                                    stripeFooterLength, *contents_->pool),
           contents_->blockSize, *contents_->pool, contents_->readerMetrics);
       proto::StripeFooter stripeFooter;
       if (!stripeFooter.ParseFromZeroCopyStream(pbStream.get())) {
@@ -1567,7 +1567,7 @@ namespace orc {
       uint64_t offset = stripeInfo.offset();
       for (int i = 0; i < stripeFooter.streams_size(); i++) {
         const proto::Stream& stream = stripeFooter.streams(i);
-        if (offset + stream.length() > stripe_footer_start) {
+        if (offset + stream.length() > stripeFooterStart) {
           std::stringstream msg;
           msg << "Malformed stream meta at stream index " << i << " in stripe " << stripe
               << ": streamOffset=" << offset << ", streamLength=" << stream.length()

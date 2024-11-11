@@ -42,11 +42,6 @@ namespace orc {
   struct CacheOptions;
   class InputStream;
 
-  namespace proto {
-    class Footer;
-    class Metadata;
-  };  // namespace proto
-
   /**
    * Expose the reader metrics including the latency and
    * number of calls of the decompression/decoding/IO modules.
