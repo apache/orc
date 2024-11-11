@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -340,7 +339,14 @@ public class RecordReaderImpl implements RecordReader {
       this.startReadPhase = TypeReader.ReadPhase.ALL;
     }
 
-    this.rowIndexColsToRead = ArrayUtils.contains(rowIndexCols, true) ? rowIndexCols : null;
+    var hasTrue = false;
+    for (boolean value: rowIndexCols) {
+      if (value) {
+        hasTrue = true;
+        break;
+      }
+    }
+    this.rowIndexColsToRead = hasTrue ? rowIndexCols : null;
     TreeReaderFactory.ReaderContext readerContext =
         new TreeReaderFactory.ReaderContext()
           .setSchemaEvolution(evolution)

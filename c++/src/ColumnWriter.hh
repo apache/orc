@@ -179,6 +179,18 @@ namespace orc {
      */
     virtual void writeDictionary();
 
+    /**
+     * Finalize the encoding and compressing process. This function should be
+     * called after all data required for encoding has been added. It ensures
+     * that any remaining data is processed and the final state of the streams
+     * is set.
+     * Note: boolean type cannot cut off the current byte if it is not filled
+     * with 8 bits, otherwise Boolean RLE may incorrectly read the unfilled
+     * trailing bits. In this case, the last byte will be the head of the next
+     * compression block.
+     */
+    virtual void finishStreams();
+
    protected:
     /**
      * Utility function to translate ColumnStatistics into protobuf form and

@@ -176,6 +176,7 @@ namespace orc {
     }
     virtual void finishStream() override {
       compressInternal();
+      BufferedOutputStream::finishStream();
     }
 
    protected:
@@ -954,7 +955,7 @@ namespace orc {
     virtual uint64_t flush() override;
     virtual std::string getName() const override = 0;
     uint64_t getRawInputBufferSize() const override {
-      return rawInputBuffer.size();
+      return bufferSize;
     }
 
     virtual void finishStream() override;
@@ -982,13 +983,7 @@ namespace orc {
   }
 
   uint64_t BlockCompressionStream::flush() {
-    void* data;
-    int size;
-    if (!Next(&data, &size)) {
-      throw CompressionError("Failed to flush compression buffer.");
-    }
-    BufferedOutputStream::BackUp(outputSize - outputPosition);
-    bufferSize = outputSize = outputPosition = 0;
+    finishStream();
     return BufferedOutputStream::flush();
   }
 
@@ -1031,7 +1026,13 @@ namespace orc {
   }
 
   void BlockCompressionStream::finishStream() {
-    doBlockCompression();
+    void* data;
+    int size;
+    if (!Next(&data, &size)) {
+      throw CompressionError("Failed to flush compression buffer.");
+    }
+    BufferedOutputStream::BackUp(outputSize - outputPosition);
+    bufferSize = outputSize = outputPosition = 0;
   }
 
   /**

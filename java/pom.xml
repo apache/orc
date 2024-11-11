@@ -60,16 +60,16 @@
   </modules>
 
   <properties>
-    <bouncycastle.version>1.78.1</bouncycastle.version>
+    <bouncycastle.version>1.79</bouncycastle.version>
     <brotli4j.version>1.17.0</brotli4j.version>
-    <checkstyle.version>10.18.1</checkstyle.version>
+    <checkstyle.version>10.20.0</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
-    <hadoop.version>3.4.0</hadoop.version>
+    <hadoop.version>3.4.1</hadoop.version>
     <java.version>17</java.version>
     <javadoc.location>${project.basedir}/../target/javadoc</javadoc.location>
-    <junit.version>5.11.0</junit.version>
+    <junit.version>5.11.3</junit.version>
     <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
-    <maven-dependency-plugin.version>3.8.0</maven-dependency-plugin.version>
+    <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
@@ -395,7 +395,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.8.6.4</version>
+          <version>4.8.6.5</version>
           <configuration>
             <includeFilterFile>spotbugs-include.xml</includeFilterFile>
             <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
@@ -450,7 +450,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.0</version>
           <configuration>
             <sourceDirectories>
               <directory>${basedir}/src/java</directory>

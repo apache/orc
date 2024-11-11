@@ -276,10 +276,10 @@ namespace orc {
     // internal methods
     void readMetadata() const;
     void checkOrcVersion();
-    void getRowIndexStatistics(
-        const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
-        const proto::StripeFooter& currentStripeFooter,
-        std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
+    void getRowIndexStatistics(const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
+                               const proto::StripeFooter& currentStripeFooter,
+                               std::vector<std::vector<proto::ColumnStatistics>>* indexStats) const;
+    proto::StripeFooter loadCurrentStripeFooter(uint32_t stripeIndex, uint64_t& offset) const;
 
     // metadata
     mutable bool isMetadataLoaded_;
@@ -385,6 +385,9 @@ namespace orc {
     void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
                    const CacheOptions& options) override;
     void releaseBuffer(uint64_t boundary) override;
+
+    std::map<uint32_t, RowGroupIndex> getRowGroupIndex(
+        uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
   };
 }  // namespace orc
 
