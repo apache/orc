@@ -101,7 +101,7 @@ namespace orc {
           throw ParseError(msg.str());
         }
 
-        InputStream::BufferSlice slice;
+        ReadRangeCache::BufferSlice slice;
         if (readCache_) {
           ReadRange range{offset, streamLength};
           slice = readCache_->read(range);
