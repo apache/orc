@@ -121,9 +121,9 @@ namespace orc {
     }
   }
 
-  InputStream::BufferSlice ReadRangeCache::read(const ReadRange& range) {
+  ReadRangeCache::BufferSlice ReadRangeCache::read(const ReadRange& range) {
     if (range.length == 0) {
-      return {std::make_shared<InputStream::Buffer>(*memoryPool_, 0), 0, 0};
+      return {std::make_shared<Buffer>(*memoryPool_, 0), 0, 0};
     }
 
     const auto it = std::lower_bound(entries_.begin(), entries_.end(), range,
@@ -137,7 +137,7 @@ namespace orc {
     }
 
     auto buffer = it->future.get();
-    return InputStream::BufferSlice{buffer, range.offset - it->range.offset, range.length};
+    return BufferSlice{buffer, range.offset - it->range.offset, range.length};
   }
 
   void ReadRangeCache::evictEntriesBefore(uint64_t boundary) {

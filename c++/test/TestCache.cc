@@ -93,13 +93,13 @@ namespace orc {
     cache.cache({{1, 2}, {3, 2}, {8, 2}, {20, 2}, {25, 0}});
     cache.cache({{10, 4}, {14, 0}, {15, 4}});
 
-    auto assert_slice_equal = [](const InputStream::BufferSlice& slice,
+    auto assert_slice_equal = [](const ReadRangeCache::BufferSlice& slice,
                                  const std::string& expected) {
       ASSERT_TRUE(slice.buffer);
       ASSERT_EQ(expected, std::string_view(slice.buffer->data() + slice.offset, slice.length));
     };
 
-    InputStream::BufferSlice slice;
+    ReadRangeCache::BufferSlice slice;
 
     slice = cache.read({20, 2});
     assert_slice_equal(slice, "uv");

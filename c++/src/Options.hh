@@ -24,6 +24,7 @@
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
 
+#include <iostream>
 #include <limits>
 
 namespace orc {

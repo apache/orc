@@ -90,6 +90,20 @@ namespace orc {
   /// A read cache designed to hide IO latencies when reading.
   class ReadRangeCache {
    public:
+    using Buffer = InputStream::Buffer;
+    using BufferPtr = InputStream::BufferPtr;
+
+    struct BufferSlice {
+      BufferSlice() : buffer(nullptr), offset(0), length(0) {}
+
+      BufferSlice(BufferPtr buffer, uint64_t offset, uint64_t length)
+          : buffer(std::move(buffer)), offset(offset), length(length) {}
+
+      BufferPtr buffer;
+      uint64_t offset;
+      uint64_t length;
+    };
+
     /// Construct a read cache with given options
     explicit ReadRangeCache(InputStream* stream, CacheOptions options, MemoryPool* memoryPool)
         : stream_(stream), options_(std::move(options)), memoryPool_(memoryPool) {}
@@ -103,7 +117,7 @@ namespace orc {
     void cache(std::vector<ReadRange> ranges);
 
     /// Read a range previously given to Cache().
-    InputStream::BufferSlice read(const ReadRange& range);
+    BufferSlice read(const ReadRange& range);
 
     /// Evict cache entries with its range before given boundary.
     void evictEntriesBefore(uint64_t boundary);

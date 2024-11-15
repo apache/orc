@@ -40,17 +40,6 @@ namespace orc {
     using Buffer = DataBuffer<char>;
     using BufferPtr = std::shared_ptr<Buffer>;
 
-    struct BufferSlice {
-      BufferSlice() : buffer(nullptr), offset(0), length(0) {}
-
-      BufferSlice(BufferPtr buffer, uint64_t offset, uint64_t length)
-          : buffer(std::move(buffer)), offset(offset), length(length) {}
-
-      BufferPtr buffer;
-      uint64_t offset;
-      uint64_t length;
-    };
-
     virtual ~InputStream();
 
     /**
