@@ -19,6 +19,7 @@
 #ifndef ORC_OPTIONS_HH
 #define ORC_OPTIONS_HH
 
+#include "io/Cache.hh"
 #include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
@@ -43,6 +44,7 @@ namespace orc {
     MemoryPool* memoryPool;
     std::string serializedTail;
     ReaderMetrics* metrics;
+    CacheOptions cacheOptions;
 
     ReaderOptionsPrivate() {
       tailLocation = std::numeric_limits<uint64_t>::max();
@@ -120,6 +122,15 @@ namespace orc {
 
   std::ostream* ReaderOptions::getErrorStream() const {
     return privateBits_->errorStream;
+  }
+
+  ReaderOptions& ReaderOptions::setCacheOptions(const CacheOptions& cacheOptions) {
+    privateBits_->cacheOptions = cacheOptions;
+    return *this;
+  }
+
+  const CacheOptions& ReaderOptions::getCacheOptions() const {
+    return privateBits_->cacheOptions;
   }
 
   /**

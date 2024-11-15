@@ -1532,7 +1532,7 @@ namespace orc {
   }
 
   void ReaderImpl::preBuffer(const std::vector<int>& stripes,
-                             const std::list<uint64_t>& includeTypes, const CacheOptions& options) {
+                             const std::list<uint64_t>& includeTypes) {
     if (stripes.empty() || includeTypes.empty()) {
       return;
     }
@@ -1590,7 +1590,8 @@ namespace orc {
       }
 
       if (!readCache_)
-        readCache_ = std::make_shared<ReadRangeCache>(getStream(), options, contents_->pool);
+        readCache_ = std::make_shared<ReadRangeCache>(getStream(), options_.getCacheOptions(),
+                                                      contents_->pool);
 
       readCache_->cache(std::move(ranges));
     }

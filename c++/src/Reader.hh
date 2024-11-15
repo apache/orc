@@ -382,8 +382,8 @@ namespace orc {
     std::map<uint32_t, BloomFilterIndex> getBloomFilters(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
 
-    void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
-                   const CacheOptions& options) override;
+    void preBuffer(const std::vector<int>& stripes,
+                   const std::list<uint64_t>& includeTypes) override;
     void releaseBuffer(uint64_t boundary) override;
 
     std::map<uint32_t, RowGroupIndex> getRowGroupIndex(

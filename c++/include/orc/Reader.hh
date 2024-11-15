@@ -119,6 +119,11 @@ namespace orc {
     ReaderOptions& setReaderMetrics(ReaderMetrics* metrics);
 
     /**
+     * Set the cache options.
+     */
+    ReaderOptions& setCacheOptions(const CacheOptions& cacheOptions);
+
+    /**
      * Set the location of the tail as defined by the logical length of the
      * file.
      */
@@ -149,6 +154,11 @@ namespace orc {
      * Get the reader metrics.
      */
     ReaderMetrics* getReaderMetrics() const;
+
+    /**
+     * Set the cache options.
+     */
+    const CacheOptions& getCacheOptions() const;
   };
 
   /**
@@ -633,8 +643,8 @@ namespace orc {
      * @param includeTypes the types to prefetch
      * @param options the cache options for prefetched contents
      */
-    virtual void preBuffer(const std::vector<int>& stripes, const std::list<uint64_t>& includeTypes,
-                           const CacheOptions& options) = 0;
+    virtual void preBuffer(const std::vector<int>& stripes,
+                           const std::list<uint64_t>& includeTypes) = 0;
 
     /**
      * Release cache entries whose boundary is less than the given value.

@@ -111,7 +111,7 @@ namespace orc {
     for (size_t i = 0; i < num_stripes; ++i) {
       stripes.push_back(i);
     }
-    reader->preBuffer(stripes, {0}, {});
+    reader->preBuffer(stripes, {0});
   }
 
   void CheckFileWithSargs(const char* fileName, const char* softwareVersion) {
