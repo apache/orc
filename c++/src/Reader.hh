@@ -271,6 +271,10 @@ namespace orc {
 
     // cached io ranges. only valid when preBuffer is invoked.
     std::shared_ptr<ReadRangeCache> readCache_;
+
+    // mutex to protect readCache_ from concurrent access
+    std::mutex readCacheMutex_;
+
     uint64_t getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns);
 
     // internal methods

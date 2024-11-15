@@ -1526,6 +1526,8 @@ namespace orc {
   }
 
   void ReaderImpl::releaseBuffer(uint64_t boundary) {
+    std::lock_guard<std::mutex> lock(readCacheMutex_);
+
     if (readCache_) {
       readCache_->evictEntriesBefore(boundary);
     }
@@ -1589,11 +1591,15 @@ namespace orc {
         offset += stream.length();
       }
 
-      if (!readCache_)
-        readCache_ = std::make_shared<ReadRangeCache>(getStream(), options_.getCacheOptions(),
-                                                      contents_->pool);
+      {
+        std::lock_guard<std::mutex> lock(readCacheMutex_);
 
-      readCache_->cache(std::move(ranges));
+        if (!readCache_)
+          readCache_ = std::make_shared<ReadRangeCache>(getStream(), options_.getCacheOptions(),
+                                                        contents_->pool);
+
+        readCache_->cache(std::move(ranges));
+      }
     }
   }
 
