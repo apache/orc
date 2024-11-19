@@ -153,7 +153,8 @@ namespace orc {
     std::vector<RangeCacheEntry> newEntries;
     newEntries.reserve(ranges.size());
     for (const auto& range : ranges) {
-      newEntries.emplace_back(range, stream_->readAsync(range.offset, range.length, *memoryPool_));
+      newEntries.emplace_back(range,
+                              stream_->readAsyncInternal(range.offset, range.length, *memoryPool_));
     }
     return newEntries;
   }

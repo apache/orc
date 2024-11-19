@@ -63,20 +63,37 @@ namespace orc {
     virtual void read(void* buf, uint64_t length, uint64_t offset) = 0;
 
     /**
-     * Read data asynchronously.
-     * @param offset the position in the stream to read from.
+     * Read data asynchronously into the buffer. The buffer is allocated by the caller.
+     * @param buf the buffer to read into
      * @param length the number of bytes to read.
-     * @return a future that will be set to the buffer when the read is complete.
+     * @param offset the position in the stream to read from.
+     * @return a future that will be set to the number of bytes read when the read is complete.
      */
-    virtual std::future<BufferPtr> readAsync(uint64_t /*offset*/, uint64_t /*length*/,
-                                             MemoryPool& /*pool*/) {
-      throw NotImplementedYet("readAsync not supported yet");
+    virtual std::future<void> readAsync(void* buf, uint64_t length, uint64_t offset) {
+      return std::async(std::launch::async,
+                        [this, buf, length, offset] { this->read(buf, length, offset); });
     }
 
     /**
      * Get the name of the stream for error messages.
      */
     virtual const std::string& getName() const = 0;
+
+   protected:
+    friend class ReadRangeCache;
+
+    /**
+     * Read data asynchronously. The buffer is allocated in the implementation.
+     * It is called internally by [[ReadRangeCache]]. User should override this method if they want
+     * to implement async io prefetch while reading orc files.
+     * @param offset the position in the stream to read from.
+     * @param length the number of bytes to read.
+     * @return a future that will be set to the buffer when the read is complete.
+     */
+    virtual std::future<BufferPtr> readAsyncInternal(uint64_t /*offset*/, uint64_t /*length*/,
+                                                     MemoryPool& /*pool*/) {
+      throw NotImplementedYet("readAsync not supported yet");
+    }
   };
 
   /**
