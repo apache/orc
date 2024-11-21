@@ -31,17 +31,6 @@
 namespace orc {
   class InputStream;
 
-  struct CacheOptions {
-    /// The maximum distance in bytes between two consecutive
-    /// ranges; beyond this value, ranges are not combined
-    uint64_t holeSizeLimit = 8192;
-
-    /// The maximum size in bytes of a combined range; if
-    /// combining two consecutive ranges would produce a range of a
-    /// size greater than this, they are not combined
-    uint64_t rangeSizeLimit = 32 * 1024 * 1024;
-  };
-
   struct ReadRange {
     uint64_t offset;
     uint64_t length;
@@ -106,8 +95,12 @@ namespace orc {
     };
 
     /// Construct a read cache with given options
-    explicit ReadRangeCache(InputStream* stream, CacheOptions options, MemoryPool* memoryPool)
-        : stream_(stream), options_(std::move(options)), memoryPool_(memoryPool) {}
+    explicit ReadRangeCache(InputStream* stream, CacheOptions options, MemoryPool* memoryPool,
+                            ReaderMetrics* metrics = nullptr)
+        : stream_(stream),
+          options_(std::move(options)),
+          memoryPool_(memoryPool),
+          metrics_(metrics) {}
 
     ~ReadRangeCache() = default;
 
@@ -133,6 +126,8 @@ namespace orc {
     std::vector<RangeCacheEntry> entries_;
 
     MemoryPool* memoryPool_;
+
+    ReaderMetrics* metrics_;
   };
 
 }  // namespace orc

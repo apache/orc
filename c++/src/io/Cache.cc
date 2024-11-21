@@ -113,11 +113,6 @@ namespace orc {
     // Add new entries, themselves ordered by offset
     if (entries_.size() > 0) {
       std::vector<RangeCacheEntry> merged(entries_.size() + newEntries.size());
-      /*
-      std::merge(std::make_move_iterator(entries_.begin()), std::make_move_iterator(entries_.end()),
-                 std::make_move_iterator(newEntries.begin()),
-                 std::make_move_iterator(newEntries.end()), merged.begin());
-      */
       std::merge(entries_.begin(), entries_.end(), newEntries.begin(), newEntries.end(),
                  merged.begin());
       entries_ = std::move(merged);
@@ -137,12 +132,21 @@ namespace orc {
                                               range.offset + range.length;
                                      });
 
-    if (it == entries_.end() || !it->range.contains(range)) {
-      return {};
+    BufferSlice result{};
+    bool hit_cache = false;
+    if (it != entries_.end() && it->range.contains(range)) {
+      hit_cache = it->future.valid();
+      it->future.get();
+      result = BufferSlice{it->buffer, range.offset - it->range.offset, range.length};
     }
 
-    it->future.get();
-    return BufferSlice{it->buffer, range.offset - it->range.offset, range.length};
+    if (metrics_) {
+      if (hit_cache)
+        metrics_->ReadRangeCacheHits.fetch_add(1);
+      else
+        metrics_->ReadRangeCacheMisses.fetch_add(1);
+    }
+    return result;
   }
 
   void ReadRangeCache::evictEntriesBefore(uint64_t boundary) {

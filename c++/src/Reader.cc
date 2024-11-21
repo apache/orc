@@ -1596,7 +1596,7 @@ namespace orc {
 
         if (!readCache_)
           readCache_ = std::make_shared<ReadRangeCache>(getStream(), options_.getCacheOptions(),
-                                                        contents_->pool);
+                                                        contents_->pool, contents_->readerMetrics);
 
         readCache_->cache(std::move(ranges));
       }

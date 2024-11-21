@@ -39,7 +39,17 @@ namespace orc {
   // classes that hold data members so we can maintain binary compatibility
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
-  struct CacheOptions;
+
+  struct CacheOptions {
+    /// The maximum distance in bytes between two consecutive
+    /// ranges; beyond this value, ranges are not combined
+    uint64_t holeSizeLimit = 8192;
+
+    /// The maximum size in bytes of a combined range; if
+    /// combining two consecutive ranges would produce a range of a
+    /// size greater than this, they are not combined
+    uint64_t rangeSizeLimit = 32 * 1024 * 1024;
+  };
 
   /**
    * Expose the reader metrics including the latency and
@@ -60,6 +70,8 @@ namespace orc {
     std::atomic<uint64_t> IOBlockingLatencyUs{0};
     std::atomic<uint64_t> SelectedRowGroupCount{0};
     std::atomic<uint64_t> EvaluatedRowGroupCount{0};
+    std::atomic<uint64_t> ReadRangeCacheHits{0};
+    std::atomic<uint64_t> ReadRangeCacheMisses{0};
   };
   ReaderMetrics* getDefaultReaderMetrics();
 
