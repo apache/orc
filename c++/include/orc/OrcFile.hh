@@ -64,7 +64,7 @@ namespace orc {
      * @param buf the buffer to read into
      * @param length the number of bytes to read.
      * @param offset the position in the stream to read from.
-     * @return a future that will be set to the number of bytes read when the read is complete.
+     * @return a future that will be set when the read is complete.
      */
     virtual std::future<void> readAsync(void* buf, uint64_t length, uint64_t offset) {
       return std::async(std::launch::async,
