@@ -78,9 +78,6 @@ namespace orc {
      * Get the name of the stream for error messages.
      */
     virtual const std::string& getName() const = 0;
-
-   protected:
-    friend class ReadRangeCache;
   };
 
   /**
