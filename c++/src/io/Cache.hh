@@ -29,7 +29,6 @@
 #include <vector>
 
 namespace orc {
-  class InputStream;
 
   struct ReadRange {
     uint64_t offset;
