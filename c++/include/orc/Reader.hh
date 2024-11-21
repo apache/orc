@@ -40,7 +40,6 @@ namespace orc {
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
   struct CacheOptions;
-  class InputStream;
 
   /**
    * Expose the reader metrics including the latency and

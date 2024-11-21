@@ -42,15 +42,6 @@ namespace orc {
       memcpy(buf, buffer_ + offset, length);
     }
 
-    std::future<BufferPtr> readAsyncInternal(uint64_t offset, uint64_t length,
-                                             MemoryPool& pool) override {
-      return std::async(std::launch::async, [this, offset, length, &pool] {
-        auto buffer = std::make_shared<Buffer>(pool, length);
-        this->read(buffer->data(), length, offset);
-        return buffer;
-      });
-    }
-
     std::future<void> readAsync(void* buf, uint64_t length, uint64_t offset) override {
       return std::async(std::launch::async,
                         [this, buf, length, offset] { this->read(buf, length, offset); });

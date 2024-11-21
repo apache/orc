@@ -81,19 +81,6 @@ namespace orc {
 
    protected:
     friend class ReadRangeCache;
-
-    /**
-     * Read data asynchronously. The buffer is allocated in the implementation.
-     * It is called internally by [[ReadRangeCache]]. User should override this method if they want
-     * to implement async io prefetch while reading orc files.
-     * @param offset the position in the stream to read from.
-     * @param length the number of bytes to read.
-     * @return a future that will be set to the buffer when the read is complete.
-     */
-    virtual std::future<BufferPtr> readAsyncInternal(uint64_t /*offset*/, uint64_t /*length*/,
-                                                     MemoryPool& /*pool*/) {
-      throw NotImplementedYet("readAsync not supported yet");
-    }
   };
 
   /**

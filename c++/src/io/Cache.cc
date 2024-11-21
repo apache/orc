@@ -113,6 +113,11 @@ namespace orc {
     // Add new entries, themselves ordered by offset
     if (entries_.size() > 0) {
       std::vector<RangeCacheEntry> merged(entries_.size() + newEntries.size());
+      /*
+      std::merge(std::make_move_iterator(entries_.begin()), std::make_move_iterator(entries_.end()),
+                 std::make_move_iterator(newEntries.begin()),
+                 std::make_move_iterator(newEntries.end()), merged.begin());
+      */
       std::merge(entries_.begin(), entries_.end(), newEntries.begin(), newEntries.end(),
                  merged.begin());
       entries_ = std::move(merged);
@@ -136,8 +141,8 @@ namespace orc {
       return {};
     }
 
-    auto buffer = it->future.get();
-    return BufferSlice{buffer, range.offset - it->range.offset, range.length};
+    it->future.get();
+    return BufferSlice{it->buffer, range.offset - it->range.offset, range.length};
   }
 
   void ReadRangeCache::evictEntriesBefore(uint64_t boundary) {
@@ -153,8 +158,9 @@ namespace orc {
     std::vector<RangeCacheEntry> newEntries;
     newEntries.reserve(ranges.size());
     for (const auto& range : ranges) {
-      newEntries.emplace_back(range,
-                              stream_->readAsyncInternal(range.offset, range.length, *memoryPool_));
+      BufferPtr buffer = std::make_shared<Buffer>(*memoryPool_, range.length);
+      std::future<void> future = stream_->readAsync(buffer->data(), buffer->size(), range.offset);
+      newEntries.emplace_back(range, std::move(buffer), std::move(future));
     }
     return newEntries;
   }

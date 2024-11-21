@@ -15,6 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+add_compile_options(-fsanitize=address)
+add_link_options(-fsanitize=address)
+
 add_subdirectory(include)
 add_subdirectory(src)
 

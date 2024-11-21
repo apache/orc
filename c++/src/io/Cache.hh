@@ -76,11 +76,12 @@ namespace orc {
     ReadRange range;
 
     // The result may be get multiple times, so we use shared_future instead of std::future
-    std::shared_future<BufferPtr> future;
+    BufferPtr buffer;
+    std::shared_future<void> future;
 
     RangeCacheEntry() = default;
-    RangeCacheEntry(const ReadRange& range, std::future<BufferPtr> future)
-        : range(range), future(std::move(future).share()) {}
+    RangeCacheEntry(const ReadRange& range, BufferPtr buffer, std::future<void> future)
+        : range(range), buffer(std::move(buffer)), future(std::move(future).share()) {}
 
     friend bool operator<(const RangeCacheEntry& left, const RangeCacheEntry& right) {
       return left.range.offset < right.range.offset;

@@ -367,6 +367,10 @@ namespace orc {
       return contents_->blockSize;
     }
 
+    const proto::Footer* getFooter() const {
+      return contents_->footer.get();
+    }
+
     const Type* getSchema() const {
       return contents_->schema.get();
     }
