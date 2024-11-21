@@ -37,9 +37,6 @@ namespace orc {
    */
   class InputStream {
    public:
-    using Buffer = DataBuffer<char>;
-    using BufferPtr = std::shared_ptr<Buffer>;
-
     virtual ~InputStream();
 
     /**
