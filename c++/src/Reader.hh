@@ -25,8 +25,9 @@
 #include "orc/Reader.hh"
 
 #include "ColumnReader.hh"
-#include "io/Cache.hh"
 #include "RLE.hh"
+#include "io/Cache.hh"
+
 #include "SchemaEvolution.hh"
 #include "TypeImpl.hh"
 #include "sargs/SargsApplier.hh"
