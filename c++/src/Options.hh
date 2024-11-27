@@ -25,7 +25,6 @@
 
 #include "io/Cache.hh"
 
-#include <iostream>
 #include <limits>
 
 namespace orc {
