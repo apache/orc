@@ -55,13 +55,15 @@ namespace orc {
 
     std::vector<ReadRange> coalesce(std::vector<ReadRange> ranges) const;
 
-    static std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
-                                              uint64_t rangeSizeLimit);
+    static std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges,
+                                                     uint64_t holeSizeLimit,
+                                                     uint64_t rangeSizeLimit);
   };
 
-  struct RangeCacheEntry {
-    using BufferPtr = InputStream::BufferPtr;
+  using Buffer = DataBuffer<char>;
+  using BufferPtr = std::shared_ptr<Buffer>;
 
+  struct RangeCacheEntry {
     ReadRange range;
 
     // The result may be get multiple times, so we use shared_future instead of std::future
@@ -78,9 +80,6 @@ namespace orc {
   };
 
   struct BufferSlice {
-    using Buffer = InputStream::Buffer;
-    using BufferPtr = InputStream::BufferPtr;
-
     BufferSlice() : buffer(nullptr), offset(0), length(0) {}
 
     BufferSlice(BufferPtr buffer, uint64_t offset, uint64_t length)

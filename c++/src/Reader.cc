@@ -246,8 +246,7 @@ namespace orc {
     buildTypeNameIdMap(contents_->schema.get());
   }
 
-  RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& opts,
-                               std::shared_ptr<ReadRangeCache> readCache)
+  RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& opts)
       : localTimezone_(getLocalTimezone()),
         contents_(contents),
         throwOnHive11DecimalOverflow_(opts.getThrowOnHive11DecimalOverflow()),
@@ -256,8 +255,7 @@ namespace orc {
         firstRowOfStripe_(*contents_->pool, 0),
         enableEncodedBlock_(opts.getEnableLazyDecoding()),
         readerTimezone_(getTimezoneByName(opts.getTimezoneName())),
-        schemaEvolution_(opts.getReadType(), contents_->schema.get()),
-        readCache_(std::move(readCache)) {
+        schemaEvolution_(opts.getReadType(), contents_->schema.get()) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer_->stripes_size());
     currentStripe_ = numberOfStripes;
@@ -840,7 +838,7 @@ namespace orc {
       // load stripe statistics for PPD
       readMetadata();
     }
-    return std::make_unique<RowReaderImpl>(contents_, opts, readCache_);
+    return std::make_unique<RowReaderImpl>(contents_, opts);
   }
 
   uint64_t maxStreamsForType(const proto::Type& type) {
@@ -1526,10 +1524,10 @@ namespace orc {
   }
 
   void ReaderImpl::releaseBuffer(uint64_t boundary) {
-    std::lock_guard<std::mutex> lock(readCacheMutex_);
+    std::lock_guard<std::mutex> lock(contents_->readCacheMutex);
 
-    if (readCache_) {
-      readCache_->evictEntriesBefore(boundary);
+    if (contents_->readCache) {
+      contents_->readCache->evictEntriesBefore(boundary);
     }
   }
 
@@ -1592,13 +1590,13 @@ namespace orc {
       }
 
       {
-        std::lock_guard<std::mutex> lock(readCacheMutex_);
+        std::lock_guard<std::mutex> lock(contents_->readCacheMutex);
 
-        if (!readCache_)
-          readCache_ = std::make_shared<ReadRangeCache>(getStream(), options_.getCacheOptions(),
-                                                        contents_->pool, contents_->readerMetrics);
-
-        readCache_->cache(std::move(ranges));
+        if (!contents_->readCache) {
+          contents_->readCache = std::make_shared<ReadRangeCache>(
+              getStream(), options_.getCacheOptions(), contents_->pool, contents_->readerMetrics);
+        }
+        contents_->readCache->cache(std::move(ranges));
       }
     }
   }

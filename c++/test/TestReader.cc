@@ -105,13 +105,25 @@ namespace orc {
                                                         nextSkippedRows));
   }
 
-  void prefetchAllStripes(Reader* reader) {
+  void prefetchStripesAndColumnsRandomly(Reader* reader, const Type& schema) {
+    // Randomly select stripes to prefetch.
     auto num_stripes = reader->getNumberOfStripes();
     std::vector<int> stripes;
     for (size_t i = 0; i < num_stripes; ++i) {
-      stripes.push_back(i);
+      if (rand() % 2 == 0) stripes.push_back(i);
     }
-    reader->preBuffer(stripes, {0});
+
+    // Randomly select columns to prefetch.
+    std::list<uint64_t> includeTypes;
+    for (size_t i = 0; i < schema.getSubtypeCount(); ++i) {
+      if (rand() % 2 == 0) includeTypes.push_back(schema.getSubtype(i)->getColumnId());
+    }
+
+    reader->preBuffer(stripes, includeTypes);
+    // Randomly call preBuffer twice.
+    if (rand() % 2 == 0) {
+      reader->preBuffer(stripes, includeTypes);
+    }
   }
 
   void CheckFileWithSargs(const char* fileName, const char* softwareVersion) {
@@ -228,7 +240,7 @@ namespace orc {
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     auto reader = createReader(std::move(inStream), readerOptions);
-    prefetchAllStripes(reader.get());
+    prefetchStripesAndColumnsRandomly(reader.get(), *type);
     return reader;
   }
 
@@ -401,7 +413,7 @@ namespace orc {
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     auto reader = createReader(std::move(inStream), readerOptions);
-    prefetchAllStripes(reader.get());
+    prefetchStripesAndColumnsRandomly(reader.get(), *type);
     return reader;
   }
 
@@ -580,7 +592,7 @@ namespace orc {
     readerOptions.setMemoryPool(*pool);
     readerOptions.setReaderMetrics(nullptr);
     auto reader = createReader(std::move(inStream), readerOptions);
-    prefetchAllStripes(reader.get());
+    prefetchStripesAndColumnsRandomly(reader.get(), *type);
     return reader;
   }
 
@@ -684,8 +696,10 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     uint64_t rowCount = 5000;
+
+    std::unique_ptr<Type> type;
     {
-      auto type = std::unique_ptr<Type>(
+      type = std::unique_ptr<Type>(
           Type::buildTypeFromString("struct<col1:struct<col2:int>,col3:struct<col4:int>,"
                                     "col5:array<int>,col6:map<int,int>>"));
       WriterOptions options;
@@ -753,7 +767,7 @@ namespace orc {
       ReaderOptions readerOptions;
       readerOptions.setMemoryPool(*pool);
       std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
-      prefetchAllStripes(reader.get());
+      prefetchStripesAndColumnsRandomly(reader.get(), *type);
       EXPECT_EQ(rowCount, reader->getNumberOfRows());
       std::unique_ptr<RowReader> rowReader = reader->createRowReader(RowReaderOptions());
       auto batch = rowReader->createRowBatch(1000);

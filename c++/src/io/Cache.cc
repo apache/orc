@@ -105,7 +105,8 @@ namespace orc {
   }
 
   void ReadRangeCache::cache(std::vector<ReadRange> ranges) {
-    ranges = ReadRangeCombiner::coalesceReadRanges(std::move(ranges), options_.holeSizeLimit, options_.rangeSizeLimit);
+    ranges = ReadRangeCombiner::coalesceReadRanges(std::move(ranges), options_.holeSizeLimit,
+                                                   options_.rangeSizeLimit);
 
     std::vector<RangeCacheEntry> newEntries = makeCacheEntries(ranges);
     // Add new entries, themselves ordered by offset
@@ -121,7 +122,7 @@ namespace orc {
 
   BufferSlice ReadRangeCache::read(const ReadRange& range) {
     if (range.length == 0) {
-      return {std::make_shared<BufferSlice::Buffer>(*memoryPool_, 0), 0, 0};
+      return {std::make_shared<Buffer>(*memoryPool_, 0), 0, 0};
     }
 
     const auto it = std::lower_bound(entries_.begin(), entries_.end(), range,
@@ -160,8 +161,7 @@ namespace orc {
     std::vector<RangeCacheEntry> newEntries;
     newEntries.reserve(ranges.size());
     for (const auto& range : ranges) {
-      BufferSlice::BufferPtr buffer =
-          std::make_shared<BufferSlice::Buffer>(*memoryPool_, range.length);
+      BufferPtr buffer = std::make_shared<Buffer>(*memoryPool_, range.length);
       std::future<void> future = stream_->readAsync(buffer->data(), buffer->size(), range.offset);
       newEntries.emplace_back(range, std::move(buffer), std::move(future));
     }

@@ -71,6 +71,11 @@ namespace orc {
     bool isDecimalAsLong;
     std::unique_ptr<proto::Metadata> metadata;
     ReaderMetrics* readerMetrics;
+
+    // mutex to protect readCache_ from concurrent access
+    std::mutex readCacheMutex;
+    // cached io ranges. only valid when preBuffer is invoked.
+    std::shared_ptr<ReadRangeCache> readCache;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -177,8 +182,6 @@ namespace orc {
     // match read and file types
     SchemaEvolution schemaEvolution_;
 
-    std::shared_ptr<ReadRangeCache> readCache_;
-
     // load stripe index if not done so
     void loadStripeIndex();
 
@@ -221,8 +224,7 @@ namespace orc {
      * @param contents of the file
      * @param options options for reading
      */
-    RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& options,
-                  std::shared_ptr<ReadRangeCache> readCache = {});
+    RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& options);
 
     // Select the columns from the options object
     const std::vector<bool> getSelectedColumns() const override;
@@ -251,7 +253,7 @@ namespace orc {
     }
 
     std::shared_ptr<ReadRangeCache> getReadCache() const {
-      return readCache_;
+      return contents_->readCache;
     }
   };
 
@@ -268,12 +270,6 @@ namespace orc {
     // footer
     proto::Footer* footer_;
     uint64_t numberOfStripes_;
-
-    // cached io ranges. only valid when preBuffer is invoked.
-    std::shared_ptr<ReadRangeCache> readCache_;
-
-    // mutex to protect readCache_ from concurrent access
-    std::mutex readCacheMutex_;
 
     uint64_t getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns);
 
