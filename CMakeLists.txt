@@ -157,6 +157,9 @@ enable_testing()
 
 INCLUDE(GNUInstallDirs)  # Put it before ThirdpartyToolchain to make CMAKE_INSTALL_LIBDIR available.
 set(ORC_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/orc)
+if (ORC_PACKAGE_KIND STREQUAL "vcpkg")
+  set(ORC_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_DATAROOTDIR}/orc)
+endif ()
 
 INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
