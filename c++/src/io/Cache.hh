@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <orc/MemoryPool.hh>
-#include <orc/OrcFile.hh>
+#include "orc/MemoryPool.hh"
+#include "orc/OrcFile.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -29,7 +29,6 @@
 #include <vector>
 
 namespace orc {
-  class InputStream;
 
   struct ReadRange {
     uint64_t offset;

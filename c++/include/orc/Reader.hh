@@ -41,13 +41,13 @@ namespace orc {
   struct RowReaderOptionsPrivate;
 
   struct CacheOptions {
-    /// The maximum distance in bytes between two consecutive
-    /// ranges; beyond this value, ranges are not combined
+    // The maximum distance in bytes between two consecutive
+    // ranges; beyond this value, ranges are not combined
     uint64_t holeSizeLimit = 8192;
 
-    /// The maximum size in bytes of a combined range; if
-    /// combining two consecutive ranges would produce a range of a
-    /// size greater than this, they are not combined
+    // The maximum size in bytes of a combined range; if
+    // combining two consecutive ranges would produce a range of a
+    // size greater than this, they are not combined
     uint64_t rangeSizeLimit = 32 * 1024 * 1024;
   };
 
