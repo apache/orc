@@ -650,6 +650,9 @@ namespace orc {
 
     /**
      * Trigger IO prefetch and cache the prefetched contents asynchronously.
+     * It is thread safe. Users should make sure requested stripes and columns
+     * are not overlapped, otherwise the overlapping part will be prefetched multiple time,
+     * which doesn't affect correctness but waste IO and memory resources.
      * @param stripes the stripes to prefetch
      * @param includeTypes the types to prefetch
      * @param options the cache options for prefetched contents
@@ -658,7 +661,7 @@ namespace orc {
                            const std::list<uint64_t>& includeTypes) = 0;
 
     /**
-     * Release cache entries whose boundary is less than the given value.
+     * Release cached entries whose right boundary is less than or equal to the given boundary.
      * @param boundary the boundary value to release cache entries
      */
     virtual void releaseBuffer(uint64_t boundary) = 0;

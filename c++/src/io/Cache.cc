@@ -60,10 +60,7 @@ namespace orc {
 #endif
 
     std::vector<ReadRange> coalesced;
-
     auto itr = ranges.begin();
-    // Ensure ranges is not empty.
-    assert(itr <= ranges.end());
 
     // Start of the current coalesced range and end (exclusive) of previous range.
     // Both are initialized with the start of first range which is a placeholder value.
@@ -98,8 +95,9 @@ namespace orc {
     return coalesced;
   }
 
-  std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
-                                            uint64_t rangeSizeLimit) {
+  std::vector<ReadRange> ReadRangeCombiner::coalesceReadRanges(std::vector<ReadRange> ranges,
+                                                               uint64_t holeSizeLimit,
+                                                               uint64_t rangeSizeLimit) {
     assert(rangeSizeLimit > holeSizeLimit);
 
     ReadRangeCombiner combiner{holeSizeLimit, rangeSizeLimit};
@@ -107,7 +105,7 @@ namespace orc {
   }
 
   void ReadRangeCache::cache(std::vector<ReadRange> ranges) {
-    ranges = coalesceReadRanges(std::move(ranges), options_.holeSizeLimit, options_.rangeSizeLimit);
+    ranges = ReadRangeCombiner::coalesceReadRanges(std::move(ranges), options_.holeSizeLimit, options_.rangeSizeLimit);
 
     std::vector<RangeCacheEntry> newEntries = makeCacheEntries(ranges);
     // Add new entries, themselves ordered by offset
@@ -121,9 +119,9 @@ namespace orc {
     }
   }
 
-  ReadRangeCache::BufferSlice ReadRangeCache::read(const ReadRange& range) {
+  BufferSlice ReadRangeCache::read(const ReadRange& range) {
     if (range.length == 0) {
-      return {std::make_shared<Buffer>(*memoryPool_, 0), 0, 0};
+      return {std::make_shared<BufferSlice::Buffer>(*memoryPool_, 0), 0, 0};
     }
 
     const auto it = std::lower_bound(entries_.begin(), entries_.end(), range,
@@ -152,17 +150,18 @@ namespace orc {
   void ReadRangeCache::evictEntriesBefore(uint64_t boundary) {
     auto it = std::lower_bound(entries_.begin(), entries_.end(), boundary,
                                [](const RangeCacheEntry& entry, uint64_t offset) {
-                                 return entry.range.offset + entry.range.length < offset;
+                                 return entry.range.offset + entry.range.length <= offset;
                                });
     entries_.erase(entries_.begin(), it);
   }
 
   std::vector<RangeCacheEntry> ReadRangeCache::makeCacheEntries(
-      const std::vector<ReadRange>& ranges) {
+      const std::vector<ReadRange>& ranges) const {
     std::vector<RangeCacheEntry> newEntries;
     newEntries.reserve(ranges.size());
     for (const auto& range : ranges) {
-      BufferPtr buffer = std::make_shared<Buffer>(*memoryPool_, range.length);
+      BufferSlice::BufferPtr buffer =
+          std::make_shared<BufferSlice::Buffer>(*memoryPool_, range.length);
       std::future<void> future = stream_->readAsync(buffer->data(), buffer->size(), range.offset);
       newEntries.emplace_back(range, std::move(buffer), std::move(future));
     }

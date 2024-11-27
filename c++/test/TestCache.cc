@@ -39,7 +39,7 @@ namespace orc {
     auto check = [](std::vector<ReadRange> ranges, std::vector<ReadRange> expected) -> void {
       const uint64_t holeSizeLimit = 9;
       const uint64_t rangeSizeLimit = 99;
-      auto coalesced = coalesceReadRanges(ranges, holeSizeLimit, rangeSizeLimit);
+      auto coalesced = ReadRangeCombiner::coalesceReadRanges(ranges, holeSizeLimit, rangeSizeLimit);
       ASSERT_EQ(coalesced, expected);
     };
 
@@ -93,13 +93,12 @@ namespace orc {
     cache.cache({{1, 2}, {3, 2}, {8, 2}, {20, 2}, {25, 0}});
     cache.cache({{10, 4}, {14, 0}, {15, 4}});
 
-    auto assert_slice_equal = [](const ReadRangeCache::BufferSlice& slice,
-                                 const std::string& expected) {
+    auto assert_slice_equal = [](const BufferSlice& slice, const std::string& expected) {
       ASSERT_TRUE(slice.buffer);
       ASSERT_EQ(expected, std::string_view(slice.buffer->data() + slice.offset, slice.length));
     };
 
-    ReadRangeCache::BufferSlice slice;
+    BufferSlice slice;
 
     slice = cache.read({20, 2});
     assert_slice_equal(slice, "uv");

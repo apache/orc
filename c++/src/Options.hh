@@ -19,10 +19,11 @@
 #ifndef ORC_OPTIONS_HH
 #define ORC_OPTIONS_HH
 
-#include "io/Cache.hh"
 #include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
+
+#include "io/Cache.hh"
 
 #include <iostream>
 #include <limits>

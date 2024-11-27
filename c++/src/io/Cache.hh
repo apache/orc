@@ -55,10 +55,11 @@ namespace orc {
     const uint64_t rangeSizeLimit;
 
     std::vector<ReadRange> coalesce(std::vector<ReadRange> ranges) const;
+
+    static std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
+                                              uint64_t rangeSizeLimit);
   };
 
-  std::vector<ReadRange> coalesceReadRanges(std::vector<ReadRange> ranges, uint64_t holeSizeLimit,
-                                            uint64_t rangeSizeLimit);
   struct RangeCacheEntry {
     using BufferPtr = InputStream::BufferPtr;
 
@@ -77,23 +78,23 @@ namespace orc {
     }
   };
 
-  /// A read cache designed to hide IO latencies when reading.
-  class ReadRangeCache {
-   public:
+  struct BufferSlice {
     using Buffer = InputStream::Buffer;
     using BufferPtr = InputStream::BufferPtr;
 
-    struct BufferSlice {
-      BufferSlice() : buffer(nullptr), offset(0), length(0) {}
+    BufferSlice() : buffer(nullptr), offset(0), length(0) {}
 
-      BufferSlice(BufferPtr buffer, uint64_t offset, uint64_t length)
-          : buffer(std::move(buffer)), offset(offset), length(length) {}
+    BufferSlice(BufferPtr buffer, uint64_t offset, uint64_t length)
+        : buffer(std::move(buffer)), offset(offset), length(length) {}
 
-      BufferPtr buffer;
-      uint64_t offset;
-      uint64_t length;
-    };
+    BufferPtr buffer;
+    uint64_t offset;
+    uint64_t length;
+  };
 
+  /// A read cache designed to hide IO latencies when reading.
+  class ReadRangeCache {
+   public:
     /// Construct a read cache with given options
     explicit ReadRangeCache(InputStream* stream, CacheOptions options, MemoryPool* memoryPool,
                             ReaderMetrics* metrics = nullptr)
@@ -117,16 +118,13 @@ namespace orc {
     void evictEntriesBefore(uint64_t boundary);
 
    private:
-    std::vector<RangeCacheEntry> makeCacheEntries(const std::vector<ReadRange>& ranges);
+    std::vector<RangeCacheEntry> makeCacheEntries(const std::vector<ReadRange>& ranges) const;
 
     InputStream* stream_;
     CacheOptions options_;
-
     // Ordered by offset (so as to find a matching region by binary search)
     std::vector<RangeCacheEntry> entries_;
-
     MemoryPool* memoryPool_;
-
     ReaderMetrics* metrics_;
   };
 
