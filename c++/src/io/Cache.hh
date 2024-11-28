@@ -65,10 +65,8 @@ namespace orc {
 
   struct RangeCacheEntry {
     ReadRange range;
-
-    // The result may be get multiple times, so we use shared_future instead of std::future
     BufferPtr buffer;
-    std::shared_future<void> future;
+    std::shared_future<void> future;  // use shared_future in case of multiple get calls
 
     RangeCacheEntry() = default;
     RangeCacheEntry(const ReadRange& range, BufferPtr buffer, std::future<void> future)
