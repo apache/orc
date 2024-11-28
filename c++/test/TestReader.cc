@@ -843,9 +843,8 @@ namespace orc {
     MemoryPool* pool = getDefaultPool();
     uint64_t rowCount = 5000;
 
-    std::unique_ptr<Type> type;
     {
-      type = std::unique_ptr<Type>(
+      auto type = std::unique_ptr<Type>(
           Type::buildTypeFromString("struct<col1:struct<col2:int>,col3:struct<col4:int>,"
                                     "col5:array<int>,col6:map<int,int>>"));
       WriterOptions options;
