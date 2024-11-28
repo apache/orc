@@ -1,3 +1,0 @@
-/home/deshanxiao/orc/conan/all/test_package/CMakeFiles/test_package.dir
-/home/deshanxiao/orc/conan/all/test_package/CMakeFiles/edit_cache.dir
-/home/deshanxiao/orc/conan/all/test_package/CMakeFiles/rebuild_cache.dir
