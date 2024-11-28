@@ -105,27 +105,6 @@ namespace orc {
                                                         nextSkippedRows));
   }
 
-  void prefetchStripesAndColumnsRandomly(Reader* reader, const Type& schema) {
-    // Randomly select stripes to prefetch.
-    auto num_stripes = reader->getNumberOfStripes();
-    std::vector<int> stripes;
-    for (size_t i = 0; i < num_stripes; ++i) {
-      if (rand() % 2 == 0) stripes.push_back(i);
-    }
-
-    // Randomly select columns to prefetch.
-    std::list<uint64_t> includeTypes;
-    for (size_t i = 0; i < schema.getSubtypeCount(); ++i) {
-      if (rand() % 2 == 0) includeTypes.push_back(schema.getSubtype(i)->getColumnId());
-    }
-
-    reader->preBuffer(stripes, includeTypes);
-    // Randomly call preBuffer twice.
-    if (rand() % 2 == 0) {
-      reader->preBuffer(stripes, includeTypes);
-    }
-  }
-
   void CheckFileWithSargs(const char* fileName, const char* softwareVersion) {
     std::stringstream ss;
     if (const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
@@ -176,7 +155,10 @@ namespace orc {
     ASSERT_THAT(rowReader->getSelectedColumns(), ElementsAreArray(expected));
   }
 
-  std::unique_ptr<Reader> createNestedListMemReader(MemoryOutputStream& memStream) {
+  std::unique_ptr<Reader> createNestedListMemReader(MemoryOutputStream& memStream,
+                                                    const std::vector<uint32_t>& stripesToPrefetch,
+                                                    const std::list<uint64_t>& columnsToPrefetch,
+                                                    bool prefetchTwice) {
     MemoryPool* pool = getDefaultPool();
 
     auto type = std::unique_ptr<Type>(
@@ -240,21 +222,41 @@ namespace orc {
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     auto reader = createReader(std::move(inStream), readerOptions);
-    prefetchStripesAndColumnsRandomly(reader.get(), *type);
+
+    reader->preBuffer(stripesToPrefetch, columnsToPrefetch);
+    if (prefetchTwice) {
+      reader->preBuffer(stripesToPrefetch, columnsToPrefetch);
+    }
+
     return reader;
   }
 
-  TEST(TestReadIntent, testListAll) {
+  class TestReadIntent : public ::testing::TestWithParam<
+                             std::tuple<std::vector<uint32_t>, std::list<uint64_t>, bool>> {};
+
+  TEST_P(TestReadIntent, testListAll) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedListMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of int_array.
     verifySelection(reader, {{1, ReadIntent_ALL}}, {0, 1, 2});
   }
 
-  TEST(TestReadIntent, testListOffsets) {
+  TEST_P(TestReadIntent, testListOffsets) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedListMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select only the offsets of int_array.
     verifySelection(reader, {{1, ReadIntent_OFFSETS}}, {0, 1});
@@ -267,26 +269,44 @@ namespace orc {
     verifySelection(reader, {{3, ReadIntent_OFFSETS}, {5, ReadIntent_OFFSETS}}, {0, 3, 4, 5});
   }
 
-  TEST(TestReadIntent, testListAllAndOffsets) {
+  TEST_P(TestReadIntent, testListAllAndOffsets) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedListMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of int_array and only the outermost offsets of int_array_array_array.
     verifySelection(reader, {{1, ReadIntent_ALL}, {3, ReadIntent_OFFSETS}}, {0, 1, 2, 3});
   }
 
-  TEST(TestReadIntent, testListConflictingIntent) {
+  TEST_P(TestReadIntent, testListConflictingIntent) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedListMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // test conflicting ReadIntent on nested list.
     verifySelection(reader, {{3, ReadIntent_OFFSETS}, {5, ReadIntent_ALL}}, {0, 3, 4, 5, 6});
     verifySelection(reader, {{3, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 3, 4, 5, 6});
   }
 
-  TEST(TestReadIntent, testRowBatchContent) {
+  TEST_P(TestReadIntent, testRowBatchContent) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedListMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of int_array and only the offsets of int_array_array.
     RowReaderOptions::IdReadIntentMap idReadIntentMap = {{1, ReadIntent_ALL},
@@ -322,7 +342,10 @@ namespace orc {
     EXPECT_EQ(nullptr, intArrayArrayArrayBatch.elements);
   }
 
-  std::unique_ptr<Reader> createNestedMapMemReader(MemoryOutputStream& memStream) {
+  std::unique_ptr<Reader> createNestedMapMemReader(MemoryOutputStream& memStream,
+                                                   const std::vector<uint32_t>& stripesToPrefetch,
+                                                   const std::list<uint64_t>& columnsToPrefetch,
+                                                   bool prefetchTwice) {
     MemoryPool* pool = getDefaultPool();
 
     auto type = std::unique_ptr<Type>(
@@ -413,21 +436,37 @@ namespace orc {
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     auto reader = createReader(std::move(inStream), readerOptions);
-    prefetchStripesAndColumnsRandomly(reader.get(), *type);
+
+    reader->preBuffer(stripesToPrefetch, columnsToPrefetch);
+    if (prefetchTwice) {
+      reader->preBuffer(stripesToPrefetch, columnsToPrefetch);
+    }
     return reader;
   }
 
-  TEST(TestReadIntent, testMapAll) {
+  TEST_P(TestReadIntent, testMapAll) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedMapMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of single_map.
     verifySelection(reader, {{2, ReadIntent_ALL}}, {0, 2, 3, 4});
   }
 
-  TEST(TestReadIntent, testMapOffsets) {
+  TEST_P(TestReadIntent, testMapOffsets) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedMapMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select only the offsets of single_map.
     verifySelection(reader, {{2, ReadIntent_OFFSETS}}, {0, 2});
@@ -439,17 +478,29 @@ namespace orc {
     verifySelection(reader, {{5, ReadIntent_OFFSETS}, {9, ReadIntent_OFFSETS}}, {0, 5, 7, 9});
   }
 
-  TEST(TestReadIntent, testMapAllAndOffsets) {
+  TEST_P(TestReadIntent, testMapAllAndOffsets) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedMapMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of single_map and only the outermost offsets of nested_map.
     verifySelection(reader, {{2, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 2, 3, 4, 5});
   }
 
-  TEST(TestReadIntent, testMapConflictingIntent) {
+  TEST_P(TestReadIntent, testMapConflictingIntent) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedMapMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // test conflicting ReadIntent on nested_map.
     verifySelection(reader, {{5, ReadIntent_OFFSETS}, {9, ReadIntent_ALL}}, {0, 5, 7, 9, 10, 11});
@@ -459,9 +510,15 @@ namespace orc {
                     {0, 5, 7, 8, 9, 10, 11});
   }
 
-  TEST(TestReadIntent, testMapRowBatchContent) {
+  TEST_P(TestReadIntent, testMapRowBatchContent) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedMapMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of single_map and only the offsets of nested_map.
     RowReaderOptions::IdReadIntentMap idReadIntentMap = {{2, ReadIntent_ALL},
@@ -507,7 +564,10 @@ namespace orc {
     EXPECT_EQ(nullptr, nestedMapBatch.elements);
   }
 
-  std::unique_ptr<Reader> createNestedUnionMemReader(MemoryOutputStream& memStream) {
+  std::unique_ptr<Reader> createNestedUnionMemReader(MemoryOutputStream& memStream,
+                                                     const std::vector<uint32_t>& stripesToPrefetch,
+                                                     const std::list<uint64_t>& columnsToPrefetch,
+                                                     bool prefetchTwice) {
     MemoryPool* pool = getDefaultPool();
 
     auto type = std::unique_ptr<Type>(
@@ -592,21 +652,38 @@ namespace orc {
     readerOptions.setMemoryPool(*pool);
     readerOptions.setReaderMetrics(nullptr);
     auto reader = createReader(std::move(inStream), readerOptions);
-    prefetchStripesAndColumnsRandomly(reader.get(), *type);
+
+    reader->preBuffer(stripesToPrefetch, columnsToPrefetch);
+    if (prefetchTwice) {
+      reader->preBuffer(stripesToPrefetch, columnsToPrefetch);
+    }
+
     return reader;
   }
 
-  TEST(TestReadIntent, testUnionAll) {
+  TEST_P(TestReadIntent, testUnionAll) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedUnionMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of single_union.
     verifySelection(reader, {{2, ReadIntent_ALL}}, {0, 2, 3, 4});
   }
 
-  TEST(TestReadIntent, testUnionOffsets) {
+  TEST_P(TestReadIntent, testUnionOffsets) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedUnionMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select only the offsets of single_union.
     verifySelection(reader, {{2, ReadIntent_OFFSETS}}, {0, 2});
@@ -619,17 +696,29 @@ namespace orc {
                     {0, 2, 5, 6, 7, 8, 11});
   }
 
-  TEST(TestReadIntent, testUnionAllAndOffsets) {
+  TEST_P(TestReadIntent, testUnionAllAndOffsets) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedUnionMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of single_union and only the outermost offsets of nested_union.
     verifySelection(reader, {{2, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 2, 3, 4, 5});
   }
 
-  TEST(TestReadIntent, testUnionConflictingIntent) {
+  TEST_P(TestReadIntent, testUnionConflictingIntent) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedUnionMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // test conflicting ReadIntent on nested_union.
     verifySelection(reader, {{5, ReadIntent_OFFSETS}, {8, ReadIntent_ALL}},
@@ -640,9 +729,15 @@ namespace orc {
                     {0, 5, 6, 7, 8, 9, 10, 11});
   }
 
-  TEST(TestReadIntent, testUnionRowBatchContent) {
+  TEST_P(TestReadIntent, testUnionRowBatchContent) {
+    const auto& params = GetParam();
+    const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
+    const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
+    bool prefetchTwice = std::get<2>(params);
+
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
+    std::unique_ptr<Reader> reader =
+        createNestedUnionMemReader(memStream, stripesToPrefetch, columnsToPrefetch, prefetchTwice);
 
     // select all of single_union and only the offsets of nested_union.
     RowReaderOptions::IdReadIntentMap idReadIntentMap = {{2, ReadIntent_ALL},
@@ -767,7 +862,6 @@ namespace orc {
       ReaderOptions readerOptions;
       readerOptions.setMemoryPool(*pool);
       std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
-      prefetchStripesAndColumnsRandomly(reader.get(), *type);
       EXPECT_EQ(rowCount, reader->getNumberOfRows());
       std::unique_ptr<RowReader> rowReader = reader->createRowReader(RowReaderOptions());
       auto batch = rowReader->createRowBatch(1000);
