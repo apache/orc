@@ -655,7 +655,6 @@ namespace orc {
      * which doesn't affect correctness but waste IO and memory resources.
      * @param stripes the stripes to prefetch
      * @param includeTypes the types to prefetch
-     * @param options the cache options for prefetched contents
      */
     virtual void preBuffer(const std::vector<uint32_t>& stripes,
                            const std::list<uint64_t>& includeTypes) = 0;
