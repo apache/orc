@@ -231,10 +231,11 @@ namespace orc {
     return reader;
   }
 
-  class TestReadIntent : public ::testing::TestWithParam<
-                             std::tuple<std::vector<uint32_t>, std::list<uint64_t>, bool>> {};
+  class TestReadIntentFromNestedList
+      : public ::testing::TestWithParam<
+            std::tuple<std::vector<uint32_t>, std::list<uint64_t>, bool>> {};
 
-  TEST_P(TestReadIntent, testListAll) {
+  TEST_P(TestReadIntentFromNestedList, testListAll) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -248,7 +249,7 @@ namespace orc {
     verifySelection(reader, {{1, ReadIntent_ALL}}, {0, 1, 2});
   }
 
-  TEST_P(TestReadIntent, testListOffsets) {
+  TEST_P(TestReadIntentFromNestedList, testListOffsets) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -269,7 +270,7 @@ namespace orc {
     verifySelection(reader, {{3, ReadIntent_OFFSETS}, {5, ReadIntent_OFFSETS}}, {0, 3, 4, 5});
   }
 
-  TEST_P(TestReadIntent, testListAllAndOffsets) {
+  TEST_P(TestReadIntentFromNestedList, testListAllAndOffsets) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -283,7 +284,7 @@ namespace orc {
     verifySelection(reader, {{1, ReadIntent_ALL}, {3, ReadIntent_OFFSETS}}, {0, 1, 2, 3});
   }
 
-  TEST_P(TestReadIntent, testListConflictingIntent) {
+  TEST_P(TestReadIntentFromNestedList, testListConflictingIntent) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -298,7 +299,7 @@ namespace orc {
     verifySelection(reader, {{3, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 3, 4, 5, 6});
   }
 
-  TEST_P(TestReadIntent, testRowBatchContent) {
+  TEST_P(TestReadIntentFromNestedList, testRowBatchContent) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -341,6 +342,20 @@ namespace orc {
     EXPECT_EQ(3, intArrayArrayArrayBatch.offsets.data()[1]);
     EXPECT_EQ(nullptr, intArrayArrayArrayBatch.elements);
   }
+
+  INSTANTIATE_TEST_SUITE_P(
+      TestReadIntentFromNestedListInstance, TestReadIntentFromNestedList,
+      ::testing::Values(
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{}, true),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{}, false),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{1, 3}, true),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{1, 3}, false),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{}, true),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{}, false),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{1, 3}, true),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{1, 3}, false),
+          std::make_tuple(std::vector<uint32_t>{1000}, std::list<uint64_t>{1000}, true),
+          std::make_tuple(std::vector<uint32_t>{1000}, std::list<uint64_t>{1000}, false)));
 
   std::unique_ptr<Reader> createNestedMapMemReader(MemoryOutputStream& memStream,
                                                    const std::vector<uint32_t>& stripesToPrefetch,
@@ -444,7 +459,11 @@ namespace orc {
     return reader;
   }
 
-  TEST_P(TestReadIntent, testMapAll) {
+  class TestReadIntentFromNestedMap
+      : public ::testing::TestWithParam<
+            std::tuple<std::vector<uint32_t>, std::list<uint64_t>, bool>> {};
+
+  TEST_P(TestReadIntentFromNestedMap, testMapAll) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -458,7 +477,7 @@ namespace orc {
     verifySelection(reader, {{2, ReadIntent_ALL}}, {0, 2, 3, 4});
   }
 
-  TEST_P(TestReadIntent, testMapOffsets) {
+  TEST_P(TestReadIntentFromNestedMap, testMapOffsets) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -478,7 +497,7 @@ namespace orc {
     verifySelection(reader, {{5, ReadIntent_OFFSETS}, {9, ReadIntent_OFFSETS}}, {0, 5, 7, 9});
   }
 
-  TEST_P(TestReadIntent, testMapAllAndOffsets) {
+  TEST_P(TestReadIntentFromNestedMap, testMapAllAndOffsets) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -492,7 +511,7 @@ namespace orc {
     verifySelection(reader, {{2, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 2, 3, 4, 5});
   }
 
-  TEST_P(TestReadIntent, testMapConflictingIntent) {
+  TEST_P(TestReadIntentFromNestedMap, testMapConflictingIntent) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -510,7 +529,7 @@ namespace orc {
                     {0, 5, 7, 8, 9, 10, 11});
   }
 
-  TEST_P(TestReadIntent, testMapRowBatchContent) {
+  TEST_P(TestReadIntentFromNestedMap, testMapRowBatchContent) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -563,6 +582,20 @@ namespace orc {
     EXPECT_EQ(nullptr, nestedMapBatch.keys);
     EXPECT_EQ(nullptr, nestedMapBatch.elements);
   }
+
+  INSTANTIATE_TEST_SUITE_P(
+      TestReadIntentFromNestedMapInstance, TestReadIntentFromNestedMap,
+      ::testing::Values(
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{}, true),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{}, false),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{1, 5}, true),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{1, 5}, false),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{}, true),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{}, false),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{1, 5}, true),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{1, 5}, false),
+          std::make_tuple(std::vector<uint32_t>{1000}, std::list<uint64_t>{1000}, true),
+          std::make_tuple(std::vector<uint32_t>{1000}, std::list<uint64_t>{1000}, false)));
 
   std::unique_ptr<Reader> createNestedUnionMemReader(MemoryOutputStream& memStream,
                                                      const std::vector<uint32_t>& stripesToPrefetch,
@@ -661,7 +694,11 @@ namespace orc {
     return reader;
   }
 
-  TEST_P(TestReadIntent, testUnionAll) {
+  class TestReadIntentFromNestedUnion
+      : public ::testing::TestWithParam<
+            std::tuple<std::vector<uint32_t>, std::list<uint64_t>, bool>> {};
+
+  TEST_P(TestReadIntentFromNestedUnion, testUnionAll) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -675,7 +712,7 @@ namespace orc {
     verifySelection(reader, {{2, ReadIntent_ALL}}, {0, 2, 3, 4});
   }
 
-  TEST_P(TestReadIntent, testUnionOffsets) {
+  TEST_P(TestReadIntentFromNestedUnion, testUnionOffsets) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -696,7 +733,7 @@ namespace orc {
                     {0, 2, 5, 6, 7, 8, 11});
   }
 
-  TEST_P(TestReadIntent, testUnionAllAndOffsets) {
+  TEST_P(TestReadIntentFromNestedUnion, testUnionAllAndOffsets) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -710,7 +747,7 @@ namespace orc {
     verifySelection(reader, {{2, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 2, 3, 4, 5});
   }
 
-  TEST_P(TestReadIntent, testUnionConflictingIntent) {
+  TEST_P(TestReadIntentFromNestedUnion, testUnionConflictingIntent) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -729,7 +766,7 @@ namespace orc {
                     {0, 5, 6, 7, 8, 9, 10, 11});
   }
 
-  TEST_P(TestReadIntent, testUnionRowBatchContent) {
+  TEST_P(TestReadIntentFromNestedUnion, testUnionRowBatchContent) {
     const auto& params = GetParam();
     const std::vector<uint32_t>& stripesToPrefetch = std::get<0>(params);
     const std::list<uint64_t>& columnsToPrefetch = std::get<1>(params);
@@ -786,6 +823,20 @@ namespace orc {
     EXPECT_EQ(0, nestedUnionBatch.offsets.data()[0]);
     EXPECT_EQ(1, nestedUnionBatch.offsets.data()[1]);
   }
+
+  INSTANTIATE_TEST_SUITE_P(
+      TestReadIntentFromNestedUnionInstance, TestReadIntentFromNestedUnion,
+      ::testing::Values(
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{}, true),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{}, false),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{1, 2}, true),
+          std::make_tuple(std::vector<uint32_t>{}, std::list<uint64_t>{1, 2}, false),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{}, true),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{}, false),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{1, 2}, true),
+          std::make_tuple(std::vector<uint32_t>{0}, std::list<uint64_t>{1, 2}, false),
+          std::make_tuple(std::vector<uint32_t>{1000}, std::list<uint64_t>{1000}, true),
+          std::make_tuple(std::vector<uint32_t>{1000}, std::list<uint64_t>{1000}, false)));
 
   TEST(TestReadIntent, testSeekOverEmptyPresentStream) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);

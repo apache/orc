@@ -1531,21 +1531,31 @@ namespace orc {
     }
   }
 
-  void ReaderImpl::preBuffer(const std::vector<int>& stripes,
+  void ReaderImpl::preBuffer(const std::vector<uint32_t>& stripes,
                              const std::list<uint64_t>& includeTypes) {
-    if (stripes.empty() || includeTypes.empty()) {
+    std::vector<uint32_t> newStripes;
+    for (auto stripe : stripes) {
+      if (stripe < static_cast<uint32_t>(footer_->stripes_size())) newStripes.push_back(stripe);
+    }
+
+    std::list<uint64_t> newIncludeTypes;
+    for (auto type : includeTypes) {
+      if (type < static_cast<uint64_t>(footer_->types_size())) newIncludeTypes.push_back(type);
+    }
+
+    if (newStripes.empty() || newIncludeTypes.empty()) {
       return;
     }
 
     orc::RowReaderOptions rowReaderOptions;
-    rowReaderOptions.includeTypes(includeTypes);
+    rowReaderOptions.includeTypes(newIncludeTypes);
     ColumnSelector columnSelector(contents_.get());
     std::vector<bool> selectedColumns;
     columnSelector.updateSelected(selectedColumns, rowReaderOptions);
 
     std::vector<ReadRange> ranges;
-    ranges.reserve(includeTypes.size());
-    for (auto stripe : stripes) {
+    ranges.reserve(newIncludeTypes.size());
+    for (auto stripe : newStripes) {
       // get stripe information
       const auto& stripeInfo = footer_->stripes(stripe);
       uint64_t stripeFooterStart =
