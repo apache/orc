@@ -30,6 +30,7 @@
 namespace orc {
 
   class RowReaderImpl;
+  class ReadRangeCache;
 
   /**
    * StripeStream Implementation
@@ -45,6 +46,7 @@ namespace orc {
     InputStream& input_;
     const Timezone& writerTimezone_;
     const Timezone& readerTimezone_;
+    std::shared_ptr<ReadRangeCache> readCache_;
 
    public:
     StripeStreamsImpl(const RowReaderImpl& reader, uint64_t index,

@@ -22,8 +22,6 @@
 #include "io/InputStream.hh"
 #include "orc/OrcFile.hh"
 
-#include <iostream>
-
 namespace orc {
   class MemoryInputStream : public InputStream {
    public:
@@ -42,6 +40,11 @@ namespace orc {
 
     virtual void read(void* buf, uint64_t length, uint64_t offset) override {
       memcpy(buf, buffer_ + offset, length);
+    }
+
+    std::future<void> readAsync(void* buf, uint64_t length, uint64_t offset) override {
+      return std::async(std::launch::async,
+                        [this, buf, length, offset] { this->read(buf, length, offset); });
     }
 
     virtual const std::string& getName() const override {

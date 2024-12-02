@@ -19,6 +19,7 @@
 #include "StripeStream.hh"
 #include "RLE.hh"
 #include "Reader.hh"
+#include "io/Cache.hh"
 #include "orc/Exceptions.hh"
 
 #include "wrap/coded-stream-wrapper.h"
@@ -37,7 +38,8 @@ namespace orc {
         stripeStart_(stripeStart),
         input_(input),
         writerTimezone_(writerTimezone),
-        readerTimezone_(readerTimezone) {
+        readerTimezone_(readerTimezone),
+        readCache_(reader.getReadCache()) {
     // PASS
   }
 
@@ -89,7 +91,6 @@ namespace orc {
       if (stream.has_kind() && stream.kind() == kind &&
           stream.column() == static_cast<uint64_t>(columnId)) {
         uint64_t streamLength = stream.length();
-        uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamLength;
         if (offset + streamLength > dataEnd) {
           std::stringstream msg;
           msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex_
@@ -99,9 +100,23 @@ namespace orc {
               << ", stripeDataLength=" << stripeInfo_.data_length();
           throw ParseError(msg.str());
         }
-        return createDecompressor(reader_.getCompression(),
-                                  std::make_unique<SeekableFileInputStream>(
-                                      &input_, offset, stream.length(), *pool, myBlock),
+
+        BufferSlice slice;
+        if (readCache_) {
+          ReadRange range{offset, streamLength};
+          slice = readCache_->read(range);
+        }
+
+        uint64_t myBlock = shouldStream ? input_.getNaturalReadSize() : streamLength;
+        std::unique_ptr<SeekableInputStream> seekableInput;
+        if (slice.buffer) {
+          seekableInput = std::make_unique<SeekableArrayInputStream>(
+              slice.buffer->data() + slice.offset, slice.length);
+        } else {
+          seekableInput = std::make_unique<SeekableFileInputStream>(&input_, offset, streamLength,
+                                                                    *pool, myBlock);
+        }
+        return createDecompressor(reader_.getCompression(), std::move(seekableInput),
                                   reader_.getCompressionSize(), *pool,
                                   reader_.getFileContents().readerMetrics);
       }

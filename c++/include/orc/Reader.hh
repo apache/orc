@@ -40,6 +40,17 @@ namespace orc {
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
 
+  struct CacheOptions {
+    // The maximum distance in bytes between two consecutive
+    // ranges; beyond this value, ranges are not combined
+    uint64_t holeSizeLimit = 8192;
+
+    // The maximum size in bytes of a combined range; if
+    // combining two consecutive ranges would produce a range of a
+    // size greater than this, they are not combined
+    uint64_t rangeSizeLimit = 32 * 1024 * 1024;
+  };
+
   /**
    * Expose the reader metrics including the latency and
    * number of calls of the decompression/decoding/IO modules.
@@ -59,6 +70,8 @@ namespace orc {
     std::atomic<uint64_t> IOBlockingLatencyUs{0};
     std::atomic<uint64_t> SelectedRowGroupCount{0};
     std::atomic<uint64_t> EvaluatedRowGroupCount{0};
+    std::atomic<uint64_t> ReadRangeCacheHits{0};
+    std::atomic<uint64_t> ReadRangeCacheMisses{0};
   };
   ReaderMetrics* getDefaultReaderMetrics();
 
@@ -117,6 +130,11 @@ namespace orc {
     ReaderOptions& setReaderMetrics(ReaderMetrics* metrics);
 
     /**
+     * Set the cache options.
+     */
+    ReaderOptions& setCacheOptions(const CacheOptions& cacheOptions);
+
+    /**
      * Set the location of the tail as defined by the logical length of the
      * file.
      */
@@ -147,6 +165,11 @@ namespace orc {
      * Get the reader metrics.
      */
     ReaderMetrics* getReaderMetrics() const;
+
+    /**
+     * Set the cache options.
+     */
+    const CacheOptions& getCacheOptions() const;
   };
 
   /**
@@ -624,6 +647,23 @@ namespace orc {
      */
     virtual std::map<uint32_t, RowGroupIndex> getRowGroupIndex(
         uint32_t stripeIndex, const std::set<uint32_t>& included = {}) const = 0;
+
+    /**
+     * Trigger IO prefetch and cache the prefetched contents asynchronously.
+     * It is thread safe. Users should make sure requested stripes and columns
+     * are not overlapped, otherwise the overlapping part will be prefetched multiple time,
+     * which doesn't affect correctness but waste IO and memory resources.
+     * @param stripes the stripes to prefetch
+     * @param includeTypes the types to prefetch
+     */
+    virtual void preBuffer(const std::vector<uint32_t>& stripes,
+                           const std::list<uint64_t>& includeTypes) = 0;
+
+    /**
+     * Release cached entries whose right boundary is less than or equal to the given boundary.
+     * @param boundary the boundary value to release cache entries
+     */
+    virtual void releaseBuffer(uint64_t boundary) = 0;
   };
 
   /**

@@ -1523,6 +1523,94 @@ namespace orc {
     return ret;
   }
 
+  void ReaderImpl::releaseBuffer(uint64_t boundary) {
+    std::lock_guard<std::mutex> lock(contents_->readCacheMutex);
+
+    if (contents_->readCache) {
+      contents_->readCache->evictEntriesBefore(boundary);
+    }
+  }
+
+  void ReaderImpl::preBuffer(const std::vector<uint32_t>& stripes,
+                             const std::list<uint64_t>& includeTypes) {
+    std::vector<uint32_t> newStripes;
+    for (auto stripe : stripes) {
+      if (stripe < static_cast<uint32_t>(footer_->stripes_size())) newStripes.push_back(stripe);
+    }
+
+    std::list<uint64_t> newIncludeTypes;
+    for (auto type : includeTypes) {
+      if (type < static_cast<uint64_t>(footer_->types_size())) newIncludeTypes.push_back(type);
+    }
+
+    if (newStripes.empty() || newIncludeTypes.empty()) {
+      return;
+    }
+
+    orc::RowReaderOptions rowReaderOptions;
+    rowReaderOptions.includeTypes(newIncludeTypes);
+    ColumnSelector columnSelector(contents_.get());
+    std::vector<bool> selectedColumns;
+    columnSelector.updateSelected(selectedColumns, rowReaderOptions);
+
+    std::vector<ReadRange> ranges;
+    ranges.reserve(newIncludeTypes.size());
+    for (auto stripe : newStripes) {
+      // get stripe information
+      const auto& stripeInfo = footer_->stripes(stripe);
+      uint64_t stripeFooterStart =
+          stripeInfo.offset() + stripeInfo.index_length() + stripeInfo.data_length();
+      uint64_t stripeFooterLength = stripeInfo.footer_length();
+
+      // get stripe footer
+      std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
+          contents_->compression,
+          std::make_unique<SeekableFileInputStream>(contents_->stream.get(), stripeFooterStart,
+                                                    stripeFooterLength, *contents_->pool),
+          contents_->blockSize, *contents_->pool, contents_->readerMetrics);
+      proto::StripeFooter stripeFooter;
+      if (!stripeFooter.ParseFromZeroCopyStream(pbStream.get())) {
+        throw ParseError(std::string("bad StripeFooter from ") + pbStream->getName());
+      }
+
+      // traverse all streams in stripe footer, choose selected streams to prebuffer
+      uint64_t offset = stripeInfo.offset();
+      for (int i = 0; i < stripeFooter.streams_size(); i++) {
+        const proto::Stream& stream = stripeFooter.streams(i);
+        if (offset + stream.length() > stripeFooterStart) {
+          std::stringstream msg;
+          msg << "Malformed stream meta at stream index " << i << " in stripe " << stripe
+              << ": streamOffset=" << offset << ", streamLength=" << stream.length()
+              << ", stripeOffset=" << stripeInfo.offset()
+              << ", stripeIndexLength=" << stripeInfo.index_length()
+              << ", stripeDataLength=" << stripeInfo.data_length();
+          throw ParseError(msg.str());
+        }
+
+        if (stream.has_kind() && selectedColumns[stream.column()]) {
+          const auto& kind = stream.kind();
+          if (kind == proto::Stream_Kind_DATA || kind == proto::Stream_Kind_DICTIONARY_DATA ||
+              kind == proto::Stream_Kind_PRESENT || kind == proto::Stream_Kind_LENGTH ||
+              kind == proto::Stream_Kind_SECONDARY) {
+            ranges.emplace_back(offset, stream.length());
+          }
+        }
+
+        offset += stream.length();
+      }
+
+      {
+        std::lock_guard<std::mutex> lock(contents_->readCacheMutex);
+
+        if (!contents_->readCache) {
+          contents_->readCache = std::make_shared<ReadRangeCache>(
+              getStream(), options_.getCacheOptions(), contents_->pool, contents_->readerMetrics);
+        }
+        contents_->readCache->cache(std::move(ranges));
+      }
+    }
+  }
+
   RowReader::~RowReader() {
     // PASS
   }

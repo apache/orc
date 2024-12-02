@@ -26,6 +26,8 @@
 
 #include "ColumnReader.hh"
 #include "RLE.hh"
+#include "io/Cache.hh"
+
 #include "SchemaEvolution.hh"
 #include "TypeImpl.hh"
 #include "sargs/SargsApplier.hh"
@@ -70,6 +72,11 @@ namespace orc {
     bool isDecimalAsLong;
     std::unique_ptr<proto::Metadata> metadata;
     ReaderMetrics* readerMetrics;
+
+    // mutex to protect readCache_ from concurrent access
+    std::mutex readCacheMutex;
+    // cached io ranges. only valid when preBuffer is invoked.
+    std::shared_ptr<ReadRangeCache> readCache;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -245,6 +252,10 @@ namespace orc {
     const SchemaEvolution* getSchemaEvolution() const {
       return &schemaEvolution_;
     }
+
+    std::shared_ptr<ReadRangeCache> getReadCache() const {
+      return contents_->readCache;
+    }
   };
 
   class ReaderImpl : public Reader {
@@ -260,6 +271,7 @@ namespace orc {
     // footer
     proto::Footer* footer_;
     uint64_t numberOfStripes_;
+
     uint64_t getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns);
 
     // internal methods
@@ -374,6 +386,10 @@ namespace orc {
 
     std::map<uint32_t, BloomFilterIndex> getBloomFilters(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
+
+    void preBuffer(const std::vector<uint32_t>& stripes,
+                   const std::list<uint64_t>& includeTypes) override;
+    void releaseBuffer(uint64_t boundary) override;
 
     std::map<uint32_t, RowGroupIndex> getRowGroupIndex(
         uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
