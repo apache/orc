@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>IO</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -215,7 +215,7 @@ is smaller than this then it is combined into a single read.</li>
   <li><strong>orc.min.disk.seek.size.tolerance</strong> is a fractional input: If the extra bytes read is greater than this fraction of
 the required bytes, then we drop the extra bytes from memory.</li>
   <li>We can further consider adding an optimization for the complete stripe in case the stripe size is smaller than
-<code class="highlighter-rouge">orc.min.disk.seek.size</code></li>
+<code class="language-plaintext highlighter-rouge">orc.min.disk.seek.size</code></li>
 </ul>
 
 <h3 id="scope-">Scope <a id="Scope"></a></h3>
@@ -247,7 +247,7 @@ the <a href="https://github.com/apache/orc/tree/main/java/core/src/java/org/apac
 S3.</p>
 
 <p>The purpose of this benchmark is to ascertain if we have added any significant penalties in the ORC code by adding
-<code class="highlighter-rouge">minSeekSize</code> and <code class="highlighter-rouge">extraByteTolerance</code>.</p>
+<code class="language-plaintext highlighter-rouge">minSeekSize</code> and <code class="language-plaintext highlighter-rouge">extraByteTolerance</code>.</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>java <span class="nt">-jar</span> java/bench/core/target/orc-benchmarks-core-<span class="k">*</span><span class="nt">-uber</span>.jar chunk_read
 </code></pre></div></div>
@@ -486,9 +486,9 @@ reduction of ~ 75 %</li>
 <p>Based on the benchmarks the following is recommended for ORC in AWS S3:</p>
 
 <ul>
-  <li><code class="highlighter-rouge">orc.min.disk.seek.size</code> is set to <code class="highlighter-rouge">4194304</code> (4 MB)</li>
-  <li><code class="highlighter-rouge">orc.min.disk.seek.size.tolerance</code> is set to value that is acceptable based on the memory usage constraints. When set
-to <code class="highlighter-rouge">0.0</code> it will always do the extra work of dropping the extra bytes.</li>
+  <li><code class="language-plaintext highlighter-rouge">orc.min.disk.seek.size</code> is set to <code class="language-plaintext highlighter-rouge">4194304</code> (4 MB)</li>
+  <li><code class="language-plaintext highlighter-rouge">orc.min.disk.seek.size.tolerance</code> is set to value that is acceptable based on the memory usage constraints. When set
+to <code class="language-plaintext highlighter-rouge">0.0</code> it will always do the extra work of dropping the extra bytes.</li>
 </ul>
 
 

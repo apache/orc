@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Spark Configuration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1066,7 +1066,7 @@ with the same options.</p>
 
 <p>For example, to create an ORC table with Zstandard compression:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE encrypted (
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE encrypted (
   ssn STRING,
   email STRING,
   name STRING
@@ -1096,12 +1096,12 @@ OPTIONS (
     <tr>
       <td style="text-align: left">spark.sql.orc.impl</td>
       <td style="text-align: left">native</td>
-      <td style="text-align: left">The name of ORC implementation. It can be one of <code class="highlighter-rouge">native</code> or <code class="highlighter-rouge">hive</code>. <code class="highlighter-rouge">native</code> means the native ORC support. <code class="highlighter-rouge">hive</code> means the ORC library in Hive.</td>
+      <td style="text-align: left">The name of ORC implementation. It can be one of <code class="language-plaintext highlighter-rouge">native</code> or <code class="language-plaintext highlighter-rouge">hive</code>. <code class="language-plaintext highlighter-rouge">native</code> means the native ORC support. <code class="language-plaintext highlighter-rouge">hive</code> means the ORC library in Hive.</td>
     </tr>
     <tr>
       <td style="text-align: left">spark.sql.orc.enableVectorizedReader</td>
       <td style="text-align: left">true</td>
-      <td style="text-align: left">Enables vectorized orc decoding in <code class="highlighter-rouge">native</code> implementation.</td>
+      <td style="text-align: left">Enables vectorized orc decoding in <code class="language-plaintext highlighter-rouge">native</code> implementation.</td>
     </tr>
     <tr>
       <td style="text-align: left">spark.sql.orc.mergeSchema</td>

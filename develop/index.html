@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Developing</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -142,7 +142,7 @@ discussion of the change.</p>
 <p>ORC uses git for version control. Get the source code and configure it
 to fetch the pull requests also:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone -o apache git@github.com:apache/orc.git
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone -o apache git@github.com:apache/orc.git
 % cd orc
 % git config --add remote.apache.fetch '+refs/pull/*/head:refs/remotes/apache/pr/*'
 </code></pre></div></div>
@@ -203,52 +203,52 @@ The following is useful during Java code review and tests.</p>
 
 <h3 id="running-individual-java-test-file">Running Individual Java Test File</h3>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
 % ./mvnw test -pl core -Dtest=TestRecordReaderImpl
 </code></pre></div></div>
 
 <h3 id="running-multiple-java-test-files">Running Multiple Java Test Files</h3>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
 % ./mvnw test -pl core -Dtest='Test*Reader*'
 </code></pre></div></div>
 
 <h3 id="running-individual-java-test-case">Running Individual Java Test Case</h3>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
 $ ./mvnw test -pl core -Dtest=TestRecordReaderImpl#testFindColumn
 </code></pre></div></div>
 
 <h3 id="running-multiple-java-test-cases">Running Multiple Java Test Cases</h3>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
 % ./mvnw test -pl core -Dtest='TestRecordReaderImpl#testFind*'
 </code></pre></div></div>
 
 <h2 id="approving-a-pull-request">Approving a pull request</h2>
 <p>It is recommended to use an interactive script to merge pull requests, which can be automatically associated with the JIRA.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./dev/merge_orc_pr.py
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./dev/merge_orc_pr.py
 </code></pre></div></div>
 
 <p>Fetch the current state of the project:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git fetch apache
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git fetch apache
 </code></pre></div></div>
 
 <p>Switch to the branch:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git checkout apache/pr/999
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git checkout apache/pr/999
 </code></pre></div></div>
 
 <p>You’ll want to rebase it and make it a single commit by squashing
 the commits into a single commit.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git rebase -i apache/main
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git rebase -i apache/main
 </code></pre></div></div>
 
 <p>Update the commit message to sign it using your GPG key and close the
 pull request:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit --amend -s -S
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit --amend -s -S
 </code></pre></div></div>
 
 <p>Ensure the first line of the commit starts with the jira number
@@ -259,14 +259,14 @@ claiming to have fixed the problem, the form “Closes #999” also works.</p>
 
 <p>Finally, push the result to Apache:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git push apache HEAD:main
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git push apache HEAD:main
 </code></pre></div></div>
 
 <h2 id="creating-a-gpg-key">Creating a GPG key</h2>
 
 <p>When you become a committer, you should create a 4096 bit GPG key.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% gpg --full-gen-key
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% gpg --full-gen-key
 </code></pre></div></div>
 
 <p>Use 4096 bits and your Apache email address. Once it is created,
@@ -274,13 +274,13 @@ you’ll need to get your key fingerprint. Avoid using the short
 fingerprint (eg. 3D0C92B9), because it is possible to generate fake
 keys that have the same short fingerprint as the real key.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% gpg --list-secret-keys --keyid-format LONG
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% gpg --list-secret-keys --keyid-format LONG
 </code></pre></div></div>
 
 <p>Your key fingerprint is the string after “rsa4096/”. Example output
 for the key with fingerprint 1209E7F13D0C92B9 looks like:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/Users/owen/.gnupg/pubring.gpg
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/Users/owen/.gnupg/pubring.gpg
 ------------------------------
 sec   rsa4096/1209E7F13D0C92B9 2010-02-23 [SC]
       47660BC98BC433F01E5C90581209E7F13D0C92B9
@@ -290,7 +290,7 @@ uid                 [ultimate] Owen O'Malley &lt;omalley@apache.org&gt;
 <p>Now publish your public key to one of the public keyservers. I usually use
 hkp://pgp.mit.edu, although any of them will work.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gpg --send-key &lt;your key fingerprint&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gpg --send-key &lt;your key fingerprint&gt;
 </code></pre></div></div>
 
 <p>Next, you need to update the <a href="https://id.apache.org">Apache account

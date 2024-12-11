@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Hive DDL</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -999,7 +999,7 @@
           <p>ORC is well integrated into Hive, so storing your istari table as ORC
 is done by adding “STORED AS ORC”.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE istari (
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE istari (
   name STRING,
   color STRING
 ) STORED AS ORC;
@@ -1008,24 +1008,24 @@ is done by adding “STORED AS ORC”.</p>
 <p>To modify a table so that new partitions of the istari table are
 stored as ORC files:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ALTER TABLE istari SET FILEFORMAT ORC;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ALTER TABLE istari SET FILEFORMAT ORC;
 </code></pre></div></div>
 
 <p>As of Hive 0.14, users can request an efficient merge of small ORC files
 together by issuing a CONCATENATE command on their table or partition. The
 files will be merged at the stripe level without reserialization.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
 </code></pre></div></div>
 
 <p>To get information about an ORC file, use the orcfiledump command.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% hive --orcfiledump &lt;path_to_file&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% hive --orcfiledump &lt;path_to_file&gt;
 </code></pre></div></div>
 
 <p>As of Hive 1.1, to display the data in the ORC file, use:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% hive --orcfiledump -d &lt;path_to_file&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% hive --orcfiledump -d &lt;path_to_file&gt;
 </code></pre></div></div>
 
           

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using Core Java</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1005,9 +1005,9 @@ read and write the data.</p>
 <p>Data is passed to ORC as instances of
 <a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html">VectorizedRowBatch</a>
 that contain the data for 1024 rows. The focus is on speed and
-accessing the data fields directly. <code class="highlighter-rouge">cols</code> is an array of
+accessing the data fields directly. <code class="language-plaintext highlighter-rouge">cols</code> is an array of
 <a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
-and <code class="highlighter-rouge">size</code> is the number of rows.</p>
+and <code class="language-plaintext highlighter-rouge">size</code> is the number of rows.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">org.apache.hadoop.hive.ql.exec.vector</span><span class="o">;</span>
 
@@ -1021,9 +1021,9 @@ and <code class="highlighter-rouge">size</code> is the number of rows.</p>
 <p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
 is the parent type of the different kinds of columns and has some
 fields that are shared across all of the column types. In particular,
-the <code class="highlighter-rouge">noNulls</code> flag if there are no nulls in this column for this batch
-and the <code class="highlighter-rouge">isRepeating</code> flag for columns were the entire batch is the
-same value. For columns where <code class="highlighter-rouge">noNulls == false</code> the <code class="highlighter-rouge">isNull</code> array is
+the <code class="language-plaintext highlighter-rouge">noNulls</code> flag if there are no nulls in this column for this batch
+and the <code class="language-plaintext highlighter-rouge">isRepeating</code> flag for columns were the entire batch is the
+same value. For columns where <code class="language-plaintext highlighter-rouge">noNulls == false</code> the <code class="language-plaintext highlighter-rouge">isNull</code> array is
 true if that value is null.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
@@ -1190,8 +1190,8 @@ length. The byte arrays may or may not be shared between values.</p>
 
 <p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a>
 handles the struct columns and represents the data as an array of
-<code class="highlighter-rouge">ColumnVector</code>. The value for row 5 consists of the fifth value from
-each of the <code class="highlighter-rouge">fields</code> values.</p>
+<code class="language-plaintext highlighter-rouge">ColumnVector</code>. The value for row 5 consists of the fifth value from
+each of the <code class="language-plaintext highlighter-rouge">fields</code> values.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">StructColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="nc">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
@@ -1201,9 +1201,9 @@ each of the <code class="highlighter-rouge">fields</code> values.</p>
 
 <p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a>
 handles the union columns and represents the data as an array of
-integers that pick the subtype and a <code class="highlighter-rouge">fields</code> array one per a
-subtype. Only the value of the <code class="highlighter-rouge">fields</code> that corresponds to
-<code class="highlighter-rouge">tags[row]</code> is set.</p>
+integers that pick the subtype and a <code class="language-plaintext highlighter-rouge">fields</code> array one per a
+subtype. Only the value of the <code class="language-plaintext highlighter-rouge">fields</code> that corresponds to
+<code class="language-plaintext highlighter-rouge">tags[row]</code> is set.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UnionColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">tags</span><span class="o">;</span>
@@ -1214,7 +1214,7 @@ subtype. Only the value of the <code class="highlighter-rouge">fields</code> tha
 
 <p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a>
 handles the array columns and represents the data as two arrays of
-integers for the offset and lengths and a <code class="highlighter-rouge">ColumnVector</code> for the
+integers for the offset and lengths and a <code class="language-plaintext highlighter-rouge">ColumnVector</code> for the
 children values.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ListColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
@@ -1233,7 +1233,7 @@ children values.</p>
 
 <p><a href="https://javadoc.io/static/org.apache.hive/hive-storage-api/2.8.1/org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a>
 handles the map columns and represents the data as two arrays of
-integers for the offset and lengths and two <code class="highlighter-rouge">ColumnVector</code>s for the
+integers for the offset and lengths and two <code class="language-plaintext highlighter-rouge">ColumnVector</code>s for the
 keys and values.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MapColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
@@ -1269,7 +1269,7 @@ parameter, but there are many other options to control the ORC writer.</p>
 </code></pre></div></div>
 
 <p>Now you need to create a row batch, set the data, and write it to the file
-as the batch fills up. When the file is done, close the <code class="highlighter-rouge">Writer</code>.</p>
+as the batch fills up. When the file is done, close the <code class="language-plaintext highlighter-rouge">Writer</code>.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
 <span class="nc">LongColumnVector</span> <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
@@ -1379,7 +1379,7 @@ but there are options to control the data that is read.</p>
 <span class="nc">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">getSchema</span><span class="o">().</span><span class="na">createRowBatch</span><span class="o">();</span>
 </code></pre></div></div>
 
-<p>With a <code class="highlighter-rouge">RecordReader</code> the user can ask for the next batch until there
+<p>With a <code class="language-plaintext highlighter-rouge">RecordReader</code> the user can ask for the next batch until there
 are no more left. The reader will stop the batch at certain boundaries, so the
 returned batch may not be full, but it will always contain some rows.</p>
 

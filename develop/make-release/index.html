@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>How To Release ORC</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -100,14 +100,14 @@
 
 <p>Set version so that it isn’t a SNAPSHOT.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git checkout branch-X.Y
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git checkout branch-X.Y
 % edit CMakeLists.txt
 % (mkdir build; cd build; cmake ..)
 </code></pre></div></div>
 
 <p>Commit the changes back to Apache along with a tag for the release candidate.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -s -S -am 'Preparing for release X.Y.Z'
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -s -S -am 'Preparing for release X.Y.Z'
 % git remote add apache https://gitbox.apache.org/repos/asf/orc.git
 % git push apache branch-X.Y
 % git tag release-X.Y.Zrc0
@@ -116,7 +116,7 @@
 
 <p>Generate the source tarball and checksums for the release.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% wget https://github.com/apache/orc/archive/release-X.Y.Zrc0.tar.gz
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% wget https://github.com/apache/orc/archive/release-X.Y.Zrc0.tar.gz
 % tar xzf release-X.Y.Zrc0.tar.gz
 % mv orc-release-X.Y.Zrc0 orc-X.Y.Z
 % tar czf orc-X.Y.Z.tar.gz orc-X.Y.Z
@@ -129,14 +129,14 @@
 
 <p>Verify the artifacts</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% shasum -a256 orc-X.Y.Z.tar.gz | diff - orc-X.Y.Z.tar.gz.sha256
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% shasum -a256 orc-X.Y.Z.tar.gz | diff - orc-X.Y.Z.tar.gz.sha256
 % gpg --verify orc-X.Y.Z.tar.gz.asc
 % cd ..
 </code></pre></div></div>
 
 <p>Upload the artifacts into Apache dev distribution website.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% svn co --depth=files "https://dist.apache.org/repos/dist/dev/orc" svn-orc
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% svn co --depth=files "https://dist.apache.org/repos/dist/dev/orc" svn-orc
 % mv orc-X.Y.Z-rc0 svn-orc
 % cd svn-orc
 % svn add orc-X.Y.Z-rc0
@@ -154,7 +154,7 @@ to get the list of jiras that are fixed in X.Y.Z</p>
 
 <p>Send email with the vote:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>To: dev@orc.apache.org
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>To: dev@orc.apache.org
 Subject: [VOTE] Release Apache ORC X.Y.Z (RC0)
 
 Please vote on releasing the following candidate as Apache ORC version X.Y.Z.
@@ -180,14 +180,14 @@ Thanks!
 
 <p>Update the final tag and remove the rc tag.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git tag rel/release-X.Y.Z -s
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git tag rel/release-X.Y.Z -s
 % git push apache rel/release-X.Y.Z
 % git push apache :release-X.Y.Zrc0
 </code></pre></div></div>
 
 <p>Publish the artifacts to Maven central staging. Make sure to have this <a href="http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env">setup</a> for Apache releases</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
 % ./mvnw -Papache-release clean deploy
 </code></pre></div></div>
 
@@ -202,7 +202,7 @@ Thanks!
 
 <p>Publish the artifacts to Apache’s dist area.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In a svn clone of https://dist.apache.org/repos/dist/release/orc
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In a svn clone of https://dist.apache.org/repos/dist/release/orc
 % mkdir orc-X.Y.Z
 % cd orc-X.Y.Z
 copy release artifacts with a rename from orc-X.Y.Zrc0* to orc-X.Y.Z*
@@ -219,7 +219,7 @@ extra releases (say I.J.K) from the Apache dist area.
 
 <p>Update the release branch with the version for the next release.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 % cd build
 % cmake ..
 % git commit -a -s -S -am 'Preparing branch for post X.Y.Z development'
@@ -232,7 +232,7 @@ extra releases (say I.J.K) from the Apache dist area.
   <li>Check out the main branch (git checkout apache/main)</li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Change directory in to site.
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Change directory in to site.
 % pwd
 &lt;path-to-main-src&gt;
 % cd site
@@ -252,18 +252,18 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
     </ul>
   </li>
   <li>create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section</li>
-  <li>Run <code class="highlighter-rouge">docker build -t orc-site .</code></li>
-  <li>Run <code class="highlighter-rouge">CONTAINER=$(docker run -d -p 4000:4000 orc-site)</code></li>
+  <li>Run <code class="language-plaintext highlighter-rouge">docker build -t orc-site .</code></li>
+  <li>Run <code class="language-plaintext highlighter-rouge">CONTAINER=$(docker run -d -p 4000:4000 orc-site)</code></li>
   <li>Check the website on <a href="http://0.0.0.0:4000/">http://0.0.0.0:4000/</a></li>
   <li>If it looks good, copy the results out of docker:
     <ul>
-      <li>Run <code class="highlighter-rouge">docker cp $CONTAINER:/home/orc/site/target .</code></li>
-      <li>Run <code class="highlighter-rouge">docker stop $CONTAINER</code></li>
+      <li>Run <code class="language-plaintext highlighter-rouge">docker cp $CONTAINER:/home/orc/site/target .</code></li>
+      <li>Run <code class="language-plaintext highlighter-rouge">docker stop $CONTAINER</code></li>
     </ul>
   </li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -am "Update site for X.Y.Z"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -am "Update site for X.Y.Z"
 % git push origin main
 </code></pre></div></div>
 
@@ -275,7 +275,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
     </ul>
   </li>
   <li>Commit to asf-site to publish the updated site.
-    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd target
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd target
 % git commit -am "Publish site for X.Y.Z"
 % git push origin asf-site
 </code></pre></div>    </div>
@@ -299,7 +299,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 <p>We could release the latest ORC version in <a href="https://vcpkg.io/en/packages">vcpkg</a>.</p>
 
 <p>1.Download the source code of vcpkg:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone git@github.com:microsoft/vcpkg.git
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone git@github.com:microsoft/vcpkg.git
 </code></pre></div></div>
 
 <p>2.Compile vcpkg</p>
@@ -309,7 +309,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 <p>3.Update ORC version</p>
 
 <p>Update the <strong>version</strong> field of <a href="https://github.com/microsoft/vcpkg/blob/master/ports/orc/vcpkg.json">vcpkg.json</a>. Run the following command to rebuild ORC:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./vcpkg build  orc
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./vcpkg build  orc
 </code></pre></div></div>
 
 <p>You will receive an error, which contains a SHA512 value, updating it to the <a href="https://github.com/microsoft/vcpkg/blob/master/ports/orc/portfile.cmake">portfile.cmake</a> file.</p>
@@ -323,15 +323,15 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 </blockquote>
 
 <p>4.Commit current changes</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -m ""
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -m ""
 </code></pre></div></div>
 
 <p>Run ./vcpkg x-add-version –all to auto generate version item in version database.</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./vcpkg x-add-version --all
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./vcpkg x-add-version --all
 </code></pre></div></div>
 
 <p>Test changes with the following command:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./vcpkg build orc
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% ./vcpkg build orc
 </code></pre></div></div>
 
 <p>If anything is ok, re-commit changes and send a PR to <a href="https://github.com/microsoft/vcpkg">vcpkg repo</a>.</p>
@@ -351,13 +351,13 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 <p>Install your conan with the help of the official guide: <a href="https://docs.conan.io/2/installation.html">Install</a></p>
 
 <p>2.Download the source code of conan-center-index:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone git@github.com:conan-io/conan-center-index.git
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone git@github.com:conan-io/conan-center-index.git
 </code></pre></div></div>
 
 <p>3.Update ORC version</p>
 
 <p>Add the new version to <a href="https://github.com/conan-io/conan-center-index/blob/master/recipes/orc/config.yml">config.yml</a> and <a href="https://github.com/conan-io/conan-center-index/blob/master/recipes/orc/all/conandata.yml">conandata.yml</a> locally in your conan-center-index. Run the following command in the conan-center-index/recipes/orc/all directory to build ORC of version X.Y.Z:</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% conan create . --version=X.Y.Z
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% conan create . --version=X.Y.Z
 </code></pre></div></div>
 
 <p>4.Commit current changes</p>

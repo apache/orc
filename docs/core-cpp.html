@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using Core C++</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1003,12 +1003,12 @@ orc::ColumnVectorBatch vectorized classes.</p>
 
 <p>Data is passed to ORC as instances of orc::ColumnVectorBatch
 that contain the data a batch of rows. The focus is on speed and
-accessing the data fields directly. <code class="highlighter-rouge">numElements</code> is the number
+accessing the data fields directly. <code class="language-plaintext highlighter-rouge">numElements</code> is the number
 of rows. ColumnVectorBatch is the parent type of the different
 kinds of columns and has some fields that are shared across
-all of the column types. In particular, the <code class="highlighter-rouge">hasNulls</code> flag
+all of the column types. In particular, the <code class="language-plaintext highlighter-rouge">hasNulls</code> flag
 if there is any null in this column for this batch. For columns
-where <code class="highlighter-rouge">hasNulls == true</code> the <code class="highlighter-rouge">notNull</code> buffer is false if that
+where <code class="language-plaintext highlighter-rouge">hasNulls == true</code> the <code class="language-plaintext highlighter-rouge">notNull</code> buffer is false if that
 value is null.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="n">orc</span> <span class="p">{</span>
@@ -1165,7 +1165,7 @@ and a length buffer.</p>
 </code></pre></div></div>
 
 <p>StructVectorBatch handles the struct columns and represents
-the data as a buffer of <code class="highlighter-rouge">ColumnVectorBatch</code>.</p>
+the data as a buffer of <code class="language-plaintext highlighter-rouge">ColumnVectorBatch</code>.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">StructVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">*&gt;</span> <span class="n">fields</span><span class="p">;</span>
@@ -1173,10 +1173,10 @@ the data as a buffer of <code class="highlighter-rouge">ColumnVectorBatch</code>
   <span class="p">};</span>
 </code></pre></div></div>
 
-<p>UnionVectorBatch handles the union columns. It uses <code class="highlighter-rouge">tags</code>
-to indicate which subtype has the value and <code class="highlighter-rouge">offsets</code> indicates
+<p>UnionVectorBatch handles the union columns. It uses <code class="language-plaintext highlighter-rouge">tags</code>
+to indicate which subtype has the value and <code class="language-plaintext highlighter-rouge">offsets</code> indicates
 the offset in child batch of that subtype. A individual
-<code class="highlighter-rouge">ColumnVectorBatch</code> is used for each subtype.</p>
+<code class="language-plaintext highlighter-rouge">ColumnVectorBatch</code> is used for each subtype.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">UnionVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">tags</span><span class="p">;</span>
@@ -1188,7 +1188,7 @@ the offset in child batch of that subtype. A individual
 
 <p>ListVectorBatch handles the array columns and represents
 the data as a buffer of integers for the offsets and a
-<code class="highlighter-rouge">ColumnVectorBatch</code> for the children values.</p>
+<code class="language-plaintext highlighter-rouge">ColumnVectorBatch</code> for the children values.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">ListVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
@@ -1198,7 +1198,7 @@ the data as a buffer of integers for the offsets and a
 </code></pre></div></div>
 
 <p>MapVectorBatch handles the map columns and represents the data
-as two arrays of integers for the offsets and two <code class="highlighter-rouge">ColumnVectorBatch</code>s
+as two arrays of integers for the offsets and two <code class="language-plaintext highlighter-rouge">ColumnVectorBatch</code>s
 for the keys and values.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">MapVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
@@ -1211,9 +1211,9 @@ for the keys and values.</p>
 
 <h2 id="writing-orc-files">Writing ORC Files</h2>
 
-<p>To write an ORC file, you need to include <code class="highlighter-rouge">OrcFile.hh</code> and define
-the schema; then use <code class="highlighter-rouge">orc::OutputStream</code> and <code class="highlighter-rouge">orc::WriterOptions</code>
-to create a <code class="highlighter-rouge">orc::Writer</code> with the desired filename. This example
+<p>To write an ORC file, you need to include <code class="language-plaintext highlighter-rouge">OrcFile.hh</code> and define
+the schema; then use <code class="language-plaintext highlighter-rouge">orc::OutputStream</code> and <code class="language-plaintext highlighter-rouge">orc::WriterOptions</code>
+to create a <code class="language-plaintext highlighter-rouge">orc::Writer</code> with the desired filename. This example
 sets the required schema parameter, but there are many other
 options to control the ORC writer.</p>
 
@@ -1227,7 +1227,7 @@ options to control the ORC writer.</p>
 </code></pre></div></div>
 
 <p>Now you need to create a row batch, set the data, and write it to the file
-as the batch fills up. When the file is done, close the <code class="highlighter-rouge">Writer</code>.</p>
+as the batch fills up. When the file is done, close the <code class="language-plaintext highlighter-rouge">Writer</code>.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">uint64_t</span> <span class="n">batchSize</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">rowCount</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">batch</span> <span class="o">=</span>
@@ -1269,9 +1269,9 @@ as the batch fills up. When the file is done, close the <code class="highlighter
 
 <h2 id="reading-orc-files">Reading ORC Files</h2>
 
-<p>To read ORC files, include <code class="highlighter-rouge">OrcFile.hh</code> file to create a <code class="highlighter-rouge">orc::Reader</code>
+<p>To read ORC files, include <code class="language-plaintext highlighter-rouge">OrcFile.hh</code> file to create a <code class="language-plaintext highlighter-rouge">orc::Reader</code>
 that contains the metadata about the file. There are a few options to
-the <code class="highlighter-rouge">orc::Reader</code>, but far fewer than the writer and none of them are
+the <code class="language-plaintext highlighter-rouge">orc::Reader</code>, but far fewer than the writer and none of them are
 required. The reader has methods for getting the number of rows,
 schema, compression, etc. from the file.</p>
 
@@ -1282,7 +1282,7 @@ schema, compression, etc. from the file.</p>
   <span class="n">createReader</span><span class="p">(</span><span class="n">inStream</span><span class="p">,</span> <span class="n">options</span><span class="p">);</span>
 </code></pre></div></div>
 
-<p>To get the data, create a <code class="highlighter-rouge">orc::RowReader</code> object. By default,
+<p>To get the data, create a <code class="language-plaintext highlighter-rouge">orc::RowReader</code> object. By default,
 the RowReader reads all rows and all columns, but there are
 options to control the data that is read.</p>
 
@@ -1293,7 +1293,7 @@ options to control the data that is read.</p>
   <span class="n">rowReader</span><span class="o">-&gt;</span><span class="n">createRowBatch</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span>
 </code></pre></div></div>
 
-<p>With a <code class="highlighter-rouge">orc::RowReader</code> the user can ask for the next batch until there
+<p>With a <code class="language-plaintext highlighter-rouge">orc::RowReader</code> the user can ask for the next batch until there
 are no more left. The reader will stop the batch at certain boundaries,
 so the returned batch may not be full, but it will always contain some rows.</p>
 

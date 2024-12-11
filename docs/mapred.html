@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using in MapRed</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1003,7 +1003,7 @@ page</a>.</p>
 
 <h2 id="reading-orc-files">Reading ORC files</h2>
 
-<p>Add ORC and your desired version of Hadoop to your <code class="highlighter-rouge">pom.xml</code>:</p>
+<p>Add ORC and your desired version of Hadoop to your <code class="language-plaintext highlighter-rouge">pom.xml</code>:</p>
 
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependencies&gt;</span>
   <span class="nt">&lt;dependency&gt;</span>
@@ -1119,7 +1119,7 @@ the key and a value based on the table below expanded recursively.</p>
 </table>
 
 <p>Let’s assume that your input directory contains ORC files with the
-schema <code class="highlighter-rouge">struct&lt;s:string,i:int&gt;</code> and you want to use the string field
+schema <code class="language-plaintext highlighter-rouge">struct&lt;s:string,i:int&gt;</code> and you want to use the string field
 as the key to the MapReduce shuffle and the integer as the value. The
 mapper code would look like:</p>
 
@@ -1155,7 +1155,7 @@ file and typically uses the OrcStruct.createValue(TypeDescription)
 function. For our example, let’s assume that the shuffle types are
 (Text, IntWritable) from the previous section and the reduce should
 gather the integer for each key together and write them as a list. The
-output schema would be <code class="highlighter-rouge">struct&lt;key:string,ints:array&lt;int&gt;&gt;</code>. As always
+output schema would be <code class="language-plaintext highlighter-rouge">struct&lt;key:string,ints:array&lt;int&gt;&gt;</code>. As always
 with MapReduce, if your method stores the values, you need to copy their
 value before getting the next.</p>
 

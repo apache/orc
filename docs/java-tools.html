@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Java Tools</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1043,28 +1043,28 @@ supports both the local file system and HDFS.</p>
 single ORC file.</p>
 
 <dl>
-  <dt><code class="highlighter-rouge">-b,--bloomFilterColumns &lt;columns&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-b,--bloomFilterColumns &lt;columns&gt;</code></dt>
   <dd>Comma separated values of column names for which bloom filter is to be created.
   By default, no bloom filters will be created.</dd>
-  <dt><code class="highlighter-rouge">-e,--escape &lt;escape&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-e,--escape &lt;escape&gt;</code></dt>
   <dd>Sets CSV escape character</dd>
-  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
-  <dt><code class="highlighter-rouge">-H,--header &lt;header&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-H,--header &lt;header&gt;</code></dt>
   <dd>Sets CSV header lines</dd>
-  <dt><code class="highlighter-rouge">-n,--null &lt;null&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-n,--null &lt;null&gt;</code></dt>
   <dd>Sets CSV null string</dd>
-  <dt><code class="highlighter-rouge">-o,--output &lt;filename&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-o,--output &lt;filename&gt;</code></dt>
   <dd>Sets the output ORC filename, which defaults to output.orc</dd>
-  <dt><code class="highlighter-rouge">-O,--overwrite</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-O,--overwrite</code></dt>
   <dd>If the file already exists, it will be overwritten</dd>
-  <dt><code class="highlighter-rouge">-q,--quote &lt;quote&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-q,--quote &lt;quote&gt;</code></dt>
   <dd>Sets CSV quote character</dd>
-  <dt><code class="highlighter-rouge">-s,--schema &lt;schema&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-s,--schema &lt;schema&gt;</code></dt>
   <dd>Sets the schema for the ORC file. By default, the schema is automatically discovered.</dd>
-  <dt><code class="highlighter-rouge">-S,--separator &lt;separator&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-S,--separator &lt;separator&gt;</code></dt>
   <dd>Sets CSV separator character</dd>
-  <dt><code class="highlighter-rouge">-t,--timestampformat &lt;timestampformat&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-t,--timestampformat &lt;timestampformat&gt;</code></dt>
   <dd>Sets timestamp Format</dd>
 </dl>
 
@@ -1082,9 +1082,9 @@ record is printed as a JSON object on a line. Each record is annotated with
 the fieldnames and a JSON representation that depends on the field’s type.</p>
 
 <dl>
-  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
-  <dt><code class="highlighter-rouge">-n,--lines &lt;LINES&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-n,--lines &lt;LINES&gt;</code></dt>
   <dd>Sets lines of data to be printed</dd>
 </dl>
 
@@ -1096,13 +1096,13 @@ documents. It works by computing the enclosing type and promoting it
 to include all of the observed values.</p>
 
 <dl>
-  <dt><code class="highlighter-rouge">-f,--flat</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-f,--flat</code></dt>
   <dd>Print the schema as a list of flat types for each subfield</dd>
-  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
-  <dt><code class="highlighter-rouge">-p,--pretty</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-p,--pretty</code></dt>
   <dd>Pretty print the schema</dd>
-  <dt><code class="highlighter-rouge">-t,--table</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-t,--table</code></dt>
   <dd>Print the schema as a Hive table declaration</dd>
 </dl>
 
@@ -1111,9 +1111,9 @@ to include all of the observed values.</p>
 <p>The key command prints the information about the encryption keys.</p>
 
 <dl>
-  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
-  <dt><code class="highlighter-rouge">-o,--output &lt;output&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-o,--output &lt;output&gt;</code></dt>
   <dd>Output filename</dd>
 </dl>
 
@@ -1123,25 +1123,25 @@ to include all of the observed values.</p>
 equivalent to the Hive ORC File Dump command.</p>
 
 <dl>
-  <dt><code class="highlighter-rouge">--backup-path &lt;path&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">--backup-path &lt;path&gt;</code></dt>
   <dd>when used with –recover specifies the path where the recovered file is written (default: /tmp)</dd>
-  <dt><code class="highlighter-rouge">--column-type</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">--column-type</code></dt>
   <dd>Print the column id, name and type of each column</dd>
-  <dt><code class="highlighter-rouge">-d,--data</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-d,--data</code></dt>
   <dd>Should the data be printed</dd>
-  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
-  <dt><code class="highlighter-rouge">-j,--json</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-j,--json</code></dt>
   <dd>Format the output in JSON</dd>
-  <dt><code class="highlighter-rouge">-p,--pretty</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-p,--pretty</code></dt>
   <dd>Pretty print the output</dd>
-  <dt><code class="highlighter-rouge">-r,--rowindex &lt;ids&gt;</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-r,--rowindex &lt;ids&gt;</code></dt>
   <dd>Print the row indexes for the comma separated list of column ids</dd>
-  <dt><code class="highlighter-rouge">--recover</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">--recover</code></dt>
   <dd>Skip over corrupted values in the ORC file</dd>
-  <dt><code class="highlighter-rouge">--skip-dump</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">--skip-dump</code></dt>
   <dd>Skip dumping the metadata</dd>
-  <dt><code class="highlighter-rouge">-t,--timezone</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-t,--timezone</code></dt>
   <dd>Print the timezone of the writer</dd>
 </dl>
 
@@ -1303,19 +1303,19 @@ is primarily intendend for benchmarking the Java reader without including the
 cost of printing the data out.</p>
 
 <dl>
-  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
-  <dt><code class="highlighter-rouge">-s,--schema</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-s,--schema</code></dt>
   <dd>Print schema</dd>
-  <dt><code class="highlighter-rouge">-v,--verbose</code></dt>
+  <dt><code class="language-plaintext highlighter-rouge">-v,--verbose</code></dt>
   <dd>Print exceptions</dd>
 </dl>
 
 <h2 id="java-sizes">Java Sizes</h2>
 
 <p>The sizes command lists size on disk of each column. The output contains not
-only the raw data of the table, but also the size of metadata such as <code class="highlighter-rouge">padding</code>,
-<code class="highlighter-rouge">stripeFooter</code>, <code class="highlighter-rouge">fileFooter</code>, <code class="highlighter-rouge">stripeIndex</code> and <code class="highlighter-rouge">stripeData</code>.</p>
+only the raw data of the table, but also the size of metadata such as <code class="language-plaintext highlighter-rouge">padding</code>,
+<code class="language-plaintext highlighter-rouge">stripeFooter</code>, <code class="language-plaintext highlighter-rouge">fileFooter</code>, <code class="language-plaintext highlighter-rouge">stripeIndex</code> and <code class="language-plaintext highlighter-rouge">stripeData</code>.</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar sizes examples/my-file.orc
 Percent  Bytes/Row  Name

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Spark DDL</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -996,23 +996,23 @@
       <div class="unit four-fifths">
         <article>
           <h1>Spark DDL</h1>
-          <p>ORC is well integrated into Spark, so storing your <code class="highlighter-rouge">istari</code> table as ORC
-is done by adding <code class="highlighter-rouge">USING ORC</code>.</p>
+          <p>ORC is well integrated into Spark, so storing your <code class="language-plaintext highlighter-rouge">istari</code> table as ORC
+is done by adding <code class="language-plaintext highlighter-rouge">USING ORC</code>.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE istari (
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE istari (
   name STRING,
   color STRING
 ) USING ORC;
 </code></pre></div></div>
 
-<p>To get information about an ORC file, use the <code class="highlighter-rouge">orc-tools</code> command.</p>
+<p>To get information about an ORC file, use the <code class="language-plaintext highlighter-rouge">orc-tools</code> command.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-tools meta &lt;path_to_file&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-tools meta &lt;path_to_file&gt;
 </code></pre></div></div>
 
 <p>To display the data in the ORC file, use:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-tools data &lt;path_to_file&gt;
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-tools data &lt;path_to_file&gt;
 </code></pre></div></div>
 
           

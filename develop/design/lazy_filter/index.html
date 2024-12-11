@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Lazy Filter</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.6">
+  <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -249,7 +249,7 @@ filter types were evaluated:</p>
   <li><strong>Read Stripe</strong> used to plan the read of all (search + select) columns. This is enhanced to plan and fetch only the
 search columns. The rest of the stripe planning process optimizations remain unchanged e.g. partial read planning of
 the stripe based on RowGroup statistics.</li>
-  <li><strong>Next Batch</strong> identifies the processing that takes place when <code class="highlighter-rouge">RecordReader.nextBatch</code> is invoked.
+  <li><strong>Next Batch</strong> identifies the processing that takes place when <code class="language-plaintext highlighter-rouge">RecordReader.nextBatch</code> is invoked.
     <ul>
       <li><strong>Read Search Columns</strong> takes place instead of reading all the selected columns. This is in sync with the planning
 that has taken place during <strong>Read Stripe</strong> where only the search columns have been planned.</li>
@@ -344,10 +344,10 @@ of stripe. This shall be included as a subsequent enhancement to this patch.</p>
 </table>
 
 <ul>
-  <li><code class="highlighter-rouge">orc.sarg.to.filter</code> can be used to turn off the SArg to filter conversion. This might be particularly relevant in
+  <li><code class="language-plaintext highlighter-rouge">orc.sarg.to.filter</code> can be used to turn off the SArg to filter conversion. This might be particularly relevant in
 cases where the filter is expensive and does not eliminate a lot of records. This will not be relevant once we have
 the option to turn off the filters on the caller as they have been completely implemented by the ORC layer.</li>
-  <li><code class="highlighter-rouge">orc.filter.use.selected</code> is an important setting that if incorrectly enabled results in wrong output. A boolean flag
+  <li><code class="language-plaintext highlighter-rouge">orc.filter.use.selected</code> is an important setting that if incorrectly enabled results in wrong output. A boolean flag
 to determine if the selected vector is supported by the reading application. If false, the output of the ORC reader
 must have the filter reapplied to avoid using unset values in the unselected rows. If unsure please leave this as
 false.</li>
@@ -564,7 +564,7 @@ compared with the Vector filter.</p>
     </ul>
   </li>
   <li>The performance of the filters is deteriorates with the increase of the IN values, however even in this case the
-vector filter is much better than the row filter. The current <code class="highlighter-rouge">IN</code> filter employs a binary search on an array instead
+vector filter is much better than the row filter. The current <code class="language-plaintext highlighter-rouge">IN</code> filter employs a binary search on an array instead
 of a hash lookup.</li>
 </ul>
 
