@@ -390,7 +390,7 @@ namespace orc {
 
   DIAGNOSTIC_POP
 
-  static bool col_has_null_forward_compatible(const proto::ColumnStatistics& stats) {
+  static bool colHasNullForwardCompatible(const proto::ColumnStatistics& stats) {
     // for foward compatibility, if has_null is not set, assume that the column has nulls
     return stats.has_has_null() ? stats.has_null() : true;
   }
@@ -398,7 +398,7 @@ namespace orc {
   static TruthValue evaluateBoolPredicate(const PredicateLeaf::Operator op,
                                           const std::vector<Literal>& literals,
                                           const proto::ColumnStatistics& stats) {
-    bool hasNull = col_has_null_forward_compatible(stats);
+    bool hasNull = colHasNullForwardCompatible(stats);
     if (!stats.has_bucket_statistics() || stats.bucket_statistics().count_size() == 0) {
       // does not have bool stats
       return hasNull ? TruthValue::YES_NO_NULL : TruthValue::YES_NO;
@@ -517,9 +517,8 @@ namespace orc {
         if (colStats.has_int_statistics() && colStats.int_statistics().has_minimum() &&
             colStats.int_statistics().has_maximum()) {
           const auto& stats = colStats.int_statistics();
-          result =
-              evaluatePredicateRange(operator_, literal2Long(literals_), stats.minimum(),
-                                     stats.maximum(), col_has_null_forward_compatible(colStats));
+          result = evaluatePredicateRange(operator_, literal2Long(literals_), stats.minimum(),
+                                          stats.maximum(), colHasNullForwardCompatible(colStats));
         }
         break;
       }
@@ -528,12 +527,11 @@ namespace orc {
             colStats.double_statistics().has_maximum()) {
           const auto& stats = colStats.double_statistics();
           if (!std::isfinite(stats.sum())) {
-            result = col_has_null_forward_compatible(colStats) ? TruthValue::YES_NO_NULL
-                                                               : TruthValue::YES_NO;
+            result = colHasNullForwardCompatible(colStats) ? TruthValue::YES_NO_NULL
+                                                           : TruthValue::YES_NO;
           } else {
-            result =
-                evaluatePredicateRange(operator_, literal2Double(literals_), stats.minimum(),
-                                       stats.maximum(), col_has_null_forward_compatible(colStats));
+            result = evaluatePredicateRange(operator_, literal2Double(literals_), stats.minimum(),
+                                            stats.maximum(), colHasNullForwardCompatible(colStats));
           }
         }
         break;
@@ -543,9 +541,8 @@ namespace orc {
         if (colStats.has_string_statistics() && colStats.string_statistics().has_minimum() &&
             colStats.string_statistics().has_maximum()) {
           const auto& stats = colStats.string_statistics();
-          result =
-              evaluatePredicateRange(operator_, literal2String(literals_), stats.minimum(),
-                                     stats.maximum(), col_has_null_forward_compatible(colStats));
+          result = evaluatePredicateRange(operator_, literal2String(literals_), stats.minimum(),
+                                          stats.maximum(), colHasNullForwardCompatible(colStats));
         }
         break;
       }
@@ -553,9 +550,8 @@ namespace orc {
         if (colStats.has_date_statistics() && colStats.date_statistics().has_minimum() &&
             colStats.date_statistics().has_maximum()) {
           const auto& stats = colStats.date_statistics();
-          result =
-              evaluatePredicateRange(operator_, literal2Date(literals_), stats.minimum(),
-                                     stats.maximum(), col_has_null_forward_compatible(colStats));
+          result = evaluatePredicateRange(operator_, literal2Date(literals_), stats.minimum(),
+                                          stats.maximum(), colHasNullForwardCompatible(colStats));
         }
         break;
       }
@@ -577,7 +573,7 @@ namespace orc {
               stats.maximum_utc() / 1000,
               static_cast<int32_t>((stats.maximum_utc() % 1000) * 1000000) + maxNano);
           result = evaluatePredicateRange(operator_, literal2Timestamp(literals_), minTimestamp,
-                                          maxTimestamp, col_has_null_forward_compatible(colStats));
+                                          maxTimestamp, colHasNullForwardCompatible(colStats));
         }
         break;
       }
@@ -587,7 +583,7 @@ namespace orc {
           const auto& stats = colStats.decimal_statistics();
           result = evaluatePredicateRange(operator_, literal2Decimal(literals_),
                                           Decimal(stats.minimum()), Decimal(stats.maximum()),
-                                          col_has_null_forward_compatible(colStats));
+                                          colHasNullForwardCompatible(colStats));
         }
         break;
       }
@@ -602,7 +598,7 @@ namespace orc {
     }
 
     // make sure null literal is respected for IN operator
-    if (operator_ == Operator::IN && col_has_null_forward_compatible(colStats)) {
+    if (operator_ == Operator::IN && colHasNullForwardCompatible(colStats)) {
       for (const auto& literal : literals_) {
         if (literal.isNull()) {
           result = TruthValue::YES_NO_NULL;
@@ -711,14 +707,14 @@ namespace orc {
       }
     }
 
-    bool allNull = col_has_null_forward_compatible(colStats) && colStats.number_of_values() == 0;
+    bool allNull = colHasNullForwardCompatible(colStats) && colStats.number_of_values() == 0;
     if (operator_ == Operator::IS_NULL ||
         ((operator_ == Operator::EQUALS || operator_ == Operator::NULL_SAFE_EQUALS) &&
          literals_.at(0).isNull())) {
       // IS_NULL operator does not need to check min/max stats and bloom filter
-      return allNull ? TruthValue::YES
-                     : (col_has_null_forward_compatible(colStats) ? TruthValue::YES_NO
-                                                                  : TruthValue::NO);
+      return allNull
+                 ? TruthValue::YES
+                 : (colHasNullForwardCompatible(colStats) ? TruthValue::YES_NO : TruthValue::NO);
     } else if (allNull) {
       // if we don't have any value, everything must have been null
       return TruthValue::IS_NULL;
@@ -726,7 +722,7 @@ namespace orc {
 
     TruthValue result = evaluatePredicateMinMax(colStats);
     if (shouldEvaluateBloomFilter(operator_, result, bloomFilter)) {
-      return evaluatePredicateBloomFiter(bloomFilter, col_has_null_forward_compatible(colStats));
+      return evaluatePredicateBloomFiter(bloomFilter, colHasNullForwardCompatible(colStats));
     } else {
       return result;
     }
