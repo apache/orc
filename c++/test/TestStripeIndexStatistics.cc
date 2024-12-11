@@ -46,7 +46,8 @@ namespace orc {
     intColStats = reinterpret_cast<const orc::IntegerColumnStatistics*>(
         stripeStats->getRowIndexStatistics(1, 0));
     EXPECT_EQ(
-        "Data type: Integer\nValues: 2000\nHas null: yes\nMinimum: 1\nMaximum: 2000\nSum: 2001000\n",
+        "Data type: Integer\nValues: 2000\nHas null: yes\nMinimum: 1\nMaximum: 2000\nSum: "
+        "2001000\n",
         intColStats->toString());
     intColStats = reinterpret_cast<const orc::IntegerColumnStatistics*>(
         stripeStats->getRowIndexStatistics(1, 1));
