@@ -672,7 +672,7 @@ namespace orc {
   TEST(TestPredicateLeaf, testLackOfSataistics) {
     PredicateLeaf pred(PredicateLeaf::Operator::IS_NULL, PredicateDataType::STRING, 1, {});
     EXPECT_EQ(TruthValue::YES_NO, evaluate(pred, createStringStats("c", "d", true)));
-    EXPECT_EQ(TruthValue::YES, evaluate(pred, createIncompleteNullStats()));
+    EXPECT_EQ(TruthValue::YES_NO_NULL, evaluate(pred, createIncompleteNullStats()));
   }
 
 }  // namespace orc
