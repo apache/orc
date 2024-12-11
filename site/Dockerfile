@@ -17,7 +17,7 @@
 # ORC site builder
 #
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.ref.name="Apache ORC site builder"
@@ -40,8 +40,8 @@ RUN gem install \
   liquid \
   listen \
   rouge
-RUN gem install jekyll -v 3.8.6
-RUN gem install github-pages
+RUN gem install jekyll
+RUN gem install -f github-pages
 
 RUN useradd -ms /bin/bash orc
 COPY . /home/orc/site
