@@ -17,7 +17,7 @@
 # ORC site builder
 #
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
@@ -37,8 +37,8 @@ RUN gem install \
   liquid \
   listen \
   rouge
-RUN gem install jekyll -v 3.8.6
-RUN gem install github-pages
+RUN gem install jekyll
+RUN gem install -f github-pages
 
 RUN useradd -ms /bin/bash orc
 COPY . /home/orc/site
