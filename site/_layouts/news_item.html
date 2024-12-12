@@ -16,12 +16,9 @@ layout: news
     <span class="post-date">
       {{ page.date | date_to_string }}
     </span>
-    <a href="https://people.apache.org/~{{ page.author }}" class="post-author">
-      <img src="https://people.apache.org/~{{ page.author }}/{{ page.author }}.png"
-           class="avatar" alt="{{ page.author }} avatar"
-           width="24" height="24">
+    <span class="post-author">
       {{ page.author }}
-    </a>
+    </span>
   </div>
   <div class="post-content">
     {{ content }}

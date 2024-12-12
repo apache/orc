@@ -27,7 +27,7 @@ are subscribed.
 
 Please note that we do not use a team GnuPG key. If you wish to
 encrypt your e-mail to security@orc.apache.org then please use the GnuPG
-keys from [ORC GPG keys](https://people.apache.org/keys/group/orc.asc) for
+keys from [ORC GPG keys](https://dist.apache.org/repos/dist/release/orc/KEYS) for
 the members of the
 [ORC PMC](https://people.apache.org/phonebook.html?ctte=orc).
 
