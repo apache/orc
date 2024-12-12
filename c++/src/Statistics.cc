@@ -181,13 +181,13 @@ namespace orc {
 
   ColumnStatisticsImpl::ColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
   }
 
   BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                          const StatContext& statContext) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (pb.has_binary_statistics() && statContext.correctStats) {
       _stats.setHasTotalLength(pb.binary_statistics().has_sum());
       _stats.setTotalLength(static_cast<uint64_t>(pb.binary_statistics().sum()));
@@ -197,7 +197,7 @@ namespace orc {
   BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                            const StatContext& statContext) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (pb.has_bucket_statistics() && statContext.correctStats) {
       _hasCount = true;
       _trueCount = pb.bucket_statistics().count(0);
@@ -210,7 +210,7 @@ namespace orc {
   DateColumnStatisticsImpl::DateColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                      const StatContext& statContext) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (!pb.has_date_statistics() || !statContext.correctStats) {
       // hasMinimum_ is false by default;
       // hasMaximum_ is false by default;
@@ -227,7 +227,7 @@ namespace orc {
   DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                            const StatContext& statContext) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (pb.has_decimal_statistics() && statContext.correctStats) {
       const proto::DecimalStatistics& stats = pb.decimal_statistics();
       _stats.setHasMinimum(stats.has_minimum());
@@ -242,7 +242,7 @@ namespace orc {
 
   DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (!pb.has_double_statistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
@@ -261,7 +261,7 @@ namespace orc {
 
   IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (!pb.has_int_statistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
@@ -281,7 +281,7 @@ namespace orc {
   StringColumnStatisticsImpl::StringColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                          const StatContext& statContext) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (!pb.has_string_statistics() || !statContext.correctStats) {
       _stats.setTotalLength(0);
     } else {
@@ -299,7 +299,7 @@ namespace orc {
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl(const proto::ColumnStatistics& pb,
                                                                const StatContext& statContext) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (!pb.has_timestamp_statistics() || !statContext.correctStats) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
@@ -365,7 +365,7 @@ namespace orc {
   CollectionColumnStatisticsImpl::CollectionColumnStatisticsImpl(
       const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.number_of_values());
-    _stats.setHasNull(pb.has_null());
+    _stats.setHasNull(pb.has_has_null() ? pb.has_null() : true);
     if (!pb.has_collection_statistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
