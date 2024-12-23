@@ -33,7 +33,8 @@ option(ORC_PREFER_STATIC_LZ4      "Prefer static lz4 library, if available"     
 option(ORC_PREFER_STATIC_ZSTD     "Prefer static zstd library, if available"     ON)
 option(ORC_PREFER_STATIC_ZLIB     "Prefer static zlib library, if available"     ON)
 option(ORC_PREFER_STATIC_GMOCK    "Prefer static gmock library, if available"    ON)
-
+set(DEFAULT_ORC_FORMAT_URL "https://www.apache.org/dyn/closer.lua/orc/orc-format-${ORC_FORMAT_VERSION}/orc-format-${ORC_FORMAT_VERSION}.tar.gz?action=download")
+set(ORC_FORMAT_URL ${DEFAULT_ORC_FORMAT_URL} CACHE STRING "URL from which to download ORC format library" FORCE)
 # zstd requires us to add the threads
 FIND_PACKAGE(Threads REQUIRED)
 
@@ -136,8 +137,9 @@ endfunction()
 
 # ----------------------------------------------------------------------
 # ORC Format
+message(STATUS "Using ORC_FORMAT_URL: ${ORC_FORMAT_URL}")
 ExternalProject_Add (orc-format_ep
-  URL "https://www.apache.org/dyn/closer.lua/orc/orc-format-${ORC_FORMAT_VERSION}/orc-format-${ORC_FORMAT_VERSION}.tar.gz?action=download"
+  URL ${ORC_FORMAT_URL}
   URL_HASH SHA256=739fae5ff94b1f812b413077280361045bf92e510ef04b34a610e23a945d8cd5
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
