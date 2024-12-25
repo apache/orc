@@ -37,4 +37,4 @@ are separated from each other so the reader can read just the columns
 that are required.
 
 For details on the specifics of the ORC format, please see the [ORC
-format specification](/specification/).
+format specification]({{ site.baseurl }}/specification/).
