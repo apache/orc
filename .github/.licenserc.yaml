@@ -22,5 +22,6 @@ header:
     - 'NOTICE'
     - '.clang-format'
     - '.asf.yaml'
+    - '.nojekyll'
 
   comment: on-failure
