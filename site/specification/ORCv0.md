@@ -27,7 +27,7 @@ include the minimum and maximum values for each column in each set of
 file reader can skip entire sets of rows that aren't important for
 this query.
 
-![ORC file structure](/img/OrcFileLayout.png)
+![ORC file structure]({{ site.baseurl }}/img/OrcFileLayout.png)
 
 # File Tail
 
@@ -381,7 +381,7 @@ for a chunk that compressed to 100,000 bytes would be [0x40, 0x0d,
 that as long as a decompressor starts at the top of a header, it can
 start decompressing without the previous bytes.
 
-![compression streams](/img/CompressionStream.png)
+![compression streams]({{ site.baseurl }}/img/CompressionStream.png)
 
 The default compression chunk size is 256K, but writers can choose
 their own value. Larger chunks lead to better compression, but require

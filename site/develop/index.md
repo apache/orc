@@ -6,7 +6,7 @@ title: Developing
 Information about the ORC project that is most important for
 developers working on the project.
 
-The [ORC format specification](/specification) defines the format
+The [ORC format specification]({{ site.baseurl }}/specification) defines the format
 to promote compatibility between implementations.
 
 ## Development community
@@ -83,11 +83,11 @@ We've added several shortcuts to various relevant pages:
 
 From our website, you can use:
 
-* [/bugs](/bugs) to jump to our bug database
-* [/downloads](/downloads) to jump to our downloads page
-* [/releases](/releases) to jump to our releases page
-* [/src](/src) to jump to our source code
-* [/web-src](/web-src) to jump to our site source code
+* [/bugs](https://orc.apache.org/bugs) to jump to our bug database
+* [/downloads](https://orc.apache.org/downloads) to jump to our downloads page
+* [/releases](https://orc.apache.org/releases) to jump to our releases page
+* [/src](https://orc.apache.org/src) to jump to our source code
+* [/web-src](https://orc.apache.org/web-src) to jump to our site source code
 
 ## Reviews
 

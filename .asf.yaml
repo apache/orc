@@ -24,6 +24,8 @@ github:
     merge: false
     squash: true
     rebase: true
+  ghp_branch: main
+  ghp_path: /site
   labels:
     - apache
     - orc
