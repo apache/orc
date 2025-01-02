@@ -19,8 +19,9 @@ name: Address Sanitizer Tests
 
 on:
   pull_request:
-    paths:
-    - 'c++/**'
+    paths-ignore:
+    - 'site/**'
+    - 'conan/**'
     branches:
     - main
 
