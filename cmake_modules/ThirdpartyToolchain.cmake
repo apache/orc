@@ -33,6 +33,7 @@ option(ORC_PREFER_STATIC_LZ4      "Prefer static lz4 library, if available"     
 option(ORC_PREFER_STATIC_ZSTD     "Prefer static zstd library, if available"     ON)
 option(ORC_PREFER_STATIC_ZLIB     "Prefer static zlib library, if available"     ON)
 option(ORC_PREFER_STATIC_GMOCK    "Prefer static gmock library, if available"    ON)
+
 # zstd requires us to add the threads
 FIND_PACKAGE(Threads REQUIRED)
 
