@@ -1,3 +1,20 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 name: Build and test
 
 on:
@@ -158,22 +175,29 @@ jobs:
         ./mvnw install -DskipTests
         ./mvnw javadoc:javadoc
 
-  formatting-check:
-    name: "C++ format check"
-    runs-on: ubuntu-22.04
+  cpp-linter:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run build
+      - uses: actions/checkout@v4
+      - uses: cpp-linter/cpp-linter-action@v2.13.3
+        id: linter
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: file
+          tidy-checks: file
+          files-changed-only: true
+          lines-changed-only: true
+          thread-comments: true
+          ignore: 'build|cmake_modules|conan|dev|docker|examples|java|site'
+          database: build/compile_commands.json
+          extra-args: #-Wno-unused-parameter
+      - name: Fail fast?!
+        if: steps.linter.outputs.checks-failed != 0
         run: |
-          mkdir build
-          cd build
-          cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DSTOP_BUILD_ON_WARNING=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DBUILD_CPP_ENABLE_METRICS=1
-          make
-      - name: Check clang-tidy
-        run: cd build && make check-clang-tidy
-      - name: Check clang-format
-        run: cd build && make check-format
+          echo "some linter checks failed. ${{ steps.linter.outputs.checks-failed }}"
+          exit 1
 
   license-check:
     name: "License Check"
