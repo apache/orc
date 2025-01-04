@@ -1,3 +1,20 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 name: Build and test
 
 on:
@@ -157,21 +174,29 @@ jobs:
         ./mvnw install -DskipTests
         ./mvnw javadoc:javadoc
 
-  formatting-check:
-    name: "C++ format check"
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        path:
-          - 'c++'
-          - 'tools'
+  cpp-linter:
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v3
-    - name: Run clang-format style check for C++ code
-      uses: jidicula/clang-format-action@v4.9.0
-      with:
-        clang-format-version: '13'
-        check-path: ${{ matrix.path }}
+      - uses: actions/checkout@v4
+      - uses: cpp-linter/cpp-linter-action@v2.13.3
+        id: linter
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: file
+          tidy-checks: file
+          files-changed-only: true
+          lines-changed-only: true
+          thread-comments: true
+          ignore: 'build|cmake_modules|conan|dev|docker|examples|java|site'
+          database: build/compile_commands.json
+          extra-args: #-Wno-unused-parameter
+      - name: Fail fast?!
+        if: steps.linter.outputs.checks-failed != 0
+        run: |
+          echo "some linter checks failed. ${{ steps.linter.outputs.checks-failed }}"
+          exit 1
 
   license-check:
     name: "License Check"
