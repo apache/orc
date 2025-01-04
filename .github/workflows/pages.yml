@@ -60,7 +60,7 @@ jobs:
           gem install bundler -n /usr/local/bin
           bundle install --retry=100
           git clone https://github.com/apache/orc.git -b asf-site target
-          bundle exec jekyll build -b https://apache.github.io/orc
+          bundle exec jekyll build -b /orc
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
