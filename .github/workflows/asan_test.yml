@@ -32,7 +32,7 @@ concurrency:
 jobs:
   asan-test:
     name: "ASAN with ${{ matrix.compiler }} on Ubuntu"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
