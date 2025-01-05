@@ -9,7 +9,7 @@ permalink: /docs/pyarrow.html
 [Apache Arrow](https://arrow.apache.org) project's [PyArrow](https://pypi.org/project/pyarrow/) is the recommended package.
 
 ```
-pip3 install pyarrow==13.0.0
+pip3 install pyarrow==18.1.0
 pip3 install pandas
 ```
 
