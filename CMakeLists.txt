@@ -77,6 +77,10 @@ option(BUILD_ENABLE_AVX512
     "Enable build with AVX512 at compile time"
     OFF)
 
+option(ENABLE_ASAN
+    "Enable Address Sanitizer"
+    OFF)
+
 option(ORC_PACKAGE_KIND
     "Arbitrary string that identifies the kind of package"
     "")
@@ -152,6 +156,16 @@ elseif (MSVC)
   set (WARN_FLAGS "${WARN_FLAGS} -wd4521") # multiple copy constructors specified
   set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
 endif ()
+# Configure Address Sanitizer if enabled
+if (ENABLE_ASAN)
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+    message(STATUS "Address Sanitizer enabled")
+  else()
+    message(WARNING "Address Sanitizer is only supported for GCC and Clang compilers")
+  endif()
+endif()
 
 enable_testing()
 
