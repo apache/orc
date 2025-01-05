@@ -9,7 +9,7 @@ permalink: /docs/dask.html
 [Dask](https://dask.org) also supports Apache ORC.
 
 ```
-pip3 install "dask[dataframe]==2023.8.1"
+pip3 install "dask[dataframe]==2024.12.1"
 pip3 install pandas
 ```
 
