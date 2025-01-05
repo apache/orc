@@ -19,7 +19,7 @@ This include generates the table of releases.
         <td style="text-align: center">{{ release[1]["date"] }}</td>
         <td style="text-align: center">{{ release[1]["state"] }}</td>
         <td style="text-align: center">
-          <a href="/news/{{ datestr }}/ORC-{{ release[0] }}/">
+          <a href="{{ site.baseurl }}/news/{{ datestr }}/ORC-{{ release[0] }}/">
           ORC-{{ release[0] }}</a></td>
       </tr>
     {% endfor %}
