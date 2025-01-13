@@ -395,7 +395,7 @@ namespace orc {
       int64_t bits = 0;
       if (bufferEnd_ - bufferPointer_ >= 8) {
         if (isLittleEndian) {
-          bits = *(reinterpret_cast<const int64_t*>(bufferPointer_));
+          memcpy(&bits, bufferPointer_, sizeof(bits));
         } else {
           bits = static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[0]));
           bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[1])) << 8;
@@ -509,8 +509,10 @@ namespace orc {
           bufferNum = std::min(numValues,
                                static_cast<size_t>(bufferEnd_ - bufferPointer_) / bytesPerValue_);
           uint64_t bufferBytes = bufferNum * bytesPerValue_;
-          memcpy(outArray, bufferPointer_, bufferBytes);
-          bufferPointer_ += bufferBytes;
+          if (bufferBytes > 0) {
+            memcpy(outArray, bufferPointer_, bufferBytes);
+            bufferPointer_ += bufferBytes;
+          }
         }
         for (size_t i = bufferNum; i < numValues; ++i) {
           outArray[i] = readDouble<ValueType>();
