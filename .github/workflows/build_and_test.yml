@@ -178,6 +178,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Run build
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_JAVA=OFF
+          cmake --build .
       - uses: cpp-linter/cpp-linter-action@v2.13.3
         id: linter
         continue-on-error: true
@@ -190,8 +195,7 @@ jobs:
           lines-changed-only: true
           thread-comments: true
           ignore: 'build|cmake_modules|conan|dev|docker|examples|java|site'
-          database: build/compile_commands.json
-          extra-args: #-Wno-unused-parameter
+          database: build
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed != 0
         run: |
