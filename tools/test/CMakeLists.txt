@@ -38,11 +38,11 @@ target_link_libraries (tool-test
 )
 
 target_include_directories(tool-test PRIVATE
-  ${CMAKE_SOURCE_DIR}/c++/include
-  ${CMAKE_SOURCE_DIR}/c++/src
-  ${CMAKE_SOURCE_DIR}/tools-c++/src
-  ${CMAKE_BINARY_DIR}/c++/include
-  ${CMAKE_BINARY_DIR}/c++/src
+  ${PROJECT_BINARY_DIR}/c++/include
+  ${PROJECT_BINARY_DIR}/c++/src
+  ${PROJECT_SOURCE_DIR}/c++/include
+  ${PROJECT_SOURCE_DIR}/c++/src
+  ${PROJECT_SOURCE_DIR}/tools-c++/src
 )
 
 add_dependencies(tool-test tool-set)
