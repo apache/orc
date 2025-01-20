@@ -184,6 +184,7 @@ if (ENABLE_UBSAN)
   else()
     message(WARNING "Undefined Behavior Sanitizer is only supported for GCC and Clang compilers")
   endif()
+endif()
 
 enable_testing()
 
