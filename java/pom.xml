@@ -60,7 +60,7 @@
   </modules>
 
   <properties>
-    <bouncycastle.version>1.79</bouncycastle.version>
+    <bouncycastle.version>1.80</bouncycastle.version>
     <brotli4j.version>1.18.0</brotli4j.version>
     <checkstyle.version>10.21.1</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
