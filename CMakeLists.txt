@@ -87,7 +87,7 @@ option(ORC_PACKAGE_KIND
 
 option(ORC_ENABLE_CLANG_TOOLS
     "Enable Clang tools"
-    ON)
+    OFF)
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)

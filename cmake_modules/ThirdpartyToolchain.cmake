@@ -156,7 +156,8 @@ ExternalProject_Add (orc-format_ep
 # Snappy
 if (ORC_PACKAGE_KIND STREQUAL "conan")
   find_package (Snappy REQUIRED CONFIG)
-  orc_add_resolved_library (orc_snappy ${Snappy_LIBRARIES} ${Snappy_INCLUDE_DIR})
+  add_library (orc_snappy INTERFACE)
+  target_link_libraries(orc_snappy INTERFACE Snappy::snappy)
   list (APPEND ORC_SYSTEM_DEPENDENCIES Snappy)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:Snappy::snappy>")
 elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
@@ -207,7 +208,8 @@ add_library (orc::snappy ALIAS orc_snappy)
 
 if (ORC_PACKAGE_KIND STREQUAL "conan")
   find_package (ZLIB REQUIRED CONFIG)
-  orc_add_resolved_library (orc_zlib ${ZLIB_LIBRARIES} ${ZLIB_INCLUDE_DIR})
+  add_library (orc_zlib INTERFACE)
+  target_link_libraries(orc_zlib INTERFACE ZLIB::ZLIB)
   list (APPEND ORC_SYSTEM_DEPENDENCIES ZLIB)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:ZLIB::ZLIB>")
 elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
@@ -265,7 +267,11 @@ add_library (orc::zlib ALIAS orc_zlib)
 
 if (ORC_PACKAGE_KIND STREQUAL "conan")
   find_package (ZSTD REQUIRED CONFIG)
-  orc_add_resolved_library (orc_zstd ${zstd_LIBRARIES} ${zstd_INCLUDE_DIR})
+  add_library (orc_zstd INTERFACE)
+  target_link_libraries (orc_zstd INTERFACE
+    $<TARGET_NAME_IF_EXISTS:zstd::libzstd_static>
+    $<TARGET_NAME_IF_EXISTS:zstd::libzstd_shared>
+  )
   list (APPEND ORC_SYSTEM_DEPENDENCIES ZSTD)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<IF:$<TARGET_EXISTS:zstd::libzstd_shared>,zstd::libzstd_shared,zstd::libzstd_static>>")
 elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
@@ -330,9 +336,13 @@ add_library (orc::zstd ALIAS orc_zstd)
 # LZ4
 if (ORC_PACKAGE_KIND STREQUAL "conan")
   find_package (LZ4 REQUIRED CONFIG)
-  orc_add_resolved_library (orc_lz4 ${lz4_LIBRARIES} ${lz4_INCLUDE_DIR})
+  add_library (orc_lz4 INTERFACE)
+  target_link_libraries (orc_lz4 INTERFACE
+    $<TARGET_NAME_IF_EXISTS:LZ4::lz4_shared>
+    $<TARGET_NAME_IF_EXISTS:LZ4::lz4_static>
+  )
   list (APPEND ORC_SYSTEM_DEPENDENCIES LZ4)
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:LZ4::lz4>")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<IF:$<TARGET_EXISTS:LZ4::lz4_shared>,LZ4::lz4_shared,LZ4::lz4_static>>")
 elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
   find_package(lz4 CONFIG REQUIRED)
   add_library (orc_lz4 INTERFACE IMPORTED)
@@ -491,9 +501,10 @@ endif ()
 
 if (ORC_PACKAGE_KIND STREQUAL "conan")
   find_package (Protobuf REQUIRED CONFIG)
-  orc_add_resolved_library (orc_protobuf ${protobuf_LIBRARIES} ${protobuf_INCLUDE_DIR})
+  add_library (orc_protobuf INTERFACE)
+  target_link_libraries(orc_protobuf INTERFACE protobuf::protobuf)
   list (APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::protobuf>")
 elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
   find_package(Protobuf CONFIG REQUIRED)
   add_library (orc_protobuf INTERFACE IMPORTED)
