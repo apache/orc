@@ -193,6 +193,7 @@ namespace orc {
      * Shift left by the given number of bits.
      * Values larger than 2**127 will shift into the sign bit.
      */
+    __attribute__((no_sanitize("shift")))
     Int128& operator<<=(uint32_t bits) {
       if (bits != 0) {
         if (bits < 64) {
@@ -214,6 +215,7 @@ namespace orc {
      * Shift right by the given number of bits. Negative values will
      * sign extend and fill with one bits.
      */
+    __attribute__((no_sanitize("shift")))
     Int128& operator>>=(uint32_t bits) {
       if (bits != 0) {
         if (bits < 64) {

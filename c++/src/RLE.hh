@@ -26,6 +26,7 @@
 
 namespace orc {
 
+  __attribute__((no_sanitize("shift")))
   inline int64_t zigZag(int64_t value) {
     return (value << 1) ^ (value >> 63);
   }

@@ -209,6 +209,7 @@ namespace orc {
 
   DIAGNOSTIC_POP
 
+  __attribute__((no_sanitize("signed-integer-overflow","shift")))
   void BloomFilterImpl::addHash(int64_t hash64) {
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
     // In Java codes, we use "hash64 >>> 32" which is an unsigned shift op.
@@ -226,6 +227,7 @@ namespace orc {
     }
   }
 
+  __attribute__((no_sanitize("signed-integer-overflow","shift")))
   bool BloomFilterImpl::testHash(int64_t hash64) const {
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
     // In Java codes, we use "hash64 >>> 32" which is an unsigned shift op.

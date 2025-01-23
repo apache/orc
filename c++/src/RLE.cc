@@ -77,6 +77,7 @@ namespace orc {
     add<int16_t>(data, numValues, notNull);
   }
 
+  __attribute__((no_sanitize("shift")))
   void RleEncoder::writeVslong(int64_t val) {
     writeVulong((val << 1) ^ (val >> 63));
   }
