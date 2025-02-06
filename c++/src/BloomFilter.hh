@@ -19,6 +19,7 @@
 #ifndef ORC_BLOOMFILTER_IMPL_HH
 #define ORC_BLOOMFILTER_IMPL_HH
 
+#include "Adaptor.hh"
 #include "orc/BloomFilter.hh"
 #include "wrap/orc-proto-wrapper.hh"
 

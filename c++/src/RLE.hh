@@ -19,6 +19,7 @@
 #ifndef ORC_RLE_HH
 #define ORC_RLE_HH
 
+#include "Adaptor.hh"
 #include "io/InputStream.hh"
 #include "io/OutputStream.hh"
 
