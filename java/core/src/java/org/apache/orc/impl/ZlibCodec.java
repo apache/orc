@@ -169,6 +169,17 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
                                        out.arrayOffset() + out.position(),
                                        out.remaining());
           out.position(count + out.position());
+
+          if (!inflater.finished() && !inflater.needsDictionary() && !inflater.needsInput() &&
+              count == 0) {
+            if (out.remaining() == 0) {
+              throw new IOException("Decompress output buffer too small. in = " + in +
+                  ", out = " + out);
+            } else {
+              throw new IOException("Decompress error. in = " + in +
+                  ", out = " + out);
+            }
+          }
         } catch (DataFormatException dfe) {
           throw new IOException("Bad compression data", dfe);
         }
