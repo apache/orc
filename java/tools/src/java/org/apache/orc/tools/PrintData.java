@@ -238,6 +238,7 @@ public class PrintData {
             .build();
     Option linesOpt = Option.builder("n").longOpt("lines")
             .argName("LINES")
+            .desc("Sets lines of data to be printed")
             .hasArg()
             .build();
 
