@@ -36,7 +36,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TesScanData {
+public class TestScanData {
   private Path workDir = new Path(System.getProperty("test.tmp.dir"));
   private Configuration conf;
   private FileSystem fs;
