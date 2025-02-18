@@ -47,7 +47,7 @@ public class TestScanData {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TesScanData.testScan.orc");
+    testFilePath = new Path("TestScanData.testScan.orc");
     fs.delete(testFilePath, false);
   }
 
@@ -86,6 +86,6 @@ public class TestScanData {
     assertTrue(output.contains("{\"category\": \"struct\", \"id\": 0, \"max\": 2, \"fields\": [\n" +
         "{  \"x\": {\"category\": \"int\", \"id\": 1, \"max\": 1}},\n" +
         "{  \"y\": {\"category\": \"string\", \"id\": 2, \"max\": 2}}]}"));
-    assertTrue(output.contains("File: TesScanData.testScan.orc, bad batches: 0, rows: 10000/10000"));
+    assertTrue(output.contains("File: TestScanData.testScan.orc, bad batches: 0, rows: 10000/10000"));
   }
 }
