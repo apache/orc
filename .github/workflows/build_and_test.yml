@@ -49,6 +49,7 @@ jobs:
           - ubuntu24
           - fedora37
           - oraclelinux9
+          - amazonlinux23
     steps:
     - name: Checkout
       uses: actions/checkout@v2
