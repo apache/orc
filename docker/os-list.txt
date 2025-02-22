@@ -1,6 +1,5 @@
 debian11
 debian12
-ubuntu20
 ubuntu22
 ubuntu24
 fedora37
