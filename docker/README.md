@@ -4,6 +4,7 @@
 * Fedora 37
 * Ubuntu 20, 22, 24
 * Oracle Linux 9
+* Amazon Linux 2023
 
 ## Pre-built Images
 
