@@ -496,9 +496,16 @@ namespace orc {
     virtual uint64_t getNumberOfStripeStatistics() const = 0;
 
     /**
+     * Get the statistics about a stripe .
+     * @param stripeIndex the index of the stripe (0 to N-1) to get statistics about
+     * @return the statistics about that stripe without reading row group index statistics
+     */
+    virtual std::unique_ptr<Statistics> getStripeStatisticsOnly(uint64_t stripeIndex) const = 0;
+
+    /**
      * Get the statistics about a stripe.
      * @param stripeIndex the index of the stripe (0 to N-1) to get statistics about
-     * @return the statistics about that stripe
+     * @return the statistics about that stripe and row group index statistics
      */
     virtual std::unique_ptr<StripeStatistics> getStripeStatistics(uint64_t stripeIndex) const = 0;
 

@@ -346,6 +346,8 @@ namespace orc {
 
     std::unique_ptr<ColumnStatistics> getColumnStatistics(uint32_t columnId) const override;
 
+    std::unique_ptr<Statistics> getStripeStatisticsOnly(uint64_t stripeIndex) const override;
+
     std::string getSerializedFileTail() const override;
 
     const Type& getType() const override;

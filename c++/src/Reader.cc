@@ -751,6 +751,20 @@ namespace orc {
     return *(contents_->schema.get());
   }
 
+  std::unique_ptr<Statistics>
+  ReaderImpl::getStripeStatisticsOnly(uint64_t stripeIndex) const {
+    if (!isMetadataLoaded_) {
+      readMetadata();
+    }
+    if (contents_->metadata == nullptr) {
+      throw std::logic_error("No stripe statistics in file");
+    }
+    StatContext statContext(hasCorrectStatistics());
+    return std::unique_ptr<Statistics>(new StatisticsImpl(
+        contents_->metadata->stripestats(static_cast<int>(stripeIndex)),
+        statContext));
+  }
+
   std::unique_ptr<StripeStatistics> ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
     if (!isMetadataLoaded_) {
       readMetadata();

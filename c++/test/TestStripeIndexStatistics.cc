@@ -83,6 +83,31 @@ namespace orc {
         "length: "
         "8000\n",
         stringColStats->toString());
+
+    std::unique_ptr<orc::Statistics> stripeLevelStats = reader->getStripeStatisticsOnly(0);
+    const orc::IntegerColumnStatistics* stripeLevelIntColStats;
+    stripeLevelIntColStats = reinterpret_cast<const orc::IntegerColumnStatistics*>(
+        stripeLevelStats->getColumnStatistics(1));
+    EXPECT_EQ(
+        "Data type: Integer\nValues: 6000\nHas null: no\nMinimum: 1\nMaximum: 6000\nSum: "
+        "18003000\n",
+        stripeLevelIntColStats->toString());
+
+    const orc::StringColumnStatistics* stripeLevelStringColStats;
+    stripeLevelStringColStats = reinterpret_cast<const orc::StringColumnStatistics*>(
+        stripeLevelStats->getColumnStatistics(2));
+    EXPECT_EQ(
+        "Data type: String\nValues: 6000\nHas null: no\nMinimum: 1000\nMaximum: 9a\nTotal length: "
+        "23892\n",
+        stripeLevelStringColStats->toString());
+
+    intColStats =
+        reinterpret_cast<const orc::IntegerColumnStatistics*>(stripeStats->getColumnStatistics(1));
+    stringColStats =
+        reinterpret_cast<const orc::StringColumnStatistics*>(stripeStats->getColumnStatistics(2));
+
+    EXPECT_EQ(intColStats->toString(), stripeLevelStringColStats->toString());
+    EXPECT_EQ(stringColStats->toString(), stripeLevelStringColStats->toString());
   }
 
 }  // namespace orc
