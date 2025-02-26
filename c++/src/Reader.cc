@@ -760,9 +760,8 @@ namespace orc {
       throw std::logic_error("No stripe statistics in file");
     }
     StatContext statContext(hasCorrectStatistics());
-    return std::unique_ptr<Statistics>(new StatisticsImpl(
-        contents_->metadata->stripe_stats(static_cast<int>(stripeIndex)),
-        statContext));
+    return std::make_unique<Statistics>(
+        contents_->metadata->stripe_stats(static_cast<int>(stripeIndex)), statContext);
   }
 
   std::unique_ptr<StripeStatistics> ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
