@@ -761,7 +761,7 @@ namespace orc {
     }
     StatContext statContext(hasCorrectStatistics());
     return std::unique_ptr<Statistics>(new StatisticsImpl(
-        contents_->metadata->stripestats(static_cast<int>(stripeIndex)),
+        contents_->metadata->stripe_stats(static_cast<int>(stripeIndex)),
         statContext));
   }
 
