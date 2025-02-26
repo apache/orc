@@ -751,8 +751,7 @@ namespace orc {
     return *(contents_->schema.get());
   }
 
-  std::unique_ptr<Statistics>
-  ReaderImpl::getStripeStatisticsOnly(uint64_t stripeIndex) const {
+  std::unique_ptr<Statistics> ReaderImpl::getStripeStatisticsOnly(uint64_t stripeIndex) const {
     if (!isMetadataLoaded_) {
       readMetadata();
     }
