@@ -330,7 +330,8 @@ namespace orc {
 
     const std::string& getStreamName() const override;
 
-    std::unique_ptr<StripeStatistics> getStripeStatistics(uint64_t stripeIndex) const override;
+    std::unique_ptr<StripeStatistics> getStripeStatistics(
+        uint64_t stripeIndex, bool includeRowIndex = true) const override;
 
     std::unique_ptr<RowReader> createRowReader() const override;
 
@@ -345,8 +346,6 @@ namespace orc {
     std::unique_ptr<Statistics> getStatistics() const override;
 
     std::unique_ptr<ColumnStatistics> getColumnStatistics(uint32_t columnId) const override;
-
-    std::unique_ptr<Statistics> getStripeStatisticsOnly(uint64_t stripeIndex) const override;
 
     std::string getSerializedFileTail() const override;
 

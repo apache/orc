@@ -1713,7 +1713,6 @@ namespace orc {
   class StripeStatisticsImpl : public StripeStatistics {
    private:
     std::unique_ptr<StatisticsImpl> columnStats_;
-    std::vector<std::vector<std::shared_ptr<const ColumnStatistics> > > rowIndexStats_;
 
     // DELIBERATELY NOT IMPLEMENTED
     StripeStatisticsImpl(const StripeStatisticsImpl&);
@@ -1721,7 +1720,6 @@ namespace orc {
 
    public:
     StripeStatisticsImpl(const proto::StripeStatistics& stripeStats,
-                         std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
                          const StatContext& statContext);
 
     virtual const ColumnStatistics* getColumnStatistics(uint32_t columnId) const override {
@@ -1732,13 +1730,38 @@ namespace orc {
       return columnStats_->getNumberOfColumns();
     }
 
+    virtual const ColumnStatistics* getRowIndexStatistics(uint32_t, uint32_t) const override {
+      throw NotImplementedYet("set includeRowIndex true to get row index stats");
+    }
+
+    virtual ~StripeStatisticsImpl() override;
+
+    virtual uint32_t getNumberOfRowIndexStats(uint32_t) const override {
+      throw NotImplementedYet("set includeRowIndex true to get row index stats");
+    }
+  };
+
+  class StripeStatisticsWithRowGroupIndexImpl : public StripeStatisticsImpl {
+   private:
+    std::vector<std::vector<std::shared_ptr<const ColumnStatistics> > > rowIndexStats_;
+
+    // DELIBERATELY NOT IMPLEMENTED
+    StripeStatisticsWithRowGroupIndexImpl(const StripeStatisticsWithRowGroupIndexImpl&);
+    StripeStatisticsWithRowGroupIndexImpl& operator=(const StripeStatisticsWithRowGroupIndexImpl&);
+
+   public:
+    StripeStatisticsWithRowGroupIndexImpl(
+        const proto::StripeStatistics& stripeStats,
+        std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
+        const StatContext& statContext);
+
     virtual const ColumnStatistics* getRowIndexStatistics(uint32_t columnId,
                                                           uint32_t rowIndex) const override {
       // check id indices are valid
       return rowIndexStats_[columnId][rowIndex].get();
     }
 
-    virtual ~StripeStatisticsImpl() override;
+    virtual ~StripeStatisticsWithRowGroupIndexImpl() override;
 
     uint32_t getNumberOfRowIndexStats(uint32_t columnId) const override {
       return static_cast<uint32_t>(rowIndexStats_[columnId].size());

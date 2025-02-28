@@ -84,7 +84,7 @@ namespace orc {
         "8000\n",
         stringColStats->toString());
 
-    std::unique_ptr<orc::Statistics> stripeLevelStats = reader->getStripeStatisticsOnly(0);
+    std::unique_ptr<orc::Statistics> stripeLevelStats = reader->getStripeStatistics(0, false);
     const orc::IntegerColumnStatistics* stripeLevelIntColStats;
     stripeLevelIntColStats = reinterpret_cast<const orc::IntegerColumnStatistics*>(
         stripeLevelStats->getColumnStatistics(1));

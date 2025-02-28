@@ -81,11 +81,20 @@ namespace orc {
     // PASS
   }
 
-  StripeStatisticsImpl::StripeStatisticsImpl(
+  StripeStatisticsImpl::StripeStatisticsImpl(const proto::StripeStatistics& stripeStats,
+                                             const StatContext& statContext) {
+    columnStats_ = std::make_unique<StatisticsImpl>(stripeStats, statContext);
+  }
+
+  StripeStatisticsWithRowGroupIndexImpl::~StripeStatisticsWithRowGroupIndexImpl() {
+    // PASS
+  }
+
+  StripeStatisticsWithRowGroupIndexImpl::StripeStatisticsWithRowGroupIndexImpl(
       const proto::StripeStatistics& stripeStats,
       std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
-      const StatContext& statContext) {
-    columnStats_ = std::make_unique<StatisticsImpl>(stripeStats, statContext);
+      const StatContext& statContext)
+      : StripeStatisticsImpl(stripeStats, statContext) {
     rowIndexStats_.resize(indexStats.size());
     for (size_t i = 0; i < rowIndexStats_.size(); i++) {
       for (size_t j = 0; j < indexStats[i].size(); j++) {
