@@ -11,7 +11,7 @@ To use `run_clang_format.py` you could act like below:
 ```shell
 mkdir build
 cd build
-cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DORC_ENABLE_CLANG_TOOLS=1
 make check-format # Do checks only
 make format # This would apply suggested changes, take care!
 ```
@@ -23,7 +23,7 @@ To use `run_clang_tidy.py` you could act like below:
 ```shell
 mkdir build
 cd build
-cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+cmake .. -DBUILD_JAVA=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DORC_ENABLE_CLANG_TOOLS=1
 make -j`nproc` # Important
 make check-clang-tidy # Do checks only
 make fix-clang-tidy # This would apply suggested changes, take care!

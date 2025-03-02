@@ -68,6 +68,19 @@ namespace orc {
         "00:00:00.688\nLowerBound: 1995-01-01 00:00:00.688\nMaximum: 2037-01-01 "
         "00:00:00.0\nUpperBound: 2037-01-01 00:00:00.1\n",
         stripeColStats->toString());
+
+    std::unique_ptr<orc::StripeStatistics> stripeStatsWithOutRowIndex =
+        reader->getStripeStatistics(0, false);
+    const orc::TimestampColumnStatistics* stripeColStatsOnly =
+        reinterpret_cast<const orc::TimestampColumnStatistics*>(
+            stripeStatsWithOutRowIndex->getColumnStatistics(0));
+
+    EXPECT_TRUE(stripeColStatsOnly->hasMinimum());
+    EXPECT_TRUE(stripeColStatsOnly->hasMaximum());
+    EXPECT_EQ(stripeColStats->toString(), stripeColStatsOnly->toString());
+    EXPECT_EQ(stripeStats->getNumberOfColumns(), stripeStatsWithOutRowIndex->getNumberOfColumns());
+    EXPECT_THROW(stripeStatsWithOutRowIndex->getRowIndexStatistics(1, 1), NotImplementedYet);
+    EXPECT_THROW(stripeStatsWithOutRowIndex->getNumberOfRowIndexStats(1), NotImplementedYet);
   }
 
   TEST(TestTimestampStatistics, testTimezoneUTC) {
