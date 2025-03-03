@@ -80,7 +80,7 @@
     <!-- Build Properties -->
     <project.build.outputTimestamp>2025-01-05T19:25:27Z</project.build.outputTimestamp>
     <protobuf.version>3.25.5</protobuf.version>
-    <slf4j.version>2.0.16</slf4j.version>
+    <slf4j.version>2.0.17</slf4j.version>
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.5.2</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
