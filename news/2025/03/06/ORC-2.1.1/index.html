@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.1.2 Released</title>
+  <title>ORC 2.1.1 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -338,8 +338,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.1.2 Released
-    <a href="/news/2016/07/08/ORC-1.1.2/" class="permalink" title="Permalink">∞</a>
+    ORC 2.1.1 Released
+    <a href="/news/2025/03/06/ORC-2.1.1/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -348,56 +348,64 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      08 Jul 2016
+      06 Mar 2025
     </span>
     <span class="post-author">
-      omalley
+      dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.1.2. This release
-contains the Java reader and writer and the native C++ ORC reader and tools.</p>
+    <p>The ORC team is excited to announce the release of ORC v2.1.1.</p>
 
 <ul>
-  <li>Released: 8 July 2016</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.1.2/orc-1.1.2.tgz">orc-1.1.2.tgz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.1.2/orc-1.1.2.tgz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.2">rel/release-1.1.2</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.1.2%22">ORC 1.1.2</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.1.2/orc-1.1.2.tgz.sha256">5d14df7d48126dd8…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.1.2%22&amp;tempMax=500">ORC-1.1.2</a></li>
+  <li>Released: 6 March 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.1/orc-2.1.1.tar.gz">orc-2.1.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.1.1/orc-2.1.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.1">rel/release-2.1.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.1%22">ORC 2.1.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.1/orc-2.1.1.tar.gz.sha256">15af8baeee322bab…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.1%22&amp;tempMax=500">ORC-2.1.1</a></li>
 </ul>
 
-<p>The major new features in ORC 1.1 are:</p>
-
+<p>The improvements (tools):</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> Copy the Java ORC code from Hive.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> Fix the C++ reader to correctly read
-timestamps from timezones with different daylight savings rules.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-52">ORC-52</a> Add mapred and mapreduce connectors.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1848">ORC-1848</a> PrintData tool add parameter description</li>
 </ul>
 
-<p>Known issues:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li>
-    <p><a href="/security/CVE-2018-8015">CVE-2018-8015</a> ORC files with malformed types cause stack overflow.</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/HIVE-14214">HIVE-14214</a> Schema evolution and predicate pushdown don’t work together.</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-101">ORC-101</a> Bloom filters for string and decimal use inconsistent encoding</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-285">ORC-285</a> Empty vector batches of floats or doubles cause EOFException</p>
-  </li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1833">ORC-1833</a> [C++] Fix CMake script to be used inside another project</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1834">ORC-1834</a> [C++] Fix undefined behavior</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1846">ORC-1846</a> [C++] Fix imported libraries in the Conan build</li>
 </ul>
 
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1835">ORC-1835</a> [C++] Fix cpp-linter-action to build first</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1853">ORC-1853</a> Rename class TesScanData to TestScanData</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1854">ORC-1854</a> Remove ubuntu20 from os-list.txt</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1855">ORC-1855</a> Add Amazon Linux 2023 and Corretto to docker tests and CI</li>
+</ul>
+
+<p>The build and dependency changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1836">ORC-1836</a> Upgrade zstd-jni to 1.5.6-9</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1837">ORC-1837</a> Remove commons-csv from parent pom.xml</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1843">ORC-1843</a> Upgrade bcpkix-jdk18on to 1.80</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1847">ORC-1847</a> Upgrade Hive to 4.0.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1849">ORC-1849</a> Upgrade byte-buddy to 1.17.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1850">ORC-1850</a> Upgrade maven-surefire-plugin to 3.5.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1851">ORC-1851</a> Upgrade zstd-jni to 1.5.6-10</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1852">ORC-1852</a> Add –enable-native-access=ALL-UNNAMED to suppress Maven warnings</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1856">ORC-1856</a> Bump spotbugs-maven-plugin to 4.9.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1859">ORC-1859</a> Upgrade junit to 5.12.0</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1840">ORC-1840</a> Add Matomo script to support https://analytics.apache.org</li>
+</ul>
 
   </div>
 </article>
@@ -417,7 +425,7 @@ timestamps from timezones with different daylight savings rules.</li>
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2025/03/06/ORC-2.1.1/">Version 2.1.1</a>
       </li>
       

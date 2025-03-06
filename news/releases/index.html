@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2025/03/06/ORC-2.1.1/">ORC 2.1.1 Released</option>
+      
       <option value="/news/2025/01/09/ORC-2.1.0/">ORC 2.1.0 Released</option>
       
       <option value="/news/2024/11/14/ORC-2.0.3/">ORC 2.0.3 Released</option>
@@ -337,6 +339,82 @@
         
   <article>
   <h2>
+    <a href="/news/2025/03/06/ORC-2.1.1/">
+      ORC 2.1.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      06 Mar 2025
+    </span>
+    <span class="post-author">
+      dongjoon
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.1.1.</p>
+
+<ul>
+  <li>Released: 6 March 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.1/orc-2.1.1.tar.gz">orc-2.1.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.1.1/orc-2.1.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.1">rel/release-2.1.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.1%22">ORC 2.1.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.1/orc-2.1.1.tar.gz.sha256">15af8baeee322bab…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.1%22&amp;tempMax=500">ORC-2.1.1</a></li>
+</ul>
+
+<p>The improvements (tools):</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1848">ORC-1848</a> PrintData tool add parameter description</li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1833">ORC-1833</a> [C++] Fix CMake script to be used inside another project</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1834">ORC-1834</a> [C++] Fix undefined behavior</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1846">ORC-1846</a> [C++] Fix imported libraries in the Conan build</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1835">ORC-1835</a> [C++] Fix cpp-linter-action to build first</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1853">ORC-1853</a> Rename class TesScanData to TestScanData</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1854">ORC-1854</a> Remove ubuntu20 from os-list.txt</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1855">ORC-1855</a> Add Amazon Linux 2023 and Corretto to docker tests and CI</li>
+</ul>
+
+<p>The build and dependency changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1836">ORC-1836</a> Upgrade zstd-jni to 1.5.6-9</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1837">ORC-1837</a> Remove commons-csv from parent pom.xml</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1843">ORC-1843</a> Upgrade bcpkix-jdk18on to 1.80</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1847">ORC-1847</a> Upgrade Hive to 4.0.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1849">ORC-1849</a> Upgrade byte-buddy to 1.17.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1850">ORC-1850</a> Upgrade maven-surefire-plugin to 3.5.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1851">ORC-1851</a> Upgrade zstd-jni to 1.5.6-10</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1852">ORC-1852</a> Add –enable-native-access=ALL-UNNAMED to suppress Maven warnings</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1856">ORC-1856</a> Bump spotbugs-maven-plugin to 4.9.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1859">ORC-1859</a> Upgrade junit to 5.12.0</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1840">ORC-1840</a> Add Matomo script to support https://analytics.apache.org</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2025/01/09/ORC-2.1.0/">
       ORC 2.1.0 Released
     </a>
@@ -359,12 +437,12 @@
 
 <ul>
   <li>Released: 9 January 2025</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.0/orc-2.1.0.tar.gz">orc-2.1.0.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.1.0/orc-2.1.0.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.1.0/orc-2.1.0.tar.gz">orc-2.1.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-2.1.0/orc-2.1.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.0">rel/release-2.1.0</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.0%22">ORC 2.1.0</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.0/orc-2.1.0.tar.gz.sha256">1ffac0228aa83f04…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.1.0/orc-2.1.0.tar.gz.sha256">1ffac0228aa83f04…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.0%22&amp;tempMax=500">ORC-2.1.0</a></li>
 </ul>
 
@@ -5711,6 +5789,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2025/03/06/ORC-2.1.1/">Version 2.1.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2025/01/09/ORC-2.1.0/">Version 2.1.0</a>
       </li>
       
@@ -5726,13 +5808,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2024/11/11/ORC-1.8.8/">Version 1.8.8</a>
       </li>
       
-      <li class="">
-        <a href="/news/2024/09/13/ORC-1.7.11/">Version 1.7.11</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
