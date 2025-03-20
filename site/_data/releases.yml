@@ -16,9 +16,17 @@
   sha256: 1ffac0228aa83f04a1b1cf2788a3af5953e82587ae3a77c41900e99f2557132d
   known-issues:
 
+2.0.4:
+  date: 2025-03-20
+  state: stable
+  tar: orc-2.0.4.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: 9525a76fae64a6da2a29adba36474c2ef863d042a394b78a9873d591649b7f0a
+  known-issues:
+
 2.0.3:
   date: 2024-11-14
-  state: stable
+  state: archived
   tar: orc-2.0.3.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: 082cba862b5a8a0d14c225404d0b51cd8d1b64ca81b8f1e500322ce8922cb86d
