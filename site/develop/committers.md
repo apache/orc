@@ -13,7 +13,7 @@ Name                    | Apache Id    | Role
 Aliaksei Sandryhaila    | asandryh     | PMC
 Chris Douglas           | cdouglas     | PMC
 Chinna Rao Lalam        | chinnaraol   | Committer
-Shaoyun Chen            | csy          | Committer
+Shaoyun Chen            | csy          | PMC
 Chaoyu Tang             | ctang        | Committer
 Carl Steinbach          | cws          | Committer
 Daniel Dai              | daijy        | Committer
