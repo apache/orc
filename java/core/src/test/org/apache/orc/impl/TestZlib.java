@@ -18,13 +18,21 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.OrcFile;
+import org.apache.orc.Reader;
+import org.apache.orc.RecordReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestZlib {
@@ -53,5 +61,25 @@ public class TestZlib {
     } catch (IOException ioe) {
       // EXPECTED
     }
+  }
+
+  @Test
+  public void testCorruptZlibFile() {
+    Configuration conf = new Configuration();
+    Path testFilePath = new Path(ClassLoader.
+        getSystemResource("orc_corrupt_zlib.orc").getPath());
+
+    IOException exception = assertThrows(
+        IOException.class,
+        () -> {
+          try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf))) {
+            RecordReader rows = reader.rows();
+            VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+            while (rows.nextBatch(batch)) {
+            }
+          }
+        }
+    );
+    assertTrue(exception.getMessage().contains("Decompress output buffer too small"));
   }
 }
