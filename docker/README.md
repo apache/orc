@@ -3,7 +3,7 @@
 * CentOS 7
 * Debian 10, 11, and 12
 * Fedora 37
-* Ubuntu 20 and 22
+* Ubuntu 22
 * Rocky 9
 
 ## Pre-built Images
