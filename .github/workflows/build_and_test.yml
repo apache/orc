@@ -46,7 +46,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
           - ubuntu-22.04
           - ubuntu-24.04
           - macos-13
@@ -78,11 +77,7 @@ jobs:
         mkdir -p ~/.m2
         mkdir build
         cd build
-        if [ "${{ matrix.os }}" = "ubuntu-20.04" ]; then
-          cmake -DANALYZE_JAVA=ON -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DSTOP_BUILD_ON_WARNING=OFF ..
-        else
-          cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl@1.1` ..
-        fi
+        cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl@1.1` ..
         make package test-out
     - name: Step on failure
       if: ${{ failure() }}
@@ -145,7 +140,7 @@ jobs:
 
   doc:
     name: "Javadoc generation"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v2
