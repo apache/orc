@@ -25,6 +25,7 @@
 #include "wrap/gtest-wrapper.h"
 
 #include <cmath>
+#include <iomanip>
 #include <sstream>
 
 namespace orc {
