@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Address Sanitizer Tests
+name: Address/Undefined Sanitizer Tests
 
 on:
   pull_request:
@@ -47,18 +47,23 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Configure and Build with ASAN
+    - name: Install dependencies
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y build-essential cmake libpthread-stubs0-dev
+    - name: Configure and Build with ASAN and UBSAN
       env:
         CC: ${{ matrix.cc }}
         CXX: ${{ matrix.cxx }}
       run: |
-        mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DBUILD_JAVA=OFF
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DBUILD_ENABLE_AVX512=ON -DBUILD_CPP_ENABLE_METRICS=ON -DBUILD_JAVA=OFF
         make
     - name: Run Tests
       working-directory: build
       env:
         ASAN_OPTIONS: detect_leaks=1:symbolize=1:strict_string_checks=1:halt_on_error=0:detect_container_overflow=0
         LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/lsan-suppressions.txt
+        UBSAN_OPTIONS: print_stacktrace=1
       run: |
         ctest --output-on-failure
