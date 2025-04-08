@@ -27,6 +27,7 @@
 #include "ConvertColumnReader.hh"
 #include "MemoryInputStream.hh"
 #include "MemoryOutputStream.hh"
+#include <iomanip>
 
 namespace orc {
 
