@@ -481,4 +481,13 @@ namespace orc {
                  std::invalid_argument);
   }
 
+  TEST(TestSearchArgument, testBadTreeNode) {
+    auto invalidNode = std::make_shared<ExpressionTree>(ExpressionTree::Operator::NOT, NodeList{});
+    EXPECT_THROW(invalidNode->toString(), std::invalid_argument);
+
+    std::vector<TruthValue> leaves;
+    leaves.push_back(TruthValue::YES);
+    EXPECT_THROW(invalidNode->evaluate(leaves), std::invalid_argument);
+  }
+
 }  // namespace orc
