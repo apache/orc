@@ -650,6 +650,10 @@ namespace orc {
     auto& readC2 = dynamic_cast<Decimal128VectorBatch&>(*readStructBatch.fields[1]);
     auto& readC3 = dynamic_cast<Decimal64VectorBatch&>(*readStructBatch.fields[2]);
     auto& readC4 = dynamic_cast<Decimal128VectorBatch&>(*readStructBatch.fields[3]);
+    EXPECT_TRUE(9 == readC1.precision && 5 == readC1.scale);
+    EXPECT_TRUE(20 == readC2.precision && 5 == readC2.scale);
+    EXPECT_TRUE(10 == readC3.precision && 3 == readC3.scale);
+    EXPECT_TRUE(19 == readC4.precision && 3 == readC4.scale);
     EXPECT_EQ(TEST_CASES, readBatch->numElements);
     for (int i = 0; i < TEST_CASES / 2; i++) {
       size_t idx = static_cast<size_t>(i);

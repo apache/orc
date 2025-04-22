@@ -558,6 +558,8 @@ namespace orc {
 
       const auto& srcBatch = *SafeCastBatchTo<const FileTypeBatch*>(data.get());
       auto& dstBatch = *SafeCastBatchTo<ReadTypeBatch*>(&rowBatch);
+      dstBatch.precision = toPrecision;
+      dstBatch.scale = toScale;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (!rowBatch.hasNulls || rowBatch.notNull[i]) {
           convertDecimalToDecimal(dstBatch, i, srcBatch);
