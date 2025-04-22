@@ -425,7 +425,8 @@ namespace orc {
 
     std::unique_ptr<SeekableInputStream> result = createDecompressor(
         CompressionKind_LZO,
-        std::make_unique<SeekableArrayInputStream>(bad_lzo_data, ARRAY_SIZE(bad_lzo_data)),
+        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(
+            bad_lzo_data, ARRAY_SIZE(bad_lzo_data))),
         128 * 1024, *getDefaultPool());
     const void* ptr;
     int length;
