@@ -56,10 +56,10 @@ jobs:
         cxx:
           - clang++
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             java: 8
             cxx: g++
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             java: 21
             cxx: g++
     env:
@@ -161,7 +161,7 @@ jobs:
 
   formatting-check:
     name: "C++ format check"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         path:
