@@ -412,6 +412,27 @@ namespace orc {
     ASSERT_TRUE(!result->Next(&ptr, &length));
   }
 
+  TEST_F(TestDecompression, testLzoOverflow) {
+    const unsigned char bad_lzo_data[] = {// Header: compressedSize = 12, original = false
+                                          0x18, 0x00, 0x00,
+
+                                          // LZO body: token and literal length extension
+                                          0x00,  // token: extended literal length
+                                          0xFF,  // extension byte 1
+
+                                          // Literal data: only 10 bytes far less than 273
+                                          'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'};
+
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_LZO,
+        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(
+            bad_lzo_data, ARRAY_SIZE(bad_lzo_data))),
+        128 * 1024, *getDefaultPool());
+    const void* ptr;
+    int length;
+    EXPECT_THROW(result->Next(&ptr, &length), ParseError);
+  }
+
   TEST_F(TestDecompression, testLz4Empty) {
     const unsigned char buffer[] = {0};
     std::unique_ptr<SeekableInputStream> result =
