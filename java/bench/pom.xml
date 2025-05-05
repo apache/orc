@@ -38,7 +38,7 @@
     <jmh.version>1.37</jmh.version>
     <junit.version>5.12.2</junit.version>
     <orc.version>${project.version}</orc.version>
-    <parquet.version>1.15.1</parquet.version>
+    <parquet.version>1.15.2</parquet.version>
     <scala.binary.version>2.13</scala.binary.version>
     <scala.version>2.13.14</scala.version>
     <spark.version>4.0.0-preview2</spark.version>
