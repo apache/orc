@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2025/05/06/ORC-2.1.2/">ORC 2.1.2 Released</option>
+      
       <option value="/news/2025/03/23/shaoyun-pmc/">ORC adds Shaoyun Chen to PMC</option>
       
       <option value="/news/2025/03/20/ORC-2.0.4/">ORC 2.0.4 Released</option>
@@ -343,6 +345,62 @@
         
   <article>
   <h2>
+    <a href="/news/2025/05/06/ORC-2.1.2/">
+      ORC 2.1.2 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      06 May 2025
+    </span>
+    <span class="post-author">
+      dongjoon
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.1.2.</p>
+
+<ul>
+  <li>Released: 6 May 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.2/orc-2.1.2.tar.gz">orc-2.1.2.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.1.2/orc-2.1.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.2">rel/release-2.1.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.2%22">ORC 2.1.2</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.2/orc-2.1.2.tar.gz.sha256">55451e65dea6ed42…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.2%22&amp;tempMax=500">ORC-2.1.2</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1866">ORC-1866</a> Avoid zlib decompression infinite loop</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1879">ORC-1879</a> [C++] Fix Heap Buffer Overflow in LZO Decompression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1881">ORC-1881</a> [C++] Populate dstBatch’s scale and precision in DecimalConvertColumnReader</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1871">ORC-1871</a> [C++] Include iomanip at TestDictionaryEncoding and TestConvertColumnReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1872">ORC-1872</a> Upgrade <code class="language-plaintext highlighter-rouge">extra-enforcer-rules</code> to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1875">ORC-1875</a> Support <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> in GitHub Action CIs</li>
+</ul>
+
+<p>The build and dependency changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1876">ORC-1876</a> Upgrade to ORC Format 1.1</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2025/03/23/shaoyun-pmc/">
       ORC adds Shaoyun Chen to PMC
     </a>
@@ -465,12 +523,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 6 March 2025</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.1/orc-2.1.1.tar.gz">orc-2.1.1.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.1.1/orc-2.1.1.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.1.1/orc-2.1.1.tar.gz">orc-2.1.1.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-2.1.1/orc-2.1.1.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.1">rel/release-2.1.1</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.1%22">ORC 2.1.1</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.1/orc-2.1.1.tar.gz.sha256">15af8baeee322bab…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.1.1/orc-2.1.1.tar.gz.sha256">15af8baeee322bab…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.1%22&amp;tempMax=500">ORC-2.1.1</a></li>
 </ul>
 
@@ -6762,6 +6820,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2025/05/06/ORC-2.1.2/">Version 2.1.2</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2025/03/20/ORC-2.0.4/">Version 2.0.4</a>
       </li>
       
@@ -6777,13 +6839,11 @@ together with the Java implementation.</p>
         <a href="/news/2024/11/14/ORC-2.0.3/">Version 2.0.3</a>
       </li>
       
-      <li class="">
-        <a href="/news/2024/11/14/ORC-1.9.5/">Version 1.9.5</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         <li class="">
