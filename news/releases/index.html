@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2025/05/06/ORC-1.8.9/">ORC 1.8.9 Released</option>
+      
       <option value="/news/2025/05/06/ORC-2.1.2/">ORC 2.1.2 Released</option>
       
       <option value="/news/2025/03/23/shaoyun-pmc/">ORC adds Shaoyun Chen to PMC</option>
@@ -343,6 +345,62 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2025/05/06/ORC-1.8.9/">
+      ORC 1.8.9 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      06 May 2025
+    </span>
+    <span class="post-author">
+      wgtmac
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.8.9.</p>
+
+<ul>
+  <li>Released: 6 May 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.9/orc-1.8.9.tar.gz">orc-1.8.9.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.8.9/orc-1.8.9.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Gang Wu (8A461DF4)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.9">rel/release-1.8.9</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.9%22">ORC 1.8.9</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.9/orc-1.8.9.tar.gz.sha256">66343dc6832beda9…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.9%22&amp;tempMax=500">ORC-1.8.9</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1866">ORC-1866</a> Avoid zlib decompression infinite loop</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1879">ORC-1879</a> Fix Heap Buffer Overflow in LZO Decompression</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1745">ORC-1745</a> Remove <code class="language-plaintext highlighter-rouge">Ubuntu 20.04</code> Support</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1776">ORC-1776</a> Remove <code class="language-plaintext highlighter-rouge">MacOS 12</code> from GitHub Action CI and docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1870">ORC-1870</a> Remove Java 18 test pipeline from <code class="language-plaintext highlighter-rouge">branch-1.8</code></li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1411">ORC-1411</a> Remove Ubuntu18.04 from docker-based tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1709">ORC-1709</a> Upgrade GitHub Action <code class="language-plaintext highlighter-rouge">setup-java</code> to v4 and use built-in cache feature</li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2025/05/06/ORC-2.1.2/">
@@ -927,12 +985,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 11 November 2024</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.8/orc-1.8.8.tar.gz">orc-1.8.8.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.8.8/orc-1.8.8.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.8.8/orc-1.8.8.tar.gz">orc-1.8.8.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.8.8/orc-1.8.8.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Gang Wu (8A461DF4)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.8">rel/release-1.8.8</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.8%22">ORC 1.8.8</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.8/orc-1.8.8.tar.gz.sha256">eca12a9139c0889d…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.8.8/orc-1.8.8.tar.gz.sha256">eca12a9139c0889d…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.8%22&amp;tempMax=500">ORC-1.8.8</a></li>
 </ul>
 
@@ -5922,6 +5980,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2025/05/06/ORC-1.8.9/">Version 1.8.9</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2025/05/06/ORC-2.1.2/">Version 2.1.2</a>
       </li>
       
@@ -5937,13 +5999,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2025/01/09/ORC-2.1.0/">Version 2.1.0</a>
       </li>
       
-      <li class="">
-        <a href="/news/2024/11/14/ORC-2.0.3/">Version 2.0.3</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
