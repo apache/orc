@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 2.0.1 Released</title>
+  <title>ORC 2.0.5 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -350,8 +350,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 2.0.1 Released
-    <a href="/news/2024/05/14/ORC-2.0.1/" class="permalink" title="Permalink">∞</a>
+    ORC 2.0.5 Released
+    <a href="/news/2025/05/06/ORC-2.0.5/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -360,74 +360,39 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      14 May 2024
+      06 May 2025
     </span>
     <span class="post-author">
-      william
+      dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v2.0.1.</p>
+    <p>The ORC team is excited to announce the release of ORC v2.0.5.</p>
 
 <ul>
-  <li>Released: 14 May 2024</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.0.1/orc-2.0.1.tar.gz">orc-2.0.1.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-2.0.1/orc-2.0.1.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.1">rel/release-2.0.1</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.1%22">ORC 2.0.1</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.0.1/orc-2.0.1.tar.gz.sha256">1ffac0228aa83f04…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.1%22&amp;tempMax=500">ORC-2.0.1</a></li>
-</ul>
-
-<p>The improvements (tools):</p>
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1644">ORC-1644</a> Add merge tool to merge multiple ORC files into a single ORC file</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1647">ORC-1647</a> Tips for supporting ORC in the convert command</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1667">ORC-1667</a> Add check tool to check the index of the specified column</li>
+  <li>Released: 6 May 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.5/orc-2.0.5.tar.gz">orc-2.0.5.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.0.5/orc-2.0.5.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.5">rel/release-2.0.5</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.5%22">ORC 2.0.5</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.5/orc-2.0.5.tar.gz.sha256">35dc3ad801f632f4…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.5%22&amp;tempMax=500">ORC-2.0.5</a></li>
 </ul>
 
 <p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1646">ORC-1646</a> Close the reader when reading the schema with the convert command</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1654">ORC-1654</a> [C++] Count up EvaluatedRowGroupCount correctly</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1684">ORC-1684</a> [C++] Find tzdb without TZDIR when in conda-environments</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1688">ORC-1688</a> [C++] Do not access TZDB if there is no timestamp type</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1696">ORC-1696</a> Fix ClassCastException when reading avro decimal type in bechmark 
-The tasks:</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1649">ORC-1649</a> [C++][Conan] Add 2.0.0 to conan recipe and update release guide</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1669">ORC-1669</a> [C++] Deprecate HDFS support</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1686">ORC-1686</a> [C++] Avoid using std::filesystem</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1866">ORC-1866</a> Avoid zlib decompression infinite loop</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1879">ORC-1879</a> [C++] Fix Heap Buffer Overflow in LZO Decompression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1881">ORC-1881</a> [C++] Populate dstBatch’s scale and precision in DecimalConvertColumnReader</li>
 </ul>
 
 <p>The test changes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1648">ORC-1648</a> Add test to convert ORC in the convert command</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1663">ORC-1663</a> [C++] Enable TestTimezone.testMissingTZDB on Windows</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1672">ORC-1672</a> Remove test packages o.a.o.tools.check</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1673">ORC-1673</a> Remove test packages <code class="language-plaintext highlighter-rouge">o.a.o.tools.[count|merge|sizes]</code></li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1676">ORC-1676</a> Use Hive 4.0.0 in benchmark</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1681">ORC-1681</a> Remove redundant import statement in tests to fix checkstyle failures</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1699">ORC-1699</a> Fix SparkBenchmark in Parquet format according to SPARK-40918</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1704">ORC-1704</a> Migration to Scala 2.13 of Apache Spark 3.5.1 at SparkBenchmark</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1707">ORC-1707</a> Fix sun.util.calendar IllegalAccessException when SparkBenchmark runs on JDK17</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1708">ORC-1708</a> Support data/compress options in Hive benchmark</li>
-</ul>
-
-<p>The build and dependency changes:</p>
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1670">ORC-1670</a> Upgrade zstd-jni to 1.5.6-1</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1679">ORC-1679</a> Bump zstd-jni to 1.5.6-2</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1695">ORC-1695</a> Upgrade gson to 2.10.1</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1698">ORC-1698</a> Upgrade commons-cli to 1.7.0</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1705">ORC-1705</a> Upgrade zstd-jni to 1.5.6-3</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1714">ORC-1714</a> Bump commons-csv to 1.11.0</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1715">ORC-1715</a> Bump org.objenesis:objenesis to 3.3</li>
-</ul>
-
-<p>The documentation changes:</p>
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1668">ORC-1668</a> Add merge command to Java tools documentation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1745">ORC-1745</a> Remove <code class="language-plaintext highlighter-rouge">Ubuntu 20.04</code> Support</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1822">ORC-1822</a> [C++][CI] Use cpp-linter-action for clang-tidy and clang-format</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1835">ORC-1835</a> [C++] Fix cpp-linter-action to build first</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1871">ORC-1871</a> [C++] Include iomanip at TestDictionaryEncoding and TestConvertColumnReader</li>
 </ul>
 
   </div>
@@ -460,7 +425,7 @@ The tasks:</li>
         <a href="/news/2025/05/06/ORC-2.1.2/">Version 2.1.2</a>
       </li>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2025/05/06/ORC-2.0.5/">Version 2.0.5</a>
       </li>
       
