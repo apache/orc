@@ -24,7 +24,7 @@ set(LZ4_VERSION "1.10.0")
 set(SNAPPY_VERSION "1.2.1")
 set(ZLIB_VERSION "1.3.1")
 set(GTEST_VERSION "1.12.1")
-set(PROTOBUF_VERSION "3.5.1")
+set(PROTOBUF_VERSION "3.21.12")
 set(ZSTD_VERSION "1.5.5")
 
 option(ORC_PREFER_STATIC_PROTOBUF "Prefer static protobuf library, if available" ON)
