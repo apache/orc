@@ -112,9 +112,17 @@
   sha256: 0dca8bbccdb2ee87e59ba964933436beebd02ea78c4134424828a8127fbc4faa
   known-issues:
 
+1.8.9:
+  date: 2025-05-06
+  state: stable
+  tar: orc-1.8.9.tar.gz
+  signed-by: Gang Wu (8A461DF4)
+  sha256: 66343dc6832beda96b118bd78e74b079b20e4fda756d98c498db92d8bfc4c639
+  known-issues:
+
 1.8.8:
   date: 2024-11-11
-  state: stable
+  state: archived
   tar: orc-1.8.8.tar.gz
   signed-by: Gang Wu (8A461DF4)
   sha256: eca12a9139c0889d11ef1ecc8f273ccb0ef5d19df70d61cb732194d806db026b
