@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.4.0 Released</title>
+  <title>ORC 1.9.6 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -348,8 +348,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.4.0 Released
-    <a href="/news/2017/05/08/ORC-1.4.0/" class="permalink" title="Permalink">∞</a>
+    ORC 1.9.6 Released
+    <a href="/news/2025/05/06/ORC-1.9.6/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -358,47 +358,45 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      08 May 2017
+      06 May 2025
     </span>
     <span class="post-author">
-      omalley
+      wgtmac
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.4.0.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.9.6.</p>
 
 <ul>
-  <li>Released: 8 May 2017</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.4.0/orc-1.4.0.tar.gz">orc-1.4.0.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.4.0/orc-1.4.0.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.4.0">rel/release-1.4.0</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.4.0%22">ORC 1.4.0</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.4.0/orc-1.4.0.tar.gz.sha256">0f96b2096dd053b6…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.4.0%22&amp;tempMax=500">ORC-1.4.0</a></li>
+  <li>Released: 6 May 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.6/orc-1.9.6.tar.gz">orc-1.9.6.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.6/orc-1.9.6.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Gang Wu (8A461DF4)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.6">rel/release-1.9.6</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.6%22">ORC 1.9.6</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.6/orc-1.9.6.tar.gz.sha256">4442944f53b6b4d4…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.6%22&amp;tempMax=500">ORC-1.9.6</a></li>
 </ul>
 
-<p>The new features of ORC 1.4:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-72">ORC-72</a> Add benchmark code for file formats.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-87">ORC-87</a> Fix timestamp statistics in C++.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-150">ORC-150</a> Add tool to convert from JSON.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-151">ORC-151</a> Reduce the size of tools.jar.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-174">ORC-174</a> Create a nohive variant of the jars.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1866">ORC-1866</a> Avoid zlib decompression infinite loop</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1879">ORC-1879</a> Fix Heap Buffer Overflow in LZO Decompression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1885">ORC-1885</a> Update all <code class="language-plaintext highlighter-rouge">ubuntu-20.04</code> to <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> in CI</li>
 </ul>
 
-<p>Known issues:</p>
-
+<p>The test changes:</p>
 <ul>
-  <li>
-    <p><a href="/security/CVE-2018-8015">CVE-2018-8015</a> ORC files with malformed types cause stack overflow.</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-285">ORC-285</a> Empty vector batches of floats or doubles cause EOFException</p>
-  </li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1745">ORC-1745</a> Remove <code class="language-plaintext highlighter-rouge">Ubuntu 20.04</code> Support</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1776">ORC-1776</a> Remove <code class="language-plaintext highlighter-rouge">MacOS 12</code> from GitHub Action CI and docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1818">ORC-1818</a> Upgrade Spark to 3.5.4 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1869">ORC-1869</a> Upgrade Spark to 3.5.5 in bench module for Apache ORC 1.9.x</li>
 </ul>
 
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1709">ORC-1709</a> Upgrade GitHub Action <code class="language-plaintext highlighter-rouge">setup-java</code> to v4 and use built-in cache feature</li>
+</ul>
 
   </div>
 </article>
@@ -418,7 +416,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2025/05/06/ORC-1.9.6/">Version 1.9.6</a>
       </li>
       
