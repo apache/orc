@@ -535,6 +535,7 @@ else ()
   set(PROTOBUF_INCLUDE_DIR "${PROTOBUF_PREFIX}/include")
   set(PROTOBUF_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROTOBUF_PREFIX}
                           -DCMAKE_INSTALL_LIBDIR=lib
+                          -DCMAKE_POLICY_VERSION_MINIMUM=3.12
                           -DBUILD_SHARED_LIBS=OFF
                           -Dprotobuf_BUILD_TESTS=OFF)
 
