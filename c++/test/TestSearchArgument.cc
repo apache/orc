@@ -339,6 +339,7 @@ namespace orc {
                     .lessThan("x", PredicateDataType::LONG, Literal(static_cast<int64_t>(10)))
                     .lessThanEquals("y", PredicateDataType::STRING, Literal("hi", 2))
                     .equals("z", PredicateDataType::FLOAT, Literal(1.1))
+                    .maybe()
                     .end()
                     .build();
     EXPECT_EQ(
@@ -356,6 +357,7 @@ namespace orc {
                .in("z", PredicateDataType::LONG,
                    {Literal(static_cast<int64_t>(1)), Literal(static_cast<int64_t>(2)),
                     Literal(static_cast<int64_t>(3))})
+               .maybe()
                .nullSafeEquals("a", PredicateDataType::STRING, Literal("stinger", 7))
                .end()
                .end()
@@ -376,6 +378,7 @@ namespace orc {
                               Literal(PredicateDataType::DATE, 123456L))
                     .lessThanEquals("y", PredicateDataType::STRING, Literal("hi        ", 10))
                     .equals("z", PredicateDataType::DECIMAL, Literal(10, 2, 1))
+                    .maybe()
                     .end()
                     .build();
     EXPECT_EQ(
@@ -394,6 +397,7 @@ namespace orc {
                    {Literal(static_cast<int64_t>(1)), Literal(static_cast<int64_t>(2)),
                     Literal(static_cast<int64_t>(3))})
                .nullSafeEquals("a", PredicateDataType::STRING, Literal("stinger", 7))
+               .maybe()
                .end()
                .end()
                .build();
@@ -413,6 +417,7 @@ namespace orc {
                               Literal(PredicateDataType::DATE, 11111L))  // "2005-3-12"
                     .lessThanEquals("y", PredicateDataType::STRING, Literal("hi        ", 10))
                     .equals("z", PredicateDataType::DECIMAL, Literal(10, 2, 1))
+                    .maybe()
                     .end()
                     .build();
     EXPECT_EQ(
@@ -430,6 +435,7 @@ namespace orc {
                .in("z", PredicateDataType::LONG,
                    {Literal(static_cast<int64_t>(1)), Literal(static_cast<int64_t>(2)),
                     Literal(static_cast<int64_t>(3))})
+               .maybe()
                .nullSafeEquals("a", PredicateDataType::STRING, Literal("stinger", 7))
                .end()
                .end()
@@ -449,6 +455,7 @@ namespace orc {
                     .lessThan("x", PredicateDataType::LONG, Literal(static_cast<int64_t>(22)))
                     .lessThan("x1", PredicateDataType::LONG, Literal(static_cast<int64_t>(22)))
                     .lessThanEquals("y", PredicateDataType::STRING, Literal("hi        ", 10))
+                    .maybe()
                     .equals("z", PredicateDataType::FLOAT, Literal(0.22))
                     .equals("z1", PredicateDataType::FLOAT, Literal(0.22))
                     .end()
