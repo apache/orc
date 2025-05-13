@@ -46,3 +46,4 @@ The full process can be found on the
 ## Fixed CVEs
 
 * [CVE-2018-8015](CVE-2018-8015) - ORC files with malformed types cause stack overflow.
+* [CVE-2025-47436](CVE-2025-47436) - Potential Heap Buffer Overflow during C++ LZO Decompression
