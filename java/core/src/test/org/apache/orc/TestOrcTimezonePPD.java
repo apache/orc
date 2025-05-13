@@ -387,7 +387,7 @@ public class TestOrcTimezonePPD {
     PredicateLeaf pred = createPredicateLeaf(
       PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    assertEquals(SearchArgument.TruthValue.NULL, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.TIMESTAMP, "x", null, null);
     assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
