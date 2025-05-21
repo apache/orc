@@ -756,6 +756,13 @@ public class RecordReaderImpl implements RecordReader {
     if (!range.hasValues()) {
       if (predicate.getOperator() == PredicateLeaf.Operator.IS_NULL) {
         return TruthValue.YES;
+      } else if (predicate.getOperator() == PredicateLeaf.Operator.NULL_SAFE_EQUALS) {
+        Object literal = predicate.getLiteral();
+        if (literal == null) {
+          return TruthValue.YES;
+        } else {
+          return TruthValue.NO;
+        }
       } else {
         return TruthValue.NULL;
       }
