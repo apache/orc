@@ -630,9 +630,6 @@
                   <maxJdkVersion>${java.version}</maxJdkVersion>
                   <ignoredScopes>test</ignoredScopes>
                   <ignoredScopes>provided</ignoredScopes>
-                  <excludes>
-                    <exclude>org.threeten:threeten-extra</exclude>
-                  </excludes>
                 </enforceBytecodeVersion>
                 <bannedDependencies>
                   <excludes>
