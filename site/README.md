@@ -9,7 +9,7 @@ the site is to use docker to use a standard environment.
 1. `cd site`
 2. `git clone git@github.com:apache/orc.git -b asf-site target`
 
-## Run the docker container with the preview of the site.
+## Run the docker container with the preview of the site
 
 1. `docker run -d --name orc-container -p 4000:4000 -v $PWD:/home/orc/site apache/orc-dev:site`
 

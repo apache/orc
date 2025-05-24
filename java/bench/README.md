@@ -15,7 +15,7 @@ There are three sub-modules to try to mitigate dependency hell:
 
 To build this library, run the following in the parent directory:
 
-```
+```bash
 % ./mvnw clean package -Pbenchmark -DskipTests
 % cd bench
 ```
@@ -57,4 +57,3 @@ To run row-filter benchmark:
 To run spark benchmark:
 
 ```% java -jar spark/target/orc-benchmarks-spark-${ORC_VERSION}.jar spark data```
-
