@@ -159,11 +159,19 @@ jobs:
         make package test-out
 
   doc:
-    name: "Javadoc generation"
+    name: "Markdown check and Javadoc generation"
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Super-Linter
+      uses: super-linter/super-linter@12150456a73e248bdc94d0794898f94e23127c88
+      env:
+        DEFAULT_BRANCH: main
+        VALIDATE_MARKDOWN: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Install Java 17
       uses: actions/setup-java@v4
       with:

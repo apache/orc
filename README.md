@@ -18,20 +18,21 @@ lists, maps, and unions.
 This project includes both a Java library and a C++ library for reading and writing the _Optimized Row Columnar_ (ORC) file format. The C++ and Java libraries are completely independent of each other and will each read all versions of ORC files.
 
 Releases:
-* Latest: <a href="https://orc.apache.org/releases">Apache ORC releases</a>
-* Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)</a>
-* Downloads: <a href="https://orc.apache.org/downloads">Apache ORC downloads</a>
-* Release tags: <a href="https://github.com/apache/orc/releases">Apache ORC release tags</a>
-* Plan: <a href="https://github.com/apache/orc/milestones">Apache ORC future release plan</a>
+
+* Latest: [Apache ORC releases](https://orc.apache.org/releases)
+* Maven Central: [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22)
+* Downloads: [Apache ORC downloads](https://orc.apache.org/downloads)
+* Release tags: [Apache ORC release tags](https://github.com/apache/orc/releases)
+* Plan: [Apache ORC future release plan](https://github.com/apache/orc/milestones)
 
 The current build status:
-* Main branch <a href="https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain">
-![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)</a>
 
-Bug tracking: <a href="https://orc.apache.org/bugs">Apache Jira</a>
+* Main branch [![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain)
 
+Bug tracking: [Apache Jira](https://orc.apache.org/bugs)
 
 The subdirectories are:
+
 * c++ - the c++ reader and writer
 * cmake_modules - the cmake modules
 * docker - docker scripts to build and test on various linuxes
@@ -47,6 +48,7 @@ The subdirectories are:
 * Install cmake 3.12 or higher
 
 To build a release version with debug information:
+
 ```shell
 % mkdir build
 % cd build
@@ -57,6 +59,7 @@ To build a release version with debug information:
 ```
 
 To build a debug version:
+
 ```shell
 % mkdir build
 % cd build
@@ -67,6 +70,7 @@ To build a debug version:
 ```
 
 To build a release version without debug information:
+
 ```shell
 % mkdir build
 % cd build
@@ -77,6 +81,7 @@ To build a release version without debug information:
 ```
 
 To build only the Java library:
+
 ```shell
 % cd java
 % ./mvnw package
@@ -84,6 +89,7 @@ To build only the Java library:
 ```
 
 To build only the C++ library:
+
 ```shell
 % mkdir build
 % cd build
@@ -94,6 +100,7 @@ To build only the C++ library:
 ```
 
 To build the C++ library with AVX512 enabled:
+
 ```shell
 export ORC_USER_SIMD_LEVEL=AVX512
 % mkdir build
@@ -102,6 +109,7 @@ export ORC_USER_SIMD_LEVEL=AVX512
 % make package
 % make test-out
 ```
+
 Cmake option BUILD_ENABLE_AVX512 can be set to "ON" or (default value)"OFF" at the compile time. At compile time, it defines the SIMD level(AVX512) to be compiled into the binaries.
 
 Environment variable ORC_USER_SIMD_LEVEL can be set to "AVX512" or (default value)"NONE" at the run time. At run time, it defines the SIMD level to dispatch the code which can apply SIMD optimization.
