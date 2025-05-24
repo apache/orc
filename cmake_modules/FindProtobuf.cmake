@@ -96,12 +96,10 @@ if (Protobuf_FOUND)
 else()
     find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/zero_copy_stream.h HINTS
       ${_protobuf_path}
-      NO_DEFAULT_PATH
       PATH_SUFFIXES "include")
 
     find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/coded_stream.h HINTS
       ${_protobuf_path}
-      NO_DEFAULT_PATH
       PATH_SUFFIXES "include")
 
     find_library (PROTOBUF_LIBRARY NAMES protobuf libprotobuf HINTS
@@ -122,7 +120,6 @@ else()
 
     find_program(PROTOBUF_EXECUTABLE protoc HINTS
       ${_protobuf_path}
-      NO_DEFAULT_PATH
       PATH_SUFFIXES "bin")
 endif ()
 
