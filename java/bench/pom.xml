@@ -41,7 +41,7 @@
     <parquet.version>1.15.2</parquet.version>
     <scala.binary.version>2.13</scala.binary.version>
     <scala.version>2.13.16</scala.version>
-    <spark.version>4.0.0</spark.version>
+    <spark.version>4.0.0-preview2</spark.version>
   </properties>
 
   <dependencyManagement>
