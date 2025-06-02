@@ -206,7 +206,7 @@ public class StripePlanner {
   public InStream getStream(StreamName name) throws IOException {
     StreamInformation stream = streams.get(name);
     return stream == null ? null
-      : InStream.create(name, stream.firstChunk, stream.offset, stream.length,
+        : InStream.create(name, stream.firstChunk, stream.offset, stream.length,
             getStreamOptions(stream.column, stream.kind));
   }
 
