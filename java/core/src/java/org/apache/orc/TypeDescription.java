@@ -50,6 +50,19 @@ public class TypeDescription
   public static final String ENCRYPT_ATTRIBUTE = "encrypt";
   public static final String MASK_ATTRIBUTE = "mask";
 
+  public enum EdgeInterpolationAlgorithm {
+    SPHERICAL("spherical"),
+    VINCENTY("vincenty"),
+    THOMAS("thomas"),
+    ANDOYER("andoyer"),
+    KARNEY("karney");
+
+    EdgeInterpolationAlgorithm(String name) {
+      this.name = name;
+    }
+    final String name;
+  }
+
   @Override
   public int compareTo(TypeDescription other) {
     if (this == other) {
@@ -116,7 +129,9 @@ public class TypeDescription
     MAP("map", false),
     STRUCT("struct", false),
     UNION("uniontype", false),
-    TIMESTAMP_INSTANT("timestamp with local time zone", true);
+    TIMESTAMP_INSTANT("timestamp with local time zone", true),
+    Geometry("geometry", true),
+    Geography("geography", true);
 
     Category(String name, boolean isPrimitive) {
       this.name = name;
@@ -187,6 +202,10 @@ public class TypeDescription
     return new TypeDescription(Category.DECIMAL);
   }
 
+  public static TypeDescription createGeometry() { return new TypeDescription(Category.Geometry); }
+  
+  public static TypeDescription createGeography() { return new TypeDescription(Category.Geography); }
+
   /**
    * Parse TypeDescription from the Hive type names. This is the inverse
    * of TypeDescription.toString()
@@ -236,6 +255,25 @@ public class TypeDescription
       throw new IllegalArgumentException("scale is out of range at " + scale);
     }
     this.scale = scale;
+    return this;
+  }
+
+  public TypeDescription withCRS(String crs) {
+    if (category != Category.Geometry &&
+        category != Category.Geography) {
+      throw new IllegalArgumentException("crs is only allowed on Geometry/Geography" +
+          " and not " + category.name);
+    }
+    this.CRS = crs;
+    return this;
+  }
+
+  public TypeDescription withEdgeInterpolationAlgorithm(EdgeInterpolationAlgorithm edgeInterpolationAlgorithm) {
+    if (category != Category.Geography) {
+      throw new IllegalArgumentException("edgeInterpolationAlgorithm is only allowed on Geography" +
+          " and not " + category.name);
+    }
+    this.edgeInterpolationAlgorithm = edgeInterpolationAlgorithm;
     return this;
   }
 
@@ -366,6 +404,8 @@ public class TypeDescription
     result.maxLength = maxLength;
     result.precision = precision;
     result.scale = scale;
+    result.CRS = CRS;
+    result.edgeInterpolationAlgorithm = edgeInterpolationAlgorithm;
     if (fieldNames != null) {
       result.fieldNames.addAll(fieldNames);
     }
@@ -557,6 +597,14 @@ public class TypeDescription
     return scale;
   }
 
+  public String getCRS() {
+    return CRS;
+  }
+
+  public EdgeInterpolationAlgorithm getEdgeInterpolationAlgorithm() {
+    return edgeInterpolationAlgorithm;
+  }
+
   /**
    * For struct types, get the list of field names.
    * @return the list of field names.
@@ -664,6 +712,8 @@ public class TypeDescription
   private int maxLength = DEFAULT_LENGTH;
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
+  private String CRS = "OGC:CRS84";
+  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm = EdgeInterpolationAlgorithm.SPHERICAL;
 
   static void printFieldName(StringBuilder buffer, String name) {
     if (UNQUOTED_NAMES.matcher(name).matches()) {
@@ -691,6 +741,17 @@ public class TypeDescription
         buffer.append(maxLength);
         buffer.append(')');
         break;
+      case Geometry:
+        buffer.append('(');
+        buffer.append(CRS);
+        buffer.append(')');
+        break;
+      case Geography:
+        buffer.append('(');
+        buffer.append(CRS);
+        buffer.append(',');
+        buffer.append(edgeInterpolationAlgorithm.name());
+        buffer.append(')');
       case LIST:
       case MAP:
       case UNION:
@@ -751,6 +812,15 @@ public class TypeDescription
         buffer.append(", \"length\": ");
         buffer.append(maxLength);
         break;
+      case Geometry:
+        buffer.append(", \"crs\": ");
+        buffer.append(CRS);
+        break;
+      case Geography:
+        buffer.append(", \"crs\": ");
+        buffer.append(CRS);
+        buffer.append(", \"edge_interpolation_algorithm\": ");
+        buffer.append(edgeInterpolationAlgorithm.name());
       case LIST:
       case MAP:
       case UNION:

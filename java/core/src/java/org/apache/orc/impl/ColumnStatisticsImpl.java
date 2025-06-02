@@ -23,18 +23,12 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.orc.BinaryColumnStatistics;
-import org.apache.orc.BooleanColumnStatistics;
-import org.apache.orc.CollectionColumnStatistics;
-import org.apache.orc.ColumnStatistics;
-import org.apache.orc.DateColumnStatistics;
-import org.apache.orc.DecimalColumnStatistics;
-import org.apache.orc.DoubleColumnStatistics;
-import org.apache.orc.IntegerColumnStatistics;
-import org.apache.orc.OrcProto;
-import org.apache.orc.StringColumnStatistics;
-import org.apache.orc.TimestampColumnStatistics;
-import org.apache.orc.TypeDescription;
+import org.apache.orc.*;
+import org.apache.orc.geospatial.BoundingBox;
+import org.apache.orc.geospatial.GeospatialTypes;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKBReader;
 import org.threeten.extra.chrono.HybridChronology;
 
 import java.sql.Date;
@@ -42,6 +36,8 @@ import java.sql.Timestamp;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TimeZone;
 
 
@@ -1858,6 +1854,131 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   private boolean hasNull = false;
   private long bytesOnDisk = 0;
 
+  private static final class GeospatialStatisticsImpl extends ColumnStatisticsImpl
+          implements GeospatialColumnStatistics {
+    private BoundingBox boundingBox;
+    private final GeospatialTypes geospatialTypes;
+    private final WKBReader reader = new WKBReader();
+
+    GeospatialStatisticsImpl() {
+      this.boundingBox = new BoundingBox();
+      this.geospatialTypes = new GeospatialTypes();
+    }
+
+    GeospatialStatisticsImpl(OrcProto.ColumnStatistics stats) {
+      super(stats);
+      this.boundingBox = new BoundingBox();
+
+      OrcProto.GeospatialStatistics geoStatistics = stats.getGeospatialStatistics();
+      if (geoStatistics.hasBbox()) {
+        OrcProto.BoundingBox bbox = geoStatistics.getBbox();
+        this.boundingBox = new BoundingBox(
+                bbox.hasXmin() ? bbox.getXmin() : Double.POSITIVE_INFINITY,
+                bbox.hasXmax() ? bbox.getXmax() : Double.NEGATIVE_INFINITY,
+                bbox.hasYmin() ? bbox.getYmin() : Double.POSITIVE_INFINITY,
+                bbox.hasYmax() ? bbox.getYmax() : Double.NEGATIVE_INFINITY,
+                bbox.hasZmin() ? bbox.getZmin() : Double.POSITIVE_INFINITY,
+                bbox.hasZmax() ? bbox.getZmax() : Double.NEGATIVE_INFINITY,
+                bbox.hasMmin() ? bbox.getMmin() : Double.POSITIVE_INFINITY,
+                bbox.hasMmax() ? bbox.getMmax() : Double.NEGATIVE_INFINITY);
+      }
+
+      Set<Integer> types = new HashSet<>(geoStatistics.getGeospatialTypesList());
+      this.geospatialTypes = new GeospatialTypes(types);
+    }
+
+    @Override
+    public void updateGeometry(BytesWritable value) {
+      if (value == null) {
+        return;
+      }
+
+      try {
+        Geometry geom = reader.read(value.getBytes());
+        boundingBox.update(geom);
+        geospatialTypes.update(geom);
+      } catch (ParseException e) {
+        throw new IllegalArgumentException("Invalid geospatial data - failed to parse WKB format", e);
+      }
+    }
+
+    @Override
+    public void updateGeometry(byte[] bytes, int offset, int length) {
+      if (bytes == null) {
+        return;
+      }
+      BytesWritable value = new BytesWritable();
+      value.set(bytes, offset, length);
+      updateGeometry(value);
+    }
+
+    @Override
+    public void reset() {
+      super.reset();
+      boundingBox.reset();;
+      geospatialTypes.reset();
+    }
+
+    @Override
+    public void merge(ColumnStatisticsImpl other) {
+      if (other instanceof GeospatialStatisticsImpl geoStats) {
+        boundingBox.merge(geoStats.boundingBox);
+        geospatialTypes.merge(geoStats.geospatialTypes);
+      } else {
+        throw new IllegalArgumentException("Incompatible merging of geospatial column statistics");
+      }
+      super.merge(other);
+    }
+
+    @Override
+    public OrcProto.ColumnStatistics.Builder serialize() {
+      OrcProto.ColumnStatistics.Builder builder = super.serialize();
+      OrcProto.GeospatialStatistics.Builder geoStats = OrcProto.GeospatialStatistics.newBuilder();
+
+      OrcProto.BoundingBox.Builder bboxBuilder = OrcProto.BoundingBox.newBuilder();
+      if (boundingBox.isValid()) {
+        bboxBuilder.setXmin(boundingBox.getXMin());
+        bboxBuilder.setXmax(boundingBox.getXMax());
+        bboxBuilder.setYmin(boundingBox.getYMin());
+        bboxBuilder.setYmax(boundingBox.getYMax());
+        bboxBuilder.setZmin(boundingBox.getZMin());
+        bboxBuilder.setZmax(boundingBox.getZMax());
+        bboxBuilder.setMmin(boundingBox.getMMin());
+        bboxBuilder.setMmax(boundingBox.getMMax());
+      }
+      if (geospatialTypes.isValid()) {
+        geoStats.addAllGeospatialTypes(geospatialTypes.getTypes());
+      }
+      geoStats.setBbox(bboxBuilder);
+      builder.setGeospatialStatistics(geoStats);
+      return builder;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder buf = new StringBuilder(super.toString());
+      if (boundingBox.isValid()) {
+        buf.append(" bbox: ");
+        buf.append(boundingBox.toString());
+      }
+      if (geospatialTypes.isValid()) {
+        buf.append(" types: ");
+        buf.append(geospatialTypes.toString());
+      }
+      return buf.toString();
+    }
+
+    @Override
+    public BoundingBox getBoundingBox() {
+      return boundingBox;
+    }
+
+    @Override
+    public GeospatialTypes getGeospatialTypes() {
+      return geospatialTypes;
+    }
+  }
+
   ColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
     if (stats.hasNumberOfValues()) {
       count = stats.getNumberOfValues();
@@ -1955,6 +2076,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     throw new UnsupportedOperationException("Can't update timestamp");
   }
 
+  public void updateGeometry(BytesWritable value) {
+    throw new UnsupportedOperationException("Can't update Geometry");
+  }
+
+  public void updateGeometry(byte[] bytes, int offset, int length) {
+    throw new UnsupportedOperationException("Can't update Geometry");
+  }
+
   public boolean isStatsExists() {
     return (count > 0 || hasNull == true);
   }
@@ -2046,6 +2175,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         return new TimestampInstantStatisticsImpl();
       case BINARY:
         return new BinaryStatisticsImpl();
+      case Geography:
+      case Geometry:
+        return new GeospatialStatisticsImpl();
       default:
         return new ColumnStatisticsImpl();
     }
