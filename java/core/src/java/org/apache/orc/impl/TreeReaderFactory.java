@@ -3034,6 +3034,7 @@ public class TreeReaderFactory {
         }
         return new DecimalTreeReader(fileType.getId(), fileType.getPrecision(),
             fileType.getScale(), context);
+      case Geography:
       case Geometry:
         return new GeospatialTreeReader(fileType.getId(), context);
       case STRUCT:

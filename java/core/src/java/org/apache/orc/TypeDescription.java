@@ -752,6 +752,7 @@ public class TypeDescription
         buffer.append(',');
         buffer.append(edgeInterpolationAlgorithm.name());
         buffer.append(')');
+        break;
       case LIST:
       case MAP:
       case UNION:

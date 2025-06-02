@@ -171,30 +171,34 @@ public class OrcUtils {
         type.setPrecision(typeDescr.getPrecision());
         type.setScale(typeDescr.getScale());
         break;
-      case Geometry:
       case Geography:
-        type.setKind(OrcProto.Type.Kind.GEOMETRY);
-        type.setCrs(typeDescr.getCRS());
-        switch (typeDescr.getEdgeInterpolationAlgorithm()) {
-          case SPHERICAL:
-            type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.SPHERICAL);
-            break;
-          case VINCENTY:
-            type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.VINCENTY);
-            break;
-          case THOMAS:
-            type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.THOMAS);
-            break;
-          case ANDOYER:
-            type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.ANDOYER);
-            break;
-          case KARNEY:
-            type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.KARNEY);
-            break;
-          default:
-            throw new IllegalArgumentException("Unknown interpolation algorithm: " +
-                typeDescr.getEdgeInterpolationAlgorithm());
+      case Geometry:
+        if (typeDescr.getCategory() == TypeDescription.Category.Geography) {
+          type.setKind(OrcProto.Type.Kind.GEOGRAPHY);
+          switch (typeDescr.getEdgeInterpolationAlgorithm()) {
+            case SPHERICAL:
+              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.SPHERICAL);
+              break;
+            case VINCENTY:
+              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.VINCENTY);
+              break;
+            case THOMAS:
+              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.THOMAS);
+              break;
+            case ANDOYER:
+              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.ANDOYER);
+              break;
+            case KARNEY:
+              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.KARNEY);
+              break;
+            default:
+              throw new IllegalArgumentException("Unknown interpolation algorithm: " +
+                      typeDescr.getEdgeInterpolationAlgorithm());
+          }
+        } else {
+          type.setKind(OrcProto.Type.Kind.GEOMETRY);
         }
+        type.setCrs(typeDescr.getCRS());
         break;
       case LIST:
         type.setKind(OrcProto.Type.Kind.LIST);

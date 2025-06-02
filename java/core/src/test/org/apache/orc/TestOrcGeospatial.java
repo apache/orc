@@ -81,6 +81,7 @@ public class TestOrcGeospatial {
         writer.close();
 
         Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+        assertEquals(reader.getSchema().toString(), "geometry(OGC:CRS84)");
         RecordReader rows = reader.rows();
         batch = reader.getSchema().createRowBatch();
         geos = (BytesColumnVector) batch.cols[0];
@@ -118,6 +119,7 @@ public class TestOrcGeospatial {
         writer.close();
 
         Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+        assertEquals(reader.getSchema().toString(), "geography(OGC:CRS84,SPHERICAL)");
         RecordReader rows = reader.rows();
         batch = reader.getSchema().createRowBatch();
         geos = (BytesColumnVector) batch.cols[0];
