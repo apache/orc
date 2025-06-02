@@ -19,11 +19,12 @@
 
 package org.apache.orc.geospatial;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
 
 public class GeospatialTypes {
 
