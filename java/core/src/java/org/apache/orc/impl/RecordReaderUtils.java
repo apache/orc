@@ -303,9 +303,9 @@ public class RecordReaderUtils {
     assert kind != OrcProto.Stream.Kind.DICTIONARY_COUNT;
     OrcProto.ColumnEncoding.Kind encodingKind = encoding.getKind();
     return kind == OrcProto.Stream.Kind.DICTIONARY_DATA ||
-      (kind == OrcProto.Stream.Kind.LENGTH &&
-       (encodingKind == OrcProto.ColumnEncoding.Kind.DICTIONARY ||
-        encodingKind == OrcProto.ColumnEncoding.Kind.DICTIONARY_V2));
+        (kind == OrcProto.Stream.Kind.LENGTH &&
+            (encodingKind == OrcProto.ColumnEncoding.Kind.DICTIONARY ||
+            encodingKind == OrcProto.ColumnEncoding.Kind.DICTIONARY_V2));
   }
 
   /**
