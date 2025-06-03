@@ -202,9 +202,13 @@ public class TypeDescription
     return new TypeDescription(Category.DECIMAL);
   }
 
-  public static TypeDescription createGeometry() { return new TypeDescription(Category.Geometry); }
-  
-  public static TypeDescription createGeography() { return new TypeDescription(Category.Geography); }
+  public static TypeDescription createGeometry() {
+    return new TypeDescription(Category.Geometry);
+  }
+
+  public static TypeDescription createGeography() {
+    return new TypeDescription(Category.Geography);
+  }
 
   /**
    * Parse TypeDescription from the Hive type names. This is the inverse
@@ -268,10 +272,11 @@ public class TypeDescription
     return this;
   }
 
-  public TypeDescription withEdgeInterpolationAlgorithm(EdgeInterpolationAlgorithm edgeInterpolationAlgorithm) {
+  public TypeDescription withEdgeInterpolationAlgorithm(
+          EdgeInterpolationAlgorithm edgeInterpolationAlgorithm) {
     if (category != Category.Geography) {
       throw new IllegalArgumentException("edgeInterpolationAlgorithm is only allowed on Geography" +
-          " and not " + category.name);
+              " and not " + category.name);
     }
     this.edgeInterpolationAlgorithm = edgeInterpolationAlgorithm;
     return this;
@@ -713,7 +718,8 @@ public class TypeDescription
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
   private String CRS = "OGC:CRS84";
-  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm = EdgeInterpolationAlgorithm.SPHERICAL;
+  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm =
+          EdgeInterpolationAlgorithm.SPHERICAL;
 
   static void printFieldName(StringBuilder buffer, String name) {
     if (UNQUOTED_NAMES.matcher(name).matches()) {

@@ -86,7 +86,7 @@ public class TestColumnStatisticsImpl implements TestConf {
     Path file = new Path(exampleDir, "TestOrcFile.testTimestamp.orc");
     Reader reader = OrcFile.createReader(file, OrcFile.readerOptions(conf));
     TimestampColumnStatistics stats =
-        (TimestampColumnStatistics) reader.getStatistics()[0];
+            (TimestampColumnStatistics) reader.getStatistics()[0];
     assertEquals("1995-01-01 00:00:00.688", stats.getMinimum().toString());
     // ORC-611: add TS stats nanosecond support for older files by using (max TS + 0.999 ms)
     assertEquals("2037-01-01 00:00:00.000999999", stats.getMaximum().toString());
@@ -140,9 +140,9 @@ public class TestColumnStatisticsImpl implements TestConf {
   public void testDecimal64Overflow() {
     TypeDescription schema = TypeDescription.fromString("decimal(18,6)");
     OrcProto.ColumnStatistics.Builder pb =
-        OrcProto.ColumnStatistics.newBuilder();
+            OrcProto.ColumnStatistics.newBuilder();
     OrcProto.DecimalStatistics.Builder decimalBuilder =
-        OrcProto.DecimalStatistics.newBuilder();
+            OrcProto.DecimalStatistics.newBuilder();
     decimalBuilder.setMaximum("1000.0");
     decimalBuilder.setMinimum("1.010");
     decimalBuilder.setSum("123456789.123456");
@@ -152,7 +152,7 @@ public class TestColumnStatisticsImpl implements TestConf {
 
     // the base case doesn't overflow
     DecimalColumnStatistics stats1 = (DecimalColumnStatistics)
-        ColumnStatisticsImpl.deserialize(schema, pb.build());
+            ColumnStatisticsImpl.deserialize(schema, pb.build());
     ColumnStatisticsImpl updateStats1 = (ColumnStatisticsImpl) stats1;
     assertEquals("1.01", stats1.getMinimum().toString());
     assertEquals("1000", stats1.getMaximum().toString());
@@ -163,7 +163,7 @@ public class TestColumnStatisticsImpl implements TestConf {
     decimalBuilder.setSum("1234567890123.45");
     pb.setDecimalStatistics(decimalBuilder);
     DecimalColumnStatistics stats2 = (DecimalColumnStatistics)
-        ColumnStatisticsImpl.deserialize(schema, pb.build());
+            ColumnStatisticsImpl.deserialize(schema, pb.build());
     assertNull(stats2.getSum());
 
     // merge them together
@@ -269,13 +269,13 @@ public class TestColumnStatisticsImpl implements TestConf {
 
     Point point = geometryFactory.createPoint(new Coordinate(1, 1));
 
-    Coordinate[] lineCoords = new Coordinate[] {new Coordinate(1, 1), new Coordinate(2, 2)};
+    Coordinate[] lineCoords = new Coordinate[]{new Coordinate(1, 1), new Coordinate(2, 2)};
     LineString line = geometryFactory.createLineString(lineCoords);
 
-    Coordinate[] polygonCoords = new Coordinate[] {
-            new Coordinate(0, 0), new Coordinate(3, 0),
-            new Coordinate(1, 3), new Coordinate(0, 1),
-            new Coordinate(0, 0)
+    Coordinate[] polygonCoords = new Coordinate[]{
+      new Coordinate(0, 0), new Coordinate(3, 0),
+      new Coordinate(1, 3), new Coordinate(0, 1),
+      new Coordinate(0, 0)
     };
     LinearRing shell = geometryFactory.createLinearRing(polygonCoords);
     Polygon polygon = geometryFactory.createPolygon(shell);
@@ -321,7 +321,7 @@ public class TestColumnStatisticsImpl implements TestConf {
     assertTrue(geospatialTypes.getTypes().contains(2));
     assertEquals(2, geospatialTypes.getTypes().size());
     assertEquals("GeospatialTypes{types=[Point (XY), LineString (XY)]}",
-                      geospatialTypes.toString());
+            geospatialTypes.toString());
 
     byte[] polygonWkb = wkbWriter.write(polygon);
     stats.updateGeometry(new BytesWritable(polygonWkb));

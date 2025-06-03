@@ -41,97 +41,97 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  */
 public class TestOrcGeospatial {
-    Path workDir = new Path(System.getProperty("test.tmp.dir",
-            "target" + File.separator + "test" + File.separator + "tmp"));
-    Configuration conf;
-    FileSystem fs;
-    Path testFilePath;
+  Path workDir = new Path(System.getProperty("test.tmp.dir",
+          "target" + File.separator + "test" + File.separator + "tmp"));
+  Configuration conf;
+  FileSystem fs;
+  Path testFilePath;
 
-    public TestOrcGeospatial() {
+  public TestOrcGeospatial() {
+  }
+
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
+    conf = new Configuration();
+    fs = FileSystem.getLocal(conf);
+    testFilePath = new Path(workDir, "TestOrcGeospatial." +
+            testInfo.getTestMethod().get().getName() + ".orc");
+    fs.delete(testFilePath, false);
+  }
+
+  @Test
+  public void testGeometryWriter() throws Exception {
+    TypeDescription schema = TypeDescription.createGeometry();
+    Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+                    .bufferSize(10000));
+    GeometryFactory geometryFactory = new GeometryFactory();
+    WKBWriter wkbWriter = new WKBWriter();
+    WKBReader wkbReader = new WKBReader();
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector geos = (BytesColumnVector) batch.cols[0];
+    long sum = 0;
+    for (int i = 0; i < 100; i++) {
+      byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
+      sum += bytes.length;
+      geos.setVal(batch.size++, bytes);
     }
+    writer.addRowBatch(batch);
+    writer.close();
 
-    @BeforeEach
-    public void openFileSystem(TestInfo testInfo) throws Exception {
-        conf = new Configuration();
-        fs = FileSystem.getLocal(conf);
-        testFilePath = new Path(workDir, "TestOrcGeospatial." +
-                testInfo.getTestMethod().get().getName() + ".orc");
-        fs.delete(testFilePath, false);
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(reader.getSchema().toString(), "geometry(OGC:CRS84)");
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch();
+    geos = (BytesColumnVector) batch.cols[0];
+    int idx = 0;
+    while (rows.nextBatch(batch)) {
+      for (int r = 0; r < batch.size; ++r) {
+        Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
+        assertEquals("Point", geom.getGeometryType());
+        assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
+        idx += 1;
+      }
     }
+    rows.close();
+  }
 
-    @Test
-    public void testGeometryWriter() throws Exception {
-        TypeDescription schema = TypeDescription.createGeometry();
-        Writer writer = OrcFile.createWriter(testFilePath,
-                OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
-                        .bufferSize(10000));
-        GeometryFactory geometryFactory = new GeometryFactory();
-        WKBWriter wkbWriter = new WKBWriter();
-        WKBReader wkbReader = new WKBReader();
+  @Test
+  public void testGeographyWriter() throws Exception {
+    TypeDescription schema = TypeDescription.createGeography();
+    Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+                    .bufferSize(10000));
+    GeometryFactory geometryFactory = new GeometryFactory();
+    WKBWriter wkbWriter = new WKBWriter();
+    WKBReader wkbReader = new WKBReader();
 
-        VectorizedRowBatch batch = schema.createRowBatch();
-        BytesColumnVector geos = (BytesColumnVector) batch.cols[0];
-        long sum  = 0;
-        for (int i = 0; i < 100; i++) {
-            byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
-            sum += bytes.length;
-            geos.setVal(batch.size++, bytes);
-        }
-        writer.addRowBatch(batch);
-        writer.close();
-
-        Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-        assertEquals(reader.getSchema().toString(), "geometry(OGC:CRS84)");
-        RecordReader rows = reader.rows();
-        batch = reader.getSchema().createRowBatch();
-        geos = (BytesColumnVector) batch.cols[0];
-        int idx = 0;
-        while (rows.nextBatch(batch)) {
-            for(int r=0; r < batch.size; ++r) {
-                Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
-                assertEquals("Point", geom.getGeometryType());
-                assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
-                idx += 1;
-            }
-        }
-        rows.close();
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector geos = (BytesColumnVector) batch.cols[0];
+    long sum = 0;
+    for (int i = 0; i < 100; i++) {
+      byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
+      sum += bytes.length;
+      geos.setVal(batch.size++, bytes);
     }
+    writer.addRowBatch(batch);
+    writer.close();
 
-    @Test
-    public void testGeographyWriter() throws Exception {
-        TypeDescription schema = TypeDescription.createGeography();
-        Writer writer = OrcFile.createWriter(testFilePath,
-                OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
-                        .bufferSize(10000));
-        GeometryFactory geometryFactory = new GeometryFactory();
-        WKBWriter wkbWriter = new WKBWriter();
-        WKBReader wkbReader = new WKBReader();
-
-        VectorizedRowBatch batch = schema.createRowBatch();
-        BytesColumnVector geos = (BytesColumnVector) batch.cols[0];
-        long sum  = 0;
-        for (int i = 0; i < 100; i++) {
-            byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
-            sum += bytes.length;
-            geos.setVal(batch.size++, bytes);
-        }
-        writer.addRowBatch(batch);
-        writer.close();
-
-        Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-        assertEquals(reader.getSchema().toString(), "geography(OGC:CRS84,SPHERICAL)");
-        RecordReader rows = reader.rows();
-        batch = reader.getSchema().createRowBatch();
-        geos = (BytesColumnVector) batch.cols[0];
-        int idx = 0;
-        while (rows.nextBatch(batch)) {
-            for(int r=0; r < batch.size; ++r) {
-                Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
-                assertEquals("Point", geom.getGeometryType());
-                assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
-                idx += 1;
-            }
-        }
-        rows.close();
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(reader.getSchema().toString(), "geography(OGC:CRS84,SPHERICAL)");
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch();
+    geos = (BytesColumnVector) batch.cols[0];
+    int idx = 0;
+    while (rows.nextBatch(batch)) {
+      for (int r = 0; r < batch.size; ++r) {
+        Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
+        assertEquals("Point", geom.getGeometryType());
+        assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
+        idx += 1;
+      }
     }
+    rows.close();
+  }
 }
