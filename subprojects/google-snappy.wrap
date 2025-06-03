@@ -1,0 +1,30 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+[wrap-file]
+directory = snappy-1.2.2
+source_url = https://github.com/google/snappy/archive/1.2.2.tar.gz
+source_filename = 1.2.2.tar.gz
+source_hash = 90f74bc1fbf78a6c56b3c4a082a05103b3a56bb17bca1a27e052ea11723292dc
+patch_filename = google-snappy_1.2.2-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/google-snappy_1.2.2-1/get_patch
+patch_hash = 831c36bf1eca64e95cee892cae5a7eade382b1a13bb74a5038cd2703a8fc158c
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/google-snappy_1.2.2-1/1.2.2.tar.gz
+wrapdb_version = 1.2.2-1
+
+[provide]
+snappy = snappy_dep
