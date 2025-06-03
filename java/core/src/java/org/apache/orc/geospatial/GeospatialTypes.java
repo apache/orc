@@ -42,6 +42,22 @@ public class GeospatialTypes {
     this.valid = valid;
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof GeospatialTypes other)) {
+      return false;
+    }
+    if (obj == this) {
+      return true;
+    }
+    return valid == other.valid && types.equals(other.types);
+  }
+
+  @Override
+  public int hashCode() {
+    return types.hashCode() ^ Boolean.hashCode(valid);
+  }
+
   public GeospatialTypes() {}
 
   public Set<Integer> getTypes() {

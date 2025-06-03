@@ -1977,6 +1977,31 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public GeospatialTypes getGeospatialTypes() {
       return geospatialTypes;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof GeospatialStatisticsImpl that)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      return boundingBox.equals(that.boundingBox) &&
+              geospatialTypes.equals(that.geospatialTypes);
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = super.hashCode();
+      result = prime * result + boundingBox.hashCode();
+      result = prime * result + geospatialTypes.hashCode();
+      return result;
+    }
   }
 
   ColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {

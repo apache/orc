@@ -822,6 +822,7 @@ public class TypeDescription
         buffer.append(CRS);
         buffer.append(", \"edge_interpolation_algorithm\": ");
         buffer.append(edgeInterpolationAlgorithm.name());
+        break;
       case LIST:
       case MAP:
       case UNION:

@@ -52,6 +52,26 @@ public class BoundingBox {
         valid = isXYValid();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof BoundingBox other)) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        return xMin == other.xMin && xMax == other.xMax && yMin == other.yMin && yMax == other.yMax
+                && zMin == other.zMin && zMax == other.zMax && mMin == other.mMin && mMax == other.mMax
+                && valid == other.valid;
+    }
+
+    @Override
+    public int hashCode() {
+        return Double.hashCode(xMin) ^ Double.hashCode(xMax) ^ Double.hashCode(yMin) ^ Double.hashCode(yMax)
+                ^ Double.hashCode(zMin) ^ Double.hashCode(zMax) ^ Double.hashCode(mMin) ^ Double.hashCode(mMax)
+                ^ Boolean.hashCode(valid);
+    }
+
     private void resetBBox() {
         xMin = Double.POSITIVE_INFINITY;
         xMax = Double.NEGATIVE_INFINITY;
