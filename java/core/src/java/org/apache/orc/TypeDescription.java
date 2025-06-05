@@ -44,6 +44,7 @@ public class TypeDescription
   public static final long MAX_DECIMAL64 = 999_999_999_999_999_999L;
   public static final long MIN_DECIMAL64 = -MAX_DECIMAL64;
   private static final int DEFAULT_LENGTH = 256;
+  private static final String DEFAULT_CRS = "OGC:CRS84";
   static final Pattern UNQUOTED_NAMES = Pattern.compile("^[a-zA-Z0-9_]+$");
 
   // type attributes
@@ -62,6 +63,8 @@ public class TypeDescription
     }
     final String name;
   }
+  private static final EdgeInterpolationAlgorithm DEFAULT_EDGE_INTERPOLATION_ALGORITHM
+                                                    = EdgeInterpolationAlgorithm.SPHERICAL;
 
   @Override
   public int compareTo(TypeDescription other) {
@@ -717,9 +720,8 @@ public class TypeDescription
   private int maxLength = DEFAULT_LENGTH;
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
-  private String CRS = "OGC:CRS84";
-  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm =
-          EdgeInterpolationAlgorithm.SPHERICAL;
+  private String CRS = DEFAULT_CRS;
+  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm = DEFAULT_EDGE_INTERPOLATION_ALGORITHM;
 
   static void printFieldName(StringBuilder buffer, String name) {
     if (UNQUOTED_NAMES.matcher(name).matches()) {

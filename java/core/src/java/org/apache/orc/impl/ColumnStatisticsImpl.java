@@ -48,9 +48,7 @@ import java.sql.Timestamp;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
@@ -1948,7 +1946,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.GeospatialStatistics.Builder geoStats = OrcProto.GeospatialStatistics.newBuilder();
 
       OrcProto.BoundingBox.Builder bboxBuilder = OrcProto.BoundingBox.newBuilder();
-      if (boundingBox.isValid()) {
+      boolean hasStats = false;
+      if (boundingBox.isValid() && !boundingBox.isXYEmpty()) {
         bboxBuilder.setXmin(boundingBox.getXMin());
         bboxBuilder.setXmax(boundingBox.getXMax());
         bboxBuilder.setYmin(boundingBox.getYMin());
@@ -1957,12 +1956,18 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         bboxBuilder.setZmax(boundingBox.getZMax());
         bboxBuilder.setMmin(boundingBox.getMMin());
         bboxBuilder.setMmax(boundingBox.getMMax());
+        hasStats = true;
+        geoStats.setBbox(bboxBuilder);
       }
-      if (geospatialTypes.isValid()) {
-        geoStats.addAllGeospatialTypes(geospatialTypes.getTypes());
+      if (geospatialTypes.isValid() && !geospatialTypes.getTypes().isEmpty()) {
+        List<Integer> sortedTypes = new ArrayList<>(geospatialTypes.getTypes());
+        Collections.sort(sortedTypes);
+        geoStats.addAllGeospatialTypes(sortedTypes);
+        hasStats = true;
       }
-      geoStats.setBbox(bboxBuilder);
-      builder.setGeospatialStatistics(geoStats);
+      if (hasStats) {
+        builder.setGeospatialStatistics(geoStats);
+      }
       return builder;
     }
 
@@ -2258,6 +2263,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
                      writerUsedProlepticGregorian, convertToProlepticGregorian);
     } else if(stats.hasBinaryStatistics()) {
       return new BinaryStatisticsImpl(stats);
+    } else if (stats.hasGeospatialStatistics()) {
+      return new GeospatialStatisticsImpl(stats);
     } else {
       return new ColumnStatisticsImpl(stats);
     }

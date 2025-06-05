@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -35,7 +36,7 @@ import org.locationtech.jts.io.WKBWriter;
 import java.io.File;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -60,7 +61,8 @@ public class TestOrcGeospatial {
   }
 
   @Test
-  public void testGeometryWriter() throws Exception {
+  public void testGeometryWriterWithNulls() throws Exception {
+    // Create a geometry schema and ORC file writer
     TypeDescription schema = TypeDescription.createGeometry();
     Writer writer = OrcFile.createWriter(testFilePath,
             OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -69,28 +71,49 @@ public class TestOrcGeospatial {
     WKBWriter wkbWriter = new WKBWriter();
     WKBReader wkbReader = new WKBReader();
 
+    // Add data
     VectorizedRowBatch batch = schema.createRowBatch();
     BytesColumnVector geos = (BytesColumnVector) batch.cols[0];
-    long sum = 0;
     for (int i = 0; i < 100; i++) {
-      byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
-      sum += bytes.length;
-      geos.setVal(batch.size++, bytes);
+      if (i % 2 == 0) {
+        byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
+        geos.setVal(batch.size++, bytes);
+      } else {
+        geos.noNulls = false;
+        geos.isNull[batch.size++] = true;
+      }
     }
     writer.addRowBatch(batch);
     writer.close();
 
+    // Verify reader schema
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-    assertEquals(reader.getSchema().toString(), "geometry(OGC:CRS84)");
+    assertEquals("geometry(OGC:CRS84)", reader.getSchema().toString());
+    assertEquals(100, reader.getNumberOfRows());
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
     geos = (BytesColumnVector) batch.cols[0];
+
+    // Verify statistics
+    ColumnStatistics[] stats = reader.getStatistics();
+    assertEquals(1, stats.length);
+    assertEquals(50, stats[0].getNumberOfValues());
+    assertTrue(stats[0].hasNull());
+    assertInstanceOf(GeospatialColumnStatistics.class, stats[0]);
+    assertEquals("BoundingBox{xMin=0.0, xMax=98.0, yMin=0.0, yMax=98.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity}", ((GeospatialColumnStatistics) stats[0]).getBoundingBox().toString());
+    assertEquals("GeospatialTypes{types=[Point (XY)]}", ((GeospatialColumnStatistics) stats[0]).getGeospatialTypes().toString());
+
+    // Verify data
     int idx = 0;
     while (rows.nextBatch(batch)) {
       for (int r = 0; r < batch.size; ++r) {
-        Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
-        assertEquals("Point", geom.getGeometryType());
-        assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
+        if (idx % 2 == 0) {
+          Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
+          assertEquals("Point", geom.getGeometryType());
+          assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
+        } else {
+          assertTrue(geos.isNull[r]);
+        }
         idx += 1;
       }
     }
@@ -98,7 +121,8 @@ public class TestOrcGeospatial {
   }
 
   @Test
-  public void testGeographyWriter() throws Exception {
+  public void testGeographyWriterWithNulls() throws Exception {
+    // Create geography schema and ORC file writer
     TypeDescription schema = TypeDescription.createGeography();
     Writer writer = OrcFile.createWriter(testFilePath,
             OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -107,28 +131,48 @@ public class TestOrcGeospatial {
     WKBWriter wkbWriter = new WKBWriter();
     WKBReader wkbReader = new WKBReader();
 
+    // Add data
     VectorizedRowBatch batch = schema.createRowBatch();
     BytesColumnVector geos = (BytesColumnVector) batch.cols[0];
-    long sum = 0;
     for (int i = 0; i < 100; i++) {
-      byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
-      sum += bytes.length;
-      geos.setVal(batch.size++, bytes);
+      if (i % 2 == 0) {
+        byte[] bytes = wkbWriter.write(geometryFactory.createPoint(new Coordinate(i, i)));
+        geos.setVal(batch.size++, bytes);
+      } else {
+        geos.noNulls = false;
+        geos.isNull[batch.size++] = true;
+      }
     }
     writer.addRowBatch(batch);
     writer.close();
 
+    // Verify reader schema
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-    assertEquals(reader.getSchema().toString(), "geography(OGC:CRS84,SPHERICAL)");
+    assertEquals("geography(OGC:CRS84,SPHERICAL)", reader.getSchema().toString());
+    assertEquals(100, reader.getNumberOfRows());
+
+    // Verify statistics, make sure there is no geospatial stats
+    ColumnStatistics[] stats = reader.getStatistics();
+    assertEquals(1, stats.length);
+    assertEquals(50, stats[0].getNumberOfValues());
+    assertTrue(stats[0].hasNull());
+    assertInstanceOf(ColumnStatisticsImpl.class, stats[0]);
+    assertFalse(stats[0] instanceof GeospatialColumnStatistics);
+
+    // Verify Data
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
     geos = (BytesColumnVector) batch.cols[0];
     int idx = 0;
     while (rows.nextBatch(batch)) {
       for (int r = 0; r < batch.size; ++r) {
-        Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
-        assertEquals("Point", geom.getGeometryType());
-        assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
+        if (idx % 2 == 0) {
+          Geometry geom = wkbReader.read(Arrays.copyOfRange(geos.vector[r], geos.start[r], geos.start[r] + geos.length[r]));
+          assertEquals("Point", geom.getGeometryType());
+          assertEquals(geom, geometryFactory.createPoint(new Coordinate(idx, idx)));
+        } else {
+          assertTrue(geos.isNull[r]);
+        }
         idx += 1;
       }
     }

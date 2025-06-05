@@ -28,10 +28,14 @@ import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.orc.geospatial.BoundingBox;
+import org.apache.orc.geospatial.GeospatialTypes;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.io.WKBWriter;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -740,6 +744,195 @@ public class TestColumnStatistics implements TestConf {
     });
 
     assertEquals(0, ((DoubleColumnStatistics) doubleStats).getNumberOfValues());
+  }
+
+  @Test
+  public void testUpdateGeometry() {
+    TypeDescription desc = TypeDescription.createGeometry();
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(desc);
+    GeometryFactory geometryFactory = new GeometryFactory();
+    WKBWriter wkbWriter = new WKBWriter();
+
+    byte[][] points = {
+            wkbWriter.write(geometryFactory.createPoint(new Coordinate(1.0, 1.0))),
+            wkbWriter.write(geometryFactory.createPoint(new Coordinate(2.0, 2.0))),
+    };
+
+    for (byte[] point : points) {
+      stats.updateGeometry(new BytesWritable(point));
+    }
+
+    GeospatialColumnStatistics geometryStatistics = (GeospatialColumnStatistics) stats;
+    BoundingBox bbox = geometryStatistics.getBoundingBox();
+    assertEquals(1.0, bbox.getXMin(), 0.0);
+    assertEquals(2.0, bbox.getXMax(), 0.0);
+    assertEquals(1.0, bbox.getYMin(), 0.0);
+    assertEquals(2.0, bbox.getYMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getZMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getZMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getMMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getMMax(), 0.0);
+    assertEquals("BoundingBox{xMin=1.0, xMax=2.0, yMin=1.0, yMax=2.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity}",
+            bbox.toString());
+    assertEquals("count: 0 hasNull: false bbox: BoundingBox{xMin=1.0, xMax=2.0, yMin=1.0, yMax=2.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity} types: GeospatialTypes{types=[Point (XY)]}",
+            geometryStatistics.toString());
+
+    GeospatialTypes geospatialTypes = geometryStatistics.getGeospatialTypes();
+    assertTrue(geospatialTypes.getTypes().contains(1));
+    assertEquals(1, geospatialTypes.getTypes().size());
+  }
+
+  @Test
+  public void testUpdateGeometryWithDifferentTypes() {
+    TypeDescription desc = TypeDescription.createGeometry();
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(desc);
+    GeometryFactory geometryFactory = new GeometryFactory();
+    WKBWriter wkbWriter = new WKBWriter();
+
+    Point point = geometryFactory.createPoint(new Coordinate(1, 1));
+    Coordinate[] lineCoords = new Coordinate[]{new Coordinate(1, 1), new Coordinate(2, 2)};
+    LineString line = geometryFactory.createLineString(lineCoords);
+    Coordinate[] polygonCoords = new Coordinate[]{
+            new Coordinate(0, 0), new Coordinate(3, 0),
+            new Coordinate(1, 3), new Coordinate(0, 1),
+            new Coordinate(0, 0)
+    };
+    LinearRing shell = geometryFactory.createLinearRing(polygonCoords);
+    Polygon polygon = geometryFactory.createPolygon(shell);
+
+    GeospatialColumnStatistics geometryStatistics = (GeospatialColumnStatistics) stats;
+    BoundingBox bbox = geometryStatistics.getBoundingBox();
+    GeospatialTypes geospatialTypes = geometryStatistics.getGeospatialTypes();
+    // Generate WKB and update stats
+    byte[] pointWkb = wkbWriter.write(point);
+    stats.updateGeometry(new BytesWritable(pointWkb));
+
+    assertEquals(1.0, bbox.getXMin(), 0.0);
+    assertEquals(1.0, bbox.getXMax(), 0.0);
+    assertEquals(1.0, bbox.getYMin(), 0.0);
+    assertEquals(1.0, bbox.getYMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getZMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getZMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getMMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getMMax(), 0.0);
+    assertEquals("BoundingBox{xMin=1.0, xMax=1.0, yMin=1.0, yMax=1.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity}",
+            bbox.toString());
+
+    assertTrue(geospatialTypes.getTypes().contains(1));
+    assertEquals(1, geospatialTypes.getTypes().size());
+    assertEquals("GeospatialTypes{types=[Point (XY)]}", geospatialTypes.toString());
+
+
+    assertEquals("count: 0 hasNull: false bbox: BoundingBox{xMin=1.0, xMax=1.0, yMin=1.0, yMax=1.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity} types: GeospatialTypes{types=[Point (XY)]}",
+            geometryStatistics.toString());
+
+    byte[] lineWkb = wkbWriter.write(line);
+    stats.updateGeometry(new BytesWritable(lineWkb));
+    assertEquals(1.0, bbox.getXMin(), 0.0);
+    assertEquals(2.0, bbox.getXMax(), 0.0);
+    assertEquals(1.0, bbox.getYMin(), 0.0);
+    assertEquals(2.0, bbox.getYMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getZMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getZMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getMMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getMMax(), 0.0);
+
+    assertTrue(geospatialTypes.getTypes().contains(1));
+    assertTrue(geospatialTypes.getTypes().contains(2));
+    assertEquals(2, geospatialTypes.getTypes().size());
+    assertEquals("GeospatialTypes{types=[Point (XY), LineString (XY)]}",
+            geospatialTypes.toString());
+
+    byte[] polygonWkb = wkbWriter.write(polygon);
+    stats.updateGeometry(new BytesWritable(polygonWkb));
+    stats.updateGeometry(new BytesWritable(lineWkb));
+    assertEquals(0.0, bbox.getXMin(), 0.0);
+    assertEquals(3.0, bbox.getXMax(), 0.0);
+    assertEquals(0.0, bbox.getYMin(), 0.0);
+    assertEquals(3.0, bbox.getYMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getZMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getZMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getMMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getMMax(), 0.0);
+
+    assertTrue(geospatialTypes.getTypes().contains(1));
+    assertTrue(geospatialTypes.getTypes().contains(2));
+    assertTrue(geospatialTypes.getTypes().contains(2));
+    assertEquals(3, geospatialTypes.getTypes().size());
+    assertEquals("GeospatialTypes{types=[Point (XY), LineString (XY), Polygon (XY)]}",
+            geospatialTypes.toString());
+
+  }
+
+  @Test
+  public void testUpdateGeometryWithZCoordinates() {
+    TypeDescription desc = TypeDescription.createGeometry();
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(desc);
+    GeometryFactory geometryFactory = new GeometryFactory();
+    WKBWriter wkbWriter = new WKBWriter(3);
+
+    Point point1 = geometryFactory.createPoint(new Coordinate(0, 1, 2));
+    Point point2 = geometryFactory.createPoint(new Coordinate(2, 1, 0));
+
+    stats.updateGeometry(new BytesWritable(wkbWriter.write(point1)));
+    stats.updateGeometry(new BytesWritable(wkbWriter.write(point2)));
+
+    GeospatialColumnStatistics geometryStatistics = (GeospatialColumnStatistics) stats;
+    BoundingBox bbox = geometryStatistics.getBoundingBox();
+    assertEquals(0.0, bbox.getXMin(), 0.0);
+    assertEquals(2.0, bbox.getXMax(), 0.0);
+    assertEquals(1.0, bbox.getYMin(), 0.0);
+    assertEquals(1.0, bbox.getYMax(), 0.0);
+    assertEquals(0.0, bbox.getZMin(), 0.0);
+    assertEquals(2.0, bbox.getZMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getMMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getMMax(), 0.0);
+    assertEquals("BoundingBox{xMin=0.0, xMax=2.0, yMin=1.0, yMax=1.0, zMin=0.0, zMax=2.0, mMin=Infinity, mMax=-Infinity}",
+            bbox.toString());
+    assertEquals("count: 0 hasNull: false bbox: BoundingBox{xMin=0.0, xMax=2.0, yMin=1.0, yMax=1.0, zMin=0.0, zMax=2.0, mMin=Infinity, mMax=-Infinity} types: GeospatialTypes{types=[Point (XYZ)]}",
+            geometryStatistics.toString());
+
+    GeospatialTypes geospatialTypes = geometryStatistics.getGeospatialTypes();
+    assertTrue(geospatialTypes.getTypes().contains(1001));
+    assertEquals(1, geospatialTypes.getTypes().size());
+  }
+
+  @Test
+  public void TestGeospatialMerge() {
+    TypeDescription desc = TypeDescription.createGeometry();
+    ColumnStatisticsImpl stats0 = ColumnStatisticsImpl.create(desc);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(desc);
+    GeometryFactory geometryFactory = new GeometryFactory();
+    WKBWriter wkbWriter = new WKBWriter();
+
+    byte[][] points = {
+            wkbWriter.write(geometryFactory.createPoint(new Coordinate(1.0, 1.0))),
+            wkbWriter.write(geometryFactory.createPoint(new Coordinate(2.0, 2.0))),
+    };
+
+    stats0.updateGeometry(new BytesWritable(points[0]));
+    stats1.updateGeometry(new BytesWritable(points[1]));
+
+    GeospatialColumnStatistics geometryStatistics = (GeospatialColumnStatistics) stats0;
+    stats0.merge(stats1);
+
+    BoundingBox bbox = geometryStatistics.getBoundingBox();
+    assertEquals(1.0, bbox.getXMin(), 0.0);
+    assertEquals(2.0, bbox.getXMax(), 0.0);
+    assertEquals(1.0, bbox.getYMin(), 0.0);
+    assertEquals(2.0, bbox.getYMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getZMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getZMax(), 0.0);
+    assertEquals(Double.POSITIVE_INFINITY, bbox.getMMin(), 0.0);
+    assertEquals(Double.NEGATIVE_INFINITY, bbox.getMMax(), 0.0);
+    assertEquals("BoundingBox{xMin=1.0, xMax=2.0, yMin=1.0, yMax=2.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity}",
+            bbox.toString());
+    assertEquals("count: 0 hasNull: false bbox: BoundingBox{xMin=1.0, xMax=2.0, yMin=1.0, yMax=2.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity} types: GeospatialTypes{types=[Point (XY)]}",
+            geometryStatistics.toString());
+
+    GeospatialTypes geospatialTypes = geometryStatistics.getGeospatialTypes();
+    assertTrue(geospatialTypes.getTypes().contains(1));
+    assertEquals(1, geospatialTypes.getTypes().size());
   }
 
   Path workDir = new Path(System.getProperty("test.tmp.dir",
