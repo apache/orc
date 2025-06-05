@@ -721,7 +721,8 @@ public class TypeDescription
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
   private String CRS = DEFAULT_CRS;
-  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm = DEFAULT_EDGE_INTERPOLATION_ALGORITHM;
+  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm
+            = DEFAULT_EDGE_INTERPOLATION_ALGORITHM;
 
   static void printFieldName(StringBuilder buffer, String name) {
     if (UNQUOTED_NAMES.matcher(name).matches()) {

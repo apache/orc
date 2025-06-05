@@ -793,9 +793,9 @@ public class TestColumnStatistics implements TestConf {
     Coordinate[] lineCoords = new Coordinate[]{new Coordinate(1, 1), new Coordinate(2, 2)};
     LineString line = geometryFactory.createLineString(lineCoords);
     Coordinate[] polygonCoords = new Coordinate[]{
-            new Coordinate(0, 0), new Coordinate(3, 0),
-            new Coordinate(1, 3), new Coordinate(0, 1),
-            new Coordinate(0, 0)
+      new Coordinate(0, 0), new Coordinate(3, 0),
+      new Coordinate(1, 3), new Coordinate(0, 1),
+      new Coordinate(0, 0)
     };
     LinearRing shell = geometryFactory.createLinearRing(polygonCoords);
     Polygon polygon = geometryFactory.createPolygon(shell);
