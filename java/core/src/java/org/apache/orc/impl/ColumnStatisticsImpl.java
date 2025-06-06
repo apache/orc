@@ -48,12 +48,12 @@ import java.sql.Timestamp;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.Collections;
 
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
