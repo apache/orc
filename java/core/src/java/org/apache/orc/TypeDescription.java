@@ -65,7 +65,7 @@ public class TypeDescription
   }
 
   private static final EdgeInterpolationAlgorithm DEFAULT_EDGE_INTERPOLATION_ALGORITHM
-                                                    = EdgeInterpolationAlgorithm.SPHERICAL;
+          = EdgeInterpolationAlgorithm.SPHERICAL;
 
   @Override
   public int compareTo(TypeDescription other) {
