@@ -63,6 +63,7 @@ public class TypeDescription
     }
     final String name;
   }
+
   private static final EdgeInterpolationAlgorithm DEFAULT_EDGE_INTERPOLATION_ALGORITHM
                                                     = EdgeInterpolationAlgorithm.SPHERICAL;
 
@@ -271,7 +272,7 @@ public class TypeDescription
       throw new IllegalArgumentException("crs is only allowed on Geometry/Geography" +
           " and not " + category.name);
     }
-    this.CRS = crs;
+    this.crs = crs;
     return this;
   }
 
@@ -412,7 +413,7 @@ public class TypeDescription
     result.maxLength = maxLength;
     result.precision = precision;
     result.scale = scale;
-    result.CRS = CRS;
+    result.crs = crs;
     result.edgeInterpolationAlgorithm = edgeInterpolationAlgorithm;
     if (fieldNames != null) {
       result.fieldNames.addAll(fieldNames);
@@ -605,8 +606,8 @@ public class TypeDescription
     return scale;
   }
 
-  public String getCRS() {
-    return CRS;
+  public String getCrs() {
+    return crs;
   }
 
   public EdgeInterpolationAlgorithm getEdgeInterpolationAlgorithm() {
@@ -720,7 +721,7 @@ public class TypeDescription
   private int maxLength = DEFAULT_LENGTH;
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
-  private String CRS = DEFAULT_CRS;
+  private String crs = DEFAULT_CRS;
   private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm
             = DEFAULT_EDGE_INTERPOLATION_ALGORITHM;
 
@@ -752,12 +753,12 @@ public class TypeDescription
         break;
       case Geometry:
         buffer.append('(');
-        buffer.append(CRS);
+        buffer.append(crs);
         buffer.append(')');
         break;
       case Geography:
         buffer.append('(');
-        buffer.append(CRS);
+        buffer.append(crs);
         buffer.append(',');
         buffer.append(edgeInterpolationAlgorithm.name());
         buffer.append(')');
@@ -824,11 +825,11 @@ public class TypeDescription
         break;
       case Geometry:
         buffer.append(", \"crs\": ");
-        buffer.append(CRS);
+        buffer.append(crs);
         break;
       case Geography:
         buffer.append(", \"crs\": ");
-        buffer.append(CRS);
+        buffer.append(crs);
         buffer.append(", \"edge_interpolation_algorithm\": ");
         buffer.append(edgeInterpolationAlgorithm.name());
         break;

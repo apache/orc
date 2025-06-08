@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.orc.geospatial;
@@ -23,6 +22,11 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 
+/**
+ * Bounding box for Geometry or Geography type in the representation of min/max
+ * value pairs of coordinates from each axis.
+ * A bounding box is considered valid if none of the X / Y dimensions contain NaN.
+ */
 public class BoundingBox {
 
   private double xMin = Double.POSITIVE_INFINITY;
@@ -63,8 +67,7 @@ public class BoundingBox {
       return true;
     }
     return xMin == other.xMin && xMax == other.xMax && yMin == other.yMin && yMax == other.yMax &&
-           zMin == other.zMin && zMax == other.zMax && mMin == other.mMin && mMax == other.mMax &&
-           valid == other.valid;
+           zMin == other.zMin && zMax == other.zMax && mMin == other.mMin && mMax == other.mMax;
   }
 
   @Override
@@ -72,8 +75,7 @@ public class BoundingBox {
     return Double.hashCode(xMin) ^ Double.hashCode(xMax) ^
            Double.hashCode(yMin) ^ Double.hashCode(yMax) ^
            Double.hashCode(zMin) ^ Double.hashCode(zMax) ^
-           Double.hashCode(mMin) ^ Double.hashCode(mMax) ^
-           Boolean.hashCode(valid);
+           Double.hashCode(mMin) ^ Double.hashCode(mMax);
   }
 
   private void resetBBox() {
@@ -85,6 +87,9 @@ public class BoundingBox {
     zMax = Double.NEGATIVE_INFINITY;
     mMin = Double.POSITIVE_INFINITY;
     mMax = Double.NEGATIVE_INFINITY;
+
+    // Update the validity
+    valid = isXYValid();
   }
 
   public double getXMin() {

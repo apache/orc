@@ -17,6 +17,7 @@
  */
 package org.apache.orc;
 
+import org.apache.orc.TypeDescription.EdgeInterpolationAlgorithm;
 import org.apache.orc.impl.ParserUtils;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.SchemaEvolution;
@@ -172,33 +173,21 @@ public class OrcUtils {
         type.setScale(typeDescr.getScale());
         break;
       case Geography:
+        type.setKind(OrcProto.Type.Kind.GEOGRAPHY);
+        type.setAlgorithm(switch (typeDescr.getEdgeInterpolationAlgorithm()) {
+          case SPHERICAL -> OrcProto.Type.EdgeInterpolationAlgorithm.SPHERICAL;
+          case VINCENTY -> OrcProto.Type.EdgeInterpolationAlgorithm.VINCENTY;
+          case THOMAS -> OrcProto.Type.EdgeInterpolationAlgorithm.THOMAS;
+          case ANDOYER -> OrcProto.Type.EdgeInterpolationAlgorithm.ANDOYER;
+          case KARNEY -> OrcProto.Type.EdgeInterpolationAlgorithm.KARNEY;
+          default -> throw new IllegalArgumentException("Unknown interpolation algorithm: " +
+                  typeDescr.getEdgeInterpolationAlgorithm());
+        });
+        type.setCrs(typeDescr.getCrs());
+        break;
       case Geometry:
-        if (typeDescr.getCategory() == TypeDescription.Category.Geography) {
-          type.setKind(OrcProto.Type.Kind.GEOGRAPHY);
-          switch (typeDescr.getEdgeInterpolationAlgorithm()) {
-            case SPHERICAL:
-              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.SPHERICAL);
-              break;
-            case VINCENTY:
-              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.VINCENTY);
-              break;
-            case THOMAS:
-              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.THOMAS);
-              break;
-            case ANDOYER:
-              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.ANDOYER);
-              break;
-            case KARNEY:
-              type.setAlgorithm(OrcProto.Type.EdgeInterpolationAlgorithm.KARNEY);
-              break;
-            default:
-              throw new IllegalArgumentException("Unknown interpolation algorithm: " +
-                      typeDescr.getEdgeInterpolationAlgorithm());
-          }
-        } else {
-          type.setKind(OrcProto.Type.Kind.GEOMETRY);
-        }
-        type.setCrs(typeDescr.getCRS());
+        type.setKind(OrcProto.Type.Kind.GEOMETRY);
+        type.setCrs(typeDescr.getCrs());
         break;
       case LIST:
         type.setKind(OrcProto.Type.Kind.LIST);
@@ -365,31 +354,17 @@ public class OrcUtils {
         if (type.hasCrs()) {
           result.withCRS(type.getCrs());
         }
-        switch (type.getAlgorithm()) {
-          case SPHERICAL:
-            result.withEdgeInterpolationAlgorithm(
-                    TypeDescription.EdgeInterpolationAlgorithm.SPHERICAL);
-            break;
-          case VINCENTY:
-            result.withEdgeInterpolationAlgorithm(
-                    TypeDescription.EdgeInterpolationAlgorithm.VINCENTY);
-            break;
-          case THOMAS:
-            result.withEdgeInterpolationAlgorithm(
-                    TypeDescription.EdgeInterpolationAlgorithm.THOMAS);
-            break;
-          case ANDOYER:
-            result.withEdgeInterpolationAlgorithm(
-                    TypeDescription.EdgeInterpolationAlgorithm.ANDOYER);
-            break;
-          case KARNEY:
-            result.withEdgeInterpolationAlgorithm(
-                    TypeDescription.EdgeInterpolationAlgorithm.KARNEY);
-            break;
-          default:
-            throw new IllegalArgumentException("Unknown interpolation algorithm: " +
-                    type.getAlgorithm());
-        }
+        result.withEdgeInterpolationAlgorithm(
+            switch (type.getAlgorithm()) {
+              case SPHERICAL -> EdgeInterpolationAlgorithm.SPHERICAL;
+              case VINCENTY -> EdgeInterpolationAlgorithm.VINCENTY;
+              case THOMAS -> EdgeInterpolationAlgorithm.THOMAS;
+              case ANDOYER -> EdgeInterpolationAlgorithm.ANDOYER;
+              case KARNEY -> EdgeInterpolationAlgorithm.KARNEY;
+              default -> throw new IllegalArgumentException("Unknown interpolation algorithm: " +
+                      type.getAlgorithm());
+          }
+        );
         break;
       case LIST:
         if (type.getSubtypesCount() != 1) {

@@ -38,9 +38,6 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- *
- */
 public class TestOrcGeospatial {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
           "target" + File.separator + "test" + File.separator + "tmp"));

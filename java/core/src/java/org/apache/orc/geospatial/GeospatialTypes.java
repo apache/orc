@@ -7,14 +7,13 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.orc.geospatial;
@@ -26,6 +25,18 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * A list of geospatial types from all instances in the Geometry or Geography column,
+ * or an empty list if they are not known.
+ *
+ * The GeospatialTypes instance becomes invalid in the following cases:
+ * - When an unknown or unsupported geometry type is encountered during update
+ * - When merging with another invalid GeospatialTypes instance
+ * - When explicitly aborted using abort()
+ *
+ * When invalid, the types list is cleared and remains empty. All subsequent
+ * updates and merges are ignored until reset() is called.
+ */
 public class GeospatialTypes {
 
   private static final int UNKNOWN_TYPE_ID = -1;
@@ -64,6 +75,12 @@ public class GeospatialTypes {
     return types;
   }
 
+  /**
+   * Updates the types list with the given geometry's type.
+   * If the geometry type is unknown, the instance becomes invalid.
+   *
+   * @param geometry the geometry to process
+   */
   public void update(Geometry geometry) {
     if (!valid) {
       return;
@@ -142,24 +159,16 @@ public class GeospatialTypes {
   }
 
   private int getGeometryTypeId(Geometry geometry) {
-    switch (geometry.getGeometryType()) {
-      case Geometry.TYPENAME_POINT:
-        return 1;
-      case Geometry.TYPENAME_LINESTRING:
-        return 2;
-      case Geometry.TYPENAME_POLYGON:
-        return 3;
-      case Geometry.TYPENAME_MULTIPOINT:
-        return 4;
-      case Geometry.TYPENAME_MULTILINESTRING:
-        return 5;
-      case Geometry.TYPENAME_MULTIPOLYGON:
-        return 6;
-      case Geometry.TYPENAME_GEOMETRYCOLLECTION:
-        return 7;
-      default:
-        return UNKNOWN_TYPE_ID;
-    }
+    return switch (geometry.getGeometryType()) {
+      case Geometry.TYPENAME_POINT -> 1;
+      case Geometry.TYPENAME_LINESTRING -> 2;
+      case Geometry.TYPENAME_POLYGON -> 3;
+      case Geometry.TYPENAME_MULTIPOINT -> 4;
+      case Geometry.TYPENAME_MULTILINESTRING -> 5;
+      case Geometry.TYPENAME_MULTIPOLYGON -> 6;
+      case Geometry.TYPENAME_GEOMETRYCOLLECTION -> 7;
+      default -> UNKNOWN_TYPE_ID;
+    };
   }
 
   /**
@@ -201,31 +210,19 @@ public class GeospatialTypes {
 
   private String typeIdToString(int typeId) {
     String typeString;
-    switch (typeId % 1000) {
-      case 1:
-        typeString = Geometry.TYPENAME_POINT;
-        break;
-      case 2:
-        typeString = Geometry.TYPENAME_LINESTRING;
-        break;
-      case 3:
-        typeString = Geometry.TYPENAME_POLYGON;
-        break;
-      case 4:
-        typeString = Geometry.TYPENAME_MULTIPOINT;
-        break;
-      case 5:
-        typeString = Geometry.TYPENAME_MULTILINESTRING;
-        break;
-      case 6:
-        typeString = Geometry.TYPENAME_MULTIPOLYGON;
-        break;
-      case 7:
-        typeString = Geometry.TYPENAME_GEOMETRYCOLLECTION;
-        break;
-      default:
-        return "Unknown";
-    }
+
+    typeString = switch (typeId % 1000) {
+      case 1 -> Geometry.TYPENAME_POINT;
+      case 2 -> Geometry.TYPENAME_LINESTRING;
+      case 3 -> Geometry.TYPENAME_POLYGON;
+      case 4 -> Geometry.TYPENAME_MULTIPOINT;
+      case 5 -> Geometry.TYPENAME_MULTILINESTRING;
+      case 6 -> Geometry.TYPENAME_MULTIPOLYGON;
+      case 7 -> Geometry.TYPENAME_GEOMETRYCOLLECTION;
+      default -> {
+        yield "Unknown";
+      }
+    };
     if (typeId >= 3000) {
       typeString += " (XYZM)";
     } else if (typeId >= 2000) {
