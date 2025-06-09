@@ -721,6 +721,7 @@
           <systemPropertyVariables>
             <test.tmp.dir>${test.tmp.dir}</test.tmp.dir>
             <example.dir>${example.dir}</example.dir>
+            <org.slf4j.simpleLogger.log.org.apache.hadoop>error</org.slf4j.simpleLogger.log.org.apache.hadoop>
           </systemPropertyVariables>
         </configuration>
       </plugin>
