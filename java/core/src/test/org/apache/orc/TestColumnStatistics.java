@@ -753,9 +753,9 @@ public class TestColumnStatistics {
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
+    conf.set("fs.file.impl.disable.cache", "true");
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path(
+    testFilePath = new Path(workDir + File.separator +
         "TestOrcFile." + testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
