@@ -16,8 +16,7 @@
 # under the License.
 
 # required dependencies
-protobuf_proj = subproject('protobuf')
-protobuf_dep = protobuf_proj.get_variable('protobuf_dep')
+protobuf_dep = dependency('protobuf', fallback: ['protobuf', 'protobuf_dep'])
 lz4_dep = dependency('liblz4')
 snappy_dep = dependency('snappy')
 zlib_dep = dependency('zlib')

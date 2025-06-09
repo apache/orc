@@ -23,9 +23,15 @@ project(
     meson_version: '>=1.3.0',
 )
 
-protobuf_proj = subproject('protobuf')
-protobuf_dep = protobuf_proj.get_variable('protobuf_dep')
-protoc = protobuf_proj.get_variable('protoc')
+protobuf_dep = dependency('protobuf', fallback: ['protobuf', 'protobuf_dep'])
+# in newer versions of protobuf from the wrapdb, find_program('protoc') will
+# "do the right thing", but the protobuf wrapdb version we are using now does
+# not call override_find_program('protoc', ...)
+if protobuf_dep.type_name() == 'internal'
+    protoc = subproject('protobuf').get_variable('protoc')
+else
+    protoc = find_program('protoc')
+endif
 
 fs = import('fs')
 proto_file = meson.project_source_root() / 'src/main/proto/orc/proto/orc_proto.proto'
