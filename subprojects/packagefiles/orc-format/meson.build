@@ -23,8 +23,9 @@ project(
     meson_version: '>=1.3.0',
 )
 
-protobuf_dep = dependency('protobuf')
-protoc = find_program('protoc')
+protobuf_proj = subproject('protobuf')
+protobuf_dep = protobuf_proj.get_variable('protobuf_dep')
+protoc = protobuf_proj.get_variable('protoc')
 
 fs = import('fs')
 proto_file = meson.project_source_root() / 'src/main/proto/orc/proto/orc_proto.proto'
