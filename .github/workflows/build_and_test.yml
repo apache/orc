@@ -52,7 +52,7 @@ jobs:
           - amazonlinux23
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: "Test"
       run: |
         cd docker
@@ -85,7 +85,7 @@ jobs:
       MAVEN_SKIP_RC: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Install Java ${{ matrix.java }}
       uses: actions/setup-java@v4
       with:
@@ -117,7 +117,7 @@ jobs:
       ORC_USER_SIMD_LEVEL: AVX512
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
       with:
@@ -149,7 +149,7 @@ jobs:
       ORC_USER_SIMD_LEVEL: AVX512
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: "Test"
       run: |
         mkdir -p ~/.m2
@@ -163,7 +163,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Super-Linter
@@ -218,7 +218,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Check license header
         uses: apache/skywalking-eyes@main
         env:
