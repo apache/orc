@@ -97,7 +97,10 @@ public class TestOrcGeospatial {
     assertEquals(50, stats[0].getNumberOfValues());
     assertTrue(stats[0].hasNull());
     assertInstanceOf(GeospatialColumnStatistics.class, stats[0]);
-    assertEquals("BoundingBox{xMin=0.0, xMax=98.0, yMin=0.0, yMax=98.0, zMin=Infinity, zMax=-Infinity, mMin=Infinity, mMax=-Infinity}", ((GeospatialColumnStatistics) stats[0]).getBoundingBox().toString());
+    assertTrue(((GeospatialColumnStatistics) stats[0]).getBoundingBox().isXYValid());
+    assertFalse(((GeospatialColumnStatistics) stats[0]).getBoundingBox().isZValid());
+    assertFalse(((GeospatialColumnStatistics) stats[0]).getBoundingBox().isMValid());
+    assertEquals("BoundingBox{xMin=0.0, xMax=98.0, yMin=0.0, yMax=98.0, zMin=NaN, zMax=NaN, mMin=NaN, mMax=NaN}", ((GeospatialColumnStatistics) stats[0]).getBoundingBox().toString());
     assertEquals("GeospatialTypes{types=[Point (XY)]}", ((GeospatialColumnStatistics) stats[0]).getGeospatialTypes().toString());
 
     // Verify data
@@ -148,13 +151,14 @@ public class TestOrcGeospatial {
     assertEquals("geography(OGC:CRS84,SPHERICAL)", reader.getSchema().toString());
     assertEquals(100, reader.getNumberOfRows());
 
-    // Verify statistics, make sure there is no geospatial stats
+    // Verify statistics, make sure there are no bounding box and geospatial types
     ColumnStatistics[] stats = reader.getStatistics();
     assertEquals(1, stats.length);
     assertEquals(50, stats[0].getNumberOfValues());
     assertTrue(stats[0].hasNull());
-    assertInstanceOf(ColumnStatisticsImpl.class, stats[0]);
-    assertFalse(stats[0] instanceof GeospatialColumnStatistics);
+    assertInstanceOf(GeospatialColumnStatistics.class, stats[0]);
+    assertNull(((GeospatialColumnStatistics) stats[0]).getBoundingBox());
+    assertNull(((GeospatialColumnStatistics) stats[0]).getGeospatialTypes());
 
     // Verify Data
     RecordReader rows = reader.rows();

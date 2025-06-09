@@ -66,8 +66,11 @@ public class BoundingBox {
     if (obj == this) {
       return true;
     }
+
+    // Valid flag must be checked since invalid bounding boxes may have equal coordinates with the initial one
     return xMin == other.xMin && xMax == other.xMax && yMin == other.yMin && yMax == other.yMax &&
-           zMin == other.zMin && zMax == other.zMax && mMin == other.mMin && mMax == other.mMax;
+           zMin == other.zMin && zMax == other.zMax && mMin == other.mMin && mMax == other.mMax &&
+           valid == other.valid;
   }
 
   @Override
@@ -75,9 +78,11 @@ public class BoundingBox {
     return Double.hashCode(xMin) ^ Double.hashCode(xMax) ^
            Double.hashCode(yMin) ^ Double.hashCode(yMax) ^
            Double.hashCode(zMin) ^ Double.hashCode(zMax) ^
-           Double.hashCode(mMin) ^ Double.hashCode(mMax);
+           Double.hashCode(mMin) ^ Double.hashCode(mMax) ^
+           Boolean.hashCode(valid);
   }
 
+  // Don't change `valid` here and let the caller maintain it
   private void resetBBox() {
     xMin = Double.POSITIVE_INFINITY;
     xMax = Double.NEGATIVE_INFINITY;
@@ -87,9 +92,6 @@ public class BoundingBox {
     zMax = Double.NEGATIVE_INFINITY;
     mMin = Double.POSITIVE_INFINITY;
     mMax = Double.NEGATIVE_INFINITY;
-
-    // Update the validity
-    valid = isXYValid();
   }
 
   public double getXMin() {
@@ -313,14 +315,6 @@ public class BoundingBox {
       yMin = Math.min(yMin, minY);
       yMax = Math.max(yMax, maxY);
     }
-  }
-
-  /**
-   * Aborts the bounding box by resetting it to its initial state.
-   */
-  public void abort() {
-    valid = false;
-    resetBBox();
   }
 
   /**

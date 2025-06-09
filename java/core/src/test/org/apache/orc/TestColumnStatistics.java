@@ -917,6 +917,12 @@ public class TestColumnStatistics implements TestConf {
     stats0.merge(stats1);
 
     BoundingBox bbox = geometryStatistics.getBoundingBox();
+    assertTrue(bbox.isXYValid());
+    assertFalse(bbox.isXYEmpty());
+    assertTrue(bbox.isZValid());
+    assertTrue(bbox.isMValid());
+    assertTrue(bbox.isZEmpty());
+    assertTrue(bbox.isMEmpty());
     assertEquals(1.0, bbox.getXMin(), 0.0);
     assertEquals(2.0, bbox.getXMax(), 0.0);
     assertEquals(1.0, bbox.getYMin(), 0.0);

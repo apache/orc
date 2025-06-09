@@ -1871,7 +1871,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   private static final class GeospatialStatisticsImpl extends ColumnStatisticsImpl
           implements GeospatialColumnStatistics {
-    private BoundingBox boundingBox;
+    private final BoundingBox boundingBox;
     private final GeospatialTypes geospatialTypes;
     private final WKBReader reader = new WKBReader();
 
@@ -1882,24 +1882,29 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     GeospatialStatisticsImpl(OrcProto.ColumnStatistics stats) {
       super(stats);
-      this.boundingBox = new BoundingBox();
+      BoundingBox boundingBoxOut = null;
+      GeospatialTypes geospatialTypesOut = null;
 
       OrcProto.GeospatialStatistics geoStatistics = stats.getGeospatialStatistics();
       if (geoStatistics.hasBbox()) {
         OrcProto.BoundingBox bbox = geoStatistics.getBbox();
-        this.boundingBox = new BoundingBox(
-                bbox.hasXmin() ? bbox.getXmin() : Double.POSITIVE_INFINITY,
-                bbox.hasXmax() ? bbox.getXmax() : Double.NEGATIVE_INFINITY,
-                bbox.hasYmin() ? bbox.getYmin() : Double.POSITIVE_INFINITY,
-                bbox.hasYmax() ? bbox.getYmax() : Double.NEGATIVE_INFINITY,
-                bbox.hasZmin() ? bbox.getZmin() : Double.POSITIVE_INFINITY,
-                bbox.hasZmax() ? bbox.getZmax() : Double.NEGATIVE_INFINITY,
-                bbox.hasMmin() ? bbox.getMmin() : Double.POSITIVE_INFINITY,
-                bbox.hasMmax() ? bbox.getMmax() : Double.NEGATIVE_INFINITY);
+        boundingBoxOut = new BoundingBox(
+                bbox.hasXmin() ? bbox.getXmin() : Double.NaN,
+                bbox.hasXmax() ? bbox.getXmax() : Double.NaN,
+                bbox.hasYmin() ? bbox.getYmin() : Double.NaN,
+                bbox.hasYmax() ? bbox.getYmax() : Double.NaN,
+                bbox.hasZmin() ? bbox.getZmin() : Double.NaN,
+                bbox.hasZmax() ? bbox.getZmax() : Double.NaN,
+                bbox.hasMmin() ? bbox.getMmin() : Double.NaN,
+                bbox.hasMmax() ? bbox.getMmax() : Double.NaN);
       }
 
-      Set<Integer> types = new HashSet<>(geoStatistics.getGeospatialTypesList());
-      this.geospatialTypes = new GeospatialTypes(types);
+      if (!geoStatistics.getGeospatialTypesList().isEmpty()) {
+        Set<Integer> types = new HashSet<>(geoStatistics.getGeospatialTypesList());
+        geospatialTypesOut = new GeospatialTypes(types);
+      }
+      this.boundingBox = boundingBoxOut;
+      this.geospatialTypes = geospatialTypesOut;
     }
 
     @Override
@@ -1951,28 +1956,27 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.GeospatialStatistics.Builder geoStats = OrcProto.GeospatialStatistics.newBuilder();
 
       OrcProto.BoundingBox.Builder bboxBuilder = OrcProto.BoundingBox.newBuilder();
-      boolean hasStats = false;
       if (boundingBox.isValid() && !boundingBox.isXYEmpty()) {
         bboxBuilder.setXmin(boundingBox.getXMin());
         bboxBuilder.setXmax(boundingBox.getXMax());
         bboxBuilder.setYmin(boundingBox.getYMin());
         bboxBuilder.setYmax(boundingBox.getYMax());
-        bboxBuilder.setZmin(boundingBox.getZMin());
-        bboxBuilder.setZmax(boundingBox.getZMax());
-        bboxBuilder.setMmin(boundingBox.getMMin());
-        bboxBuilder.setMmax(boundingBox.getMMax());
-        hasStats = true;
+        if (boundingBox.isZValid() && !boundingBox.isZEmpty()) {
+          bboxBuilder.setZmin(boundingBox.getZMin());
+          bboxBuilder.setZmax(boundingBox.getZMax());
+        }
+        if (boundingBox.isMValid() && !boundingBox.isMEmpty()) {
+          bboxBuilder.setMmin(boundingBox.getMMin());
+          bboxBuilder.setMmax(boundingBox.getMMax());
+        }
         geoStats.setBbox(bboxBuilder);
       }
       if (geospatialTypes.isValid() && !geospatialTypes.getTypes().isEmpty()) {
         List<Integer> sortedTypes = new ArrayList<>(geospatialTypes.getTypes());
         Collections.sort(sortedTypes);
         geoStats.addAllGeospatialTypes(sortedTypes);
-        hasStats = true;
       }
-      if (hasStats) {
-        builder.setGeospatialStatistics(geoStats);
-      }
+      builder.setGeospatialStatistics(geoStats);
       return builder;
     }
 

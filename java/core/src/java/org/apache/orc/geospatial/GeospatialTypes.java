@@ -117,11 +117,6 @@ public class GeospatialTypes {
     valid = true;
   }
 
-  public void abort() {
-    valid = false;
-    types.clear();
-  }
-
   public boolean isValid() {
     return valid;
   }
