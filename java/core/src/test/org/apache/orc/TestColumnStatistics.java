@@ -20,7 +20,6 @@ package org.apache.orc;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -51,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Test ColumnStatisticsImpl for ORC.
  */
-public class TestColumnStatistics {
+public class TestColumnStatistics implements TestConf {
 
   @Test
   public void testLongSumOverflow() {
@@ -746,13 +745,11 @@ public class TestColumnStatistics {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     conf.set("fs.file.impl.disable.cache", "true");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir + File.separator +

@@ -18,7 +18,6 @@
 package org.apache.orc;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -43,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestOrcNullOptimization {
+public class TestOrcNullOptimization implements TestConf {
 
   TypeDescription createMyStruct() {
     return TypeDescription.createStruct()
@@ -103,13 +102,11 @@ public class TestOrcNullOptimization {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcNullOptimization." +
         testInfo.getTestMethod().get().getName() + ".orc");

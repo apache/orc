@@ -19,7 +19,6 @@
 package org.apache.orc.impl;
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
@@ -40,20 +39,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class TestWriterImpl {
+public class TestWriterImpl implements TestConf {
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
   TypeDescription schema;
 
   @BeforeEach
   public void openFileSystem() throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("testWriterImpl.orc");
+    testFilePath = new Path(workDir, "testWriterImpl.orc");
     fs.create(testFilePath, true);
     schema = TypeDescription.fromString("struct<x:int,y:int>");
   }

@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
@@ -40,15 +39,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * and it was written from a time zone that observes DST for one of the timestamp
  * values stored ('2014-06-06 12:34:56.0').
  */
-public class TestOrcDSTNoTimezone {
-  Configuration conf;
+public class TestOrcDSTNoTimezone implements TestConf {
   FileSystem fs;
   SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
   static TimeZone defaultTimeZone = TimeZone.getDefault();
 
   @BeforeEach
   public void openFileSystem() throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
   }
 

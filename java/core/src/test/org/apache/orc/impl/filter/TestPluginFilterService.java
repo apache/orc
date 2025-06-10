@@ -20,6 +20,8 @@ package org.apache.orc.impl.filter;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.filter.BatchFilter;
+import org.apache.orc.TestConf;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -31,11 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestPluginFilterService {
-  private final Configuration conf;
-
-  public TestPluginFilterService() {
-    conf = new Configuration();
+public class TestPluginFilterService implements TestConf {
+  @BeforeEach
+  public void addFilter() {
     conf.set("my.filter.col.name", "f2");
     conf.set("my.filter.col.value", "aBcd");
     conf.set("my.filter.scope", "file://db/table1/.*");

@@ -49,6 +49,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
@@ -103,7 +104,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class TestRecordReaderImpl {
+public class TestRecordReaderImpl implements TestConf {
 
   // This is a work around until we update storage-api to allow ChronoLocalDate in
   // predicates.
@@ -114,7 +115,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testFindColumn() throws Exception {
-    Configuration conf = new Configuration();
     TypeDescription file = TypeDescription.fromString("struct<a:int,c:string,e:int>");
     TypeDescription reader = TypeDescription.fromString("struct<a:int,b:double,c:string,d:double,e:bigint>");
     SchemaEvolution evo = new SchemaEvolution(file, reader, new Reader.Options(conf));
@@ -127,7 +127,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testFindColumnCaseInsensitively() throws Exception {
-    Configuration conf = new Configuration();
     TypeDescription file = TypeDescription.fromString("struct<A:int>");
     TypeDescription reader = TypeDescription.fromString("struct<a:int>");
     conf.setBoolean("orc.schema.evolution.case.sensitive", false);
@@ -137,8 +136,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testForcePositionalEvolution() throws Exception {
-    Configuration conf = new Configuration();
-
     Path oldFilePath = new Path(TestVectorOrcFile.getFileFromClasspath("orc-file-11-format.orc"));
     Reader reader = OrcFile.createReader(oldFilePath,
         OrcFile.readerOptions(conf).filesystem(FileSystem.getLocal(conf)));
@@ -264,7 +261,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testMaxLengthToReader() throws Exception {
-    Configuration conf = new Configuration();
     OrcProto.Type rowType = OrcProto.Type.newBuilder()
         .setKind(OrcProto.Type.Kind.STRUCT).build();
     OrcProto.Footer footer = OrcProto.Footer.newBuilder()
@@ -1976,7 +1972,6 @@ public class TestRecordReaderImpl {
       "target" + File.separator + "test" + File.separator + "tmp"));
 
   private void closeMockedRecordReader(DataReader mockedDataReader) throws IOException {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "empty.orc");
     FileSystem.get(conf).delete(path, true);
     Writer writer = OrcFile.createWriter(path, OrcFile.writerOptions(conf)
@@ -2253,7 +2248,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testPickRowGroups() throws Exception {
-    Configuration conf = new Configuration();
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
     SchemaEvolution evolution = new SchemaEvolution(schema, schema,
         new Reader.Options(conf));
@@ -2302,7 +2296,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testPickRowGroupsError() throws Exception {
-    Configuration conf = new Configuration();
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
     SchemaEvolution evolution = new SchemaEvolution(schema, schema,
         new Reader.Options(conf));
@@ -2399,7 +2392,6 @@ public class TestRecordReaderImpl {
     when(mockedDataReader.clone()).thenReturn(mockedDataReader);
     doNothing().when(mockedDataReader).close();
 
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "empty.orc");
     FileSystem.get(conf).delete(path, true);
     OrcFile.WriterOptions options = OrcFile.writerOptions(conf).setSchema(TypeDescription.createLong());
@@ -2414,7 +2406,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testCloseAtConstructorException() throws Exception {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "oneRow.orc");
     FileSystem.get(conf).delete(path, true);
 
@@ -2445,7 +2436,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testSargApplier() throws Exception {
-    Configuration conf = new Configuration();
     TypeDescription schema = TypeDescription.createLong();
     SearchArgument sarg = SearchArgumentFactory.newBuilder().build();
     SchemaEvolution evo = new SchemaEvolution(schema, schema, new Reader.Options(conf));
@@ -2481,7 +2471,6 @@ public class TestRecordReaderImpl {
   @Test
   public void testStatisticsWithNoWrites() throws Exception {
     Path testFilePath = new Path(workDir, "rowIndexStrideNegative.orc");
-    Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
     fs.delete(testFilePath, true);
 
@@ -2537,7 +2526,6 @@ public class TestRecordReaderImpl {
     Path filePath = new Path(ClassLoader.getSystemResource("orc-file-no-double-statistic.orc")
         .getPath());
 
-    Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
 
     Reader reader = OrcFile.createReader(filePath,
@@ -2627,7 +2615,6 @@ public class TestRecordReaderImpl {
   }
 
   private void testSmallCompressionSizeOrc(int compressionSize) throws IOException {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "smallCompressionSize.orc");
     FileSystem.get(conf).delete(path, true);
 
@@ -2673,7 +2660,6 @@ public class TestRecordReaderImpl {
   @Test
   public void testRowIndexStrideNegativeFilter() throws Exception {
     Path testFilePath = new Path(workDir, "rowIndexStrideNegative.orc");
-    Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
     fs.delete(testFilePath, true);
 
@@ -2716,7 +2702,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testHadoopVectoredIO() throws Exception {
-    Configuration conf = new Configuration();
     Path filePath = new Path(TestVectorOrcFile.getFileFromClasspath("orc-file-11-format.orc"));
 
     FileSystem localFileSystem = FileSystem.getLocal(conf);
@@ -2736,7 +2721,6 @@ public class TestRecordReaderImpl {
 
   @Test
   public  void testDecimalIsRepeatingFlag() throws IOException {
-    Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
     Path testFilePath = new Path(workDir, "testDecimalIsRepeatingFlag.orc");
     fs.delete(testFilePath, true);

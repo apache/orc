@@ -32,6 +32,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.reader.ReaderEncryption;
@@ -62,9 +63,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestSchemaEvolution {
+public class TestSchemaEvolution implements TestConf {
 
-  Configuration conf;
   Reader.Options options;
   Path testFilePath;
   FileSystem fs;
@@ -73,7 +73,6 @@ public class TestSchemaEvolution {
 
   @BeforeEach
   public void setup(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     options = new Reader.Options(conf);
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestSchemaEvolution." +

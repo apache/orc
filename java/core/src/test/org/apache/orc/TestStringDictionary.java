@@ -51,18 +51,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class TestStringDictionary {
+public class TestStringDictionary implements TestConf {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
       + File.separator + "tmp"));
 
-  private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestStringDictionary." +
         testInfo.getTestMethod().get().getName() + ".orc");

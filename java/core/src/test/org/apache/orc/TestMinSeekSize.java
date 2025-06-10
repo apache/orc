@@ -18,7 +18,6 @@
 
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -40,13 +39,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestMinSeekSize {
+public class TestMinSeekSize implements TestConf {
   private static final Logger LOG = LoggerFactory.getLogger(TestMinSeekSize.class);
   private static final Path workDir = new Path(System.getProperty("test.tmp.dir",
                                                                   "target" + File.separator + "test"
                                                                   + File.separator + "tmp"));
   private static final Path filePath = new Path(workDir, "min_seek_size_file.orc");
-  private static Configuration conf;
   private static FileSystem fs;
 
   private static final TypeDescription schema = TypeDescription.createStruct()
@@ -62,7 +60,6 @@ public class TestMinSeekSize {
 
   @BeforeAll
   public static void setup() throws IOException {
-    conf = new Configuration();
     fs = FileSystem.get(conf);
 
     LOG.info("Creating file {} with schema {}", filePath, schema);

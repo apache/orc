@@ -18,13 +18,13 @@
 
 package org.apache.orc.impl.filter;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
+import org.apache.orc.TestConf;
 import org.apache.orc.filter.BatchFilter;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestPluginFilters extends ATestFilter {
+public class TestPluginFilters extends ATestFilter implements TestConf {
 
   @Test
   public void testPluginFilterWithSArg() {
@@ -40,7 +40,6 @@ public class TestPluginFilters extends ATestFilter {
              new String[] {"a", "B", "c", "dE", "e", "f"});
 
     // Define the plugin filter
-    Configuration conf = new Configuration();
     OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(conf, true);
     conf.set("my.filter.name", "my_str_i_eq");
     conf.set("my.filter.col.name", "f2");
@@ -75,7 +74,6 @@ public class TestPluginFilters extends ATestFilter {
              new String[] {"a", "B", "c", "dE", "e", "f"});
 
     // Define the plugin filter
-    Configuration conf = new Configuration();
     OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(conf, true);
     conf.set("my.filter.name", "my_str_i_eq");
     conf.set("my.filter.col.name", "f2");
@@ -109,7 +107,6 @@ public class TestPluginFilters extends ATestFilter {
              new String[] {"a", "B", "c", "dE", "e", "f"});
 
     // Define the plugin filter
-    Configuration conf = new Configuration();
     OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(conf, false);
     conf.set("my.filter.name", "my_str_i_eq");
     conf.set("my.filter.col.name", "f2");
@@ -143,7 +140,6 @@ public class TestPluginFilters extends ATestFilter {
              new String[] {"a", "B", "c", "dE", "e", "f"});
 
     // Define the plugin filter
-    Configuration conf = new Configuration();
     OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(conf, true);
     conf.set("my.filter.name", "my_str_i_eq");
     conf.set("my.filter.col.name", "f2");
@@ -177,7 +173,6 @@ public class TestPluginFilters extends ATestFilter {
              new String[] {"abcdef", "Abcdef", "aBcdef", null, "abcDef", "abcdEf"});
 
     // Define the plugin filter
-    Configuration conf = new Configuration();
     OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(conf, true);
     conf.set("my.filter.name", "my_str_i_eq");
     conf.set("my.filter.col.name", "f2");
@@ -211,7 +206,6 @@ public class TestPluginFilters extends ATestFilter {
              new String[] {"abcdef", "Abcdef", "aBcdef", null, "abcDef", "abcdEf"});
 
     // Define the plugin filter
-    Configuration conf = new Configuration();
     OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(conf, true);
     conf.set("my.filter.name", "my_str_i_eq");
     conf.set("my.filter.col.name", "f2");

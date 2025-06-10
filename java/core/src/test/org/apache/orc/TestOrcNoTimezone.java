@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
@@ -39,15 +38,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Test over an orc file that does not store time zone information in the footer
  * and it was written from a time zone that does not observe DST.
  */
-public class TestOrcNoTimezone {
-  Configuration conf;
+public class TestOrcNoTimezone implements TestConf {
   FileSystem fs;
   SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
   static TimeZone defaultTimeZone = TimeZone.getDefault();
 
   @BeforeEach
   public void openFileSystem() throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
   }
 

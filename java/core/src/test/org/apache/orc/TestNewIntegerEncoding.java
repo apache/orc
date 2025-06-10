@@ -19,7 +19,6 @@ package org.apache.orc;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
@@ -42,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestNewIntegerEncoding {
+public class TestNewIntegerEncoding implements TestConf {
 
   private static Stream<Arguments> data() {
     return Stream.of(
@@ -72,13 +71,11 @@ public class TestNewIntegerEncoding {
   Path workDir = new Path(System.getProperty("test.tmp.dir", "target"
       + File.separator + "test" + File.separator + "tmp"));
 
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile."
         + testInfo.getTestMethod().get().getName() + ".orc");

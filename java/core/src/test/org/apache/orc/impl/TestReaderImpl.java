@@ -39,6 +39,7 @@ import org.apache.orc.OrcUtils;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.StripeStatistics;
+import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestReaderImpl {
+public class TestReaderImpl implements TestConf {
   private Path workDir = new Path(System.getProperty("example.dir",
       "../../examples/"));
 
@@ -106,7 +107,6 @@ public class TestReaderImpl {
   public void testOptionSafety() throws IOException {
     Reader.Options options = new Reader.Options();
     String expected = options.toString();
-    Configuration conf = new Configuration();
     Path path = new Path(TestVectorOrcFile.getFileFromClasspath
         ("orc-file-11-format.orc"));
     try (Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
@@ -310,7 +310,6 @@ public class TestReaderImpl {
 
   @Test
   public void testClosingRowsFirst() throws Exception {
-    Configuration conf = new Configuration();
     MockFileSystem fs = new MockFileSystem(conf);
     Reader reader = OrcFile.createReader(new Path("/foo"),
         OrcFile.readerOptions(conf).filesystem(fs));
@@ -329,7 +328,6 @@ public class TestReaderImpl {
 
   @Test
   public void testClosingReaderFirst() throws Exception {
-    Configuration conf = new Configuration();
     MockFileSystem fs = new MockFileSystem(conf);
     Reader reader = OrcFile.createReader(new Path("/foo"),
         OrcFile.readerOptions(conf).filesystem(fs));
@@ -344,7 +342,6 @@ public class TestReaderImpl {
 
   @Test
   public void testClosingMultiple() throws Exception {
-    Configuration conf = new Configuration();
     MockFileSystem fs = new MockFileSystem(conf);
     Reader reader = OrcFile.createReader(new Path("/foo"),
         OrcFile.readerOptions(conf).filesystem(fs));
@@ -359,7 +356,6 @@ public class TestReaderImpl {
 
   @Test
   public void testOrcTailStripeStats() throws Exception {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "orc_split_elim_new.orc");
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
@@ -398,7 +394,6 @@ public class TestReaderImpl {
 
   @Test
   public void testGetRawDataSizeFromColIndices() throws Exception {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "orc_split_elim_new.orc");
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
@@ -420,7 +415,6 @@ public class TestReaderImpl {
 
   private void CheckFileWithSargs(String fileName, String softwareVersion)
       throws IOException {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, fileName);
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
@@ -450,7 +444,6 @@ public class TestReaderImpl {
 
   @Test
   public void testReadDecimalV2File() throws IOException {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "decimal64_v2_cplusplus.orc");
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
@@ -489,7 +482,6 @@ public class TestReaderImpl {
 
   @Test
   public void testExtractFileTailIndexOutOfBoundsException() throws Exception {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "demo-11-none.orc");
     FileSystem fs = path.getFileSystem(conf);
     FileStatus fileStatus = fs.getFileStatus(path);
@@ -508,7 +500,6 @@ public class TestReaderImpl {
 
   @Test
   public void testWithoutCompressionBlockSize() throws IOException {
-    Configuration conf = new Configuration();
     Path path = new Path(workDir, "TestOrcFile.testWithoutCompressionBlockSize.orc");
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
@@ -530,7 +521,6 @@ public class TestReaderImpl {
 
   @Test
   public void testSargSkipPickupGroupWithoutIndex() throws IOException {
-    Configuration conf = new Configuration();
     // We use ORC files in two languages to test, the previous Java version could not work
     // well when orc.row.index.stride > 0 and orc.create.index=false, now it can skip these row groups.
     Path[] paths = new Path[] {
