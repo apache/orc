@@ -18,7 +18,6 @@
 
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -47,14 +46,13 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestRowFilteringComplexTypesNulls {
+public class TestRowFilteringComplexTypesNulls implements TestConf {
   private static final Logger LOG =
     LoggerFactory.getLogger(TestRowFilteringComplexTypesNulls.class);
   private static final Path workDir = new Path(System.getProperty("test.tmp.dir",
                                                                   "target" + File.separator + "test"
                                                                   + File.separator + "tmp"));
   private static final Path filePath = new Path(workDir, "complex_null_file.orc");
-  private static Configuration conf;
   private static FileSystem fs;
 
   private static final TypeDescription schema = TypeDescription.createStruct()
@@ -75,7 +73,6 @@ public class TestRowFilteringComplexTypesNulls {
 
   @BeforeAll
   public static void setup() throws IOException {
-    conf = new Configuration();
     fs = FileSystem.get(conf);
 
     LOG.info("Creating file {} with schema {}", filePath, schema);

@@ -17,9 +17,9 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.MemoryManager;
+import org.apache.orc.TestConf;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -32,7 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 /**
  * Test the ORC memory manager.
  */
-public class TestMemoryManager {
+public class TestMemoryManager implements TestConf {
   private static final double ERROR = 0.000001;
 
   private static class NullCallback implements MemoryManagerImpl.Callback {
@@ -43,7 +43,6 @@ public class TestMemoryManager {
 
   @Test
   public void testBasics() throws Exception {
-    Configuration conf = new Configuration();
     MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
     NullCallback callback = new NullCallback();
     long poolSize = mgr.getTotalMemoryPool();
@@ -71,7 +70,6 @@ public class TestMemoryManager {
 
   @Test
   public void testConfig() throws Exception {
-    Configuration conf = new Configuration();
     conf.set("hive.exec.orc.memory.pool", "0.9");
     MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
     long mem =
@@ -84,7 +82,6 @@ public class TestMemoryManager {
 
   @Test
   public void testCallback() throws Exception {
-    Configuration conf = new Configuration();
     MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
     long pool = mgr.getTotalMemoryPool();
     MemoryManager.Callback[] calls = new MemoryManager.Callback[20];

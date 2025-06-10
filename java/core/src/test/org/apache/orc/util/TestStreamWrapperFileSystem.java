@@ -18,7 +18,6 @@
 
 package org.apache.orc.util;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.junit.jupiter.api.Test;
@@ -40,11 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for StreamWrapperFileSystem.
  */
-public class TestStreamWrapperFileSystem {
+public class TestStreamWrapperFileSystem implements TestConf {
 
   @Test
   public void testWrapper() throws IOException {
-    Configuration conf = new Configuration();
     Path realFilename = new Path(TestVectorOrcFile.getFileFromClasspath(
         "orc-file-11-format.orc"));
     FileSystem local = FileSystem.getLocal(conf);

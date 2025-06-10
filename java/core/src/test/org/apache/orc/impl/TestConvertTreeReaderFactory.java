@@ -36,6 +36,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFile.WriterOptions;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TestProlepticConversions;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
@@ -58,12 +59,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class TestConvertTreeReaderFactory {
+public class TestConvertTreeReaderFactory implements TestConf {
 
   private Path workDir =
       new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test" + File.separator + "tmp"));
 
-  private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
   private int LARGE_BATCH_SIZE;
@@ -74,7 +74,6 @@ public class TestConvertTreeReaderFactory {
   public void setupPath(TestInfo testInfo) throws Exception {
     // Default CV length is 1024
     this.LARGE_BATCH_SIZE = 1030;
-    this.conf = new Configuration();
     this.fs = FileSystem.getLocal(conf);
     this.testFilePath = new Path(workDir, TestWriterImpl.class.getSimpleName() +
         testInfo.getTestMethod().get().getName().replaceFirst("\\[[0-9]+]", "") +
@@ -85,7 +84,6 @@ public class TestConvertTreeReaderFactory {
   public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithLargeArray(
       TypeDescription schema, Class<TExpectedColumnVector> expectedColumnType, boolean useDecimal64)
       throws IOException, ParseException {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
@@ -115,7 +113,6 @@ public class TestConvertTreeReaderFactory {
   public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(
       TypeDescription schema, Class<TExpectedColumnVector> typeClass, boolean useDecimal64)
       throws IOException, ParseException {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
     WriterOptions options = OrcFile.writerOptions(conf);
@@ -178,8 +175,6 @@ public class TestConvertTreeReaderFactory {
     options.schema(schema);
     String expected = options.toString();
 
-    Configuration conf = new Configuration();
-
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows(options);
     VectorizedRowBatch batch = schema.createRowBatchV2();
@@ -199,8 +194,6 @@ public class TestConvertTreeReaderFactory {
     TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeString + ">");
     options.schema(schema);
     String expected = options.toString();
-
-    Configuration conf = new Configuration();
 
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows(options);
@@ -692,8 +685,6 @@ public class TestConvertTreeReaderFactory {
     TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeString + ">");
     options.schema(schema);
     String expected = options.toString();
-
-    Configuration conf = new Configuration();
 
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows(options);

@@ -18,7 +18,6 @@
 package org.apache.orc;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
@@ -43,10 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  *
  */
-public class TestOrcTimezone1 {
+public class TestOrcTimezone1 implements TestConf {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
   static TimeZone defaultTimeZone = TimeZone.getDefault();
@@ -79,7 +77,6 @@ public class TestOrcTimezone1 {
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
         testInfo.getTestMethod().get().getName() + ".orc");

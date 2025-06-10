@@ -18,13 +18,13 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestColumnStatisticsImpl {
+public class TestColumnStatisticsImpl implements TestConf {
 
   @Test
   public void testUpdateDate() {
@@ -78,7 +78,6 @@ public class TestColumnStatisticsImpl {
     TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
     Path exampleDir = new Path(System.getProperty("example.dir"));
     Path file = new Path(exampleDir, "TestOrcFile.testTimestamp.orc");
-    Configuration conf = new Configuration();
     Reader reader = OrcFile.createReader(file, OrcFile.readerOptions(conf));
     TimestampColumnStatistics stats =
         (TimestampColumnStatistics) reader.getStatistics()[0];

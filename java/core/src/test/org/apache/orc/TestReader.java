@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,16 +29,14 @@ import java.io.File;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestReader {
+public class TestReader implements TestConf {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, TestReader.class.getSimpleName() + "." +
         testInfo.getTestMethod().get().getName() + ".orc");
