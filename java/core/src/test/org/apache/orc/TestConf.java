@@ -30,10 +30,14 @@ public interface TestConf {
   @BeforeEach
   default void clear() {
     conf.clear();
+    conf.set("fs.defaultFS", "file:///");
+    conf.set("fs.file.impl.disable.cache", "true");
   }
 
   private static Configuration getNewConf() {
     Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", "file:///");
+    conf.set("fs.file.impl.disable.cache", "true");
     return conf;
   }
 }

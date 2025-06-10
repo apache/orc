@@ -750,7 +750,6 @@ public class TestColumnStatistics implements TestConf {
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf.set("fs.file.impl.disable.cache", "true");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir + File.separator +
         "TestOrcFile." + testInfo.getTestMethod().get().getName() + ".orc");
