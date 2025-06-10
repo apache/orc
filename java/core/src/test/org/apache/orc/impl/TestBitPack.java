@@ -18,10 +18,10 @@
 package org.apache.orc.impl;
 
 import com.google.common.primitives.Longs;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.impl.writer.StreamOptions;
+import org.apache.orc.TestConf;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -35,20 +35,18 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestBitPack {
+public class TestBitPack implements TestConf {
 
   private static final int SIZE = 100;
   private static Random rand = new Random(100);
   Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
       + File.separator + "tmp"));
 
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
         testInfo.getTestMethod().get().getName() + ".orc");

@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class TestTypeDescription {
+public class TestTypeDescription implements TestConf {
   @Test
   public void testJson() {
     TypeDescription bin = TypeDescription.createBinary();
@@ -369,7 +368,6 @@ public class TestTypeDescription {
     // write a file with those attributes
     Path path = new Path(System.getProperty("test.tmp.dir",
         "target" + File.separator + "test" + File.separator + "tmp"), "attribute.orc");
-    Configuration conf = new Configuration();
     Writer writer = OrcFile.createWriter(path,
         OrcFile.writerOptions(conf).setSchema(schema).overwrite(true));
     writer.close();

@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -42,12 +41,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * As it turns out it is more expensive to skip non-selected rows rather that just decode all and propagate the
  * selected array. Skipping for these type breaks instruction pipelining and introduces more branch mispredictions.
  */
-public class TestRowFilteringNoSkip {
+public class TestRowFilteringNoSkip implements TestConf {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
       + File.separator + "tmp"));
 
-  private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
 
@@ -55,7 +53,6 @@ public class TestRowFilteringNoSkip {
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     OrcConf.READER_USE_SELECTED.setBoolean(conf, true);
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRowFilteringNoSkip." +

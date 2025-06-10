@@ -18,12 +18,12 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
+import org.apache.orc.TestConf;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestCryptoUtils {
+public class TestCryptoUtils implements TestConf {
 
   @Test
   public void testCreateStreamIv() throws Exception {
@@ -56,7 +56,6 @@ public class TestCryptoUtils {
 
   @Test
   public void testMemoryKeyProvider() throws IOException {
-    Configuration conf = new Configuration();
     OrcConf.KEY_PROVIDER.setString(conf, "memory");
     // Hard code the random so that we know the bytes that will come out.
     InMemoryKeystore provider =
@@ -91,7 +90,6 @@ public class TestCryptoUtils {
 
   @Test
   public void testInvalidKeyProvider() throws IOException {
-    Configuration conf = new Configuration();
     OrcConf.KEY_PROVIDER.setString(conf, "");
     assertNull(CryptoUtils.getKeyProvider(conf, new Random()));
   }

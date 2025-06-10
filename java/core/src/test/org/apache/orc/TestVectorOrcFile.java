@@ -19,7 +19,6 @@
 package org.apache.orc;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -102,7 +101,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for the vectorized reader and writer for ORC files.
  */
-public class TestVectorOrcFile {
+public class TestVectorOrcFile implements TestConf {
 
   private static Stream<Arguments> data() {
     return Stream.of(
@@ -193,13 +192,11 @@ public class TestVectorOrcFile {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestVectorOrcFile." +
         testInfo.getTestMethod().get().getName().replaceFirst("\\[[0-9]+\\]", "")

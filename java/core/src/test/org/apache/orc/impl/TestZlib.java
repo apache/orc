@@ -18,13 +18,13 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class TestZlib {
+public class TestZlib implements TestConf {
 
   @Test
   public void testNoOverflow() throws Exception {
@@ -65,7 +65,6 @@ public class TestZlib {
 
   @Test
   public void testCorruptZlibFile() {
-    Configuration conf = new Configuration();
     Path testFilePath = new Path(ClassLoader.
         getSystemResource("orc_corrupt_zlib.orc").getPath());
 

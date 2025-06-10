@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
@@ -39,11 +38,10 @@ import java.io.File;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestRowFilteringComplexTypes {
+public class TestRowFilteringComplexTypes implements TestConf {
     private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
             + File.separator + "tmp"));
 
-    private Configuration conf;
     private FileSystem fs;
     private Path testFilePath;
 
@@ -51,7 +49,6 @@ public class TestRowFilteringComplexTypes {
 
     @BeforeEach
     public void openFileSystem(TestInfo testInfo) throws Exception {
-        conf = new Configuration();
         OrcConf.READER_USE_SELECTED.setBoolean(conf, true);
         fs = FileSystem.getLocal(conf);
         testFilePath = new Path(workDir,

@@ -29,7 +29,6 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.impl.OrcFilterContextImpl;
@@ -47,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestOrcFilterContext {
+public class TestOrcFilterContext implements TestConf {
   private final TypeDescription schema = TypeDescription.createStruct()
     .addField("f1", TypeDescription.createLong())
     .addField("f2", TypeDescription.createString())
@@ -74,7 +73,6 @@ public class TestOrcFilterContext {
                                            TypeDescription.createList(TypeDescription.createChar()))
                 )
     );
-  private static Configuration configuration;
   private static FileSystem fileSystem;
   private static final Path workDir = new Path(System.getProperty("test.tmp.dir",
           "target" + File.separator + "test"
@@ -270,11 +268,10 @@ public class TestOrcFilterContext {
   }
 
   private void createAcidORCFile() throws IOException {
-    configuration = new Configuration();
-    fileSystem = FileSystem.get(configuration);
+    fileSystem = FileSystem.get(conf);
 
     try (Writer writer = OrcFile.createWriter(filePath,
-            OrcFile.writerOptions(configuration)
+            OrcFile.writerOptions(conf)
                     .fileSystem(fileSystem)
                     .overwrite(true)
                     .rowIndexStride(8192)
@@ -325,7 +322,7 @@ public class TestOrcFilterContext {
   }
 
   private void readSingleRowWithFilter(int id) throws IOException {
-    Reader reader = OrcFile.createReader(filePath, OrcFile.readerOptions(configuration).filesystem(fileSystem));
+    Reader reader = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fileSystem));
     SearchArgument searchArgument = SearchArgumentFactory.newBuilder()
             .in("int1", PredicateLeaf.Type.LONG, new Long(id))
             .build();

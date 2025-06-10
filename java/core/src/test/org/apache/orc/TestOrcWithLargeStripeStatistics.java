@@ -16,7 +16,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -41,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </p>
  */
 @Disabled("ORC-1361")
-public class TestOrcWithLargeStripeStatistics {
+public class TestOrcWithLargeStripeStatistics implements TestConf {
 
   @ParameterizedTest
   @EnumSource(value = OrcFile.Version.class, mode = EnumSource.Mode.EXCLUDE, names = "FUTURE")
@@ -49,7 +48,7 @@ public class TestOrcWithLargeStripeStatistics {
       throws Exception {
     // Use a size that exceeds the protobuf limit (e.g., 1GB) to trigger protobuf exception
     Path p = createOrcFile(1024L << 20, version);
-    try (Reader reader = OrcFile.createReader(p, OrcFile.readerOptions(new Configuration()))) {
+    try (Reader reader = OrcFile.createReader(p, OrcFile.readerOptions(conf))) {
       assertTrue(reader.getStripeStatistics().isEmpty());
     }
   }
@@ -75,7 +74,6 @@ public class TestOrcWithLargeStripeStatistics {
         TestOrcWithLargeStripeStatistics.class.getSimpleName()
             + "_" + ROW_STRIPE_NUM + "_" + version + ".orc");
     // Modify defaults to force one row per stripe.
-    Configuration conf = new Configuration();
     conf.set(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), "0");
     TypeDescription schema = createTypeDescription();
     OrcFile.WriterOptions writerOptions =

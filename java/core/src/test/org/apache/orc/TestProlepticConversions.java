@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -56,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This class tests all of the combinations of reading and writing the hybrid
  * and proleptic calendars.
  */
-public class TestProlepticConversions {
+public class TestProlepticConversions implements TestConf {
 
   private static Stream<Arguments> data() {
     return Stream.of(
@@ -69,12 +68,10 @@ public class TestProlepticConversions {
   private Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
-  private final Configuration conf;
   private final TimeZone UTC = TimeZone.getTimeZone("UTC");
   private final GregorianCalendar PROLEPTIC = new GregorianCalendar();
   private final GregorianCalendar HYBRID = new GregorianCalendar();
   {
-    conf = new Configuration();
     PROLEPTIC.setTimeZone(UTC);
     PROLEPTIC.setGregorianChange(new Date(Long.MIN_VALUE));
     HYBRID.setTimeZone(UTC);

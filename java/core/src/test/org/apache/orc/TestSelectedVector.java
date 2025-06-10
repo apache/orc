@@ -18,7 +18,6 @@
 
 package org.apache.orc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -49,17 +48,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestSelectedVector {
+public class TestSelectedVector implements TestConf {
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
   Random random = new Random();
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     conf.setInt(OrcConf.ROW_INDEX_STRIDE.getAttribute(), VectorizedRowBatch.DEFAULT_SIZE);
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);

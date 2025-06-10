@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -32,6 +31,7 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.jupiter.api.AfterEach;
@@ -43,10 +43,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestEncryption {
+public class TestEncryption implements TestConf {
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
   TypeDescription schema;
@@ -56,11 +55,9 @@ public class TestEncryption {
 
   @BeforeEach
   public void openFileSystem() throws Exception {
-    conf = new Configuration();
     conf.setInt(OrcConf.ROW_INDEX_STRIDE.getAttribute(), VectorizedRowBatch.DEFAULT_SIZE);
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("testWriterImpl.orc");
+    testFilePath = new Path(workDir, "TestEncryption.orc");
     fs.create(testFilePath, true);
     schema = TypeDescription.fromString("struct<id:int,name:string>");
     byte[] kmsKey = "secret123".getBytes(StandardCharsets.UTF_8);

@@ -48,13 +48,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestRowFilteringIOSkip {
+public class TestRowFilteringIOSkip implements TestConf {
   private static final Logger LOG = LoggerFactory.getLogger(TestRowFilteringIOSkip.class);
   private static final Path workDir = new Path(System.getProperty("test.tmp.dir",
                                                                   "target" + File.separator + "test"
                                                                   + File.separator + "tmp"));
   private static final Path filePath = new Path(workDir, "skip_file.orc");
-  private static Configuration conf;
   private static FileSystem fs;
 
   private static final TypeDescription schema = TypeDescription.createStruct()
@@ -71,7 +70,6 @@ public class TestRowFilteringIOSkip {
 
   @BeforeAll
   public static void setup() throws IOException {
-    conf = new Configuration();
     fs = FileSystem.get(conf);
 
     LOG.info("Creating file {} with schema {}", filePath, schema);

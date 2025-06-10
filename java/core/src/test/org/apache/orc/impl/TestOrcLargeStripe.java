@@ -15,7 +15,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,6 +25,7 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,18 +56,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TestOrcLargeStripe {
+public class TestOrcLargeStripe implements TestConf {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
       + File.separator + "tmp"));
 
-  Configuration conf;
   FileSystem fs;
   private Path testFilePath;
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
         testInfo.getTestMethod().get().getName() + ".orc");
@@ -136,7 +134,6 @@ public class TestOrcLargeStripe {
 
   @Test
   public void testConfigMaxChunkLimit() throws IOException {
-    Configuration conf = new Configuration();
     FileSystem fs = FileSystem.getLocal(conf);
     TypeDescription schema = TypeDescription.createTimestamp();
     fs.delete(testFilePath, false);
@@ -151,7 +148,6 @@ public class TestOrcLargeStripe {
     assertTrue(recordReader instanceof RecordReaderImpl);
     assertEquals(Integer.MAX_VALUE - 1024, ((RecordReaderImpl) recordReader).getMaxDiskRangeChunkLimit());
 
-    conf = new Configuration();
     conf.setInt(OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getHiveConfName(), 1000);
     opts = OrcFile.readerOptions(conf);
     reader = OrcFile.createReader(testFilePath, opts);
