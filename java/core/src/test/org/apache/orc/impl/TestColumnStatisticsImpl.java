@@ -27,12 +27,6 @@ import org.apache.orc.Reader;
 import org.apache.orc.TestConf;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.orc.*;
-import org.apache.orc.geospatial.BoundingBox;
-import org.apache.orc.geospatial.GeospatialTypes;
-import org.apache.orc.TimestampColumnStatistics;
-import org.apache.orc.TypeDescription;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

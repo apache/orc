@@ -280,8 +280,20 @@ public class BoundingBox {
       return;
     }
 
+    // Updates the X and Y bounds of this bounding box with the given coordinates.
+    // Updates are conditional:
+    // - X bounds are only updated if both minX and maxX are not NaN
+    // - Y bounds are only updated if both minY and maxY are not NaN
+    // This allows partial updates while preserving valid dimensions.
     Envelope envelope = geometry.getEnvelopeInternal();
-    updateBounds(envelope.getMinX(), envelope.getMaxX(), envelope.getMinY(), envelope.getMaxY());
+    if (!Double.isNaN(envelope.getMinX()) && !Double.isNaN(envelope.getMaxX())) {
+      xMin = Math.min(xMin, envelope.getMinX());
+      xMax = Math.max(xMax, envelope.getMaxX());
+    }
+    if (!Double.isNaN(envelope.getMinY()) && !Double.isNaN(envelope.getMaxY())) {
+      yMin = Math.min(yMin, envelope.getMinY());
+      yMax = Math.max(yMax, envelope.getMaxY());
+    }
 
     for (Coordinate coord : geometry.getCoordinates()) {
       if (!Double.isNaN(coord.getZ())) {
@@ -296,25 +308,6 @@ public class BoundingBox {
 
     // Update the validity of this bounding box based on the other bounding box
     valid = isXYValid();
-  }
-
-  /**
-   * Updates the X and Y bounds of this bounding box with the given coordinates.
-   * Updates are conditional:
-   * - X bounds are only updated if both minX and maxX are not NaN
-   * - Y bounds are only updated if both minY and maxY are not NaN
-   * This allows partial updates while preserving valid dimensions.
-   */
-  private void updateBounds(double minX, double maxX, double minY, double maxY) {
-    if (!Double.isNaN(minX) && !Double.isNaN(maxX)) {
-      xMin = Math.min(xMin, minX);
-      xMax = Math.max(xMax, maxX);
-    }
-
-    if (!Double.isNaN(minY) && !Double.isNaN(maxY)) {
-      yMin = Math.min(yMin, minY);
-      yMax = Math.max(yMax, maxY);
-    }
   }
 
   /**
