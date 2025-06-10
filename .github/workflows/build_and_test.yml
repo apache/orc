@@ -47,7 +47,6 @@ jobs:
           - debian11
           - debian12
           - ubuntu24
-          - fedora37
           - oraclelinux9
           - amazonlinux23
     steps:
