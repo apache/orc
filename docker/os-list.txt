@@ -2,6 +2,5 @@ debian11
 debian12
 ubuntu22
 ubuntu24
-fedora37
 oraclelinux9
 amazonlinux23
