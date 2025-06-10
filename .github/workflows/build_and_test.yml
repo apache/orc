@@ -79,6 +79,8 @@ jobs:
           - os: ubuntu-22.04
             java: 17
             cxx: g++
+          - os: ubuntu-latest
+            java: 25-ea
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
@@ -94,10 +96,16 @@ jobs:
     - name: "Test"
       run: |
         mkdir -p ~/.m2
-        mkdir build
-        cd build
-        cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl@1.1` ..
-        make package test-out
+        if [ "${{ matrix.java }}" = "25-ea" ]; then
+          cd java
+          # JDK 25 Build
+          ./mvnw package -DskipTests
+        else
+          mkdir build
+          cd build
+          cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl@1.1` ..
+          make package test-out
+        fi
     - name: Step on failure
       if: ${{ failure() }}
       run: |
