@@ -38,19 +38,14 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestOrcGeospatial {
+public class TestOrcGeospatial implements TestConf {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
           "target" + File.separator + "test" + File.separator + "tmp"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
-  public TestOrcGeospatial() {
-  }
-
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcGeospatial." +
             testInfo.getTestMethod().get().getName() + ".orc");
