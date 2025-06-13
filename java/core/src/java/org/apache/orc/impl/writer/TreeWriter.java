@@ -185,6 +185,9 @@ public interface TreeWriter {
           return new ListTreeWriter(schema, encryption, streamFactory);
         case UNION:
           return new UnionTreeWriter(schema, encryption, streamFactory);
+        case Geometry:
+        case Geography:
+          return new GeospatialTreeWriter(schema, encryption, streamFactory);
         default:
           throw new IllegalArgumentException("Bad category: " +
                                                schema.getCategory());

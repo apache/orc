@@ -44,11 +44,28 @@ public class TypeDescription
   public static final long MAX_DECIMAL64 = 999_999_999_999_999_999L;
   public static final long MIN_DECIMAL64 = -MAX_DECIMAL64;
   private static final int DEFAULT_LENGTH = 256;
+  private static final String DEFAULT_CRS = "OGC:CRS84";
   static final Pattern UNQUOTED_NAMES = Pattern.compile("^[a-zA-Z0-9_]+$");
 
   // type attributes
   public static final String ENCRYPT_ATTRIBUTE = "encrypt";
   public static final String MASK_ATTRIBUTE = "mask";
+
+  public enum EdgeInterpolationAlgorithm {
+    SPHERICAL("spherical"),
+    VINCENTY("vincenty"),
+    THOMAS("thomas"),
+    ANDOYER("andoyer"),
+    KARNEY("karney");
+
+    EdgeInterpolationAlgorithm(String name) {
+      this.name = name;
+    }
+    final String name;
+  }
+
+  private static final EdgeInterpolationAlgorithm DEFAULT_EDGE_INTERPOLATION_ALGORITHM
+          = EdgeInterpolationAlgorithm.SPHERICAL;
 
   @Override
   public int compareTo(TypeDescription other) {
@@ -116,7 +133,9 @@ public class TypeDescription
     MAP("map", false),
     STRUCT("struct", false),
     UNION("uniontype", false),
-    TIMESTAMP_INSTANT("timestamp with local time zone", true);
+    TIMESTAMP_INSTANT("timestamp with local time zone", true),
+    Geometry("geometry", true),
+    Geography("geography", true);
 
     Category(String name, boolean isPrimitive) {
       this.name = name;
@@ -187,6 +206,14 @@ public class TypeDescription
     return new TypeDescription(Category.DECIMAL);
   }
 
+  public static TypeDescription createGeometry() {
+    return new TypeDescription(Category.Geometry);
+  }
+
+  public static TypeDescription createGeography() {
+    return new TypeDescription(Category.Geography);
+  }
+
   /**
    * Parse TypeDescription from the Hive type names. This is the inverse
    * of TypeDescription.toString()
@@ -236,6 +263,26 @@ public class TypeDescription
       throw new IllegalArgumentException("scale is out of range at " + scale);
     }
     this.scale = scale;
+    return this;
+  }
+
+  public TypeDescription withCRS(String crs) {
+    if (category != Category.Geometry &&
+        category != Category.Geography) {
+      throw new IllegalArgumentException("crs is only allowed on Geometry/Geography" +
+          " and not " + category.name);
+    }
+    this.crs = crs;
+    return this;
+  }
+
+  public TypeDescription withEdgeInterpolationAlgorithm(
+          EdgeInterpolationAlgorithm edgeInterpolationAlgorithm) {
+    if (category != Category.Geography) {
+      throw new IllegalArgumentException("edgeInterpolationAlgorithm is only allowed on Geography" +
+              " and not " + category.name);
+    }
+    this.edgeInterpolationAlgorithm = edgeInterpolationAlgorithm;
     return this;
   }
 
@@ -366,6 +413,8 @@ public class TypeDescription
     result.maxLength = maxLength;
     result.precision = precision;
     result.scale = scale;
+    result.crs = crs;
+    result.edgeInterpolationAlgorithm = edgeInterpolationAlgorithm;
     if (fieldNames != null) {
       result.fieldNames.addAll(fieldNames);
     }
@@ -557,6 +606,14 @@ public class TypeDescription
     return scale;
   }
 
+  public String getCrs() {
+    return crs;
+  }
+
+  public EdgeInterpolationAlgorithm getEdgeInterpolationAlgorithm() {
+    return edgeInterpolationAlgorithm;
+  }
+
   /**
    * For struct types, get the list of field names.
    * @return the list of field names.
@@ -664,6 +721,9 @@ public class TypeDescription
   private int maxLength = DEFAULT_LENGTH;
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
+  private String crs = DEFAULT_CRS;
+  private EdgeInterpolationAlgorithm edgeInterpolationAlgorithm
+            = DEFAULT_EDGE_INTERPOLATION_ALGORITHM;
 
   static void printFieldName(StringBuilder buffer, String name) {
     if (UNQUOTED_NAMES.matcher(name).matches()) {
@@ -689,6 +749,18 @@ public class TypeDescription
       case VARCHAR:
         buffer.append('(');
         buffer.append(maxLength);
+        buffer.append(')');
+        break;
+      case Geometry:
+        buffer.append('(');
+        buffer.append(crs);
+        buffer.append(')');
+        break;
+      case Geography:
+        buffer.append('(');
+        buffer.append(crs);
+        buffer.append(',');
+        buffer.append(edgeInterpolationAlgorithm.name());
         buffer.append(')');
         break;
       case LIST:
@@ -750,6 +822,16 @@ public class TypeDescription
       case VARCHAR:
         buffer.append(", \"length\": ");
         buffer.append(maxLength);
+        break;
+      case Geometry:
+        buffer.append(", \"crs\": ");
+        buffer.append(crs);
+        break;
+      case Geography:
+        buffer.append(", \"crs\": ");
+        buffer.append(crs);
+        buffer.append(", \"edge_interpolation_algorithm\": ");
+        buffer.append(edgeInterpolationAlgorithm.name());
         break;
       case LIST:
       case MAP:

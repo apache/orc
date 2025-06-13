@@ -1154,6 +1154,12 @@ public class TreeReaderFactory {
     }
   }
 
+  public static class GeospatialTreeReader extends BinaryTreeReader {
+    GeospatialTreeReader(int columnId, Context context) throws IOException {
+      super(columnId, context);
+    }
+  }
+
   public static class TimestampTreeReader extends TreeReader {
     protected IntegerReader data = null;
     protected IntegerReader nanos = null;
@@ -3028,6 +3034,9 @@ public class TreeReaderFactory {
         }
         return new DecimalTreeReader(fileType.getId(), fileType.getPrecision(),
             fileType.getScale(), context);
+      case Geography:
+      case Geometry:
+        return new GeospatialTreeReader(fileType.getId(), context);
       case STRUCT:
         return new StructTreeReader(fileType.getId(), readerType, context);
       case LIST:
