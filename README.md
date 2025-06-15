@@ -115,3 +115,43 @@ Cmake option BUILD_ENABLE_AVX512 can be set to "ON" or (default value)"OFF" at t
 Environment variable ORC_USER_SIMD_LEVEL can be set to "AVX512" or (default value)"NONE" at the run time. At run time, it defines the SIMD level to dispatch the code which can apply SIMD optimization.
 
 Note that if ORC_USER_SIMD_LEVEL is set to "NONE" at run time, AVX512 will not take effect at run time even if BUILD_ENABLE_AVX512 is set to "ON" at compile time.
+
+### Building with Meson
+
+While CMake is the official build system for orc, there is unofficial support for using Meson to build select parts of the project. To build a debug version of the library and test it using Meson, from the project root you can run:
+
+```shell
+meson setup build
+meson compile -C build
+meson test -C build
+```
+
+By default, Meson will build release libraries. If you would instead like debug libraries, you can use the ``-Dbuildtype=debug`` argument to setup. You must either remove the existing build directory before changing that setting, or alternatively pass the ``--reconfigure`` flag:
+
+```shell
+meson setup build -Dbuildtype=debug --reconfigure
+meson compile -C build
+meson test -C build
+```
+
+Meson supports running your test suite through valgrind out of the box:
+
+```shell
+meson test -C build --wrap=valgrind
+```
+
+If you'd like to enable sanitizers, you can leverage the ``-Db_sanitize=`` option. For example, to enable both ASAN and UBSAN, you can run:
+
+```shell
+meson setup build -Dbuildtype=debug -Db_sanitize=address,undefined --reconfigure
+meson compile -C build
+meson test
+```
+
+Meson takes care of detecting all dependencies on your system, and downloading missing ones as required through its [Wrap system](https://mesonbuild.com/Wrap-dependency-system-manual.html). The dependencies for the project are all stored in the ``subprojects`` directory in individual wrap files. The majority of these are system generated files created by running:
+
+```shell
+meson wrap install <depencency_name>
+```
+
+From the project root. If you are developing orc and need to add a new dependency in the future, be sure to check Meson's [WrapDB](https://mesonbuild.com/Wrapdb-projects.html) to check if a pre-configured wrap entry exists. If not, you may still manually configure the dependency as outlined in the aforementioned Wrap system documentation.
