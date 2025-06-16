@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <sstream>
 #include <cstring>
+#include <optional>
+
 #include "orc/Exceptions.hh"
 
 namespace orc::geospatial {
