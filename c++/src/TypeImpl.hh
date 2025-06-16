@@ -194,7 +194,6 @@ namespace orc {
     static std::unique_ptr<Type> parseDecimalType(const std::string& input, size_t start,
                                                   size_t end);
 
-
     /**
      * Parse geography type from string
      * @param input the input string of a decimal type
@@ -202,7 +201,7 @@ namespace orc {
      * @param end end position of the input string
      */
     static std::unique_ptr<Type> parseGeographyType(const std::string& input, size_t start,
-                                                   size_t end);
+                                                    size_t end);
     /**
      * Parse type for a category
      * @param category type name
