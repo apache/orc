@@ -24,6 +24,7 @@
 #include <string>
 #include <string_view>
 #include <ostream>
+#include <cstdint>
 
 namespace orc::geospatial {
 
