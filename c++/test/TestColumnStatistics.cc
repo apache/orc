@@ -20,6 +20,7 @@
 #include "orc/OrcFile.hh"
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
+#include "TestUtil.hh"
 
 #include <cmath>
 
@@ -531,4 +532,343 @@ namespace orc {
     collectionStats->merge(*other);
     EXPECT_FALSE(collectionStats->hasTotalChildren());
   }
+
+  TEST(ColumnStatistics, TestGeospatialDefaults) {
+    std::unique_ptr<GeospatialColumnStatisticsImpl> geoStats(new GeospatialColumnStatisticsImpl());
+    EXPECT_TRUE(geoStats->getGeospatialTypes().empty());
+    auto bbox = geoStats->getBoundingBox();
+    for (int i = 0; i < geospatial::kMaxDimensions; i++) {
+      EXPECT_TRUE(bbox.BoundEmpty(i));
+      EXPECT_TRUE(bbox.BoundValid(i));
+    }
+    EXPECT_EQ("<GeoStatistics> x: empty y: empty z: empty m: empty geometry_types: []",
+              geoStats->toString());
+  }
+
+  TEST(ColumnStatistics, TestGeospatialUpdate) {
+    std::unique_ptr<GeospatialColumnStatisticsImpl> geoStats(new GeospatialColumnStatisticsImpl());
+    EXPECT_TRUE(geoStats->getGeospatialTypes().empty());
+    const auto& bbox = geoStats->getBoundingBox();
+    for (int i = 0; i < geospatial::kMaxDimensions; i++) {
+      EXPECT_TRUE(bbox.BoundEmpty(i));
+      EXPECT_TRUE(bbox.BoundValid(i));
+    }
+    EXPECT_EQ(geoStats->getGeospatialTypes().size(), 0);
+
+    geospatial::BoundingBox::XYZM expectedMin;
+    geospatial::BoundingBox::XYZM expectedMax;
+    std::array<bool, geospatial::kMaxDimensions> expectedEmpty;
+    std::array<bool, geospatial::kMaxDimensions> expectedValid;
+    std::vector<int32_t> expectedTypes;
+    for (int i = 0; i < geospatial::kMaxDimensions; i++) {
+      expectedMin[i] = geospatial::kInf;
+      expectedMax[i] = -geospatial::kInf;
+      expectedEmpty[i] = true;
+      expectedValid[i] = true;
+    }
+
+    auto Verify = [&]() {
+      EXPECT_EQ(expectedEmpty, geoStats->getBoundingBox().DimensionEmpty());
+      EXPECT_EQ(expectedValid, geoStats->getBoundingBox().DimensionValid());
+      EXPECT_EQ(expectedTypes, geoStats->getGeospatialTypes());
+      for (int i = 0; i < geospatial::kMaxDimensions; i++) {
+        if (geoStats->getBoundingBox().BoundValid(i)) {
+          EXPECT_EQ(expectedMin[i], geoStats->getBoundingBox().LowerBound()[i]);
+          EXPECT_EQ(expectedMax[i], geoStats->getBoundingBox().UpperBound()[i]);
+        } else {
+          EXPECT_TRUE(std::isnan(geoStats->getBoundingBox().LowerBound()[i]));
+          EXPECT_TRUE(std::isnan(geoStats->getBoundingBox().UpperBound()[i]));
+        }
+      }
+    };
+
+    // Update a xy point
+    std::string xy0 = MakeWKBPoint({10, 11}, false, false);
+    geoStats->update(xy0.c_str(), xy0.size());
+    expectedMin[0] = expectedMax[0] = 10;
+    expectedMin[1] = expectedMax[1] = 11;
+    expectedEmpty[0] = expectedEmpty[1] = false;
+    expectedTypes.push_back(1);
+    Verify();
+
+    // Update a xyz point.
+    std::string xyz0 = MakeWKBPoint({11, 12, 13}, true, false);
+    geoStats->update(xyz0.c_str(), xyz0.size());
+    expectedMax[0] = 11;
+    expectedMax[1] = 12;
+    expectedMin[2] = expectedMax[2] = 13;
+    expectedEmpty[2] = false;
+    expectedTypes.push_back(1001);
+    Verify();
+
+    // Update a xym point.
+    std::string xym0 = MakeWKBPoint({9, 10, 0, 11}, false, true);
+    geoStats->update(xym0.c_str(), xym0.size());
+    expectedMin[0] = 9;
+    expectedMin[1] = 10;
+    expectedMin[3] = expectedMax[3] = 11;
+    expectedEmpty[3] = false;
+    expectedTypes.push_back(2001);
+    Verify();
+
+    // Update a xymz point.
+    std::string xymz0 = MakeWKBPoint({8, 9, 10, 12}, true, true);
+    geoStats->update(xymz0.c_str(), xymz0.size());
+    expectedMin[0] = 8;
+    expectedMin[1] = 9;
+    expectedMin[2] = 10;
+    expectedMax[3] = 12;
+    expectedTypes.push_back(3001);
+    Verify();
+
+    // Update NaN to every dimension.
+    std::string xyzm1 = MakeWKBPoint(
+        {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()},
+        true, false);
+    geoStats->update(xyzm1.c_str(), xyzm1.size());
+    Verify();
+
+    // Update a invalid WKB
+    std::string invalidWKB;
+    geoStats->update(invalidWKB.c_str(), invalidWKB.size());
+    expectedValid[0] = expectedValid[1] = expectedValid[2] = expectedValid[3] = false;
+    expectedTypes.clear();
+    Verify();
+
+    // Update a xy point again
+    std::string xy1 = MakeWKBPoint({10, 11}, false, false);
+    geoStats->update(xy1.c_str(), xy1.size());
+    Verify();
+  }
+
+  TEST(ColumnStatistics, TestGeospatialToProto) {
+    // Test Empty
+    std::unique_ptr<GeospatialColumnStatisticsImpl> geoStats(new GeospatialColumnStatisticsImpl());
+    proto::ColumnStatistics pbStats;
+    geoStats->toProtoBuf(pbStats);
+    EXPECT_TRUE(pbStats.has_geospatial_statistics());
+    EXPECT_EQ(0, pbStats.geospatial_statistics().geospatial_types().size());
+    EXPECT_FALSE(pbStats.geospatial_statistics().has_bbox());
+
+    // Update a xy point
+    std::string xy = MakeWKBPoint({10, 11}, false, false);
+    geoStats->update(xy.c_str(), xy.size());
+    pbStats.Clear();
+    geoStats->toProtoBuf(pbStats);
+    EXPECT_TRUE(pbStats.has_geospatial_statistics());
+    EXPECT_EQ(1, pbStats.geospatial_statistics().geospatial_types().size());
+    EXPECT_EQ(1, pbStats.geospatial_statistics().geospatial_types(0));
+    EXPECT_TRUE(pbStats.geospatial_statistics().has_bbox());
+    const auto& bbox0 = pbStats.geospatial_statistics().bbox();
+    EXPECT_TRUE(bbox0.has_xmin());
+    EXPECT_TRUE(bbox0.has_xmax());
+    EXPECT_TRUE(bbox0.has_ymin());
+    EXPECT_TRUE(bbox0.has_ymax());
+    EXPECT_FALSE(bbox0.has_zmin());
+    EXPECT_FALSE(bbox0.has_zmax());
+    EXPECT_FALSE(bbox0.has_mmin());
+    EXPECT_FALSE(bbox0.has_mmax());
+    EXPECT_EQ(10, bbox0.xmin());
+    EXPECT_EQ(10, bbox0.xmax());
+    EXPECT_EQ(11, bbox0.ymin());
+    EXPECT_EQ(11, bbox0.ymax());
+
+    // Update a xyzm point.
+    std::string xyzm = MakeWKBPoint({-10, -11, -12, -13}, true, true);
+    geoStats->update(xyzm.c_str(), xyzm.size());
+    pbStats.Clear();
+    geoStats->toProtoBuf(pbStats);
+    EXPECT_TRUE(pbStats.has_geospatial_statistics());
+    EXPECT_EQ(2, pbStats.geospatial_statistics().geospatial_types().size());
+    EXPECT_EQ(1, pbStats.geospatial_statistics().geospatial_types(0));
+    EXPECT_EQ(3001, pbStats.geospatial_statistics().geospatial_types(1));
+    EXPECT_TRUE(pbStats.geospatial_statistics().has_bbox());
+    const auto& bbox1 = pbStats.geospatial_statistics().bbox();
+    EXPECT_TRUE(bbox1.has_xmin());
+    EXPECT_TRUE(bbox1.has_xmax());
+    EXPECT_TRUE(bbox1.has_ymin());
+    EXPECT_TRUE(bbox1.has_ymax());
+    EXPECT_TRUE(bbox1.has_zmin());
+    EXPECT_TRUE(bbox1.has_zmax());
+    EXPECT_TRUE(bbox1.has_mmin());
+    EXPECT_TRUE(bbox1.has_mmax());
+    EXPECT_EQ(-10, bbox1.xmin());
+    EXPECT_EQ(10, bbox1.xmax());
+    EXPECT_EQ(-11, bbox1.ymin());
+    EXPECT_EQ(11, bbox1.ymax());
+    EXPECT_EQ(-12, bbox1.zmin());
+    EXPECT_EQ(-12, bbox1.zmax());
+    EXPECT_EQ(-13, bbox1.mmin());
+    EXPECT_EQ(-13, bbox1.mmax());
+
+    // Update a invalid point
+    std::string invalidWKB;
+    geoStats->update(invalidWKB.c_str(), invalidWKB.size());
+    pbStats.Clear();
+    geoStats->toProtoBuf(pbStats);
+    EXPECT_TRUE(pbStats.has_geospatial_statistics());
+    EXPECT_EQ(0, pbStats.geospatial_statistics().geospatial_types().size());
+    EXPECT_FALSE(pbStats.geospatial_statistics().has_bbox());
+  }
+
+  TEST(ColumnStatistics, TestGeospatialMerge) {
+    std::unique_ptr<GeospatialColumnStatisticsImpl> invalidStats(new GeospatialColumnStatisticsImpl());
+    invalidStats->update("0", 0);
+
+    std::unique_ptr<GeospatialColumnStatisticsImpl> emptyStats(new GeospatialColumnStatisticsImpl());
+
+    std::unique_ptr<GeospatialColumnStatisticsImpl> xyStats(new GeospatialColumnStatisticsImpl());
+    std::string xy = MakeWKBPoint({10, 11}, false, false);
+    xyStats->update(xy.c_str(), xy.size());
+
+    std::unique_ptr<GeospatialColumnStatisticsImpl> xyzStats(new GeospatialColumnStatisticsImpl());
+    std::string xyz = MakeWKBPoint({12, 13, 14}, true, false);
+    xyzStats->update(xyz.c_str(), xyz.size());
+
+    std::unique_ptr<GeospatialColumnStatisticsImpl> xyzmStats(new GeospatialColumnStatisticsImpl());
+    std::string xyzm = MakeWKBPoint({-10, -11, -12, -13}, true, true);
+    xyzmStats->update(xyzm.c_str(), xyzm.size());
+
+    // invalid merge invalid
+    invalidStats->merge(*invalidStats);
+    std::array<bool, 4> expectedValid = {false, false, false, false};
+    EXPECT_EQ(invalidStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(invalidStats->getGeospatialTypes().size(), 0);
+
+    // Empty merge empty
+    emptyStats->merge(*emptyStats);
+    expectedValid = {true, true, true, true};
+    std::array<bool, 4> expectedEmpty = {true, true, true, true};
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 0);
+
+    // Empty merge xy
+    emptyStats->merge(*xyStats);
+    expectedEmpty = {false, false, true, true};
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(10, emptyStats->getBoundingBox().LowerBound()[0]);
+    EXPECT_EQ(10, emptyStats->getBoundingBox().UpperBound()[0]);
+    EXPECT_EQ(11, emptyStats->getBoundingBox().LowerBound()[1]);
+    EXPECT_EQ(11, emptyStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 1);
+    EXPECT_EQ(emptyStats->getGeospatialTypes()[0], 1);
+
+    // Empty merge xyz
+    emptyStats->merge(*xyzStats);
+    expectedEmpty = {false, false, false, true};
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(10, emptyStats->getBoundingBox().LowerBound()[0]);
+    EXPECT_EQ(12, emptyStats->getBoundingBox().UpperBound()[0]);
+    EXPECT_EQ(11, emptyStats->getBoundingBox().LowerBound()[1]);
+    EXPECT_EQ(13, emptyStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(14, emptyStats->getBoundingBox().LowerBound()[2]);
+    EXPECT_EQ(14, emptyStats->getBoundingBox().UpperBound()[2]);
+    EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 2);
+    EXPECT_EQ(emptyStats->getGeospatialTypes()[0], 1);
+    EXPECT_EQ(emptyStats->getGeospatialTypes()[1], 1001);
+
+    // Empty merge xyzm
+    emptyStats->merge(*xyzmStats);
+    expectedEmpty = {false, false, false, false};
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(-10, emptyStats->getBoundingBox().LowerBound()[0]);
+    EXPECT_EQ(12, emptyStats->getBoundingBox().UpperBound()[0]);
+    EXPECT_EQ(-11, emptyStats->getBoundingBox().LowerBound()[1]);
+    EXPECT_EQ(13, emptyStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(-12, emptyStats->getBoundingBox().LowerBound()[2]);
+    EXPECT_EQ(14, emptyStats->getBoundingBox().UpperBound()[2]);
+    EXPECT_EQ(-13, emptyStats->getBoundingBox().LowerBound()[3]);
+    EXPECT_EQ(-13, emptyStats->getBoundingBox().UpperBound()[3]);
+    EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 3);
+    EXPECT_EQ(emptyStats->getGeospatialTypes()[0], 1);
+    EXPECT_EQ(emptyStats->getGeospatialTypes()[1], 1001);
+    EXPECT_EQ(emptyStats->getGeospatialTypes()[2], 3001);
+
+    // Empty merge invalid
+    emptyStats->merge(*invalidStats);
+    expectedValid = {false, false, false, false};
+    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 0);
+  }
+
+  TEST(ColumnStatistics, TestGeospatialFromProto) {
+    proto::ColumnStatistics pbStats;
+    // No geostats
+
+    std::unique_ptr<GeospatialColumnStatisticsImpl> emptyStats0(
+        new GeospatialColumnStatisticsImpl(pbStats));
+    std::array<bool, 4> expectedValid = {false, false, false, false};
+    EXPECT_TRUE(emptyStats0->getGeospatialTypes().empty());
+    EXPECT_EQ(emptyStats0->getBoundingBox().DimensionValid(), expectedValid);
+
+    // Add empty geostats
+    pbStats.mutable_geospatial_statistics();
+    std::unique_ptr<GeospatialColumnStatisticsImpl> emptyStats1(
+        new GeospatialColumnStatisticsImpl(pbStats));
+    EXPECT_TRUE(emptyStats1->getGeospatialTypes().empty());
+    EXPECT_EQ(emptyStats1->getBoundingBox().DimensionValid(), expectedValid);
+
+    // Set xy bounds
+    auto* geoProtoStas = pbStats.mutable_geospatial_statistics();
+    geoProtoStas->mutable_bbox()->set_xmin(0);
+    geoProtoStas->mutable_bbox()->set_xmax(1);
+    geoProtoStas->mutable_bbox()->set_ymin(0);
+    geoProtoStas->mutable_bbox()->set_ymax(1);
+    geoProtoStas->mutable_geospatial_types()->Add(2);
+    std::unique_ptr<GeospatialColumnStatisticsImpl> xyStats(
+        new GeospatialColumnStatisticsImpl(pbStats));
+    expectedValid = {true, true, false, false};
+    EXPECT_EQ(xyStats->getGeospatialTypes().size(), 1);
+    EXPECT_EQ(xyStats->getGeospatialTypes()[0], 2);
+    EXPECT_EQ(xyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(0, xyStats->getBoundingBox().LowerBound()[0]);
+    EXPECT_EQ(1, xyStats->getBoundingBox().UpperBound()[0]);
+    EXPECT_EQ(0, xyStats->getBoundingBox().LowerBound()[1]);
+    EXPECT_EQ(1, xyStats->getBoundingBox().UpperBound()[1]);
+
+    // Set xyz bounds
+    geoProtoStas->mutable_bbox()->set_zmin(0);
+    geoProtoStas->mutable_bbox()->set_zmax(1);
+    geoProtoStas->mutable_geospatial_types()->Add(1003);
+    std::unique_ptr<GeospatialColumnStatisticsImpl> xyzStats(
+        new GeospatialColumnStatisticsImpl(pbStats));
+    expectedValid = {true, true, true, false};
+    EXPECT_EQ(xyzStats->getGeospatialTypes().size(), 2);
+    EXPECT_EQ(xyzStats->getGeospatialTypes()[0], 2);
+    EXPECT_EQ(xyzStats->getGeospatialTypes()[1], 1003);
+    EXPECT_EQ(xyzStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(0, xyzStats->getBoundingBox().LowerBound()[0]);
+    EXPECT_EQ(1, xyzStats->getBoundingBox().UpperBound()[0]);
+    EXPECT_EQ(0, xyzStats->getBoundingBox().LowerBound()[1]);
+    EXPECT_EQ(1, xyzStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(0, xyzStats->getBoundingBox().LowerBound()[2]);
+    EXPECT_EQ(1, xyzStats->getBoundingBox().UpperBound()[2]);
+
+    // Set xyzm bounds
+    geoProtoStas->mutable_bbox()->set_mmin(0);
+    geoProtoStas->mutable_bbox()->set_mmax(1);
+    geoProtoStas->mutable_geospatial_types()->Add(3003);
+    std::unique_ptr<GeospatialColumnStatisticsImpl> xyzmStats(
+        new GeospatialColumnStatisticsImpl(pbStats));
+    expectedValid = {true, true, true, true};
+    EXPECT_EQ(xyzmStats->getGeospatialTypes().size(), 3);
+    EXPECT_EQ(xyzmStats->getGeospatialTypes()[0], 2);
+    EXPECT_EQ(xyzmStats->getGeospatialTypes()[1], 1003);
+    EXPECT_EQ(xyzmStats->getGeospatialTypes()[2], 3003);
+    EXPECT_EQ(xyzmStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[0]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[0]);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[1]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[2]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[2]);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[3]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[3]);
+  }
+
 }  // namespace orc

@@ -56,12 +56,14 @@ add_executable (orc-test
   TestRleEncoder.cc
   TestRLEV2Util.cc
   TestSargsApplier.cc
+  TestStatistics.cc
   TestSearchArgument.cc
   TestSchemaEvolution.cc
   TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
   TestTimezone.cc
   TestType.cc
+  TestUtil.cc
   TestWriter.cc
   TestCache.cc
   ${SIMD_TEST_SRCS}

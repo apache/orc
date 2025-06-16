@@ -873,6 +873,8 @@ namespace orc {
       case proto::Type_Kind_CHAR:
       case proto::Type_Kind_STRING:
       case proto::Type_Kind_VARCHAR:
+      case proto::Type_Kind_GEOMETRY:
+      case proto::Type_Kind_GEOGRAPHY:
         return 4;
       default:
         return 0;

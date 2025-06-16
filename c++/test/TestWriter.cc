@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-#include "orc/ColumnPrinter.hh"
+#include <gtest/gtest.h>
 #include "orc/OrcFile.hh"
 
 #include "MemoryInputStream.hh"
 #include "MemoryOutputStream.hh"
 #include "Reader.hh"
+#include "TestUtil.hh"
 
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
@@ -2399,6 +2400,141 @@ namespace orc {
     }
     EXPECT_FALSE(rowReader->next(*batch));
   }
+
+  TEST_P(WriterTest, writeGeometryAndGeographyColumn) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:geometry(OGC:CRS84),col2:geography(OGC:CRS84,speherial)>"));
+    uint64_t stripeSize = 1024;            // 1K
+    uint64_t compressionBlockSize = 1024;  // 1k
+    uint64_t memoryBlockSize = 64;
+    std::unique_ptr<Writer> writer =
+      createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+                     pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
+
+    EXPECT_EQ("struct<col1:geometry(OGC:CRS84),),col2:geography(OGC:CRS84,speherial)>", type->toString());
+
+    uint64_t batchCount = 100, batchSize = 1000;
+    std::unique_ptr<ColumnVectorBatch> batch =
+      writer->createRowBatch(batchSize);
+    StructVectorBatch* structBatch =
+      dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* geometryBatch =
+      dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    StringVectorBatch* geographyBatch =
+      dynamic_cast<StringVectorBatch*>(structBatch->fields[1]);
+
+    char buffer[8000000];
+    char* buf = buffer;
+
+    // write 100 * 1000 rows, every 100 rows are in one row group
+    // every 2 consecutive rows has one null value.
+    uint64_t rowCount = 0;
+    for (uint64_t i = 0; i != batchCount; ++i) {
+      structBatch->hasNulls = false;
+      structBatch->numElements = batchSize;
+
+      geometryBatch->hasNulls = true;
+      geometryBatch->numElements = batchSize;
+      geographyBatch->hasNulls = true;
+      geographyBatch->numElements = batchSize;
+
+      for (uint64_t j = 0; j != batchSize; ++j) {
+        if (rowCount % 2 == 0) {
+          geometryBatch->notNull[j] = 0;
+          geographyBatch->notNull[j] = 0;
+        } else {
+          geometryBatch->notNull[j] = 1;
+          geographyBatch->notNull[j] = 1;
+
+          std::string wkb = MakeWKBPoint({j * 1.0, j * 1.0}, false, false);
+          strncpy(buf, wkb.c_str(), wkb.size());
+
+          geometryBatch->data[j] = buf;
+          geometryBatch->length[j] = static_cast<int64_t>(wkb.size());
+          geographyBatch->data[j] = buf;
+          geographyBatch->length[j] = static_cast<int64_t>(wkb.size());
+
+          buf += wkb.size();
+        }
+        ++rowCount;
+      }
+
+      writer->add(*batch);
+    }
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    EXPECT_EQ(batchCount * batchSize, reader->getNumberOfRows());
+    EXPECT_TRUE(reader->getNumberOfStripes() > 1);
+
+    EXPECT_EQ("struct<col1:geometry(OGC:CRS84),),col2:geography(OGC:CRS84,speherial)>", reader->getType().toString());
+    // test sequential reader
+    std::unique_ptr<RowReader> seqReader = createRowReader(reader.get());
+    rowCount = 0;
+    for (uint64_t i = 0; i != batchCount; ++i) {
+      seqReader->next(*batch);
+
+      EXPECT_FALSE(structBatch->hasNulls);
+      EXPECT_EQ(batchSize, structBatch->numElements);
+
+      EXPECT_TRUE(geometryBatch->hasNulls);
+      EXPECT_EQ(batchSize, geometryBatch->numElements);
+      EXPECT_TRUE(geographyBatch->hasNulls);
+      EXPECT_EQ(batchSize, geographyBatch->numElements);
+
+      for (uint64_t j = 0; j != batchSize; ++j) {
+        if (rowCount % 2 == 0) {
+          EXPECT_TRUE(geometryBatch->notNull[j] == 0);
+          EXPECT_TRUE(geographyBatch->notNull[j] == 0);
+        } else {
+          EXPECT_TRUE(geometryBatch->notNull[j] != 0);
+          EXPECT_TRUE(geographyBatch->notNull[j] != 0);
+          std::string wkb = MakeWKBPoint({j * 1.0, j * 1.0}, false, false);
+          EXPECT_EQ(static_cast<int64_t>(wkb.size()), geometryBatch->length[j]);
+          EXPECT_TRUE(strncmp(geometryBatch->data[j], wkb.c_str(), wkb.size()) == 0);
+          EXPECT_EQ(static_cast<int64_t>(wkb.size()), geographyBatch->length[j]);
+          EXPECT_TRUE(strncmp(geographyBatch->data[j], wkb.c_str(), wkb.size()) == 0);
+        }
+        ++rowCount;
+      }
+    }
+    EXPECT_FALSE(seqReader->next(*batch));
+
+    // test seek reader
+    std::unique_ptr<RowReader> seekReader = createRowReader(reader.get());
+    batch = seekReader->createRowBatch(2);
+    structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    geometryBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    geographyBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[1]);
+
+    for (uint64_t row = rowCount - 2; row >= 100; row -= 100) {
+      seekReader->seekToRow(row);
+      seekReader->next(*batch);
+
+      EXPECT_FALSE(structBatch->hasNulls);
+      EXPECT_EQ(2, structBatch->numElements);
+      EXPECT_TRUE(geometryBatch->hasNulls);
+      EXPECT_EQ(2, geometryBatch->numElements);
+      EXPECT_TRUE(geographyBatch->hasNulls);
+      EXPECT_EQ(2, geographyBatch->numElements);
+
+      EXPECT_TRUE(geometryBatch->notNull[0] == 0);
+      EXPECT_TRUE(geometryBatch->notNull[1] != 0);
+      EXPECT_TRUE(geographyBatch->notNull[0] == 0);
+      EXPECT_TRUE(geographyBatch->notNull[1] != 0);
+
+      std::string wkb = MakeWKBPoint({(row + 1) * 1.0, (row + 1) * 1.0}, false, false);
+
+      EXPECT_EQ(static_cast<int64_t>(wkb.size()), geometryBatch->length[1]);
+      EXPECT_TRUE(strncmp(geometryBatch->data[1], wkb.c_str(), wkb.size()) == 0);
+      EXPECT_EQ(static_cast<int64_t>(wkb.size()), geographyBatch->length[1]);
+      EXPECT_TRUE(strncmp(geographyBatch->data[1], wkb.c_str(), wkb.size()) == 0);
+    }
+  }
+
 
   std::vector<TestParams> testParams = {{FileVersion::v_0_11(), true},
                                         {FileVersion::v_0_11(), false},
