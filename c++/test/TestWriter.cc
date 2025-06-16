@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <ctime>
+#include <memory>
 #include <sstream>
 
 #ifdef __clang__
@@ -2424,8 +2425,8 @@ namespace orc {
     StringVectorBatch* geographyBatch =
       dynamic_cast<StringVectorBatch*>(structBatch->fields[1]);
 
-    char buffer[8000000];
-    char* buf = buffer;
+    std::unique_ptr<char[]> buffer(new char[8000000]);
+    char* buf = buffer.get();
 
     // write 100 * 1000 rows, every 100 rows are in one row group
     // every 2 consecutive rows has one null value.
