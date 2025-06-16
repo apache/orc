@@ -171,6 +171,7 @@ set(SOURCE_FILES
   ConvertColumnReader.cc
   CpuInfoUtil.cc
   Exceptions.cc
+  Geospatial.cc
   Int128.cc
   LzoDecompressor.cc
   MemoryPool.cc
