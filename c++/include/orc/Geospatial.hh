@@ -21,6 +21,9 @@
 #include <cmath>
 #include <unordered_set>
 #include <vector>
+#include <string>
+#include <string_view>
+#include <ostream>
 
 namespace orc::geospatial {
 
