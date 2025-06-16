@@ -21,9 +21,9 @@
 #include "orc/Type.hh"
 #include "orc/Writer.hh"
 
+#include <memory>
 #include "ByteRLE.hh"
 #include "ColumnWriter.hh"
-#include <memory>
 #include "RLE.hh"
 #include "Statistics.hh"
 #include "Timezone.hh"
@@ -2876,12 +2876,13 @@ namespace orc {
 
   class GeospatialColumnWriter : public BinaryColumnWriter {
    public:
-    GeospatialColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options)
+    GeospatialColumnWriter(const Type& type, const StreamsFactory& factory,
+                           const WriterOptions& options)
         : BinaryColumnWriter(type, factory, options),
           isGeometry_(type.getKind() == TypeKind::GEOMETRY) {}
 
-    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset,
-                         uint64_t numValues, const char* incomingMask) override {
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
+                     const char* incomingMask) override {
       ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
       const StringVectorBatch& strBatch = dynamic_cast<const StringVectorBatch&>(rowBatch);

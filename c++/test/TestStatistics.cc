@@ -34,13 +34,10 @@ namespace orc {
 #define ENSURE_DYNAMIC_CAST_NOT_NULL(PTR) \
   if (PTR == NULL) throw std::logic_error("dynamic_cast returns null");
 
-  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024; // 1M
+  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
 
-   static std::unique_ptr<Writer> createWriter(
-                                       uint64_t stripeSize,
-                                       const Type &type,
-                                       MemoryPool* memoryPool,
-                                       OutputStream *stream) {
+  static std::unique_ptr<Writer> createWriter(uint64_t stripeSize, const Type& type,
+                                              MemoryPool* memoryPool, OutputStream* stream) {
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setCompressionBlockSize(256);
@@ -51,12 +48,10 @@ namespace orc {
     return createWriter(type, stream, options);
   }
 
-  static std::unique_ptr<Reader> createReader(
-                                       MemoryPool* memoryPool,
-                                       MemoryOutputStream& memStream) {
-
+  static std::unique_ptr<Reader> createReader(MemoryPool* memoryPool,
+                                              MemoryOutputStream& memStream) {
     std::unique_ptr<InputStream> inStream(
-      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     ReaderOptions options;
     options.setMemoryPool(*memoryPool);
     return createReader(std::move(inStream), options);

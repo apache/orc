@@ -2405,25 +2405,23 @@ namespace orc {
   TEST_P(WriterTest, writeGeometryAndGeographyColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
-    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:geometry(OGC:CRS84),col2:geography(OGC:CRS84,speherial)>"));
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+        "struct<col1:geometry(OGC:CRS84),col2:geography(OGC:CRS84,speherial)>"));
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k
     uint64_t memoryBlockSize = 64;
     std::unique_ptr<Writer> writer =
-      createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
+        createWriter(stripeSize, memoryBlockSize, compressionBlockSize, CompressionKind_ZLIB, *type,
                      pool, &memStream, fileVersion, enableAlignBlockBoundToRowGroup ? 1024 : 0);
 
-    EXPECT_EQ("struct<col1:geometry(OGC:CRS84),),col2:geography(OGC:CRS84,speherial)>", type->toString());
+    EXPECT_EQ("struct<col1:geometry(OGC:CRS84),),col2:geography(OGC:CRS84,speherial)>",
+              type->toString());
 
     uint64_t batchCount = 100, batchSize = 1000;
-    std::unique_ptr<ColumnVectorBatch> batch =
-      writer->createRowBatch(batchSize);
-    StructVectorBatch* structBatch =
-      dynamic_cast<StructVectorBatch*>(batch.get());
-    StringVectorBatch* geometryBatch =
-      dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
-    StringVectorBatch* geographyBatch =
-      dynamic_cast<StringVectorBatch*>(structBatch->fields[1]);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(batchSize);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* geometryBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    StringVectorBatch* geographyBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[1]);
 
     std::unique_ptr<char[]> buffer(new char[8000000]);
     char* buf = buffer.get();
@@ -2466,12 +2464,13 @@ namespace orc {
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
-      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     EXPECT_EQ(batchCount * batchSize, reader->getNumberOfRows());
     EXPECT_TRUE(reader->getNumberOfStripes() > 1);
 
-    EXPECT_EQ("struct<col1:geometry(OGC:CRS84),),col2:geography(OGC:CRS84,speherial)>", reader->getType().toString());
+    EXPECT_EQ("struct<col1:geometry(OGC:CRS84),),col2:geography(OGC:CRS84,speherial)>",
+              reader->getType().toString());
     // test sequential reader
     std::unique_ptr<RowReader> seqReader = createRowReader(reader.get());
     rowCount = 0;
@@ -2535,7 +2534,6 @@ namespace orc {
       EXPECT_TRUE(strncmp(geographyBatch->data[1], wkb.c_str(), wkb.size()) == 0);
     }
   }
-
 
   std::vector<TestParams> testParams = {{FileVersion::v_0_11(), true},
                                         {FileVersion::v_0_11(), false},

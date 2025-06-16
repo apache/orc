@@ -21,21 +21,21 @@
 
 namespace orc {
 
-/// \brief Number of bytes in a WKB Point with X and Y dimensions (uint8_t endian,
-/// uint32_t geometry type, 2 * double coordinates)
-static constexpr int kWkbPointXYSize = 21;
+  /// \brief Number of bytes in a WKB Point with X and Y dimensions (uint8_t endian,
+  /// uint32_t geometry type, 2 * double coordinates)
+  static constexpr int kWkbPointXYSize = 21;
 
-static bool isLittleEndian() {
+  static bool isLittleEndian() {
     static union {
-        uint32_t i;
-        char c[4];
+      uint32_t i;
+      char c[4];
     } num = {0x01020304};
     return num.c[0] == 4;
-}
+  }
 
-static uint8_t kWkbNativeEndianness = isLittleEndian() ? 0x01 : 0x00;
+  static uint8_t kWkbNativeEndianness = isLittleEndian() ? 0x01 : 0x00;
 
-uint32_t GeometryTypeToWKB(geospatial::GeometryType geometryType, bool hasZ, bool hasM);
-std::string MakeWKBPoint(const std::vector<double> &xyzm, bool hasZ, bool hasM);
+  uint32_t GeometryTypeToWKB(geospatial::GeometryType geometryType, bool hasZ, bool hasM);
+  std::string MakeWKBPoint(const std::vector<double>& xyzm, bool hasZ, bool hasM);
 
 }  // namespace orc

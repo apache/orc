@@ -64,34 +64,31 @@ namespace orc {
     subtypeCount_ = 0;
   }
 
-  TypeImpl::TypeImpl(TypeKind kind,
-                   const std::string& crs) {
-  parent_ = nullptr;
-  columnId_ = -1;
-  maximumColumnId_ = -1;
-  kind_ = kind;
-  maxLength_ = 0;
-  precision_ = 0;
-  scale_ = 0;
-  subtypeCount_ = 0;
-  crs_ = crs;
-  edgeInterpolationAlgorithm_ = geospatial::EIAlgo::SPHERICAL;
-}
+  TypeImpl::TypeImpl(TypeKind kind, const std::string& crs) {
+    parent_ = nullptr;
+    columnId_ = -1;
+    maximumColumnId_ = -1;
+    kind_ = kind;
+    maxLength_ = 0;
+    precision_ = 0;
+    scale_ = 0;
+    subtypeCount_ = 0;
+    crs_ = crs;
+    edgeInterpolationAlgorithm_ = geospatial::EIAlgo::SPHERICAL;
+  }
 
-TypeImpl::TypeImpl(TypeKind kind,
-                   const std::string& crs,
-                   geospatial::EIAlgo algo) {
-  parent_ = nullptr;
-  columnId_ = -1;
-  maximumColumnId_ = -1;
-  kind_ = kind;
-  maxLength_ = 0;
-  precision_ = 0;
-  scale_ = 0;
-  subtypeCount_ = 0;
-  crs_ = crs;
-  edgeInterpolationAlgorithm_ = algo;
-}
+  TypeImpl::TypeImpl(TypeKind kind, const std::string& crs, geospatial::EIAlgo algo) {
+    parent_ = nullptr;
+    columnId_ = -1;
+    maximumColumnId_ = -1;
+    kind_ = kind;
+    maxLength_ = 0;
+    precision_ = 0;
+    scale_ = 0;
+    subtypeCount_ = 0;
+    crs_ = crs;
+    edgeInterpolationAlgorithm_ = algo;
+  }
 
   uint64_t TypeImpl::assignIds(uint64_t root) const {
     columnId_ = static_cast<int64_t>(root);
@@ -229,43 +226,43 @@ TypeImpl::TypeImpl(TypeKind kind,
   }
 
   namespace geospatial {
-std::string AlgotoString(EIAlgo algo) {
-  switch (algo) {
-    case EIAlgo::SPHERICAL:
-        return "speherial";
-    case VINCENTY:
-        return "vincenty";
-    case THOMAS:
-        return "thomas";
-    case ANDOYER:
-        return "andoyer";
-    case KARNEY:
-        return "karney";
-    default:
-      throw InvalidArgument("Unknown algo");
-  }
-}
+    std::string AlgotoString(EIAlgo algo) {
+      switch (algo) {
+        case EIAlgo::SPHERICAL:
+          return "speherial";
+        case VINCENTY:
+          return "vincenty";
+        case THOMAS:
+          return "thomas";
+        case ANDOYER:
+          return "andoyer";
+        case KARNEY:
+          return "karney";
+        default:
+          throw InvalidArgument("Unknown algo");
+      }
+    }
 
-EIAlgo AlgoFromString(const std::string &algo) {
-  if (algo == "speherial") {
-    return EIAlgo::SPHERICAL;
-  }
-  if (algo == "vincenty") {
-    return VINCENTY;
-  }
-  if (algo == "thomas") {
-    return THOMAS;
-  }
-  if (algo == "andoyer") {
-    return ANDOYER;
-  }
-  if (algo == "karney") {
-    return KARNEY;
-  }
-  throw InvalidArgument("Unknown algo: " + algo);
-}
+    EIAlgo AlgoFromString(const std::string& algo) {
+      if (algo == "speherial") {
+        return EIAlgo::SPHERICAL;
+      }
+      if (algo == "vincenty") {
+        return VINCENTY;
+      }
+      if (algo == "thomas") {
+        return THOMAS;
+      }
+      if (algo == "andoyer") {
+        return ANDOYER;
+      }
+      if (algo == "karney") {
+        return KARNEY;
+      }
+      throw InvalidArgument("Unknown algo: " + algo);
+    }
 
-}  // namespace geospatial
+  }  // namespace geospatial
 
   std::string TypeImpl::toString() const {
     switch (static_cast<int64_t>(kind_)) {
@@ -356,8 +353,8 @@ EIAlgo AlgoFromString(const std::string &algo) {
       }
       case GEOGRAPHY: {
         std::stringstream result;
-        result << "geography(" << crs_ << "," << geospatial::AlgotoString(edgeInterpolationAlgorithm_)
-               << ")";
+        result << "geography(" << crs_ << ","
+               << geospatial::AlgotoString(edgeInterpolationAlgorithm_) << ")";
         return result.str();
       }
       default:
@@ -542,14 +539,14 @@ EIAlgo AlgoFromString(const std::string &algo) {
         ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()), type.maximum_length());
         break;
 
-    case proto::Type_Kind_GEOMETRY:
-      ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()), type.crs());
+      case proto::Type_Kind_GEOMETRY:
+        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()), type.crs());
         break;
 
-    case proto::Type_Kind_GEOGRAPHY:
-        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()),
-                                         type.crs(),
-                                         static_cast<geospatial::EdgeInterpolationAlgorithm>(type.algorithm()));
+      case proto::Type_Kind_GEOGRAPHY:
+        ret = std::make_unique<TypeImpl>(
+            static_cast<TypeKind>(type.kind()), type.crs(),
+            static_cast<geospatial::EdgeInterpolationAlgorithm>(type.algorithm()));
         break;
 
       case proto::Type_Kind_DECIMAL:
@@ -827,7 +824,7 @@ EIAlgo AlgoFromString(const std::string &algo) {
   }
 
   std::unique_ptr<Type> TypeImpl::parseGeographyType(const std::string& input, size_t start,
-                                                   size_t end) {
+                                                     size_t end) {
     if (input[start] != '(') {
       throw std::logic_error("Missing ( after geometry.");
     }
