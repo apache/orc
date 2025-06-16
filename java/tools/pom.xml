@@ -199,5 +199,31 @@
         <directory>${build.dir}/tools</directory>
       </build>
     </profile>
+    <profile>
+      <id>native</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.graalvm.nativeimage</groupId>
+            <artifactId>native-image-maven-plugin</artifactId>
+            <version>20.3.17</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>native-image</goal>
+                </goals>
+                <configuration>
+                  <mainClass>org.apache.orc.tools.Driver</mainClass>
+                  <imageName>orc-tool</imageName>
+                  <buildArgs>
+                    <buildArg>--no-fallback</buildArg>
+                  </buildArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
