@@ -21,25 +21,25 @@
 #include <cstring>
 
 namespace orc {
-uint32_t GeometryTypeToWKB(geospatial::GeometryType geometryType, bool hasZ, bool hasM) {
+  uint32_t GeometryTypeToWKB(geospatial::GeometryType geometryType, bool hasZ, bool hasM) {
     auto wkbGeomType = static_cast<uint32_t>(geometryType);
 
     if (hasZ) {
-        wkbGeomType += 1000;
+      wkbGeomType += 1000;
     }
 
     if (hasM) {
-        wkbGeomType += 2000;
+      wkbGeomType += 2000;
     }
 
     return wkbGeomType;
-}
+  }
 
-std::string MakeWKBPoint(const std::vector<double> &xyzm, bool hasZ, bool hasM) {
+  std::string MakeWKBPoint(const std::vector<double>& xyzm, bool hasZ, bool hasM) {
     // 1:endianness + 4:type + 8:x + 8:y
     int numBytes = kWkbPointXYSize + (hasZ ? sizeof(double) : 0) + (hasM ? sizeof(double) : 0);
     std::string wkb(numBytes, 0);
-    char *ptr = wkb.data();
+    char* ptr = wkb.data();
 
     ptr[0] = kWkbNativeEndianness;
     uint32_t geom_type = GeometryTypeToWKB(geospatial::GeometryType::kPoint, hasZ, hasM);
@@ -49,17 +49,17 @@ std::string MakeWKBPoint(const std::vector<double> &xyzm, bool hasZ, bool hasM) 
     ptr += 21;
 
     if (hasZ) {
-        std::memcpy(ptr, &xyzm[2], 8);
-        ptr += 8;
+      std::memcpy(ptr, &xyzm[2], 8);
+      ptr += 8;
     }
 
     if (hasM) {
-        std::memcpy(ptr, &xyzm[3], 8);
-        ptr += 8;
+      std::memcpy(ptr, &xyzm[3], 8);
+      ptr += 8;
     }
 
     assert(static_cast<size_t>(ptr - wkb.data()) == wkb.length());
     return wkb;
-}
+  }
 
-}
+}  // namespace orc

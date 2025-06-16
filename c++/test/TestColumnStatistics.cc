@@ -17,10 +17,10 @@
  */
 
 #include "Statistics.hh"
+#include "TestUtil.hh"
 #include "orc/OrcFile.hh"
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
-#include "TestUtil.hh"
 
 #include <cmath>
 
@@ -713,10 +713,12 @@ namespace orc {
   }
 
   TEST(ColumnStatistics, TestGeospatialMerge) {
-    std::unique_ptr<GeospatialColumnStatisticsImpl> invalidStats(new GeospatialColumnStatisticsImpl());
+    std::unique_ptr<GeospatialColumnStatisticsImpl> invalidStats(
+        new GeospatialColumnStatisticsImpl());
     invalidStats->update("0", 0);
 
-    std::unique_ptr<GeospatialColumnStatisticsImpl> emptyStats(new GeospatialColumnStatisticsImpl());
+    std::unique_ptr<GeospatialColumnStatisticsImpl> emptyStats(
+        new GeospatialColumnStatisticsImpl());
 
     std::unique_ptr<GeospatialColumnStatisticsImpl> xyStats(new GeospatialColumnStatisticsImpl());
     std::string xy = MakeWKBPoint({10, 11}, false, false);
