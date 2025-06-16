@@ -18,6 +18,7 @@
 
 #include "TestUtil.hh"
 #include <cassert>
+#include <cstring>
 
 namespace orc {
 uint32_t GeometryTypeToWKB(geospatial::GeometryType geometryType, bool hasZ, bool hasM) {
