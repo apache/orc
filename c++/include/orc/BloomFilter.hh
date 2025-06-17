@@ -19,8 +19,6 @@
 #ifndef ORC_BLOOMFILTER_HH
 #define ORC_BLOOMFILTER_HH
 
-#include "orc/orc-config.hh"
-
 #include <memory>
 #include <vector>
 
