@@ -89,6 +89,10 @@ option(ORC_ENABLE_CLANG_TOOLS
     "Enable Clang tools"
     OFF)
 
+option(ENABLE_UBSAN
+    "Enable Undefined Behavior Sanitizer"
+    OFF)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -168,6 +172,17 @@ if (ENABLE_ASAN)
     message(STATUS "Address Sanitizer enabled")
   else()
     message(WARNING "Address Sanitizer is only supported for GCC and Clang compilers")
+  endif()
+endif()
+
+# Configure Undefined Behavior Sanitizer if enabled
+if (ENABLE_UBSAN)
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=alignment,vptr,function  -fno-sanitize-recover=all")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-sanitize=alignment,vptr,function  -fno-sanitize-recover=all")
+    message(STATUS "Undefined Behavior Sanitizer enabled")
+  else()
+    message(WARNING "Undefined Behavior Sanitizer is only supported for GCC and Clang compilers")
   endif()
 endif()
 
