@@ -138,9 +138,9 @@ jobs:
         mkdir build
         cd build
         if [ "${{ matrix.simd }}" = "General" ]; then
-          cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
         else
-          cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
         fi
         cmake --build . --config Debug
         ctest -C Debug --output-on-failure
