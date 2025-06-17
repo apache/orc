@@ -29,6 +29,7 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 * [Debian 12]({{ page.dockerUrl }}/debian12/Dockerfile)
 * [Ubuntu 22]({{ page.dockerUrl }}/ubuntu22/Dockerfile)
 * [Ubuntu 24]({{ page.dockerUrl }}/ubuntu24/Dockerfile)
+* [Oracle Linux 8]({{ page.dockerUrl }}/oraclelinux8/Dockerfile)
 * [Oracle Linux 9]({{ page.dockerUrl }}/oraclelinux9/Dockerfile)
 
 To build a normal release:
