@@ -429,7 +429,6 @@ public class OrcFile {
   public static class ZstdCompressOptions {
     private int compressionZstdLevel;
     private int compressionZstdWindowLog;
-
     private int compressionZstdWorkers;
 
     public int getCompressionZstdLevel() {
