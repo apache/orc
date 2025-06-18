@@ -18,7 +18,6 @@
 
 package org.apache.orc.tools;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -27,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.tools.MergeFiles;
@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -43,21 +44,18 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestMergeFiles {
+public class TestMergeFiles implements TestConf {
   private Path workDir = new Path(
       Paths.get(System.getProperty("test.tmp.dir"), "orc-test-merge").toString());
-  private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
 
   @BeforeEach
   public void openFileSystem() throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
     fs.mkdirs(workDir);
     fs.deleteOnExit(workDir);
-    testFilePath = new Path("TestMergeFiles.testMerge.orc");
+    testFilePath = new Path(workDir + File.separator + "TestMergeFiles.testMerge.orc");
     fs.delete(testFilePath, false);
   }
 
@@ -65,8 +63,8 @@ public class TestMergeFiles {
   public void testMerge() throws Exception {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
     Map<String, Integer> fileToRowCountMap = new LinkedHashMap<>();
-    fileToRowCountMap.put("test-merge-1.orc", 10000);
-    fileToRowCountMap.put("test-merge-2.orc", 20000);
+    fileToRowCountMap.put(workDir + File.separator + "test-merge-1.orc", 10000);
+    fileToRowCountMap.put(workDir + File.separator + "test-merge-2.orc", 20000);
     for (Map.Entry<String, Integer> fileToRowCount : fileToRowCountMap.entrySet()) {
       Writer writer = OrcFile.createWriter(new Path(fileToRowCount.getKey()),
           OrcFile.writerOptions(conf)

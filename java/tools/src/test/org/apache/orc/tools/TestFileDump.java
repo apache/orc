@@ -18,7 +18,6 @@
 
 package org.apache.orc.tools;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -40,6 +39,7 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.StripeStatistics;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,19 +75,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class TestFileDump {
+public class TestFileDump implements TestConf {
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem () throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TestFileDump.testDump.orc");
+    testFilePath = new Path(workDir + File.separator + "TestFileDump.testDump.orc");
     fs.delete(testFilePath, false);
   }
 
@@ -233,6 +230,7 @@ public class TestFileDump {
         TestJsonFileDump.getFileFromClasspath(expected)), StandardCharsets.UTF_8);
     BufferedReader aStream = Files.newBufferedReader(Paths.get(actual), StandardCharsets.UTF_8);
     Object expectedLine = preprocessLine(eStream.readLine());
+    final String[] filenames = {"Structure for", "\"fileName\":"};
     while (expectedLine != null) {
       Object actualLine = preprocessLine(aStream.readLine());
       if (expectedLine instanceof Long && actualLine instanceof Long) {
@@ -240,7 +238,10 @@ public class TestFileDump {
         assertTrue(diff < SIZE_SLOP,
             "expected: " + expectedLine + ", actual: " + actualLine);
       } else {
-        assertEquals(expectedLine, actualLine);
+        String line = (String)expectedLine;
+        if (!Arrays.stream(filenames).anyMatch(s -> line.startsWith(s))) { // Ignore file path
+          assertEquals(expectedLine, actualLine);
+        }
       }
       expectedLine = preprocessLine(eStream.readLine());
     }
@@ -386,7 +387,6 @@ public class TestFileDump {
   @Test
   public void testDictionaryThreshold() throws Exception {
     TypeDescription schema = getMyRecordType();
-    Configuration conf = new Configuration();
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
     conf.setFloat(OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute(), 0.49f);
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -754,9 +754,7 @@ public class TestFileDump {
 
     long fileSize = fs.getFileStatus(testFilePath).getLen();
 
-    String testFilePathStr = Path.mergePaths(
-        workDir, Path.mergePaths(new Path(Path.SEPARATOR), testFilePath))
-        .toUri().getPath();
+    String testFilePathStr = testFilePath.toUri().getPath();
 
     String copyTestFilePathStr = Path.mergePaths(
         workDir, Path.mergePaths(new Path(Path.SEPARATOR),

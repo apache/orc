@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
@@ -27,6 +26,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.writer.StreamOptions;
@@ -50,16 +50,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestRLEv2 {
+public class TestRLEv2 implements TestConf {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
   Path testFilePath;
-  Configuration conf;
   FileSystem fs;
 
   @BeforeEach
   public void openFileSystem (TestInfo testInfo) throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRLEv2." +
         testInfo.getTestMethod().get().getName() + ".orc");
