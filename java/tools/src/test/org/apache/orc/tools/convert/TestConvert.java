@@ -19,7 +19,6 @@
 package org.apache.orc.tools.convert;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,12 +27,14 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.TimeZone;
@@ -41,21 +42,18 @@ import java.util.TimeZone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestConvert {
+public class TestConvert implements TestConf {
 
   public static final TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem () throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TestConvert.testConvert.orc");
+    testFilePath = new Path(workDir + File.separator + "TestConvert.testConvert.orc");
     fs.delete(testFilePath, false);
   }
 

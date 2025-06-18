@@ -18,13 +18,13 @@
 
 package org.apache.orc.tools;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.tools.CheckTool;
@@ -32,24 +32,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestCheckTool {
+public class TestCheckTool implements TestConf {
   private Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
 
   @BeforeEach
   public void openFileSystem() throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TestCheckTool.testCheckTool.orc");
+    testFilePath = new Path(workDir + File.separator + "TestCheckTool.testCheckTool.orc");
     fs.delete(testFilePath, false);
     createFile();
   }

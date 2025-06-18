@@ -19,7 +19,6 @@
 package org.apache.orc.tools.convert;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -28,11 +27,13 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -42,22 +43,19 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestConvertORC {
+public class TestConvertORC implements TestConf {
 
   private Path workDir = new Path(
       Paths.get(System.getProperty("test.tmp.dir"), "orc-test-convert-orc").toString());
-  private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
 
   @BeforeEach
   public void openFileSystem () throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
     fs.mkdirs(workDir);
     fs.deleteOnExit(workDir);
-    testFilePath = new Path("TestConvertORC.testConvertORC.orc");
+    testFilePath = new Path(workDir + File.separator + "TestConvertORC.testConvertORC.orc");
     fs.delete(testFilePath, false);
   }
 
@@ -65,11 +63,13 @@ public class TestConvertORC {
   public void testConvertFromORC() throws IOException, ParseException {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
     Map<String, Integer> fileToRowCountMap = new LinkedHashMap<>();
-    fileToRowCountMap.put("test-convert-1.orc", 10000);
-    fileToRowCountMap.put("test-convert-2.orc", 20000);
+    String file1 = workDir + File.separator + "test-convert-1.orc";
+    String file2 = workDir + File.separator + "test-convert-2.orc";
+    fileToRowCountMap.put(file1, 10000);
+    fileToRowCountMap.put(file2, 20000);
     Map<String, CompressionKind> fileToCompressMap = new HashMap<>();
-    fileToCompressMap.put("test-convert-1.orc", CompressionKind.ZLIB);
-    fileToCompressMap.put("test-convert-2.orc", CompressionKind.SNAPPY);
+    fileToCompressMap.put(file1, CompressionKind.ZLIB);
+    fileToCompressMap.put(file2, CompressionKind.SNAPPY);
 
     for (Map.Entry<String, Integer> fileToRowCount : fileToRowCountMap.entrySet()) {
       Writer writer = OrcFile.createWriter(new Path(fileToRowCount.getKey()),
@@ -95,20 +95,20 @@ public class TestConvertORC {
       writer.close();
     }
 
-    try (Reader reader = OrcFile.createReader(new Path("test-convert-1.orc"), OrcFile.readerOptions(conf))) {
+    try (Reader reader = OrcFile.createReader(new Path(file1), OrcFile.readerOptions(conf))) {
       assertEquals(schema, reader.getSchema());
       assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
       assertEquals(10000, reader.getNumberOfRows());
     }
 
-    try (Reader reader = OrcFile.createReader(new Path("test-convert-2.orc"), OrcFile.readerOptions(conf))) {
+    try (Reader reader = OrcFile.createReader(new Path(file2), OrcFile.readerOptions(conf))) {
       assertEquals(schema, reader.getSchema());
       assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
       assertEquals(20000, reader.getNumberOfRows());
     }
 
     ConvertTool.main(conf, new String[]{"-o", testFilePath.toString(),
-        "test-convert-1.orc", "test-convert-2.orc"});
+        file1, file2});
 
     assertTrue(fs.exists(testFilePath));
     try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf))) {

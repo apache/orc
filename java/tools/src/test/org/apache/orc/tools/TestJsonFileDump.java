@@ -18,7 +18,6 @@
 
 package org.apache.orc.tools;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -28,6 +27,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
+import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestJsonFileDump {
+public class TestJsonFileDump implements TestConf {
 
   public static String getFileFromClasspath(String name) {
     URL url = ClassLoader.getSystemResource(name);
@@ -53,16 +53,13 @@ public class TestJsonFileDump {
   }
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
-  Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
   @BeforeEach
   public void openFileSystem () throws Exception {
-    conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TestFileDump.testDump.orc");
+    testFilePath = new Path(workDir + File.separator + "TestFileDump.testDump.orc");
     fs.delete(testFilePath, false);
   }
 
