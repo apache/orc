@@ -165,7 +165,7 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
    * @param out      the compressed bytes
    * @param overflow put any additional bytes here
    * @param options  the options to control compression
-   * @return ZstdOptions
+   * @return true if input data is compressed. Otherwise, false.
    */
   @Override
   public boolean compress(ByteBuffer in, ByteBuffer out,
