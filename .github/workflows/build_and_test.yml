@@ -101,8 +101,8 @@ jobs:
           cd java
           # JDK 25 Build
           ./mvnw package -DskipTests
-          # JDK 25 Test: shims and core modules
-          ./mvnw package --pl core --am
+          # JDK 25 Test: shims, core, tools modules
+          ./mvnw package --pl tools --am
         else
           mkdir build
           cd build
