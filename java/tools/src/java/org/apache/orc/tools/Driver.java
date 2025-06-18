@@ -77,6 +77,7 @@ public class Driver {
   }
 
   public static void main(String[] args) throws Exception {
+    System.setProperty("org.slf4j.simpleLogger.log.org.apache.hadoop", "error");
     DriverOptions options = new DriverOptions(args);
 
     if (options.command == null) {
