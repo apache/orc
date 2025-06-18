@@ -72,7 +72,9 @@ public class RowCount {
   }
 
   public static void main(String[] args) throws Exception {
-    main(new Configuration(), args);
+    Configuration conf = new Configuration();
+    conf.set("fs.file.impl.disable.cache", "true");
+    main(conf, args);
   }
 
   private static Options createOptions() {
