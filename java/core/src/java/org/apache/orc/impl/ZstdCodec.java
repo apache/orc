@@ -57,7 +57,6 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
   static class ZstdOptions implements Options {
     private int level;
     private int windowLog;
-
     private int workers;
 
     ZstdOptions(int level, int windowLog, int workers) {
