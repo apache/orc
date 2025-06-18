@@ -122,6 +122,10 @@ public class GenerateVariants implements OrcBenchmark {
     Configuration conf = new Configuration();
     // Disable Hadoop checksums
     conf.set("fs.file.impl", "org.apache.hadoop.fs.RawLocalFileSystem");
+    for (String key: System.getProperties().stringPropertyNames()) {
+      if (!key.startsWith("orc.")) continue;
+      conf.set(key, System.getProperty(key));
+    }
     Path root = new Path(cli.getArgs()[0]);
 
     for (final String data: dataList) {
