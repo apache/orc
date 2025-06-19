@@ -29,28 +29,9 @@
 #include <string>
 #include <vector>
 
-namespace {
-  const char* exampleDirectory = 0;
-  const char* buildDirectory = 0;
-}  // namespace
-
 GTEST_API_ int main(int argc, char** argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   std::cout << "ORC version: " << ORC_VERSION << "\n";
-  if (argc >= 2) {
-    exampleDirectory = argv[1];
-  } else {
-    exampleDirectory = "../examples";
-  }
-  if (argc >= 3) {
-    buildDirectory = argv[2];
-  } else {
-    buildDirectory = ".";
-  }
-  std::cout << "example dir = " << exampleDirectory << "\n";
-  if (buildDirectory) {
-    std::cout << "build dir = " << buildDirectory << "\n";
-  }
   testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
   google::protobuf::ShutdownProtobufLibrary();
@@ -77,12 +58,16 @@ int runProgram(const std::vector<std::string>& args, std::string& out, std::stri
   return WEXITSTATUS(status);
 }
 
+#define ORC_TOOL_TEST_STRINGIFY(path) ORC_TOOL_TEST_STR(path)
+#define ORC_TOOL_TEST_STR(path) #path
+
 /**
  * Get the name of the given example file.
  * @param name the simple name of the example file
  */
 std::string findExample(const std::string& name) {
-  std::string result = exampleDirectory;
+#define ORC_EXAMPLE_DIR_STR ORC_TOOL_TEST_STRINGIFY(ORC_EXAMPLE_DIR)
+  std::string result = ORC_EXAMPLE_DIR_STR;
   result += "/";
   result += name;
   return result;
@@ -93,7 +78,8 @@ std::string findExample(const std::string& name) {
  * @param name the simple name of the executable
  */
 std::string findProgram(const std::string& name) {
-  std::string result = buildDirectory;
+#define ORC_BUILD_DIR_STR ORC_TOOL_TEST_STRINGIFY(ORC_BUILD_DIR)
+  std::string result = ORC_BUILD_DIR_STR;
   result += "/";
   result += name;
   return result;
