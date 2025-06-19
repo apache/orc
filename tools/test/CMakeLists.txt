@@ -45,6 +45,11 @@ target_include_directories(tool-test PRIVATE
   ${PROJECT_SOURCE_DIR}/tools-c++/src
 )
 
+target_compile_definitions(tool-test PRIVATE
+  "-DORC_EXAMPLE_DIR=${PROJECT_SOURCE_DIR}/examples"
+  "-DORC_BUILD_DIR=${PROJECT_BINARY_DIR}"
+)
+
 add_dependencies(tool-test tool-set)
 
 if (TEST_VALGRIND_MEMCHECK)
