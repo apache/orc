@@ -22,6 +22,7 @@
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 #include "orc/orc-config.hh"
+#include "orc/Geospatial.hh"
 
 #include <sstream>
 
@@ -365,6 +366,33 @@ namespace orc {
      * @return last 6 digits of nanosecond of maximum timestamp.
      */
     virtual int32_t getMaximumNanos() const = 0;
+  };
+
+  /**
+   * Statistics for Geometry and Geography
+   */
+  class GeospatialColumnStatistics : public ColumnStatistics {
+   public:
+    virtual ~GeospatialColumnStatistics();
+
+    /**
+     * get bounding box
+     * @return bounding box
+     */
+    virtual const geospatial::BoundingBox& getBoundingBox() const = 0;
+
+    /**
+     * get geospatial types
+     * @return geospatial types
+     */
+    virtual std::vector<int32_t> getGeospatialTypes() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     * @param length length of the value
+     */
+    virtual void update(const char* value, size_t length) = 0;
   };
 
   class Statistics {
