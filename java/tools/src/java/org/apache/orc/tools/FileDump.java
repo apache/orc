@@ -142,7 +142,7 @@ public final class FileDump {
 
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
-    conf.set("fs.file.impl.disable.cache", "true");
+    conf.setIfUnset("fs.file.impl.disable.cache", "true");
     main(conf, args);
   }
 
