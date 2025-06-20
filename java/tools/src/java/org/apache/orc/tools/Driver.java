@@ -103,7 +103,7 @@ public class Driver {
       System.exit(1);
     }
     Configuration conf = new Configuration();
-    conf.set("fs.file.impl.disable.cache", "true");
+    conf.setIfUnset("fs.file.impl.disable.cache", "true");
     Properties confSettings = options.genericOptions.getOptionProperties("D");
     for(Map.Entry pair: confSettings.entrySet()) {
       conf.set(pair.getKey().toString(), pair.getValue().toString());
