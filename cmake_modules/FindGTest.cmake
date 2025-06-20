@@ -32,7 +32,6 @@ file (TO_CMAKE_PATH "${GTEST_HOME}" _gtest_path )
 
 find_path (GTEST_INCLUDE_DIR gmock/gmock.h HINTS
   ${_gtest_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
 find_library (GMOCK_LIBRARY NAMES gmock HINTS
