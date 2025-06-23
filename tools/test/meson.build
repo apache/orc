@@ -36,5 +36,9 @@ exc = executable(
         gtest_dep,
         gmock_dep,
     ],
+    cpp_args: [
+        '-DORC_EXAMPLE_DIR=@0@'.format(meson.project_source_root() / 'examples'),
+        '-DORC_BUILD_DIR=@0@'.format(meson.project_build_root()),
+    ],
 )
 test('tool-test', exc)
