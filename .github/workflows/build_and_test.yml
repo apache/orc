@@ -252,6 +252,6 @@ jobs:
         pip install meson
     - name: Test
       run: |
-        meson setup build
+        meson setup build -Dbuildtype=release
         meson compile -C build
         meson test -C build

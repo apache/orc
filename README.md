@@ -126,10 +126,10 @@ meson compile -C build
 meson test -C build
 ```
 
-By default, Meson will build release libraries. If you would instead like debug libraries, you can use the ``-Dbuildtype=debug`` argument to setup. You must either remove the existing build directory before changing that setting, or alternatively pass the ``--reconfigure`` flag:
+By default, Meson will build unoptimized libraries with debug symbols. By contrast, the CMake build system generates release libraries by default. If you would like to create release libraries ala CMake, you should set the buildtype option. You must either remove the existing build directory before changing that setting, or alternatively pass the ``--reconfigure`` flag:
 
 ```shell
-meson setup build -Dbuildtype=debug --reconfigure
+meson setup build -Dbuildtype=release --reconfigure
 meson compile -C build
 meson test -C build
 ```
