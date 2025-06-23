@@ -217,7 +217,9 @@ public class ColumnSizes {
 
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
-    conf.setIfUnset("fs.file.impl.disable.cache", "true");
+    if (Runtime.version().feature() > 21) {
+      conf.setIfUnset("fs.file.impl.disable.cache", "true");
+    }
     main(conf, args);
   }
 
