@@ -1533,6 +1533,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new LongColumnVector(batchSize);
         timestampColVector = (TimestampColumnVector) previousVector;
+        timestampColVector.setIsUTC(useUtc);
       } else {
         longColVector.ensureSize(batchSize, false);
       }
@@ -1597,6 +1598,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector(batchSize);
         timestampColVector = (TimestampColumnVector) previousVector;
+        timestampColVector.setIsUTC(useUtc);
       } else {
         doubleColVector.ensureSize(batchSize, false);
       }
@@ -1661,6 +1663,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         // Allocate column vector for file; cast column vector for reader.
         decimalColVector = new DecimalColumnVector(batchSize, precision, scale);
         timestampColVector = (TimestampColumnVector) previousVector;
+        timestampColVector.setIsUTC(useUtc);
       } else {
         decimalColVector.ensureSize(batchSize, false);
       }
@@ -1676,6 +1679,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   public static class TimestampFromStringGroupTreeReader extends ConvertTreeReader {
     private BytesColumnVector bytesColVector;
     private TimestampColumnVector timestampColVector;
+    private final boolean useUtc;
     private final DateTimeFormatter formatter;
     private final boolean useProlepticGregorian;
 
@@ -1683,6 +1687,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
                                        Context context, boolean isInstant)
         throws IOException {
       super(columnId, getStringGroupTreeReader(columnId, fileType, context), context);
+      useUtc = isInstant || context.getUseUTCTimestamp();
       useProlepticGregorian = context.useProlepticGregorian();
       Chronology chronology = useProlepticGregorian
           ? IsoChronology.INSTANCE
@@ -1722,6 +1727,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector(batchSize);
         timestampColVector = (TimestampColumnVector) previousVector;
+        timestampColVector.setIsUTC(useUtc);
       } else {
         bytesColVector.ensureSize(batchSize, false);
       }
@@ -1768,6 +1774,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new DateColumnVector(batchSize);
         timestampColVector = (TimestampColumnVector) previousVector;
+        timestampColVector.setIsUTC(useUtc);
       } else {
         longColVector.ensureSize(batchSize, false);
       }
