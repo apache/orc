@@ -173,6 +173,8 @@ source_files += files(
 
 incdir = include_directories('../include')
 orc_format_proto_dep = dependency('orc_format_proto')
+# zstd requires us to add the threads
+threads_dep = dependency('threads')
 
 orc_lib = library(
     'orc',
@@ -184,6 +186,7 @@ orc_lib = library(
         snappy_dep,
         lz4_dep,
         zstd_dep,
+        threads_dep,
     ],
     include_directories: incdir,
     install: true,
