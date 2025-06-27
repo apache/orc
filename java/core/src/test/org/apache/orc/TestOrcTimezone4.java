@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -92,6 +93,7 @@ public class TestOrcTimezone4 implements TestConf {
     times = (TimestampColumnVector) batch.cols[0];
     int idx = 0;
     while (rows.nextBatch(batch)) {
+      assertTrue(times.isUTC());
       for(int r=0; r < batch.size; ++r) {
         Timestamp timestamp = times.asScratchTimestamp(r);
         assertEquals(ts.get(idx++), formatter.format(timestamp));
