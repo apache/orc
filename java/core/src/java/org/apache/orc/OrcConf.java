@@ -80,6 +80,9 @@ public enum OrcConf {
       "hive.exec.orc.compression.zstd.windowlog", 0,
       "Set the maximum allowed back-reference distance for "
           + "ZStandard codec, expressed as power of 2."),
+  COMPRESSION_ZSTD_WORKERS("orc.compression.zstd.workers",
+          "hive.exec.orc.compression.zstd.workers", 0,
+          "Define the number of workers to use with ZStandard codec while writing data."),
   BLOCK_PADDING_TOLERANCE("orc.block.padding.tolerance",
       "hive.exec.orc.block.padding.tolerance", 0.05,
       "Define the tolerance for block padding as a decimal fraction of\n" +
