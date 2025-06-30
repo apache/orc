@@ -724,6 +724,7 @@
             <test.tmp.dir>${test.tmp.dir}</test.tmp.dir>
             <example.dir>${example.dir}</example.dir>
             <org.slf4j.simpleLogger.log.org.apache.hadoop>error</org.slf4j.simpleLogger.log.org.apache.hadoop>
+            <com.google.protobuf.use_unsafe_pre22_gencode></com.google.protobuf.use_unsafe_pre22_gencode>
           </systemPropertyVariables>
         </configuration>
       </plugin>
