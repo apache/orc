@@ -490,4 +490,36 @@ namespace orc {
     EXPECT_THROW(invalidNode->evaluate(leaves), std::invalid_argument);
   }
 
+  TEST(TestSearchArgument, testMaybe) {
+    auto expectedSarg =
+        SearchArgumentFactory::newBuilder()
+            ->startNot()
+            .startOr()
+            .isNull("x", PredicateDataType::LONG)
+            .between("y", PredicateDataType::DECIMAL, Literal(10, 3, 0), Literal(200, 3, 1))
+            .in("z", PredicateDataType::LONG,
+                {Literal(static_cast<int64_t>(1)), Literal(static_cast<int64_t>(2)),
+                 Literal(static_cast<int64_t>(3))})
+            .nullSafeEquals("a", PredicateDataType::STRING, Literal("stinger", 7))
+            .end()
+            .end()
+            .build();
+
+    auto sargWithMaybe =
+        SearchArgumentFactory::newBuilder()
+            ->startNot()
+            .startOr()
+            .isNull("x", PredicateDataType::LONG)
+            .between("y", PredicateDataType::DECIMAL, Literal(10, 3, 0), Literal(200, 3, 1))
+            .in("z", PredicateDataType::LONG,
+                {Literal(static_cast<int64_t>(1)), Literal(static_cast<int64_t>(2)),
+                 Literal(static_cast<int64_t>(3))})
+            .maybe()
+            .nullSafeEquals("a", PredicateDataType::STRING, Literal("stinger", 7))
+            .end()
+            .end()
+            .build();
+    EXPECT_EQ(expectedSarg->toString(), sargWithMaybe->toString());
+  }
+
 }  // namespace orc
