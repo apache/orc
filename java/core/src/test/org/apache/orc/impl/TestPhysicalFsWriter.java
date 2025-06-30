@@ -26,7 +26,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
+import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
@@ -329,5 +331,24 @@ public class TestPhysicalFsWriter {
     assertEquals(endOfStripe, dirEntry.getOffset());
     assertEquals(62 * 1024, dirEntry.getDataLength());
     assertEquals(endOfStripe, shim.lastShortBlock);
+  }
+
+  @Test
+  public void testZstdCodec() throws IOException {
+    CompressionCodec zstdCodec = OrcCodecPool.getCodec(CompressionKind.ZSTD);
+    int originalHashCode = zstdCodec.getDefaultOptions().hashCode();
+
+    Configuration conf = new Configuration();
+    conf.setInt(OrcConf.COMPRESSION_ZSTD_LEVEL.getAttribute(), 9);
+    MockHadoopShim shim = new MockHadoopShim();
+    TypeDescription schema = TypeDescription.fromString("int");
+    OrcFile.WriterOptions opts =
+        OrcFile.writerOptions(conf)
+            .compress(CompressionKind.ZSTD)
+            .setSchema(schema)
+            .setShims(shim);
+    MemoryFileSystem fs = new MemoryFileSystem();
+    PhysicalFsWriter writer = new PhysicalFsWriter(fs, new Path("test1.orc"), opts);
+    assertEquals(originalHashCode, zstdCodec.getDefaultOptions().hashCode());
   }
 }
