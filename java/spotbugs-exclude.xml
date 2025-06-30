@@ -74,4 +74,10 @@
       <Class name="org.apache.orc.tools.ScanData" />
     </And>
   </Match>
+  <Match>
+    <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
+  </Match>
+  <Match>
+    <Bug pattern="CT_CONSTRUCTOR_THROW" />
+  </Match>
 </FindBugsFilter>
