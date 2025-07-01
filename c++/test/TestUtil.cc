@@ -42,7 +42,7 @@ namespace orc {
     char* ptr = wkb.data();
 
     ptr[0] = kWkbNativeEndianness;
-    uint32_t geom_type = GeometryTypeToWKB(geospatial::GeometryType::kPoint, hasZ, hasM);
+    uint32_t geom_type = GeometryTypeToWKB(geospatial::GeometryType::POINT, hasZ, hasM);
     std::memcpy(&ptr[1], &geom_type, 4);
     std::memcpy(&ptr[5], &xyzm[0], 8);
     std::memcpy(&ptr[13], &xyzm[1], 8);

@@ -537,9 +537,9 @@ namespace orc {
     std::unique_ptr<GeospatialColumnStatisticsImpl> geoStats(new GeospatialColumnStatisticsImpl());
     EXPECT_TRUE(geoStats->getGeospatialTypes().empty());
     auto bbox = geoStats->getBoundingBox();
-    for (int i = 0; i < geospatial::kMaxDimensions; i++) {
-      EXPECT_TRUE(bbox.BoundEmpty(i));
-      EXPECT_TRUE(bbox.BoundValid(i));
+    for (int i = 0; i < geospatial::MAX_DIMENSIONS; i++) {
+      EXPECT_TRUE(bbox.boundEmpty(i));
+      EXPECT_TRUE(bbox.boundValid(i));
     }
     EXPECT_EQ("<GeoStatistics> x: empty y: empty z: empty m: empty geometry_types: []",
               geoStats->toString());
@@ -549,35 +549,35 @@ namespace orc {
     std::unique_ptr<GeospatialColumnStatisticsImpl> geoStats(new GeospatialColumnStatisticsImpl());
     EXPECT_TRUE(geoStats->getGeospatialTypes().empty());
     const auto& bbox = geoStats->getBoundingBox();
-    for (int i = 0; i < geospatial::kMaxDimensions; i++) {
-      EXPECT_TRUE(bbox.BoundEmpty(i));
-      EXPECT_TRUE(bbox.BoundValid(i));
+    for (int i = 0; i < geospatial::MAX_DIMENSIONS; i++) {
+      EXPECT_TRUE(bbox.boundEmpty(i));
+      EXPECT_TRUE(bbox.boundValid(i));
     }
     EXPECT_EQ(geoStats->getGeospatialTypes().size(), 0);
 
     geospatial::BoundingBox::XYZM expectedMin;
     geospatial::BoundingBox::XYZM expectedMax;
-    std::array<bool, geospatial::kMaxDimensions> expectedEmpty;
-    std::array<bool, geospatial::kMaxDimensions> expectedValid;
+    std::array<bool, geospatial::MAX_DIMENSIONS> expectedEmpty;
+    std::array<bool, geospatial::MAX_DIMENSIONS> expectedValid;
     std::vector<int32_t> expectedTypes;
-    for (int i = 0; i < geospatial::kMaxDimensions; i++) {
-      expectedMin[i] = geospatial::kInf;
-      expectedMax[i] = -geospatial::kInf;
+    for (int i = 0; i < geospatial::MAX_DIMENSIONS; i++) {
+      expectedMin[i] = geospatial::INF;
+      expectedMax[i] = -geospatial::INF;
       expectedEmpty[i] = true;
       expectedValid[i] = true;
     }
 
     auto Verify = [&]() {
-      EXPECT_EQ(expectedEmpty, geoStats->getBoundingBox().DimensionEmpty());
-      EXPECT_EQ(expectedValid, geoStats->getBoundingBox().DimensionValid());
+      EXPECT_EQ(expectedEmpty, geoStats->getBoundingBox().dimensionEmpty());
+      EXPECT_EQ(expectedValid, geoStats->getBoundingBox().dimensionValid());
       EXPECT_EQ(expectedTypes, geoStats->getGeospatialTypes());
-      for (int i = 0; i < geospatial::kMaxDimensions; i++) {
-        if (geoStats->getBoundingBox().BoundValid(i)) {
-          EXPECT_EQ(expectedMin[i], geoStats->getBoundingBox().LowerBound()[i]);
-          EXPECT_EQ(expectedMax[i], geoStats->getBoundingBox().UpperBound()[i]);
+      for (int i = 0; i < geospatial::MAX_DIMENSIONS; i++) {
+        if (geoStats->getBoundingBox().boundValid(i)) {
+          EXPECT_EQ(expectedMin[i], geoStats->getBoundingBox().lowerBound()[i]);
+          EXPECT_EQ(expectedMax[i], geoStats->getBoundingBox().upperBound()[i]);
         } else {
-          EXPECT_TRUE(std::isnan(geoStats->getBoundingBox().LowerBound()[i]));
-          EXPECT_TRUE(std::isnan(geoStats->getBoundingBox().UpperBound()[i]));
+          EXPECT_TRUE(std::isnan(geoStats->getBoundingBox().lowerBound()[i]));
+          EXPECT_TRUE(std::isnan(geoStats->getBoundingBox().upperBound()[i]));
         }
       }
     };
@@ -735,40 +735,40 @@ namespace orc {
     // invalid merge invalid
     invalidStats->merge(*invalidStats);
     std::array<bool, 4> expectedValid = {false, false, false, false};
-    EXPECT_EQ(invalidStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(invalidStats->getBoundingBox().dimensionValid(), expectedValid);
     EXPECT_EQ(invalidStats->getGeospatialTypes().size(), 0);
 
     // Empty merge empty
     emptyStats->merge(*emptyStats);
     expectedValid = {true, true, true, true};
     std::array<bool, 4> expectedEmpty = {true, true, true, true};
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionEmpty(), expectedEmpty);
     EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 0);
 
     // Empty merge xy
     emptyStats->merge(*xyStats);
     expectedEmpty = {false, false, true, true};
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
-    EXPECT_EQ(10, emptyStats->getBoundingBox().LowerBound()[0]);
-    EXPECT_EQ(10, emptyStats->getBoundingBox().UpperBound()[0]);
-    EXPECT_EQ(11, emptyStats->getBoundingBox().LowerBound()[1]);
-    EXPECT_EQ(11, emptyStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(10, emptyStats->getBoundingBox().lowerBound()[0]);
+    EXPECT_EQ(10, emptyStats->getBoundingBox().upperBound()[0]);
+    EXPECT_EQ(11, emptyStats->getBoundingBox().lowerBound()[1]);
+    EXPECT_EQ(11, emptyStats->getBoundingBox().upperBound()[1]);
     EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 1);
     EXPECT_EQ(emptyStats->getGeospatialTypes()[0], 1);
 
     // Empty merge xyz
     emptyStats->merge(*xyzStats);
     expectedEmpty = {false, false, false, true};
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
-    EXPECT_EQ(10, emptyStats->getBoundingBox().LowerBound()[0]);
-    EXPECT_EQ(12, emptyStats->getBoundingBox().UpperBound()[0]);
-    EXPECT_EQ(11, emptyStats->getBoundingBox().LowerBound()[1]);
-    EXPECT_EQ(13, emptyStats->getBoundingBox().UpperBound()[1]);
-    EXPECT_EQ(14, emptyStats->getBoundingBox().LowerBound()[2]);
-    EXPECT_EQ(14, emptyStats->getBoundingBox().UpperBound()[2]);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(10, emptyStats->getBoundingBox().lowerBound()[0]);
+    EXPECT_EQ(12, emptyStats->getBoundingBox().upperBound()[0]);
+    EXPECT_EQ(11, emptyStats->getBoundingBox().lowerBound()[1]);
+    EXPECT_EQ(13, emptyStats->getBoundingBox().upperBound()[1]);
+    EXPECT_EQ(14, emptyStats->getBoundingBox().lowerBound()[2]);
+    EXPECT_EQ(14, emptyStats->getBoundingBox().upperBound()[2]);
     EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 2);
     EXPECT_EQ(emptyStats->getGeospatialTypes()[0], 1);
     EXPECT_EQ(emptyStats->getGeospatialTypes()[1], 1001);
@@ -776,16 +776,16 @@ namespace orc {
     // Empty merge xyzm
     emptyStats->merge(*xyzmStats);
     expectedEmpty = {false, false, false, false};
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionEmpty(), expectedEmpty);
-    EXPECT_EQ(-10, emptyStats->getBoundingBox().LowerBound()[0]);
-    EXPECT_EQ(12, emptyStats->getBoundingBox().UpperBound()[0]);
-    EXPECT_EQ(-11, emptyStats->getBoundingBox().LowerBound()[1]);
-    EXPECT_EQ(13, emptyStats->getBoundingBox().UpperBound()[1]);
-    EXPECT_EQ(-12, emptyStats->getBoundingBox().LowerBound()[2]);
-    EXPECT_EQ(14, emptyStats->getBoundingBox().UpperBound()[2]);
-    EXPECT_EQ(-13, emptyStats->getBoundingBox().LowerBound()[3]);
-    EXPECT_EQ(-13, emptyStats->getBoundingBox().UpperBound()[3]);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionEmpty(), expectedEmpty);
+    EXPECT_EQ(-10, emptyStats->getBoundingBox().lowerBound()[0]);
+    EXPECT_EQ(12, emptyStats->getBoundingBox().upperBound()[0]);
+    EXPECT_EQ(-11, emptyStats->getBoundingBox().lowerBound()[1]);
+    EXPECT_EQ(13, emptyStats->getBoundingBox().upperBound()[1]);
+    EXPECT_EQ(-12, emptyStats->getBoundingBox().lowerBound()[2]);
+    EXPECT_EQ(14, emptyStats->getBoundingBox().upperBound()[2]);
+    EXPECT_EQ(-13, emptyStats->getBoundingBox().lowerBound()[3]);
+    EXPECT_EQ(-13, emptyStats->getBoundingBox().upperBound()[3]);
     EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 3);
     EXPECT_EQ(emptyStats->getGeospatialTypes()[0], 1);
     EXPECT_EQ(emptyStats->getGeospatialTypes()[1], 1001);
@@ -794,7 +794,7 @@ namespace orc {
     // Empty merge invalid
     emptyStats->merge(*invalidStats);
     expectedValid = {false, false, false, false};
-    EXPECT_EQ(emptyStats->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats->getBoundingBox().dimensionValid(), expectedValid);
     EXPECT_EQ(emptyStats->getGeospatialTypes().size(), 0);
   }
 
@@ -806,14 +806,14 @@ namespace orc {
         new GeospatialColumnStatisticsImpl(pbStats));
     std::array<bool, 4> expectedValid = {false, false, false, false};
     EXPECT_TRUE(emptyStats0->getGeospatialTypes().empty());
-    EXPECT_EQ(emptyStats0->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats0->getBoundingBox().dimensionValid(), expectedValid);
 
     // Add empty geostats
     pbStats.mutable_geospatial_statistics();
     std::unique_ptr<GeospatialColumnStatisticsImpl> emptyStats1(
         new GeospatialColumnStatisticsImpl(pbStats));
     EXPECT_TRUE(emptyStats1->getGeospatialTypes().empty());
-    EXPECT_EQ(emptyStats1->getBoundingBox().DimensionValid(), expectedValid);
+    EXPECT_EQ(emptyStats1->getBoundingBox().dimensionValid(), expectedValid);
 
     // Set xy bounds
     auto* geoProtoStas = pbStats.mutable_geospatial_statistics();
@@ -827,11 +827,11 @@ namespace orc {
     expectedValid = {true, true, false, false};
     EXPECT_EQ(xyStats->getGeospatialTypes().size(), 1);
     EXPECT_EQ(xyStats->getGeospatialTypes()[0], 2);
-    EXPECT_EQ(xyStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(0, xyStats->getBoundingBox().LowerBound()[0]);
-    EXPECT_EQ(1, xyStats->getBoundingBox().UpperBound()[0]);
-    EXPECT_EQ(0, xyStats->getBoundingBox().LowerBound()[1]);
-    EXPECT_EQ(1, xyStats->getBoundingBox().UpperBound()[1]);
+    EXPECT_EQ(xyStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(0, xyStats->getBoundingBox().lowerBound()[0]);
+    EXPECT_EQ(1, xyStats->getBoundingBox().upperBound()[0]);
+    EXPECT_EQ(0, xyStats->getBoundingBox().lowerBound()[1]);
+    EXPECT_EQ(1, xyStats->getBoundingBox().upperBound()[1]);
 
     // Set xyz bounds
     geoProtoStas->mutable_bbox()->set_zmin(0);
@@ -843,13 +843,13 @@ namespace orc {
     EXPECT_EQ(xyzStats->getGeospatialTypes().size(), 2);
     EXPECT_EQ(xyzStats->getGeospatialTypes()[0], 2);
     EXPECT_EQ(xyzStats->getGeospatialTypes()[1], 1003);
-    EXPECT_EQ(xyzStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(0, xyzStats->getBoundingBox().LowerBound()[0]);
-    EXPECT_EQ(1, xyzStats->getBoundingBox().UpperBound()[0]);
-    EXPECT_EQ(0, xyzStats->getBoundingBox().LowerBound()[1]);
-    EXPECT_EQ(1, xyzStats->getBoundingBox().UpperBound()[1]);
-    EXPECT_EQ(0, xyzStats->getBoundingBox().LowerBound()[2]);
-    EXPECT_EQ(1, xyzStats->getBoundingBox().UpperBound()[2]);
+    EXPECT_EQ(xyzStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(0, xyzStats->getBoundingBox().lowerBound()[0]);
+    EXPECT_EQ(1, xyzStats->getBoundingBox().upperBound()[0]);
+    EXPECT_EQ(0, xyzStats->getBoundingBox().lowerBound()[1]);
+    EXPECT_EQ(1, xyzStats->getBoundingBox().upperBound()[1]);
+    EXPECT_EQ(0, xyzStats->getBoundingBox().lowerBound()[2]);
+    EXPECT_EQ(1, xyzStats->getBoundingBox().upperBound()[2]);
 
     // Set xyzm bounds
     geoProtoStas->mutable_bbox()->set_mmin(0);
@@ -862,15 +862,15 @@ namespace orc {
     EXPECT_EQ(xyzmStats->getGeospatialTypes()[0], 2);
     EXPECT_EQ(xyzmStats->getGeospatialTypes()[1], 1003);
     EXPECT_EQ(xyzmStats->getGeospatialTypes()[2], 3003);
-    EXPECT_EQ(xyzmStats->getBoundingBox().DimensionValid(), expectedValid);
-    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[0]);
-    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[0]);
-    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[1]);
-    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[1]);
-    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[2]);
-    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[2]);
-    EXPECT_EQ(0, xyzmStats->getBoundingBox().LowerBound()[3]);
-    EXPECT_EQ(1, xyzmStats->getBoundingBox().UpperBound()[3]);
+    EXPECT_EQ(xyzmStats->getBoundingBox().dimensionValid(), expectedValid);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().lowerBound()[0]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().upperBound()[0]);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().lowerBound()[1]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().upperBound()[1]);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().lowerBound()[2]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().upperBound()[2]);
+    EXPECT_EQ(0, xyzmStats->getBoundingBox().lowerBound()[3]);
+    EXPECT_EQ(1, xyzmStats->getBoundingBox().upperBound()[3]);
   }
 
 }  // namespace orc

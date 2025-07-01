@@ -16,6 +16,17 @@
  * limitations under the License.
  */
 
+/*
+ * This file contains code adapted from the Apache Arrow project.
+ *
+ * Original source:
+ * https://github.com/apache/arrow/blob/main/cpp/src/parquet/geospatial/statistics.cc
+ *
+ * The original code is licensed under the Apache License, Version 2.0.
+ *
+ * Modifications may have been made from the original source.
+ */
+
 #include "orc/Geospatial.hh"
 
 #include <algorithm>
@@ -70,14 +81,11 @@ namespace orc::geospatial {
     return SafeCopy<double>(swapped);
   }
 
-  std::string BoundingBox::ToString() const {
+  std::string BoundingBox::toString() const {
     std::stringstream ss;
-    ss << "BoundingBox" << std::endl;
-    ss << "  x: [" << min[0] << ", " << max[0] << "]" << std::endl;
-    ss << "  y: [" << min[1] << ", " << max[1] << "]" << std::endl;
-    ss << "  z: [" << min[2] << ", " << max[2] << "]" << std::endl;
-    ss << "  m: [" << min[3] << ", " << max[3] << "]" << std::endl;
-
+    ss << "BoundingBox{xMin=" << min[0] << ", xMax=" << max[0] << ", yMin=" << min[1]
+       << ", yMax=" << max[1] << ", zMin=" << min[2] << ", zMax=" << max[2] << ", mMin=" << min[3]
+       << ", mMax=" << max[3] << "}";
     return ss.str();
   }
 
@@ -165,10 +173,10 @@ namespace orc::geospatial {
       uint32_t geometryTypeComponent = wkbGeometryType % 1000;
       uint32_t dimensionsComponent = wkbGeometryType / 1000;
 
-      auto minGeometryTypeValue = static_cast<uint32_t>(GeometryType::kValueMin);
-      auto maxGeometryTypeValue = static_cast<uint32_t>(GeometryType::kValueMax);
-      auto minDimensionValue = static_cast<uint32_t>(Dimensions::kValueMin);
-      auto maxDimensionValue = static_cast<uint32_t>(Dimensions::kValueMax);
+      auto minGeometryTypeValue = static_cast<uint32_t>(GeometryType::VALUE_MIN);
+      auto maxGeometryTypeValue = static_cast<uint32_t>(GeometryType::VALUE_MAX);
+      auto minDimensionValue = static_cast<uint32_t>(Dimensions::VALUE_MIN);
+      auto maxDimensionValue = static_cast<uint32_t>(Dimensions::VALUE_MAX);
 
       if (geometryTypeComponent < minGeometryTypeValue ||
           geometryTypeComponent > maxGeometryTypeValue || dimensionsComponent < minDimensionValue ||
@@ -183,37 +191,37 @@ namespace orc::geospatial {
 
   }  // namespace
 
-  std::vector<int32_t> WKBGeometryBounder::GeometryTypes() const {
+  std::vector<int32_t> WKBGeometryBounder::geometryTypes() const {
     std::vector<int32_t> out(geospatialTypes_.begin(), geospatialTypes_.end());
     std::sort(out.begin(), out.end());
     return out;
   }
 
-  void WKBGeometryBounder::MergeGeometry(std::string_view bytesWkb) {
+  void WKBGeometryBounder::mergeGeometry(std::string_view bytesWkb) {
     if (!isValid_) {
       return;
     }
-    MergeGeometry(reinterpret_cast<const uint8_t*>(bytesWkb.data()), bytesWkb.size());
+    mergeGeometry(reinterpret_cast<const uint8_t*>(bytesWkb.data()), bytesWkb.size());
   }
 
-  void WKBGeometryBounder::MergeGeometry(const uint8_t* bytesWkb, size_t bytesSize) {
+  void WKBGeometryBounder::mergeGeometry(const uint8_t* bytesWkb, size_t bytesSize) {
     if (!isValid_) {
       return;
     }
     WKBBuffer src{bytesWkb, static_cast<int64_t>(bytesSize)};
     try {
-      MergeGeometryInternal(&src, /*record_wkb_type=*/true);
+      mergeGeometryInternal(&src, /*record_wkb_type=*/true);
     } catch (const ParseError&) {
-      Invalidate();
+      invalidate();
       return;
     }
     if (src.size() != 0) {
       // "Exepcted zero bytes after consuming WKB
-      Invalidate();
+      invalidate();
     }
   }
 
-  void WKBGeometryBounder::MergeGeometryInternal(WKBBuffer* src, bool recordWkbType) {
+  void WKBGeometryBounder::mergeGeometryInternal(WKBBuffer* src, bool recordWkbType) {
     uint8_t endian = src->ReadUInt8();
     bool swap = endian != 0x00;
     if (isLittleEndian()) {
@@ -223,7 +231,7 @@ namespace orc::geospatial {
     uint32_t wkbGeometryType = src->ReadUInt32(swap);
     auto geometryTypeAndDimensions = ParseGeometryType(wkbGeometryType);
     if (!geometryTypeAndDimensions.has_value()) {
-      Invalidate();
+      invalidate();
       return;
     }
     auto& [geometry_type, dimensions] = geometryTypeAndDimensions.value();
@@ -234,20 +242,20 @@ namespace orc::geospatial {
     }
 
     switch (geometry_type) {
-      case GeometryType::kPoint:
-        MergeSequence(src, dimensions, 1, swap);
+      case GeometryType::POINT:
+        mergeSequence(src, dimensions, 1, swap);
         break;
 
-      case GeometryType::kLinestring: {
+      case GeometryType::LINESTRING: {
         uint32_t nCoords = src->ReadUInt32(swap);
-        MergeSequence(src, dimensions, nCoords, swap);
+        mergeSequence(src, dimensions, nCoords, swap);
         break;
       }
-      case GeometryType::kPolygon: {
+      case GeometryType::POLYGON: {
         uint32_t n_parts = src->ReadUInt32(swap);
         for (uint32_t i = 0; i < n_parts; i++) {
           uint32_t nCoords = src->ReadUInt32(swap);
-          MergeSequence(src, dimensions, nCoords, swap);
+          mergeSequence(src, dimensions, nCoords, swap);
         }
         break;
       }
@@ -258,40 +266,40 @@ namespace orc::geospatial {
       // record_wkb_type = false because we do not want the child geometry to be
       // added to the geometry_types list (e.g., for a MultiPoint, we only want
       // the code for MultiPoint to be added, not the code for Point).
-      case GeometryType::kMultiPoint:
-      case GeometryType::kMultiLinestring:
-      case GeometryType::kMultiPolygon:
-      case GeometryType::kGeometryCollection: {
+      case GeometryType::MULTIPOINT:
+      case GeometryType::MULTILINESTRING:
+      case GeometryType::MULTIPOLYGON:
+      case GeometryType::GEOMETRYCOLLECTION: {
         uint32_t n_parts = src->ReadUInt32(swap);
         for (uint32_t i = 0; i < n_parts; i++) {
-          MergeGeometryInternal(src, /*record_wkb_type*/ false);
+          mergeGeometryInternal(src, /*record_wkb_type*/ false);
         }
         break;
       }
     }
   }
 
-  void WKBGeometryBounder::MergeSequence(WKBBuffer* src, Dimensions dimensions, uint32_t nCoords,
+  void WKBGeometryBounder::mergeSequence(WKBBuffer* src, Dimensions dimensions, uint32_t nCoords,
                                          bool swap) {
     switch (dimensions) {
-      case Dimensions::kXY:
+      case Dimensions::XY:
         src->ReadCoords<BoundingBox::XY>(nCoords, swap,
-                                         [&](BoundingBox::XY coord) { box_.UpdateXY(coord); });
+                                         [&](BoundingBox::XY coord) { box_.updateXY(coord); });
         break;
-      case Dimensions::kXYZ:
+      case Dimensions::XYZ:
         src->ReadCoords<BoundingBox::XYZ>(nCoords, swap,
-                                          [&](BoundingBox::XYZ coord) { box_.UpdateXYZ(coord); });
+                                          [&](BoundingBox::XYZ coord) { box_.updateXYZ(coord); });
         break;
-      case Dimensions::kXYM:
+      case Dimensions::XYM:
         src->ReadCoords<BoundingBox::XYM>(nCoords, swap,
-                                          [&](BoundingBox::XYM coord) { box_.UpdateXYM(coord); });
+                                          [&](BoundingBox::XYM coord) { box_.updateXYM(coord); });
         break;
-      case Dimensions::kXYZM:
+      case Dimensions::XYZM:
         src->ReadCoords<BoundingBox::XYZM>(
-            nCoords, swap, [&](BoundingBox::XYZM coord) { box_.UpdateXYZM(coord); });
+            nCoords, swap, [&](BoundingBox::XYZM coord) { box_.updateXYZM(coord); });
         break;
       default:
-        Invalidate();
+        invalidate();
     }
   }
 

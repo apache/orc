@@ -1720,16 +1720,16 @@ namespace orc {
       const GeospatialColumnStatisticsImpl& geoStats =
           dynamic_cast<const GeospatialColumnStatisticsImpl&>(other);
       stats_.merge(geoStats.stats_);
-      bounder_.Merge(geoStats.bounder_);
+      bounder_.merge(geoStats.bounder_);
     }
 
     void reset() override {
       stats_.reset();
-      bounder_.Reset();
+      bounder_.reset();
     }
 
     void update(const char* value, size_t length) override {
-      bounder_.MergeGeometry(std::string_view(value, length));
+      bounder_.mergeGeometry(std::string_view(value, length));
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
@@ -1737,28 +1737,28 @@ namespace orc {
       pbStats.set_number_of_values(stats_.getNumberOfValues());
 
       proto::GeospatialStatistics* geoStats = pbStats.mutable_geospatial_statistics();
-      const auto& bbox = bounder_.Bounds();
-      if (bbox.BoundValid(0) && bbox.BoundValid(1) && !bbox.BoundEmpty(0) && !bbox.BoundEmpty(1)) {
+      const auto& bbox = bounder_.bounds();
+      if (bbox.boundValid(0) && bbox.boundValid(1) && !bbox.boundEmpty(0) && !bbox.boundEmpty(1)) {
         geoStats->mutable_bbox()->set_xmin(bbox.min[0]);
         geoStats->mutable_bbox()->set_xmax(bbox.max[0]);
         geoStats->mutable_bbox()->set_ymin(bbox.min[1]);
         geoStats->mutable_bbox()->set_ymax(bbox.max[1]);
-        if (bbox.BoundValid(2) && !bbox.BoundEmpty(2)) {
+        if (bbox.boundValid(2) && !bbox.boundEmpty(2)) {
           geoStats->mutable_bbox()->set_zmin(bbox.min[2]);
           geoStats->mutable_bbox()->set_zmax(bbox.max[2]);
         }
-        if (bbox.BoundValid(3) && !bbox.BoundEmpty(3)) {
+        if (bbox.boundValid(3) && !bbox.boundEmpty(3)) {
           geoStats->mutable_bbox()->set_mmin(bbox.min[3]);
           geoStats->mutable_bbox()->set_mmax(bbox.max[3]);
         }
       }
-      for (auto type : bounder_.GeometryTypes()) {
+      for (auto type : bounder_.geometryTypes()) {
         geoStats->add_geospatial_types(type);
       }
     }
 
     std::string toString() const override {
-      if (!bounder_.IsValid()) {
+      if (!bounder_.isValid()) {
         return "<GeoStatistics> invalid";
       }
 
@@ -1766,11 +1766,11 @@ namespace orc {
       ss << "<GeoStatistics>";
 
       std::string dim_label("xyzm");
-      const auto& bbox = bounder_.Bounds();
-      auto dim_valid = bbox.DimensionValid();
-      auto dim_empty = bbox.DimensionEmpty();
-      auto lower = bbox.LowerBound();
-      auto upper = bbox.UpperBound();
+      const auto& bbox = bounder_.bounds();
+      auto dim_valid = bbox.dimensionValid();
+      auto dim_empty = bbox.dimensionEmpty();
+      auto lower = bbox.lowerBound();
+      auto upper = bbox.upperBound();
 
       for (int i = 0; i < 4; i++) {
         ss << " " << dim_label[i] << ": ";
@@ -1783,7 +1783,7 @@ namespace orc {
         }
       }
 
-      std::vector<int32_t> maybe_geometry_types = bounder_.GeometryTypes();
+      std::vector<int32_t> maybe_geometry_types = bounder_.geometryTypes();
       ss << " geometry_types: [";
       std::string sep("");
       for (int32_t geometry_type : maybe_geometry_types) {
@@ -1796,11 +1796,11 @@ namespace orc {
     }
 
     const geospatial::BoundingBox& getBoundingBox() const override {
-      return bounder_.Bounds();
+      return bounder_.bounds();
     }
 
     std::vector<int32_t> getGeospatialTypes() const override {
-      return bounder_.GeometryTypes();
+      return bounder_.geometryTypes();
     }
   };
 

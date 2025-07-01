@@ -395,8 +395,6 @@ int main(int argc, char* argv[]) {
           case orc::CHAR:
           case orc::VARCHAR:
           case orc::BINARY:
-          case orc::GEOMETRY:
-          case orc::GEOGRAPHY:
             bufferList.emplace_back(*orc::getDefaultPool(), 1 * 1024 * 1024);
             fillStringValues(data, structBatch->fields[i], numValues, i, bufferList.back());
             break;
@@ -422,6 +420,8 @@ int main(int argc, char* argv[]) {
           case orc::LIST:
           case orc::MAP:
           case orc::UNION:
+          case orc::GEOMETRY:
+          case orc::GEOGRAPHY:
             throw std::runtime_error(subType->toString() + " is not supported yet.");
         }
       }

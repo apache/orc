@@ -19,12 +19,10 @@
 #ifndef ORC_STATISTICS_HH
 #define ORC_STATISTICS_HH
 
+#include "orc/Geospatial.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 #include "orc/orc-config.hh"
-#include "orc/Geospatial.hh"
-
-#include <sstream>
 
 namespace orc {
 

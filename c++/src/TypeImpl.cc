@@ -826,12 +826,12 @@ namespace orc {
   std::unique_ptr<Type> TypeImpl::parseGeographyType(const std::string& input, size_t start,
                                                      size_t end) {
     if (input[start] != '(') {
-      throw std::logic_error("Missing ( after geometry.");
+      throw std::logic_error("Missing ( after geography.");
     }
     size_t pos = start + 1;
     size_t sep = input.find(',', pos);
     if (sep + 1 >= end || sep == std::string::npos) {
-      throw std::logic_error("Decimal type must specify CRS.");
+      throw std::logic_error("Geography type must specify CRS.");
     }
     std::string crs = input.substr(pos, sep - pos);
     std::string algoStr = input.substr(sep + 1, end - sep - 1);
@@ -911,7 +911,7 @@ namespace orc {
       return std::make_unique<TypeImpl>(CHAR, maxLength);
     } else if (category == "geometry") {
       if (input[start] != '(') {
-        throw std::logic_error("Missing ( after varchar.");
+        throw std::logic_error("Missing ( after geometry.");
       }
       std::string crs = input.substr(start + 1, end - start + 1);
       return std::make_unique<TypeImpl>(GEOMETRY, crs);

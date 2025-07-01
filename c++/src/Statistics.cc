@@ -405,12 +405,12 @@ namespace orc {
       const proto::ColumnStatistics& pb) {
     reset();
     if (!pb.has_geospatial_statistics()) {
-      bounder_.Invalidate();
+      bounder_.invalidate();
     } else {
       const proto::GeospatialStatistics& stats = pb.geospatial_statistics();
       geospatial::BoundingBox::XYZM min;
       geospatial::BoundingBox::XYZM max;
-      for (int i = 0; i < geospatial::kMaxDimensions; i++) {
+      for (int i = 0; i < geospatial::MAX_DIMENSIONS; i++) {
         min[i] = max[i] = std::numeric_limits<double>::quiet_NaN();
       }
       if (stats.has_bbox()) {
@@ -428,10 +428,10 @@ namespace orc {
           max[3] = protoBBox.mmax();
         }
       }
-      bounder_.MergeBox(geospatial::BoundingBox(min, max));
+      bounder_.mergeBox(geospatial::BoundingBox(min, max));
       std::vector<int32_t> types = {stats.geospatial_types().begin(),
                                     stats.geospatial_types().end()};
-      bounder_.MergeGeometryTypes(types);
+      bounder_.mergeGeometryTypes(types);
     }
   }
 

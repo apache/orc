@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include "Statistics.hh"
 #include "orc/OrcFile.hh"
 
 #include "MemoryInputStream.hh"
@@ -76,10 +75,10 @@ namespace orc {
 
     // create str values
     std::vector<std::string> wkbs;
-    std::array<double, 4> mins = {geospatial::kInf, geospatial::kInf, geospatial::kInf,
-                                  geospatial::kInf};
-    std::array<double, 4> maxs = {-geospatial::kInf, -geospatial::kInf, -geospatial::kInf,
-                                  -geospatial::kInf};
+    std::array<double, 4> mins = {geospatial::INF, geospatial::INF, geospatial::INF,
+                                  geospatial::INF};
+    std::array<double, 4> maxs = {-geospatial::INF, -geospatial::INF, -geospatial::INF,
+                                  -geospatial::INF};
     for (uint64_t i = 1; i < batchCount - 1; ++i) {
       if (i % 3 == 0) {
         wkbs.push_back(MakeWKBPoint({i * 1.0, i * 1.0}, false, false));
@@ -140,10 +139,10 @@ namespace orc {
     EXPECT_EQ(geoFileStats->getGeospatialTypes()[2], 3001);
     std::array<bool, 4> expectValid = {true, true, true, true};
     std::array<bool, 4> expectEmpty = {false, false, false, false};
-    EXPECT_EQ(geoFileStats->getBoundingBox().DimensionValid(), expectValid);
-    EXPECT_EQ(geoFileStats->getBoundingBox().DimensionEmpty(), expectEmpty);
-    EXPECT_EQ(geoFileStats->getBoundingBox().LowerBound(), mins);
-    EXPECT_EQ(geoFileStats->getBoundingBox().UpperBound(), maxs);
+    EXPECT_EQ(geoFileStats->getBoundingBox().dimensionValid(), expectValid);
+    EXPECT_EQ(geoFileStats->getBoundingBox().dimensionEmpty(), expectEmpty);
+    EXPECT_EQ(geoFileStats->getBoundingBox().lowerBound(), mins);
+    EXPECT_EQ(geoFileStats->getBoundingBox().upperBound(), maxs);
   }
 
   TEST(Statistics, geographyStatsWithNull) {
@@ -166,10 +165,10 @@ namespace orc {
 
     // create str values
     std::vector<std::string> wkbs;
-    std::array<double, 4> mins = {geospatial::kInf, geospatial::kInf, geospatial::kInf,
-                                  geospatial::kInf};
-    std::array<double, 4> maxs = {-geospatial::kInf, -geospatial::kInf, -geospatial::kInf,
-                                  -geospatial::kInf};
+    std::array<double, 4> mins = {geospatial::INF, geospatial::INF, geospatial::INF,
+                                  geospatial::INF};
+    std::array<double, 4> maxs = {-geospatial::INF, -geospatial::INF, -geospatial::INF,
+                                  -geospatial::INF};
     for (uint64_t i = 1; i < batchCount - 1; ++i) {
       if (i % 3 == 0) {
         wkbs.push_back(MakeWKBPoint({i * 1.0, i * 1.0}, false, false));
@@ -226,6 +225,6 @@ namespace orc {
     ENSURE_DYNAMIC_CAST_NOT_NULL(geoFileStats);
     EXPECT_EQ(geoFileStats->getGeospatialTypes().size(), 0);
     std::array<bool, 4> expectValid = {false, false, false, false};
-    EXPECT_EQ(geoFileStats->getBoundingBox().DimensionValid(), expectValid);
+    EXPECT_EQ(geoFileStats->getBoundingBox().dimensionValid(), expectValid);
   }
 }  // namespace orc
