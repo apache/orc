@@ -19,6 +19,7 @@
 #pragma once
 #include "orc/Geospatial.hh"
 
+#include <cstdint>
 #include <vector>
 
 namespace orc {
