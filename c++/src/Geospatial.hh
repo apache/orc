@@ -23,6 +23,7 @@
 #include "orc/Geospatial.hh"
 
 #include <unordered_set>
+#include <vector>
 
 namespace orc {
   namespace geospatial {

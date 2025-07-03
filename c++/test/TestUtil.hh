@@ -19,6 +19,8 @@
 #pragma once
 #include "orc/Geospatial.hh"
 
+#include <vector>
+
 namespace orc {
 
   /// \brief Number of bytes in a WKB Point with X and Y dimensions (uint8_t endian,
