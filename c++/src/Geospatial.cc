@@ -28,13 +28,14 @@
  */
 
 #include "orc/Geospatial.hh"
+#include "orc/Exceptions.hh"
+
+#include "Geospatial.hh"
 
 #include <algorithm>
 #include <cstring>
 #include <optional>
 #include <sstream>
-
-#include "orc/Exceptions.hh"
 
 namespace orc::geospatial {
 

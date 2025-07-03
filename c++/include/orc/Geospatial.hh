@@ -32,12 +32,8 @@
 
 #include <array>
 #include <cmath>
-#include <cstdint>
 #include <ostream>
 #include <string>
-#include <string_view>
-#include <unordered_set>
-#include <vector>
 
 namespace orc {
   namespace geospatial {
@@ -195,60 +191,6 @@ namespace orc {
       os << obj.toString();
       return os;
     }
-
-    class WKBBuffer;
-
-    class WKBGeometryBounder {
-     public:
-      void mergeGeometry(std::string_view bytesWkb);
-      void mergeGeometry(const uint8_t* bytesWkb, size_t bytesSize);
-
-      void mergeBox(const BoundingBox& box) {
-        box_.merge(box);
-      }
-      void mergeGeometryTypes(const std::vector<int>& geospatialTypes) {
-        geospatialTypes_.insert(geospatialTypes.begin(), geospatialTypes.end());
-      }
-      void merge(const WKBGeometryBounder& other) {
-        if (!isValid() || !other.isValid()) {
-          invalidate();
-          return;
-        }
-        box_.merge(other.box_);
-        geospatialTypes_.insert(other.geospatialTypes_.begin(), other.geospatialTypes_.end());
-      }
-
-      // Get the bounding box for the merged geometries.
-      const BoundingBox& bounds() const {
-        return box_;
-      }
-
-      // Get the set of geometry types encountered during merging.
-      // Returns a sorted vector of geometry type IDs.
-      std::vector<int32_t> geometryTypes() const;
-
-      void reset() {
-        isValid_ = true;
-        box_.reset();
-        geospatialTypes_.clear();
-      }
-      bool isValid() const {
-        return isValid_;
-      }
-      void invalidate() {
-        isValid_ = false;
-        box_.invalidate();
-        geospatialTypes_.clear();
-      }
-
-     private:
-      BoundingBox box_;
-      std::unordered_set<int32_t> geospatialTypes_;
-      bool isValid_ = true;
-
-      void mergeGeometryInternal(WKBBuffer* src, bool recordWkbType);
-      void mergeSequence(WKBBuffer* src, Dimensions dimensions, uint32_t nCoords, bool swap);
-    };
 
   }  // namespace geospatial
 }  // namespace orc

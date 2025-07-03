@@ -24,6 +24,7 @@
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
 
+#include "Geospatial.hh"
 #include "Timezone.hh"
 #include "TypeImpl.hh"
 
