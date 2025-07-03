@@ -222,7 +222,7 @@ namespace orc {
       const BoundingBox& bounds() const {
         return box_;
       }
-      
+
       // Get the set of geometry types encountered during merging.
       // Returns a sorted vector of geometry type IDs.
       std::vector<int32_t> geometryTypes() const;
