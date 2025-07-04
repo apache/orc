@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.9.4 Released</title>
+  <title>ORC 1.9.7 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -354,8 +354,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.9.4 Released
-    <a href="/news/2024/07/16/ORC-1.9.4/" class="permalink" title="Permalink">∞</a>
+    ORC 1.9.7 Released
+    <a href="/news/2025/07/04/ORC-1.9.7/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -364,42 +364,35 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      16 Jul 2024
+      04 Jul 2025
     </span>
     <span class="post-author">
-      william
+      dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.9.4.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.9.7.</p>
 
 <ul>
-  <li>Released: 16 July 2024</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.9.4/orc-1.9.4.tar.gz">orc-1.9.4.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.9.4/orc-1.9.4.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.4">rel/release-1.9.4</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.4%22">ORC 1.9.4</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.9.4/orc-1.9.4.tar.gz.sha256">d9a6bcc00e07a6e5…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.4%22&amp;tempMax=500">ORC-1.9.4</a></li>
+  <li>Released: 4 July 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.7/orc-1.9.7.tar.gz">orc-1.9.7.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.9.7/orc-1.9.7.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.7">rel/release-1.9.7</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.7%22">ORC 1.9.7</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.7/orc-1.9.7.tar.gz.sha256">3b3b18f472f8edf3…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.7%22&amp;tempMax=500">ORC-1.9.7</a></li>
 </ul>
 
 <p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1696">ORC-1696</a> Fix ClassCastException when reading avro decimal type in bechmark</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1721">ORC-1721</a> Upgrade <code class="language-plaintext highlighter-rouge">aircompressor</code> to 0.27</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1738">ORC-1738</a> Wrong Int128 maximum value</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1898">ORC-1898</a>: When column is all null, NULL_SAFE_EQUALS pushdown doesn’t get evaluated correctly</li>
 </ul>
 
 <p>The test changes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1619">ORC-1619</a> Add <code class="language-plaintext highlighter-rouge">MacOS 14</code> to GitHub Action</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1699">ORC-1699</a> Fix SparkBenchmark in Parquet format according to SPARK-40918</li>
-</ul>
-
-<p>The task changes:</p>
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1540">ORC-1540</a> Remove MacOS 11 from GitHub Action CI</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1909">ORC-1909</a> Remove unused test resource log4j.properties files</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1923">ORC-1923</a> Remove Windows 2019 GitHub Action job</li>
 </ul>
 
   </div>
@@ -420,7 +413,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2025/07/04/ORC-1.9.7/">Version 1.9.7</a>
       </li>
       
