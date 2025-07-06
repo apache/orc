@@ -374,19 +374,19 @@ namespace orc {
     virtual ~GeospatialColumnStatistics();
 
     /**
-     * get bounding box
+     * Get bounding box
      * @return bounding box
      */
     virtual const geospatial::BoundingBox& getBoundingBox() const = 0;
 
     /**
-     * get geospatial types
-     * @return geospatial types
+     * Get geospatial types
+     * @return a sorted vector of geometry type IDs that elements is unique
      */
     virtual std::vector<int32_t> getGeospatialTypes() const = 0;
 
     /**
-     * update stats by a new value
+     * Update stats by a new value
      * @param value new value to update
      * @param length length of the value
      */

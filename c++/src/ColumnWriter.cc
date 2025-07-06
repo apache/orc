@@ -2885,10 +2885,13 @@ namespace orc {
                      const char* incomingMask) override {
       ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-      const StringVectorBatch& strBatch = dynamic_cast<const StringVectorBatch&>(rowBatch);
-      auto data = &strBatch.data[offset];
-      auto length = &strBatch.length[offset];
-      const char* notNull = strBatch.hasNulls ? strBatch.notNull.data() + offset : nullptr;
+      const StringVectorBatch* strBatch = dynamic_cast<const StringVectorBatch*>(&rowBatch);
+      if (strBatch == nullptr) {
+        throw InvalidArgument("Failed to cast to StringVectorBatch");
+      }
+      auto data = &strBatch->data[offset];
+      auto length = &strBatch->length[offset];
+      const char* notNull = strBatch->hasNulls ? strBatch->notNull.data() + offset : nullptr;
 
       bool hasNull = false;
       GeospatialColumnStatisticsImpl* geoStats = nullptr;

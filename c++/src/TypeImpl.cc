@@ -74,10 +74,11 @@ namespace orc {
     scale_ = 0;
     subtypeCount_ = 0;
     crs_ = crs;
-    edgeInterpolationAlgorithm_ = geospatial::EIAlgo::SPHERICAL;
+    edgeInterpolationAlgorithm_ = geospatial::EdgeInterpolationAlgorithm::SPHERICAL;
   }
 
-  TypeImpl::TypeImpl(TypeKind kind, const std::string& crs, geospatial::EIAlgo algo) {
+  TypeImpl::TypeImpl(TypeKind kind, const std::string& crs,
+                     geospatial::EdgeInterpolationAlgorithm algo) {
     parent_ = nullptr;
     columnId_ = -1;
     maximumColumnId_ = -1;
@@ -152,7 +153,7 @@ namespace orc {
     return crs_;
   }
 
-  geospatial::EIAlgo TypeImpl::getEIAlgo() const {
+  geospatial::EdgeInterpolationAlgorithm TypeImpl::getAlgorithm() const {
     return edgeInterpolationAlgorithm_;
   }
 
@@ -226,9 +227,9 @@ namespace orc {
   }
 
   namespace geospatial {
-    std::string AlgotoString(EIAlgo algo) {
+    std::string AlgotoString(EdgeInterpolationAlgorithm algo) {
       switch (algo) {
-        case EIAlgo::SPHERICAL:
+        case EdgeInterpolationAlgorithm::SPHERICAL:
           return "speherial";
         case VINCENTY:
           return "vincenty";
@@ -243,9 +244,9 @@ namespace orc {
       }
     }
 
-    EIAlgo AlgoFromString(const std::string& algo) {
+    EdgeInterpolationAlgorithm AlgoFromString(const std::string& algo) {
       if (algo == "speherial") {
-        return EIAlgo::SPHERICAL;
+        return EdgeInterpolationAlgorithm::SPHERICAL;
       }
       if (algo == "vincenty") {
         return VINCENTY;
@@ -511,7 +512,8 @@ namespace orc {
     return std::make_unique<TypeImpl>(GEOMETRY, crs);
   }
 
-  std::unique_ptr<Type> createGeographyType(const std::string& crs, geospatial::EIAlgo algo) {
+  std::unique_ptr<Type> createGeographyType(const std::string& crs,
+                                            geospatial::EdgeInterpolationAlgorithm algo) {
     return std::make_unique<TypeImpl>(GEOGRAPHY, crs, algo);
   }
 
@@ -634,7 +636,7 @@ namespace orc {
         break;
       case GEOGRAPHY:
         result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getCRS(),
-                                            fileType->getEIAlgo());
+                                            fileType->getAlgorithm());
         break;
 
       case LIST:

@@ -70,7 +70,7 @@ namespace orc {
     /**
      * Create geography type.
      */
-    TypeImpl(TypeKind kind, const std::string& crs, geospatial::EIAlgo algo);
+    TypeImpl(TypeKind kind, const std::string& crs, geospatial::EdgeInterpolationAlgorithm algo);
 
     uint64_t getColumnId() const override;
 
@@ -92,7 +92,7 @@ namespace orc {
 
     const std::string& getCRS() const override;
 
-    geospatial::EIAlgo getEIAlgo() const override;
+    geospatial::EdgeInterpolationAlgorithm getAlgorithm() const override;
 
     Type& setAttribute(const std::string& key, const std::string& value) override;
 

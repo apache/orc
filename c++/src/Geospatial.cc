@@ -40,7 +40,7 @@
 namespace orc::geospatial {
 
   template <typename T>
-  inline std::enable_if_t<std::is_trivially_copyable_v<T>, T> SafeLoadAs(const uint8_t* unaligned) {
+  inline std::enable_if_t<std::is_trivially_copyable_v<T>, T> safeLoadAs(const uint8_t* unaligned) {
     std::remove_const_t<T> ret;
     std::memcpy(&ret, unaligned, sizeof(T));
     return ret;
@@ -50,7 +50,7 @@ namespace orc::geospatial {
   inline std::enable_if_t<std::is_trivially_copyable_v<T> && std::is_trivially_copyable_v<U> &&
                               sizeof(T) == sizeof(U),
                           U>
-  SafeCopy(T value) {
+  safeCopy(T value) {
     std::remove_const_t<U> ret;
     std::memcpy(&ret, static_cast<const void*>(&value), sizeof(T));
     return ret;
@@ -66,20 +66,20 @@ namespace orc::geospatial {
 
 #if defined(_MSC_VER)
 #include <intrin.h>  // IWYU pragma: keep
-#define ORC_BYTE_SWAP64 _byteswap_uint64
-#define ORC_BYTE_SWAP32 _byteswap_ulong
+#define ORC_BYTE_SWAP64 _byteSwap_uint64
+#define ORC_BYTE_SWAP32 _byteSwap_ulong
 #else
 #define ORC_BYTE_SWAP64 __builtin_bswap64
 #define ORC_BYTE_SWAP32 __builtin_bswap32
 #endif
 
   // Swap the byte order (i.e. endianness)
-  static inline uint32_t ByteSwap(uint32_t value) {
+  static inline uint32_t byteSwap(uint32_t value) {
     return static_cast<uint32_t>(ORC_BYTE_SWAP32(value));
   }
-  static inline double ByteSwap(double value) {
-    const uint64_t swapped = ORC_BYTE_SWAP64(SafeCopy<uint64_t>(value));
-    return SafeCopy<double>(swapped);
+  static inline double byteSwap(double value) {
+    const uint64_t swapped = ORC_BYTE_SWAP64(safeCopy<uint64_t>(value));
+    return safeCopy<double>(swapped);
   }
 
   std::string BoundingBox::toString() const {
@@ -103,17 +103,17 @@ namespace orc::geospatial {
     WKBBuffer() : data_(nullptr), size_(0) {}
     WKBBuffer(const uint8_t* data, int64_t size) : data_(data), size_(size) {}
 
-    uint8_t ReadUInt8() {
-      return ReadChecked<uint8_t>();
+    uint8_t readUInt8() {
+      return readChecked<uint8_t>();
     }
 
-    uint32_t ReadUInt32(bool swap) {
-      auto value = ReadChecked<uint32_t>();
-      return swap ? ByteSwap(value) : value;
+    uint32_t readUInt32(bool swap) {
+      auto value = readChecked<uint32_t>();
+      return swap ? byteSwap(value) : value;
     }
 
     template <typename Coord, typename Visit>
-    void ReadCoords(uint32_t nCoords, bool swap, Visit&& visit) {
+    void readCoords(uint32_t nCoords, bool swap, Visit&& visit) {
       size_t total_bytes = nCoords * sizeof(Coord);
       if (size_ < total_bytes) {
       }
@@ -121,16 +121,16 @@ namespace orc::geospatial {
       if (swap) {
         Coord coord;
         for (uint32_t i = 0; i < nCoords; i++) {
-          coord = ReadUnchecked<Coord>();
+          coord = readUnchecked<Coord>();
           for (auto& c : coord) {
-            c = ByteSwap(c);
+            c = byteSwap(c);
           }
 
           std::forward<Visit>(visit)(coord);
         }
       } else {
         for (uint32_t i = 0; i < nCoords; i++) {
-          std::forward<Visit>(visit)(ReadUnchecked<Coord>());
+          std::forward<Visit>(visit)(readUnchecked<Coord>());
         }
       }
     }
@@ -144,19 +144,19 @@ namespace orc::geospatial {
     size_t size_;
 
     template <typename T>
-    T ReadChecked() {
+    T readChecked() {
       if (size_ < sizeof(T)) {
         std::stringstream ss;
         ss << "Can't read" << sizeof(T) << " bytes from WKBBuffer with " << size_ << " remaining";
         throw ParseError(ss.str());
       }
 
-      return ReadUnchecked<T>();
+      return readUnchecked<T>();
     }
 
     template <typename T>
-    T ReadUnchecked() {
-      T out = SafeLoadAs<T>(data_);
+    T readUnchecked() {
+      T out = safeLoadAs<T>(data_);
       data_ += sizeof(T);
       size_ -= sizeof(T);
       return out;
@@ -167,7 +167,7 @@ namespace orc::geospatial {
 
   namespace {
 
-    std::optional<GeometryTypeAndDimensions> ParseGeometryType(uint32_t wkbGeometryType) {
+    std::optional<GeometryTypeAndDimensions> parseGeometryType(uint32_t wkbGeometryType) {
       // The number 1000 can be used because WKB geometry types are constructed
       // on purpose such that this relationship is true (e.g., LINESTRING ZM maps
       // to 3002).
@@ -223,14 +223,14 @@ namespace orc::geospatial {
   }
 
   void WKBGeometryBounder::mergeGeometryInternal(WKBBuffer* src, bool recordWkbType) {
-    uint8_t endian = src->ReadUInt8();
+    uint8_t endian = src->readUInt8();
     bool swap = endian != 0x00;
     if (isLittleEndian()) {
       swap = endian != 0x01;
     }
 
-    uint32_t wkbGeometryType = src->ReadUInt32(swap);
-    auto geometryTypeAndDimensions = ParseGeometryType(wkbGeometryType);
+    uint32_t wkbGeometryType = src->readUInt32(swap);
+    auto geometryTypeAndDimensions = parseGeometryType(wkbGeometryType);
     if (!geometryTypeAndDimensions.has_value()) {
       invalidate();
       return;
@@ -248,14 +248,14 @@ namespace orc::geospatial {
         break;
 
       case GeometryType::LINESTRING: {
-        uint32_t nCoords = src->ReadUInt32(swap);
+        uint32_t nCoords = src->readUInt32(swap);
         mergeSequence(src, dimensions, nCoords, swap);
         break;
       }
       case GeometryType::POLYGON: {
-        uint32_t n_parts = src->ReadUInt32(swap);
+        uint32_t n_parts = src->readUInt32(swap);
         for (uint32_t i = 0; i < n_parts; i++) {
-          uint32_t nCoords = src->ReadUInt32(swap);
+          uint32_t nCoords = src->readUInt32(swap);
           mergeSequence(src, dimensions, nCoords, swap);
         }
         break;
@@ -271,7 +271,7 @@ namespace orc::geospatial {
       case GeometryType::MULTILINESTRING:
       case GeometryType::MULTIPOLYGON:
       case GeometryType::GEOMETRYCOLLECTION: {
-        uint32_t n_parts = src->ReadUInt32(swap);
+        uint32_t n_parts = src->readUInt32(swap);
         for (uint32_t i = 0; i < n_parts; i++) {
           mergeGeometryInternal(src, /*record_wkb_type*/ false);
         }
@@ -284,19 +284,19 @@ namespace orc::geospatial {
                                          bool swap) {
     switch (dimensions) {
       case Dimensions::XY:
-        src->ReadCoords<BoundingBox::XY>(nCoords, swap,
+        src->readCoords<BoundingBox::XY>(nCoords, swap,
                                          [&](BoundingBox::XY coord) { box_.updateXY(coord); });
         break;
       case Dimensions::XYZ:
-        src->ReadCoords<BoundingBox::XYZ>(nCoords, swap,
+        src->readCoords<BoundingBox::XYZ>(nCoords, swap,
                                           [&](BoundingBox::XYZ coord) { box_.updateXYZ(coord); });
         break;
       case Dimensions::XYM:
-        src->ReadCoords<BoundingBox::XYM>(nCoords, swap,
+        src->readCoords<BoundingBox::XYM>(nCoords, swap,
                                           [&](BoundingBox::XYM coord) { box_.updateXYM(coord); });
         break;
       case Dimensions::XYZM:
-        src->ReadCoords<BoundingBox::XYZM>(
+        src->readCoords<BoundingBox::XYZM>(
             nCoords, swap, [&](BoundingBox::XYZM coord) { box_.updateXYZM(coord); });
         break;
       default:

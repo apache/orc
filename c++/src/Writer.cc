@@ -711,24 +711,24 @@ namespace orc {
       case GEOGRAPHY: {
         protoType.set_kind(proto::Type_Kind_GEOGRAPHY);
         protoType.set_crs(t.getCRS());
-        switch (t.getEIAlgo()) {
-          case geospatial::EIAlgo::SPHERICAL: {
+        switch (t.getAlgorithm()) {
+          case geospatial::EdgeInterpolationAlgorithm::SPHERICAL: {
             protoType.set_algorithm(proto::Type_EdgeInterpolationAlgorithm_SPHERICAL);
             break;
           }
-          case orc::geospatial::EIAlgo::VINCENTY: {
+          case orc::geospatial::EdgeInterpolationAlgorithm::VINCENTY: {
             protoType.set_algorithm(proto::Type_EdgeInterpolationAlgorithm_VINCENTY);
             break;
           }
-          case orc::geospatial::EIAlgo::THOMAS: {
+          case orc::geospatial::EdgeInterpolationAlgorithm::THOMAS: {
             protoType.set_algorithm(proto::Type_EdgeInterpolationAlgorithm_VINCENTY);
             break;
           }
-          case orc::geospatial::EIAlgo::ANDOYER: {
+          case orc::geospatial::EdgeInterpolationAlgorithm::ANDOYER: {
             protoType.set_algorithm(proto::Type_EdgeInterpolationAlgorithm_ANDOYER);
             break;
           }
-          case orc::geospatial::EIAlgo::KARNEY: {
+          case orc::geospatial::EdgeInterpolationAlgorithm::KARNEY: {
             protoType.set_algorithm(proto::Type_EdgeInterpolationAlgorithm_KARNEY);
             break;
           }

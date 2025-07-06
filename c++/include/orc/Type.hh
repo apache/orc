@@ -33,9 +33,8 @@ namespace orc {
       ANDOYER = 3,
       KARNEY = 4
     };
-    using EIAlgo = EdgeInterpolationAlgorithm;
-    std::string AlgotoString(EIAlgo algo);
-    EIAlgo AlgoFromString(const std::string& algo);
+    std::string AlgotoString(EdgeInterpolationAlgorithm algo);
+    EdgeInterpolationAlgorithm AlgoFromString(const std::string& algo);
   }  // namespace geospatial
 
   enum TypeKind {
@@ -74,8 +73,10 @@ namespace orc {
     virtual uint64_t getMaximumLength() const = 0;
     virtual uint64_t getPrecision() const = 0;
     virtual uint64_t getScale() const = 0;
+    // for geospatial types only
     virtual const std::string& getCRS() const = 0;
-    virtual geospatial::EIAlgo getEIAlgo() const = 0;
+    // for geography types only
+    virtual geospatial::EdgeInterpolationAlgorithm getAlgorithm() const = 0;
     virtual Type& setAttribute(const std::string& key, const std::string& value) = 0;
     virtual bool hasAttributeKey(const std::string& key) const = 0;
     virtual Type& removeAttribute(const std::string& key) = 0;
@@ -133,8 +134,9 @@ namespace orc {
   std::unique_ptr<Type> createMapType(std::unique_ptr<Type> key, std::unique_ptr<Type> value);
   std::unique_ptr<Type> createUnionType();
   std::unique_ptr<Type> createGeometryType(const std::string& crs = "OGC:CRS84");
-  std::unique_ptr<Type> createGeographyType(const std::string& crs = "OGC:CRS84",
-                                            geospatial::EIAlgo algo = geospatial::SPHERICAL);
+  std::unique_ptr<Type> createGeographyType(
+      const std::string& crs = "OGC:CRS84",
+      geospatial::EdgeInterpolationAlgorithm algo = geospatial::SPHERICAL);
 
 }  // namespace orc
 #endif
