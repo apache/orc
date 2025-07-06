@@ -23,6 +23,8 @@
 #include "orc/OrcFile.hh"
 #include "wrap/zero-copy-stream-wrapper.h"
 
+#include "google/protobuf/stubs/port.h"
+
 #include <fstream>
 #include <iostream>
 #include <list>
