@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Deepak Majeti added as committer</title>
+  <title>ORC 2.0.6 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -356,26 +356,54 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    Deepak Majeti added as committer
-    <a href="/news/2017/05/16/new-committer/" class="permalink" title="Permalink">∞</a>
+    ORC 2.0.6 Released
+    <a href="/news/2025/07/07/ORC-2.0.6/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
-      team
+      release
     </span>
   </span>
   <div class="post-meta">
     <span class="post-date">
-      16 May 2017
+      07 Jul 2025
     </span>
     <span class="post-author">
-      omalley
+      dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC PMC is happy to add Deepak Majeti as an ORC committer for the
-work on the C++ ORC reader including both contributions and reviews of
-other’s patches. Thank you for your work on ORC, Deepak!</p>
+    <p>The ORC team is excited to announce the release of ORC v2.0.6.</p>
+
+<ul>
+  <li>Released: 7 July 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.6/orc-2.0.6.tar.gz">orc-2.0.6.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.0.6/orc-2.0.6.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.6">rel/release-2.0.6</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.6%22">ORC 2.0.6</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.6/orc-2.0.6.tar.gz.sha256">81167d31d7ec51de…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.6%22&amp;tempMax=500">ORC-2.0.6</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1898">ORC-1898</a>: When column is all null, NULL_SAFE_EQUALS pushdown doesn’t get evaluated correctly</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1929">ORC-1929</a>: Fix the Javadoc of <code class="language-plaintext highlighter-rouge">ZstdCodec.compress</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1942">ORC-1942</a>: Fix <code class="language-plaintext highlighter-rouge">PhysicalFsWriter</code> to change <code class="language-plaintext highlighter-rouge">tempOptions</code> directly</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1728">ORC-1728</a> Bump <code class="language-plaintext highlighter-rouge">maven-shade-plugin</code> to 3.6.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1872">ORC-1872</a> Upgrade <code class="language-plaintext highlighter-rouge">extra-enforcer-rules</code> to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1889">ORC-1889</a> Upgrade <code class="language-plaintext highlighter-rouge">parquet</code> to 1.15.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1899">ORC-1899</a> Upgrade Spark to 4.0.0 and Scala to 2.13.16</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1900">ORC-1900</a> Upgrade Jackson to 2.18.2 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1901">ORC-1901</a> Remove <code class="language-plaintext highlighter-rouge">threeten-extra</code> exclusion in <code class="language-plaintext highlighter-rouge">enforceBytecodeVersion</code> rule</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1909">ORC-1909</a> Remove unused test resource <code class="language-plaintext highlighter-rouge">log4j.properties</code> files</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1923">ORC-1923</a> Remove <code class="language-plaintext highlighter-rouge">Windows 2019</code> GitHub Action job</li>
+</ul>
 
   </div>
 </article>
@@ -395,7 +423,7 @@ other’s patches. Thank you for your work on ORC, Deepak!</p>
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2025/07/07/ORC-2.0.6/">Version 2.0.6</a>
       </li>
       
@@ -686,7 +714,7 @@ other’s patches. Thank you for your work on ORC, Deepak!</p>
         
         
         
-        <li class="current">
+        <li class="">
           <a href="/news/2017/05/16/new-committer/">Deepak Majeti added as committer</a>
         </li>
         
