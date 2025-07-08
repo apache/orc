@@ -21,6 +21,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcConf;
@@ -29,9 +30,15 @@ import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.*;
+import org.apache.orc.geospatial.BoundingBox;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKBWriter;
+import org.locationtech.jts.io.WKTReader;
 
 import java.io.IOException;
 
@@ -176,6 +183,59 @@ public class TestWriterImpl implements TestConf {
     }
     w.close();
     assertEquals(10, w.getStripes().size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testGeospatialColumnStatistics(boolean useFilter) throws IOException, ParseException {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    // Use the Geometry type
+    schema = TypeDescription.createGeometry();
+    Writer writer = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector geomColumn = (BytesColumnVector) batch.cols[0];
+
+    WKTReader wktReader = new WKTReader();
+    WKBWriter wkbWriter = new WKBWriter();
+    byte[] point1 = wkbWriter.write(wktReader.read("POINT (1 2)"));
+    byte[] point2 = wkbWriter.write(wktReader.read("POINT (3 4)"));
+    byte[] point3 = wkbWriter.write(wktReader.read("POINT (5 6)"));
+    byte[] point4 = wkbWriter.write(wktReader.read("POINT (7 8)"));
+
+    geomColumn.setVal(0, point1);
+    geomColumn.setVal(1, point2);
+    geomColumn.setVal(2, point3);
+    geomColumn.setVal(3, point4);
+
+    if (useFilter) {
+      int[] selected = {2};
+      batch.setFilterContext(true, selected, selected.length);
+    } else {
+      batch.size = 4;
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+    ColumnStatistics[] statistics = reader.getStatistics();
+    GeospatialColumnStatistics geometryStatistics = (GeospatialColumnStatistics) statistics[0];
+    BoundingBox bbox = geometryStatistics.getBoundingBox();
+    if (useFilter) {
+      assertEquals(5.0, bbox.getXMin());
+      assertEquals(5.0, bbox.getXMax());
+      assertEquals(6.0, bbox.getYMin());
+      assertEquals(6.0, bbox.getYMax());
+    } else {
+      assertEquals(1.0, bbox.getXMin());
+      assertEquals(7.0, bbox.getXMax());
+      assertEquals(2.0, bbox.getYMin());
+      assertEquals(8.0, bbox.getYMax());
+    }
+    assertEquals(Double.NaN, bbox.getZMin());
+    assertEquals(Double.NaN, bbox.getZMax());
+    assertEquals(Double.NaN, bbox.getMMin());
+    assertEquals(Double.NaN, bbox.getMMax());
+    reader.close();
   }
 
   @Test
