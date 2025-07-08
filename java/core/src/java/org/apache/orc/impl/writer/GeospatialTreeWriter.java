@@ -20,7 +20,6 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
@@ -96,10 +95,9 @@ public class GeospatialTreeWriter extends TreeWriterBase {
                   vec.start[offset + i], vec.length[offset + i]);
           this.length.write(vec.length[offset + i]);
           rawDataSize += vec.length[offset + i];
-          BytesWritable bw = new BytesWritable();
-          bw.set(vec.vector[offset + i], vec.start[offset + i], vec.length[offset + i]);
           if (isGeometry) {
-            indexStatistics.updateGeometry(vec.vector[i], vec.start[i], vec.length[i]);
+            indexStatistics.updateGeometry(vec.vector[offset + i],
+                    vec.start[offset + i], vec.length[offset + i]);
           }
           if (createBloomFilter) {
             if (bloomFilter != null) {
