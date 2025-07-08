@@ -28,12 +28,12 @@ set(PROTOBUF_VERSION "3.5.1")
 set(ZSTD_VERSION "1.5.7")
 set(SPARSEHASH_C11_VERSION "2.11.1")
 
-option(ORC_PREFER_STATIC_PROTOBUF       "Prefer static protobuf library, if available"          ON)
-option(ORC_PREFER_STATIC_SNAPPY         "Prefer static snappy library, if available"            ON)
-option(ORC_PREFER_STATIC_LZ4            "Prefer static lz4 library, if available"               ON)
-option(ORC_PREFER_STATIC_ZSTD           "Prefer static zstd library, if available"              ON)
-option(ORC_PREFER_STATIC_ZLIB           "Prefer static zlib library, if available"              ON)
-option(ORC_PREFER_STATIC_GMOCK          "Prefer static gmock library, if available"             ON)
+option(ORC_PREFER_STATIC_PROTOBUF "Prefer static protobuf library, if available" ON)
+option(ORC_PREFER_STATIC_SNAPPY   "Prefer static snappy library, if available"   ON)
+option(ORC_PREFER_STATIC_LZ4      "Prefer static lz4 library, if available"      ON)
+option(ORC_PREFER_STATIC_ZSTD     "Prefer static zstd library, if available"     ON)
+option(ORC_PREFER_STATIC_ZLIB     "Prefer static zlib library, if available"     ON)
+option(ORC_PREFER_STATIC_GMOCK    "Prefer static gmock library, if available"    ON)
 
 # zstd requires us to add the threads
 FIND_PACKAGE(Threads REQUIRED)
@@ -100,10 +100,6 @@ endif ()
 
 if (DEFINED ENV{GTEST_HOME})
   set (GTEST_HOME "$ENV{GTEST_HOME}")
-endif ()
-
-if (DEFINED ENV{SPARSEHASH_C11_HOME})
-  set (SPARSEHASH_C11_HOME "$ENV{SPARSEHASH_C11_HOME}")
 endif ()
 
 # ----------------------------------------------------------------------
