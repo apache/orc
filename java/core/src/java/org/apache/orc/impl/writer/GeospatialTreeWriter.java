@@ -96,7 +96,8 @@ public class GeospatialTreeWriter extends TreeWriterBase {
           this.length.write(vec.length[offset + i]);
           rawDataSize += vec.length[offset + i];
           if (isGeometry) {
-            indexStatistics.updateGeometry(vec.vector[offset + i], vec.start[offset + i], vec.length[offset + i]);
+            indexStatistics.updateGeometry(vec.vector[offset + i],
+                    vec.start[offset + i], vec.length[offset + i]);
           }
           if (createBloomFilter) {
             if (bloomFilter != null) {
