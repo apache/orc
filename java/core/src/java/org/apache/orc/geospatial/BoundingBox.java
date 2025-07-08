@@ -201,7 +201,7 @@ public class BoundingBox {
    * @return true if the X dimension is empty, false otherwise.
    */
   public boolean isXEmpty() {
-    return Double.isInfinite(xMin) && Double.isInfinite(xMax);
+    return xMin > xMax;
   }
 
   /**
@@ -210,7 +210,7 @@ public class BoundingBox {
    * @return true if the Y dimension is empty, false otherwise.
    */
   public boolean isYEmpty() {
-    return Double.isInfinite(yMin) && Double.isInfinite(yMax);
+    return yMin > yMax;
   }
 
   /**
@@ -219,7 +219,7 @@ public class BoundingBox {
    * @return true if the Z dimension is empty, false otherwise.
    */
   public boolean isZEmpty() {
-    return Double.isInfinite(zMin) && Double.isInfinite(zMax);
+    return zMin > zMax;
   }
 
   /**
@@ -228,7 +228,7 @@ public class BoundingBox {
    * @return true if the M dimension is empty, false otherwise.
    */
   public boolean isMEmpty() {
-    return Double.isInfinite(mMin) && Double.isInfinite(mMax);
+    return mMin > mMax;
   }
 
   /**
