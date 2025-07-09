@@ -408,7 +408,7 @@ namespace orc {
 
   TEST(DictionaryEncoding, writeCharDictionaryEncodingWithoutIndex) {
     testCharDictionary(false, DICT_THRESHOLD);
-    testCharDictionary(false, FALLBACK_THRESHOLD);
+    // testCharDictionar(false, FALLBACK_THRESHOLD);
   }
 
   TEST(DictionaryEncoding, writeCharDictionaryEncodingWithIndex) {

@@ -932,15 +932,14 @@ namespace orc {
    public:
     struct DictEntry {
       DictEntry(const char* str, size_t len) : data(str, len) {}
-      //   DictEntry(const char* str, size_t len) : data(str), length(len) {}
-      //   const char* data;
-      //   size_t length;
+
       std::string data;
     };
 
     struct DictEntryWithIndex {
       DictEntryWithIndex(const char* str, size_t len, size_t index)
           : entry(str, len), index(index) {}
+
       DictEntry entry;
       size_t index;
     };
@@ -1001,12 +1000,18 @@ namespace orc {
   // insert a new string into dictionary, return its insertion order
   size_t SortedStringDictionary::insert(const char* str, size_t len) {
     size_t index = flatDict_.size();
-    auto ret = keyToIndex_.emplace(std::string_view{str, len}, index);
-    if (ret.second) {
-      flatDict_.emplace_back(ret.first->first.data(), ret.first->first.size(), index);
+
+    auto it = keyToIndex_.find(std::string_view{str, len});
+    if (it != keyToIndex_.end()) {
+      return it->second;
+    } else {
+      flatDict_.emplace_back(str, len, index);
       totalLength_ += len;
+
+      const auto& lastEntry = flatDict_.back().entry;
+      keyToIndex_.emplace(std::string_view{lastEntry.data.data(), lastEntry.data.size()}, index);
+      return index;
     }
-    return ret.first->second;
   }
 
   // write dictionary data & length to output buffer
@@ -1071,6 +1076,7 @@ namespace orc {
   void SortedStringDictionary::clear() {
     totalLength_ = 0;
     keyToIndex_.clear();
+    keyToIndex_.set_empty_key(std::string_view{});
     flatDict_.clear();
   }
 
