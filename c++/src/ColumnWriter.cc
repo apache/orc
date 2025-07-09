@@ -26,6 +26,8 @@
 #include "Timezone.hh"
 #include "Utils.hh"
 
+#include <sparsehash/dense_hash_map>
+
 namespace orc {
   StreamsFactory::~StreamsFactory() {
     // PASS
@@ -929,9 +931,11 @@ namespace orc {
   class SortedStringDictionary {
    public:
     struct DictEntry {
-      DictEntry(const char* str, size_t len) : data(str), length(len) {}
-      const char* data;
-      size_t length;
+      DictEntry(const char* str, size_t len) : data(str, len) {}
+      //   DictEntry(const char* str, size_t len) : data(str), length(len) {}
+      //   const char* data;
+      //   size_t length;
+      std::string data;
     };
 
     struct DictEntryWithIndex {
@@ -941,7 +945,10 @@ namespace orc {
       size_t index;
     };
 
-    SortedStringDictionary() : totalLength_(0) {}
+    SortedStringDictionary() : totalLength_(0) {
+      /// Need to set empty key otherwise dense_hash_map will not work correctly
+      keyToIndex_.set_empty_key(std::string_view{});
+    }
 
     // insert a new string into dictionary, return its insertion order
     size_t insert(const char* str, size_t len);
@@ -966,6 +973,7 @@ namespace orc {
    private:
     struct LessThan {
       bool operator()(const DictEntryWithIndex& l, const DictEntryWithIndex& r) {
+        /*
         const auto& left = l.entry;
         const auto& right = r.entry;
         int ret = memcmp(left.data, right.data, std::min(left.length, right.length));
@@ -973,11 +981,13 @@ namespace orc {
           return ret < 0;
         }
         return left.length < right.length;
+        */
+        return l.entry.data < r.entry.data;  // use std::string's operator<
       }
     };
 
     mutable std::vector<DictEntryWithIndex> flatDict_;
-    std::unordered_map<std::string, size_t> keyToIndex_;
+    google::dense_hash_map<std::string_view, size_t> keyToIndex_;
     uint64_t totalLength_;
 
     // use friend class here to avoid being bothered by const function calls
@@ -991,7 +1001,7 @@ namespace orc {
   // insert a new string into dictionary, return its insertion order
   size_t SortedStringDictionary::insert(const char* str, size_t len) {
     size_t index = flatDict_.size();
-    auto ret = keyToIndex_.emplace(std::string(str, len), index);
+    auto ret = keyToIndex_.emplace(std::string_view{str, len}, index);
     if (ret.second) {
       flatDict_.emplace_back(ret.first->first.data(), ret.first->first.size(), index);
       totalLength_ += len;
@@ -1006,8 +1016,8 @@ namespace orc {
 
     for (const auto& entryWithIndex : flatDict_) {
       const auto& entry = entryWithIndex.entry;
-      dataStream->write(entry.data, entry.length);
-      lengthEncoder->write(static_cast<int64_t>(entry.length));
+      dataStream->write(entry.data.data(), entry.data.size());
+      lengthEncoder->write(static_cast<int64_t>(entry.data.size()));
     }
   }
 
@@ -1417,8 +1427,8 @@ namespace orc {
     for (uint64_t i = 0; i != dictionary.idxInDictBuffer_.size(); ++i) {
       // write one row data in direct encoding
       dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer_[i])];
-      directDataStream->write(dictEntry->data, dictEntry->length);
-      directLengthEncoder->write(static_cast<int64_t>(dictEntry->length));
+      directDataStream->write(dictEntry->data.data(), dictEntry->data.size());
+      directLengthEncoder->write(static_cast<int64_t>(dictEntry->data.size()));
     }
 
     deleteDictStreams();

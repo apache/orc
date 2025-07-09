@@ -26,7 +26,7 @@ set(ZLIB_VERSION "1.3.1")
 set(GTEST_VERSION "1.12.1")
 set(PROTOBUF_VERSION "3.5.1")
 set(ZSTD_VERSION "1.5.7")
-set(SPARSEHASH_C11_VERSION "2.11.1")
+set(SPARSEHASH_VERSION "2.11.1")
 
 option(ORC_PREFER_STATIC_PROTOBUF "Prefer static protobuf library, if available" ON)
 option(ORC_PREFER_STATIC_SNAPPY   "Prefer static snappy library, if available"   ON)
@@ -582,40 +582,43 @@ if (NOT (ORC_PACKAGE_KIND STREQUAL "conan" OR ORC_PACKAGE_KIND STREQUAL "vcpkg")
 endif ()
 
 # ----------------------------------------------------------------------
-# SPARSEHASH_C11
+# SPARSEHASH
 
-set(SPARSEHASH_C11_HOME "${THIRDPARTY_DIR}/sparsehash_c11_ep-install")
-set(SPARSEHASH_C11_INCLUDE_DIR "${SPARSEHASH_C11_HOME}/include/")
-set(SPARSEHASH_C11_STATIC_LIB_NAME sparsehash_c11)
-set(SPARSEHASH_C11_STATIC_LIB "${SPARSEHASH_C11_HOME}/lib/${SPARSEHASH_C11_STATIC_LIB_NAME}")
-set(SPARSEHASH_C11_CMAKE_ARGS
-    -DCMAKE_INSTALL_PREFIX=${SPARSEHASH_C11_HOME}
+set(SPARSEHASH_HOME "${THIRDPARTY_DIR}/sparsehash_ep-install")
+set(SPARSEHASH_INCLUDE_DIR "${SPARSEHASH_HOME}/include/google")
+set(SPARSEHASH_CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=${SPARSEHASH_HOME}
     -DBUILD_SHARED_LIBS=OFF
     -DCMAKE_INSTALL_LIBDIR=lib
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 )
 if (BUILD_POSITION_INDEPENDENT_LIB)
-  set(SPARSEHASH_C11_CMAKE_ARGS ${SPARSEHASH_C11_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  set(SPARSEHASH_CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 endif ()
 
 if (CMAKE_VERSION VERSION_GREATER "3.7")
-    set(SPARSEHASH_C11_CONFIGURE SOURCE_SUBDIR "" CMAKE_ARGS ${SPARSEHASH_C11_CMAKE_ARGS})
+    set(SPARSEHASH_CONFIGURE SOURCE_SUBDIR "" CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS})
   else()
-    set(SPARSEHASH_C11_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${SPARSEHASH_C11_CMAKE_ARGS}
-            "${CMAKE_CURRENT_BINARY_DIR}/sparsehash_c11_ep-prefix/src/sparsehash_c11_ep/")
-  endif()
+    set(SPARSEHASH_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${SPARSEHASH_CMAKE_ARGS}
+            "${CMAKE_CURRENT_BINARY_DIR}/sparsehash_ep-prefix/src/sparsehash_ep/")
+endif()
 
-ExternalProject_Add(sparsehash_c11_ep
-    URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_C11_VERSION}.tar.gz"
-    ${SPARSEHASH_C11_CONFIGURE}
-    ${THIRDPARTY_LOG_OPTIONS}
-    BUILD_BYPRODUCTS ${SPARSEHASH_C11_STATIC_LIB})
+ExternalProject_Add(sparsehash_ep
+    URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
+    ${SPARSEHASH_CONFIGURE}
+    ${THIRDPARTY_LOG_OPTIONS})
 
-orc_add_built_library (sparsehash_c11_ep orc_sparsehash_c11 ${SPARSEHASH_C11_STATIC_LIB} ${SPARSEHASH_C11_INCLUDE_DIR})
-list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_sparsehash_c11|${SPARSEHASH_C11_STATIC_LIB}")
-list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_sparsehash_c11>")
+# sparsehash-c11 is header-only, create interface library
+add_library(orc_sparsehash INTERFACE)
+target_include_directories(orc_sparsehash INTERFACE 
+    $<BUILD_INTERFACE:${SPARSEHASH_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+add_dependencies(orc_sparsehash sparsehash_ep)
 
-add_library (orc::sparsehash_c11 ALIAS orc_sparsehash_c11)
+list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_sparsehash")
+list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_sparsehash>")
+
+add_library (orc::sparsehash ALIAS orc_sparsehash)
 
 # ----------------------------------------------------------------------
 # LIBHDFSPP

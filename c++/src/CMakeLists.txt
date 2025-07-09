@@ -211,6 +211,7 @@ target_link_libraries (orc
     $<BUILD_INTERFACE:orc::snappy>
     $<BUILD_INTERFACE:orc::lz4>
     $<BUILD_INTERFACE:orc::zstd>
+    $<BUILD_INTERFACE:orc::sparsehash>
     $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}>
   )
 
