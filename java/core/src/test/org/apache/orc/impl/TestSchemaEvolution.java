@@ -2356,6 +2356,9 @@ public class TestSchemaEvolution implements TestConf {
     final ZoneId WRITER_ZONE = ZoneId.of("America/New_York");
     final ZoneId READER_ZONE = ZoneId.of("Australia/Sydney");
 
+    final String EXPECT_LOCAL = "expected %s in local time zone";
+    final String EXPECT_UTC = "expected %s in UTC time zone";
+
     final TimeZone oldDefault = TimeZone.getDefault();
     final ZoneId UTC = ZoneId.of("UTC");
 
@@ -2420,50 +2423,62 @@ public class TestSchemaEvolution implements TestConf {
           assertEquals(expected1.replace(".1 ", " "),
               timestampToString(l1.time[current], l1.nanos[current], READER_ZONE),
               msg);
+          assertFalse(l1.isUTC(), EXPECT_LOCAL.formatted("l1"));
 
           assertEquals(expected2.replace(".1 ", " "),
               timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(l2.isUTC(), EXPECT_UTC.formatted("l2"));
 
           assertEquals(longTimestampToString(((r % 128) - offset), READER_ZONE),
               timestampToString(t1.time[current], t1.nanos[current], READER_ZONE),
               msg);
+          assertFalse(t1.isUTC(), EXPECT_LOCAL.formatted("t1"));
 
           assertEquals(longTimestampToString((r % 128), WRITER_ZONE),
               timestampToString(t2.time[current], t2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(t2.isUTC(), EXPECT_UTC.formatted("t2"));
 
           assertEquals(expected1,
               timestampToString(d1.time[current], d1.nanos[current], READER_ZONE),
               msg);
+          assertFalse(d1.isUTC(), EXPECT_LOCAL.formatted("d1"));
 
           assertEquals(expected2,
               timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(d2.isUTC(), EXPECT_UTC.formatted("d2"));
 
           assertEquals(expected1,
               timestampToString(dbl1.time[current], dbl1.nanos[current], READER_ZONE),
               msg);
+          assertFalse(dbl1.isUTC(), EXPECT_LOCAL.formatted("dbl1"));
 
           assertEquals(expected2,
               timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(dbl2.isUTC(), EXPECT_UTC.formatted("dbl2"));
 
           assertEquals(expectedDate1,
               timestampToString(dt1.time[current], dt1.nanos[current], READER_ZONE),
               msg);
+          assertFalse(dt1.isUTC(), EXPECT_LOCAL.formatted("dt1"));
 
           assertEquals(expectedDate2,
               timestampToString(dt2.time[current], dt2.nanos[current], UTC),
               msg);
+          assertTrue(dt2.isUTC(), EXPECT_UTC.formatted("dt2"));
 
           assertEquals(expected1,
               timestampToString(s1.time[current], s1.nanos[current], READER_ZONE),
               msg);
+          assertFalse(s1.isUTC(), EXPECT_LOCAL.formatted("s1"));
 
           assertEquals(expected2,
               timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(s2.isUTC(), EXPECT_UTC.formatted("s2"));
           current += 1;
         }
         assertFalse(rows.nextBatch(batch));
@@ -2488,42 +2503,52 @@ public class TestSchemaEvolution implements TestConf {
           assertEquals(expected1.replace(".1 ", " "),
               timestampToString(l1.time[current], l1.nanos[current], UTC),
               msg);
+          assertTrue(l1.isUTC(), EXPECT_UTC.formatted("l1"));
 
           assertEquals(expected2.replace(".1 ", " "),
               timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(l2.isUTC(), EXPECT_UTC.formatted("l2"));
 
           assertEquals(expected1,
               timestampToString(d1.time[current], d1.nanos[current], UTC),
               msg);
+          assertTrue(d1.isUTC(), EXPECT_UTC.formatted("d1"));
 
           assertEquals(expected2,
               timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(d2.isUTC(), EXPECT_UTC.formatted("d2"));
 
           assertEquals(expected1,
               timestampToString(dbl1.time[current], dbl1.nanos[current], UTC),
               msg);
+          assertTrue(dbl1.isUTC(), EXPECT_UTC.formatted("dbl1"));
 
           assertEquals(expected2,
               timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(dbl2.isUTC(), EXPECT_UTC.formatted("dbl2"));
 
           assertEquals(expectedDate,
               timestampToString(dt1.time[current], dt1.nanos[current], UTC),
               msg);
+          assertTrue(dt1.isUTC(), EXPECT_UTC.formatted("dt1"));
 
           assertEquals(expectedDate,
               timestampToString(dt2.time[current], dt2.nanos[current], UTC),
               msg);
+          assertTrue(dt2.isUTC(), EXPECT_UTC.formatted("dt2"));
 
           assertEquals(expected1,
               timestampToString(s1.time[current], s1.nanos[current], UTC),
               msg);
+          assertTrue(s1.isUTC(), EXPECT_UTC.formatted("s1"));
 
           assertEquals(expected2,
               timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE),
               msg);
+          assertTrue(s2.isUTC(), EXPECT_UTC.formatted("s2"));
           current += 1;
         }
         assertFalse(rows.nextBatch(batch));
