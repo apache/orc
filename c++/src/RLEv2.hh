@@ -123,7 +123,7 @@ namespace orc {
     int64_t* zigzagLiterals_;
     int64_t* baseRedLiterals_;
     int64_t* adjDeltas_;
-    static const int64_t BASE_VALUE_LIMIT = int64_t(1) << 56;
+    static constexpr int64_t BASE_VALUE_LIMIT = int64_t(1) << 56;
 
     uint32_t getOpCode(EncodingType encoding);
     int64_t* prepareForDirectOrPatchedBase(EncodingOption& option);
