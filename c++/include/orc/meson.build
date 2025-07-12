@@ -34,6 +34,7 @@ install_headers(
         'ColumnPrinter.hh',
         'Common.hh',
         'Exceptions.hh',
+        'Geospatial.hh',
         'Int128.hh',
         'MemoryPool.hh',
         'OrcFile.hh',
