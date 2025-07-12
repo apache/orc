@@ -25,10 +25,9 @@
 #include <memory>
 
 namespace orc {
-
-  NO_SANITIZE_ATTR
   inline int64_t zigZag(int64_t value) {
-    return (value << 1) ^ (value >> 63);
+    uint64_t uval = static_cast<uint64_t>(value);
+    return ((uval << 1) ^ (static_cast<int64_t>(uval) >> 63));
   }
 
   inline int64_t unZigZag(uint64_t value) {
