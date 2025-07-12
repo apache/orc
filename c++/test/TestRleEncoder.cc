@@ -285,5 +285,43 @@ namespace orc {
     runExampleTest(data, 9, expectedEncoded, 13);
   }
 
+  TEST_P(RleTest, RleV2_value_limit_test) {
+    std::vector<int64_t> inputData = {-9007199254740992l,
+                                      -8725724278030337l,
+                                      -1125762467889153l,
+                                      -1l,
+                                      -9007199254740992l,
+                                      -9007199254740992l,
+                                      -497l,
+                                      127l,
+                                      -1l,
+                                      -72057594037927936l,
+                                      -4194304l,
+                                      -9007199254740992l,
+                                      -4503599593816065l,
+                                      -4194304l,
+                                      -8936830510563329l,
+                                      -9007199254740992l,
+                                      -1l,
+                                      -70334384439312l,
+                                      -4063233l,
+                                      -6755399441973249l};
+    int numValues = inputData.size();
+
+    // Invoke the encoder.
+    const bool isSigned = true;
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+
+    std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
+    encoder->add(inputData.data(), numValues, nullptr);
+    encoder->finishEncode();
+
+    encoder->add(inputData.data(), numValues, nullptr);
+    encoder->flush();
+
+    // Decode and verify.
+    decodeAndVerify(RleVersion_2, memStream, inputData.data(), numValues, nullptr, isSigned);
+  }
+
   INSTANTIATE_TEST_SUITE_P(OrcTest, RleTest, Values(true, false));
 }  // namespace orc
