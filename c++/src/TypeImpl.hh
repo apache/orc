@@ -90,7 +90,7 @@ namespace orc {
 
     uint64_t getScale() const override;
 
-    const std::string& getCRS() const override;
+    const std::string& getCrs() const override;
 
     geospatial::EdgeInterpolationAlgorithm getAlgorithm() const override;
 

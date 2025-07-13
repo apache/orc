@@ -149,7 +149,7 @@ namespace orc {
     return scale_;
   }
 
-  const std::string& TypeImpl::getCRS() const {
+  const std::string& TypeImpl::getCrs() const {
     return crs_;
   }
 
@@ -227,7 +227,7 @@ namespace orc {
   }
 
   namespace geospatial {
-    std::string AlgotoString(EdgeInterpolationAlgorithm algo) {
+    std::string AlgoToString(EdgeInterpolationAlgorithm algo) {
       switch (algo) {
         case EdgeInterpolationAlgorithm::SPHERICAL:
           return "speherial";
@@ -355,7 +355,7 @@ namespace orc {
       case GEOGRAPHY: {
         std::stringstream result;
         result << "geography(" << crs_ << ","
-               << geospatial::AlgotoString(edgeInterpolationAlgorithm_) << ")";
+               << geospatial::AlgoToString(edgeInterpolationAlgorithm_) << ")";
         return result.str();
       }
       default:
@@ -632,10 +632,10 @@ namespace orc {
         result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getMaximumLength());
         break;
       case GEOMETRY:
-        result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getCRS());
+        result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getCrs());
         break;
       case GEOGRAPHY:
-        result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getCRS(),
+        result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getCrs(),
                                             fileType->getAlgorithm());
         break;
 

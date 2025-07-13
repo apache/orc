@@ -33,7 +33,7 @@ namespace orc {
       ANDOYER = 3,
       KARNEY = 4
     };
-    std::string AlgotoString(EdgeInterpolationAlgorithm algo);
+    std::string AlgoToString(EdgeInterpolationAlgorithm algo);
     EdgeInterpolationAlgorithm AlgoFromString(const std::string& algo);
   }  // namespace geospatial
 
@@ -74,8 +74,8 @@ namespace orc {
     virtual uint64_t getPrecision() const = 0;
     virtual uint64_t getScale() const = 0;
     // for geospatial types only
-    virtual const std::string& getCRS() const = 0;
-    // for geography types only
+    virtual const std::string& getCrs() const = 0;
+    // for geography type only
     virtual geospatial::EdgeInterpolationAlgorithm getAlgorithm() const = 0;
     virtual Type& setAttribute(const std::string& key, const std::string& value) = 0;
     virtual bool hasAttributeKey(const std::string& key) const = 0;

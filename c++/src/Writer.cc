@@ -705,12 +705,12 @@ namespace orc {
       }
       case GEOMETRY: {
         protoType.set_kind(proto::Type_Kind_GEOMETRY);
-        protoType.set_crs(t.getCRS());
+        protoType.set_crs(t.getCrs());
         break;
       }
       case GEOGRAPHY: {
         protoType.set_kind(proto::Type_Kind_GEOGRAPHY);
-        protoType.set_crs(t.getCRS());
+        protoType.set_crs(t.getCrs());
         switch (t.getAlgorithm()) {
           case geospatial::EdgeInterpolationAlgorithm::SPHERICAL: {
             protoType.set_algorithm(proto::Type_EdgeInterpolationAlgorithm_SPHERICAL);
