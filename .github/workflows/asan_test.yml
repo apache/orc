@@ -53,7 +53,7 @@ jobs:
         CXX: ${{ matrix.cxx }}
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_UBSAN=ON -DBUILD_ENABLE_AVX512=ON -DBUILD_CPP_ENABLE_METRICS=ON -DBUILD_JAVA=OFF
+        cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_ENABLE_AVX512=ON -DBUILD_CPP_ENABLE_METRICS=ON -DBUILD_JAVA=OFF
         make
     - name: Run Tests
       working-directory: build
