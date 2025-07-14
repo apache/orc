@@ -51,6 +51,8 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
+      <!-- Spark uses org.apache.commons.lang3.SystemUtils -->
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
