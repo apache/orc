@@ -420,6 +420,8 @@ int main(int argc, char* argv[]) {
           case orc::LIST:
           case orc::MAP:
           case orc::UNION:
+          case orc::GEOMETRY:
+          case orc::GEOGRAPHY:
             throw std::runtime_error(subType->toString() + " is not supported yet.");
         }
       }

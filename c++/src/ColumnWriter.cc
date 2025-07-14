@@ -17,8 +17,11 @@
  */
 
 #include "orc/Int128.hh"
+#include "orc/Statistics.hh"
+#include "orc/Type.hh"
 #include "orc/Writer.hh"
 
+#include <memory>
 #include "ByteRLE.hh"
 #include "ColumnWriter.hh"
 #include "RLE.hh"
@@ -2871,6 +2874,65 @@ namespace orc {
     }
   }
 
+  class GeospatialColumnWriter : public BinaryColumnWriter {
+   public:
+    GeospatialColumnWriter(const Type& type, const StreamsFactory& factory,
+                           const WriterOptions& options)
+        : BinaryColumnWriter(type, factory, options),
+          isGeometry_(type.getKind() == TypeKind::GEOMETRY) {}
+
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
+                     const char* incomingMask) override {
+      ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
+
+      const StringVectorBatch* strBatch = dynamic_cast<const StringVectorBatch*>(&rowBatch);
+      if (strBatch == nullptr) {
+        throw InvalidArgument("Failed to cast to StringVectorBatch");
+      }
+      auto data = &strBatch->data[offset];
+      auto length = &strBatch->length[offset];
+      const char* notNull = strBatch->hasNulls ? strBatch->notNull.data() + offset : nullptr;
+
+      bool hasNull = false;
+      GeospatialColumnStatisticsImpl* geoStats = nullptr;
+      if (isGeometry_) {
+        geoStats = dynamic_cast<GeospatialColumnStatisticsImpl*>(colIndexStatistics.get());
+      }
+
+      uint64_t count = 0;
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (notNull == nullptr || notNull[i]) {
+          uint64_t len = static_cast<uint64_t>(length[i]);
+          directDataStream->write(data[i], len);
+
+          // update stats
+          if (geoStats) {
+            ++count;
+            geoStats->update(data[i], len);
+          }
+
+          if (enableBloomFilter) {
+            bloomFilter->addBytes(data[i], length[i]);
+          }
+        } else if (!hasNull) {
+          hasNull = true;
+          if (geoStats) {
+            geoStats->setHasNull(hasNull);
+          }
+        }
+      }
+
+      directLengthEncoder->add(length, numValues, notNull);
+
+      if (geoStats) {
+        geoStats->increase(count);
+      }
+    }
+
+   private:
+    bool isGeometry_;
+  };
+
   std::unique_ptr<ColumnWriter> buildWriter(const Type& type, const StreamsFactory& factory,
                                             const WriterOptions& options) {
     switch (static_cast<int64_t>(type.getKind())) {
@@ -2941,6 +3003,9 @@ namespace orc {
         return std::make_unique<MapColumnWriter>(type, factory, options);
       case UNION:
         return std::make_unique<UnionColumnWriter>(type, factory, options);
+      case GEOMETRY:
+      case GEOGRAPHY:
+        return std::make_unique<GeospatialColumnWriter>(type, factory, options);
       default:
         throw NotImplementedYet(
             "Type is not supported yet for creating "

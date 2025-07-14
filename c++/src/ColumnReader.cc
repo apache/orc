@@ -1747,6 +1747,8 @@ namespace orc {
       case CHAR:
       case STRING:
       case VARCHAR:
+      case GEOMETRY:
+      case GEOGRAPHY:
         switch (static_cast<int64_t>(stripe.getEncoding(type.getColumnId()).kind())) {
           case proto::ColumnEncoding_Kind_DICTIONARY:
           case proto::ColumnEncoding_Kind_DICTIONARY_V2:
