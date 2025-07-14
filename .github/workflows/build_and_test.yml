@@ -23,13 +23,13 @@ on:
     - 'site/**'
     - 'conan/**'
     branches:
-    - main
+    - branch-2.2
   pull_request:
     paths-ignore:
     - 'site/**'
     - 'conan/**'
     branches:
-    - main
+    - branch-2.2
 
 # Cancel previous PR build and test
 concurrency:
@@ -56,7 +56,7 @@ jobs:
     - name: "Test"
       run: |
         cd docker
-        ./run-one.sh local main ${{ matrix.os }}
+        ./run-one.sh local branch-2.2 ${{ matrix.os }}
 
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
