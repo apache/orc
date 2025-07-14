@@ -50,7 +50,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libpthread-stubs0-dev libboost-all-dev clang gcc g++
+        sudo apt-get install -y build-essential cmake libpthread-stubs0-dev libboost-all-dev clang
     - name: Configure and Build with ASAN and UBSAN
       env:
         CC: ${{ matrix.cc }}
