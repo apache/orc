@@ -151,6 +151,7 @@ source_files += files(
     'ConvertColumnReader.cc',
     'CpuInfoUtil.cc',
     'Exceptions.cc',
+    'Geospatial.cc',
     'Int128.cc',
     'LzoDecompressor.cc',
     'MemoryPool.cc',

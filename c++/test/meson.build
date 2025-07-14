@@ -50,10 +50,12 @@ test_sources = [
     'TestSargsApplier.cc',
     'TestSearchArgument.cc',
     'TestSchemaEvolution.cc',
+    'TestStatistics.cc',
     'TestStripeIndexStatistics.cc',
     'TestTimestampStatistics.cc',
     'TestTimezone.cc',
     'TestType.cc',
+    'TestUtil.cc',
     'TestWriter.cc',
     'TestCache.cc',        
 ]
