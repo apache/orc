@@ -35,7 +35,7 @@ option(ORC_PREFER_STATIC_ZLIB     "Prefer static zlib library, if available"    
 option(ORC_PREFER_STATIC_GMOCK    "Prefer static gmock library, if available"    ON)
 
 # zstd requires us to add the threads
-# FIND_PACKAGE(Threads REQUIRED)
+FIND_PACKAGE(Threads REQUIRED)
 
 set(THIRDPARTY_DIR "${PROJECT_BINARY_DIR}/c++/libs/thirdparty")
 set(THIRDPARTY_LOG_OPTIONS LOG_CONFIGURE 1
