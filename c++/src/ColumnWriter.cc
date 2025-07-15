@@ -931,9 +931,9 @@ namespace orc {
   class SortedStringDictionary {
    public:
     struct DictEntry {
-      DictEntry(const char* str, size_t len) : data(str, len) {}
+      DictEntry(const char* str, size_t len) : data(std::make_unique<std::string>(str, len)) {}
 
-      std::string data;
+      std::unique_ptr<std::string> data;
     };
 
     SortedStringDictionary() : totalLength_(0) {
@@ -967,6 +967,7 @@ namespace orc {
 
     // store dictionary entries in insertion order
     mutable std::vector<DictEntry> flatDict_;
+
     // map from string to its insertion order index
     google::dense_hash_map<std::string_view, size_t> keyToIndex_;
     uint64_t totalLength_;
@@ -991,7 +992,7 @@ namespace orc {
       totalLength_ += len;
 
       const auto& lastEntry = flatDict_.back();
-      keyToIndex_.emplace(std::string_view{lastEntry.data.data(), lastEntry.data.size()}, index);
+      keyToIndex_.emplace(std::string_view{lastEntry.data->data(), lastEntry.data->size()}, index);
       return index;
     }
   }
@@ -1000,8 +1001,8 @@ namespace orc {
   void SortedStringDictionary::flush(AppendOnlyBufferedStream* dataStream,
                                      RleEncoder* lengthEncoder) const {
     for (const auto& entry : flatDict_) {
-      dataStream->write(entry.data.data(), entry.data.size());
-      lengthEncoder->write(static_cast<int64_t>(entry.data.size()));
+      dataStream->write(entry.data->data(), entry.data->size());
+      lengthEncoder->write(static_cast<int64_t>(entry.data->size()));
     }
   }
 
@@ -1376,8 +1377,8 @@ namespace orc {
     for (uint64_t i = 0; i != dictionary.idxInDictBuffer_.size(); ++i) {
       // write one row data in direct encoding
       const auto& dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer_[i])];
-      directDataStream->write(dictEntry.data.data(), dictEntry.data.size());
-      directLengthEncoder->write(static_cast<int64_t>(dictEntry.data.size()));
+      directDataStream->write(dictEntry.data->data(), dictEntry.data->size());
+      directLengthEncoder->write(static_cast<int64_t>(dictEntry.data->size()));
     }
 
     deleteDictStreams();
