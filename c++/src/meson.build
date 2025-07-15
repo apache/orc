@@ -187,6 +187,7 @@ orc_lib = library(
         lz4_dep,
         zstd_dep,
         threads_dep,
+        sparsehash_c11_dep,
     ],
     include_directories: incdir,
     install: true,
