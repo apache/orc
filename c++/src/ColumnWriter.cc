@@ -1019,7 +1019,6 @@ namespace orc {
   void SortedStringDictionary::clear() {
     totalLength_ = 0;
     keyToIndex_.clear();
-    keyToIndex_.set_empty_key(std::string_view{});
     flatDict_.clear();
   }
 
