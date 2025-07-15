@@ -74,7 +74,7 @@
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
-    <maven.version>3.9.10</maven.version>
+    <maven.version>3.9.11</maven.version>
 
     <mockito.version>5.10.0</mockito.version>
     <orc-format.version>1.1.0</orc-format.version>
