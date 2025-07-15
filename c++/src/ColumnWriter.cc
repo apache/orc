@@ -959,12 +959,6 @@ namespace orc {
     void clear();
 
    private:
-    struct LessThan {
-      bool operator()(const DictEntry& l, const DictEntry& r) {
-        return l.data < r.data;  // use std::string's operator<
-      }
-    };
-
     // store dictionary entries in insertion order
     mutable std::vector<DictEntry> flatDict_;
 
