@@ -77,9 +77,8 @@ namespace orc {
     add<int16_t>(data, numValues, notNull);
   }
 
-  NO_SANITIZE_ATTR
   void RleEncoder::writeVslong(int64_t val) {
-    writeVulong((val << 1) ^ (val >> 63));
+    writeVulong((static_cast<uint64_t>(val) << 1) ^ (val >> 63));
   }
 
   void RleEncoder::writeVulong(int64_t val) {
