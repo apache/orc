@@ -2519,6 +2519,39 @@ public class TestRecordReaderImpl implements TestConf {
   }
 
   @Test
+  public void testStringStatisticsWithPrestoWriter() throws Exception {
+    // struct<id:int,name:string,score:int>
+    Path testFilePath = new Path(ClassLoader.
+        getSystemResource("orc-file-presto-string.orc").getPath());
+    FileSystem fs = FileSystem.get(conf);
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+
+    try (RecordReader rr = reader.rows()) {
+      RecordReaderImpl rri = (RecordReaderImpl) rr;
+      // x.z id is 2, We just need to read this column
+      OrcIndex orcIndex = rri.readRowIndex(0,
+          new boolean[] { false, false, true, false },
+          new boolean[] { false, false, true, false });
+      OrcProto.RowIndex[] rowGroupIndex = orcIndex.getRowGroupIndex();
+      OrcProto.ColumnStatistics statistics = rowGroupIndex[2].getEntry(0).getStatistics();
+      OrcProto.ColumnEncoding encoding = OrcProto.ColumnEncoding.newBuilder()
+          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2)
+          .build();
+      PredicateLeaf pred = createPredicateLeaf(
+          PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.STRING, "name", null, null);
+
+      TruthValue truthValue = RecordReaderImpl.evaluatePredicateProto(
+          statistics,
+          pred, null, encoding, null,
+          CURRENT_WRITER, TypeDescription.createString());
+
+      assertEquals(TruthValue.YES_NO_NULL, truthValue);
+    }
+  }
+
+  @Test
   public void testDoubleColumnWithoutDoubleStatistics() throws Exception {
     // orc-file-no-double-statistic.orc is an orc file created by cudf with a schema of
     // struct<x:double>, one row and a value of null.
