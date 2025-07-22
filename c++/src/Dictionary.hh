@@ -20,7 +20,9 @@
 #include <memory>
 #include <string>
 
+#ifdef BUILD_SPARSEHASH
 #include <sparsehash/dense_hash_map>
+#endif
 
 #include "RLE.hh"
 
@@ -45,8 +47,10 @@ namespace orc {
     };
 
     SortedStringDictionary() : totalLength_(0) {
+#ifdef BUILD_SPARSEHASH
       /// Need to set empty key otherwise dense_hash_map will not work correctly
       keyToIndex_.set_empty_key(std::string_view{});
+#endif
     }
 
     // insert a new string into dictionary, return its insertion order
@@ -78,8 +82,13 @@ namespace orc {
     // store dictionary entries in insertion order
     mutable std::vector<DictEntryWithIndex> flatDict_;
 
+#ifdef BUILD_SPARSEHASH
     // map from string to its insertion order index
     google::dense_hash_map<std::string_view, size_t> keyToIndex_;
+#else
+    std::unordered_map<std::string_view, size_t> keyToIndex_;
+#endif
+
     uint64_t totalLength_;
 
     // use friend class here to avoid being bothered by const function calls

@@ -30,8 +30,6 @@
 #include "Timezone.hh"
 #include "Utils.hh"
 
-#include <sparsehash/dense_hash_map>
-
 namespace orc {
   StreamsFactory::~StreamsFactory() {
     // PASS
