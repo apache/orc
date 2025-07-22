@@ -170,6 +170,7 @@ source_files += files(
     'TypeImpl.cc',
     'Vector.cc',
     'Writer.cc',
+    'Dictionary.cc',
 )
 
 incdir = include_directories('../include')
