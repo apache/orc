@@ -170,6 +170,7 @@ set(SOURCE_FILES
   Compression.cc
   ConvertColumnReader.cc
   CpuInfoUtil.cc
+  Dictionary.cc
   Exceptions.cc
   Geospatial.cc
   Int128.cc
@@ -189,8 +190,7 @@ set(SOURCE_FILES
   Timezone.cc
   TypeImpl.cc
   Vector.cc
-  Writer.cc
-  Dictionary.cc)
+  Writer.cc)
 
 if(BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)

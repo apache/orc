@@ -22,6 +22,8 @@
 
 #ifdef BUILD_SPARSEHASH
 #include <sparsehash/dense_hash_map>
+#else
+#include <unordered_map>
 #endif
 
 #include "RLE.hh"

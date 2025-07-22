@@ -150,6 +150,7 @@ source_files += files(
     'Compression.cc',
     'ConvertColumnReader.cc',
     'CpuInfoUtil.cc',
+    'Dictionary.cc',
     'Exceptions.cc',
     'Geospatial.cc',
     'Int128.cc',
@@ -170,7 +171,6 @@ source_files += files(
     'TypeImpl.cc',
     'Vector.cc',
     'Writer.cc',
-    'Dictionary.cc',
 )
 
 incdir = include_directories('../include')
