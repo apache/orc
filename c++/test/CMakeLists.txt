@@ -77,8 +77,8 @@ target_link_libraries (orc-test
   orc::zlib
   orc::gtest
   orc::gmock
-  orc::sparsehash
   orc-test-include
+  ${SPARSEHASH_LIBRARIES}
 )
 
 add_executable (create-test-files

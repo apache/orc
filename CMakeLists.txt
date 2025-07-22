@@ -45,6 +45,10 @@ option (BUILD_LIBHDFSPP
     "Include LIBHDFSPP library in the build process"
      OFF)
 
+option (BUILD_SPARSEHASH
+    "Include sparsehash library in the build process"
+    OFF)
+
 option(BUILD_CPP_TESTS
     "Build the googletest unit tests"
     ON)
