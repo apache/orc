@@ -939,6 +939,14 @@ namespace orc {
       std::unique_ptr<std::string> data;
     };
 
+    struct DictEntryWithIndex {
+      DictEntryWithIndex(const char* str, size_t len, size_t index)
+          : entry(str, len), index(index) {}
+
+      DictEntry entry;
+      size_t index;
+    };
+
     SortedStringDictionary() : totalLength_(0) {
       /// Need to set empty key otherwise dense_hash_map will not work correctly
       keyToIndex_.set_empty_key(std::string_view{});
@@ -950,8 +958,11 @@ namespace orc {
     // write dictionary data & length to output buffer
     void flush(AppendOnlyBufferedStream* dataStream, RleEncoder* lengthEncoder) const;
 
+    // reorder input index buffer from insertion order to dictionary order
+    void reorder(std::vector<int64_t>& idxBuffer) const;
+
     // get dict entries in insertion order
-    const std::vector<DictEntry>& getEntriesInInsertionOrder() const;
+    void getEntriesInInsertionOrder(std::vector<const DictEntry*>&) const;
 
     // return count of entries
     size_t size() const;
@@ -962,8 +973,13 @@ namespace orc {
     void clear();
 
    private:
+    struct LessThan {
+      bool operator()(const DictEntryWithIndex& l, const DictEntryWithIndex& r) {
+        return l.entry.data < r.entry.data;  // use std::string's operator<
+      }
+    };
     // store dictionary entries in insertion order
-    mutable std::vector<DictEntry> flatDict_;
+    mutable std::vector<DictEntryWithIndex> flatDict_;
 
     // map from string to its insertion order index
     google::dense_hash_map<std::string_view, size_t> keyToIndex_;
@@ -985,10 +1001,10 @@ namespace orc {
     if (it != keyToIndex_.end()) {
       return it->second;
     } else {
-      flatDict_.emplace_back(str, len);
+      flatDict_.emplace_back(str, len, index);
       totalLength_ += len;
 
-      const auto& lastEntry = flatDict_.back();
+      const auto& lastEntry = flatDict_.back().entry;
       keyToIndex_.emplace(std::string_view{lastEntry.data->data(), lastEntry.data->size()}, index);
       return index;
     }
@@ -997,16 +1013,45 @@ namespace orc {
   // write dictionary data & length to output buffer
   void SortedStringDictionary::flush(AppendOnlyBufferedStream* dataStream,
                                      RleEncoder* lengthEncoder) const {
-    for (const auto& entry : flatDict_) {
-      dataStream->write(entry.data->data(), entry.data->size());
-      lengthEncoder->write(static_cast<int64_t>(entry.data->size()));
+    std::sort(flatDict_.begin(), flatDict_.end(), LessThan());
+
+    for (const auto& entryWithIndex : flatDict_) {
+      dataStream->write(entryWithIndex.entry.data->data(), entryWithIndex.entry.data->size());
+      lengthEncoder->write(static_cast<int64_t>(entryWithIndex.entry.data->size()));
+    }
+  }
+
+  /**
+   * Reorder input index buffer from insertion order to dictionary order
+   *
+   * We require this function because string values are buffered by indexes
+   * in their insertion order. Until the entire dictionary is complete can
+   * we get their sorted indexes in the dictionary in that ORC specification
+   * demands dictionary should be ordered. Therefore this function transforms
+   * the indexes from insertion order to dictionary value order for final
+   * output.
+   */
+  void SortedStringDictionary::reorder(std::vector<int64_t>& idxBuffer) const {
+    // iterate the dictionary to get mapping from insertion order to value order
+    std::vector<size_t> mapping(flatDict_.size());
+    for (size_t i = 0; i < flatDict_.size(); ++i) {
+      mapping[flatDict_[i].index] = i;
+    }
+
+    // do the transformation
+    for (size_t i = 0; i != idxBuffer.size(); ++i) {
+      idxBuffer[i] = static_cast<int64_t>(mapping[static_cast<size_t>(idxBuffer[i])]);
     }
   }
 
   // get dict entries in insertion order
-  const std::vector<SortedStringDictionary::DictEntry>&
-  SortedStringDictionary::getEntriesInInsertionOrder() const {
-    return flatDict_;
+  void SortedStringDictionary::getEntriesInInsertionOrder(
+      std::vector<const DictEntry*>& entries) const {
+    /// flatDict_ is sorted in insertion order before [[SortedStringDictionary::flush]] is invoked.
+    entries.resize(flatDict_.size());
+    for (size_t i = 0; i < flatDict_.size(); ++i) {
+      entries[i] = &(flatDict_[i].entry);
+    }
   }
 
   // return count of entries
@@ -1324,6 +1369,9 @@ namespace orc {
       // flush dictionary data & length streams
       dictionary.flush(dictStream.get(), dictLengthEncoder.get());
 
+      // convert index from insertion order to dictionary order
+      dictionary.reorder(dictionary.idxInDictBuffer_);
+
       // write data sequences
       int64_t* data = dictionary.idxInDictBuffer_.data();
       if (enableIndex) {
@@ -1367,14 +1415,15 @@ namespace orc {
     }
 
     // get dictionary entries in insertion order
-    const auto& entries = dictionary.getEntriesInInsertionOrder();
+    std::vector<const SortedStringDictionary::DictEntry*> entries;
+    dictionary.getEntriesInInsertionOrder(entries);
 
     // store each length of the data into a vector
     for (uint64_t i = 0; i != dictionary.idxInDictBuffer_.size(); ++i) {
       // write one row data in direct encoding
       const auto& dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer_[i])];
-      directDataStream->write(dictEntry.data->data(), dictEntry.data->size());
-      directLengthEncoder->write(static_cast<int64_t>(dictEntry.data->size()));
+      directDataStream->write(dictEntry->data->data(), dictEntry->data->size());
+      directLengthEncoder->write(static_cast<int64_t>(dictEntry->data->size()));
     }
 
     deleteDictStreams();
