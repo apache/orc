@@ -429,6 +429,7 @@ public class OrcFile {
   public static class ZstdCompressOptions {
     private int compressionZstdLevel;
     private int compressionZstdWindowLog;
+    private int compressionZstdStrategy;
 
     public int getCompressionZstdLevel() {
       return compressionZstdLevel;
@@ -444,6 +445,14 @@ public class OrcFile {
 
     public void setCompressionZstdWindowLog(int compressionZstdWindowLog) {
       this.compressionZstdWindowLog = compressionZstdWindowLog;
+    }
+
+    public int getCompressionZstdStrategy() {
+      return compressionZstdStrategy;
+    }
+
+    public void setCompressionZstdStrategy(int compressionZstdStrategy) {
+      this.compressionZstdStrategy = compressionZstdStrategy;
     }
   }
 
@@ -520,6 +529,8 @@ public class OrcFile {
               OrcConf.COMPRESSION_ZSTD_LEVEL.getInt(tableProperties, conf));
       zstdCompressOptions.setCompressionZstdWindowLog(
               OrcConf.COMPRESSION_ZSTD_WINDOWLOG.getInt(tableProperties, conf));
+      zstdCompressOptions.setCompressionZstdStrategy(
+          OrcConf.COMPRESSION_ZSTD_STRATEGY.getInt(tableProperties, conf));
 
       paddingTolerance =
           OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(tableProperties, conf);
