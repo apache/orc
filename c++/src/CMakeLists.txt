@@ -170,6 +170,7 @@ set(SOURCE_FILES
   Compression.cc
   ConvertColumnReader.cc
   CpuInfoUtil.cc
+  Dictionary.cc
   Exceptions.cc
   Geospatial.cc
   Int128.cc
@@ -212,8 +213,8 @@ target_link_libraries (orc
     $<BUILD_INTERFACE:orc::snappy>
     $<BUILD_INTERFACE:orc::lz4>
     $<BUILD_INTERFACE:orc::zstd>
-    $<BUILD_INTERFACE:orc::sparsehash>
     $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}>
+    $<BUILD_INTERFACE:${SPARSEHASH_LIBRARIES}>
   )
 
 target_include_directories (orc
@@ -231,6 +232,10 @@ target_include_directories (orc
 if (BUILD_LIBHDFSPP)
   target_compile_definitions(orc PUBLIC -DBUILD_LIBHDFSPP)
 endif (BUILD_LIBHDFSPP)
+
+if (BUILD_SPARSEHASH)
+  target_compile_definitions(orc PUBLIC -DBUILD_SPARSEHASH)
+endif (BUILD_SPARSEHASH)
 
 if (BUILD_CPP_ENABLE_METRICS)
   message(STATUS "Enable the metrics collection")

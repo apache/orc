@@ -24,12 +24,11 @@
 #include <memory>
 #include "ByteRLE.hh"
 #include "ColumnWriter.hh"
+#include "Dictionary.hh"
 #include "RLE.hh"
 #include "Statistics.hh"
 #include "Timezone.hh"
 #include "Utils.hh"
-
-#include <sparsehash/dense_hash_map>
 
 namespace orc {
   StreamsFactory::~StreamsFactory() {
@@ -927,104 +926,6 @@ namespace orc {
     ColumnWriter::finishStreams();
     dataStream_->finishStream();
   }
-
-  /**
-   * Implementation of increasing sorted string dictionary
-   */
-  class SortedStringDictionary {
-   public:
-    struct DictEntry {
-      DictEntry(const char* str, size_t len) : data(std::make_unique<std::string>(str, len)) {}
-
-      std::unique_ptr<std::string> data;
-    };
-
-    SortedStringDictionary() : totalLength_(0) {
-      /// Need to set empty key otherwise dense_hash_map will not work correctly
-      keyToIndex_.set_empty_key(std::string_view{});
-    }
-
-    // insert a new string into dictionary, return its insertion order
-    size_t insert(const char* str, size_t len);
-
-    // write dictionary data & length to output buffer
-    void flush(AppendOnlyBufferedStream* dataStream, RleEncoder* lengthEncoder) const;
-
-    // get dict entries in insertion order
-    const std::vector<DictEntry>& getEntriesInInsertionOrder() const;
-
-    // return count of entries
-    size_t size() const;
-
-    // return total length of strings in the dictioanry
-    uint64_t length() const;
-
-    void clear();
-
-   private:
-    // store dictionary entries in insertion order
-    mutable std::vector<DictEntry> flatDict_;
-
-    // map from string to its insertion order index
-    google::dense_hash_map<std::string_view, size_t> keyToIndex_;
-    uint64_t totalLength_;
-
-    // use friend class here to avoid being bothered by const function calls
-    friend class StringColumnWriter;
-    friend class CharColumnWriter;
-    friend class VarCharColumnWriter;
-    // store indexes of insertion order in the dictionary for not-null rows
-    std::vector<int64_t> idxInDictBuffer_;
-  };
-
-  // insert a new string into dictionary, return its insertion order
-  size_t SortedStringDictionary::insert(const char* str, size_t len) {
-    size_t index = flatDict_.size();
-
-    auto it = keyToIndex_.find(std::string_view{str, len});
-    if (it != keyToIndex_.end()) {
-      return it->second;
-    } else {
-      flatDict_.emplace_back(str, len);
-      totalLength_ += len;
-
-      const auto& lastEntry = flatDict_.back();
-      keyToIndex_.emplace(std::string_view{lastEntry.data->data(), lastEntry.data->size()}, index);
-      return index;
-    }
-  }
-
-  // write dictionary data & length to output buffer
-  void SortedStringDictionary::flush(AppendOnlyBufferedStream* dataStream,
-                                     RleEncoder* lengthEncoder) const {
-    for (const auto& entry : flatDict_) {
-      dataStream->write(entry.data->data(), entry.data->size());
-      lengthEncoder->write(static_cast<int64_t>(entry.data->size()));
-    }
-  }
-
-  // get dict entries in insertion order
-  const std::vector<SortedStringDictionary::DictEntry>&
-  SortedStringDictionary::getEntriesInInsertionOrder() const {
-    return flatDict_;
-  }
-
-  // return count of entries
-  size_t SortedStringDictionary::size() const {
-    return flatDict_.size();
-  }
-
-  // return total length of strings in the dictioanry
-  uint64_t SortedStringDictionary::length() const {
-    return totalLength_;
-  }
-
-  void SortedStringDictionary::clear() {
-    totalLength_ = 0;
-    keyToIndex_.clear();
-    flatDict_.clear();
-  }
-
   class StringColumnWriter : public ColumnWriter {
    public:
     StringColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -1324,6 +1225,9 @@ namespace orc {
       // flush dictionary data & length streams
       dictionary.flush(dictStream.get(), dictLengthEncoder.get());
 
+      // convert index from insertion order to dictionary order
+      dictionary.reorder(dictionary.idxInDictBuffer_);
+
       // write data sequences
       int64_t* data = dictionary.idxInDictBuffer_.data();
       if (enableIndex) {
@@ -1367,14 +1271,15 @@ namespace orc {
     }
 
     // get dictionary entries in insertion order
-    const auto& entries = dictionary.getEntriesInInsertionOrder();
+    std::vector<const SortedStringDictionary::DictEntry*> entries;
+    dictionary.getEntriesInInsertionOrder(entries);
 
     // store each length of the data into a vector
     for (uint64_t i = 0; i != dictionary.idxInDictBuffer_.size(); ++i) {
       // write one row data in direct encoding
       const auto& dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer_[i])];
-      directDataStream->write(dictEntry.data->data(), dictEntry.data->size());
-      directLengthEncoder->write(static_cast<int64_t>(dictEntry.data->size()));
+      directDataStream->write(dictEntry->data->data(), dictEntry->data->size());
+      directLengthEncoder->write(static_cast<int64_t>(dictEntry->data->size()));
     }
 
     deleteDictStreams();

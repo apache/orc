@@ -77,7 +77,6 @@ target_link_libraries (orc-test
   orc::zlib
   orc::gtest
   orc::gmock
-  orc::sparsehash
   orc-test-include
 )
 
