@@ -177,7 +177,7 @@ endif()
 
 # Configure Undefined Behavior Sanitizer if enabled
 if (ENABLE_UBSAN)
-  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=alignment,vptr,function  -fno-sanitize-recover=all")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-sanitize=alignment,vptr,function  -fno-sanitize-recover=all")
     message(STATUS "Undefined Behavior Sanitizer enabled")
