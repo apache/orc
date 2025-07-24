@@ -72,7 +72,6 @@ orc_test = executable(
         zlib_dep,
         gtest_dep,
         gmock_dep,
-        sparsehash_c11_dep,
     ],
 )
 
