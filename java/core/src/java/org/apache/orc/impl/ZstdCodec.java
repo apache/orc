@@ -29,12 +29,12 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
   private ZstdOptions zstdOptions = null;
   private ZstdCompressCtx zstdCompressCtx = null;
 
-  public ZstdCodec(int level, int windowLog) {
-    this.zstdOptions = new ZstdOptions(level, windowLog);
+  public ZstdCodec(int level, int windowLog, int strategy) {
+    this.zstdOptions = new ZstdOptions(level, windowLog, strategy);
   }
 
   public ZstdCodec() {
-    this(3, 0);
+    this(3, 0, 0);
   }
 
   public ZstdOptions getZstdOptions() {
@@ -57,15 +57,17 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
   static class ZstdOptions implements Options {
     private int level;
     private int windowLog;
+    private int strategy;
 
-    ZstdOptions(int level, int windowLog) {
+    ZstdOptions(int level, int windowLog, int strategy) {
       this.level = level;
       this.windowLog = windowLog;
+      this.strategy = strategy;
     }
 
     @Override
     public ZstdOptions copy() {
-      return new ZstdOptions(level, windowLog);
+      return new ZstdOptions(level, windowLog, strategy);
     }
 
     @Override
@@ -123,6 +125,13 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
       return this;
     }
 
+    public ZstdOptions setStrategy(int newValue) {
+      // https://facebook.github.io/zstd/zstd_manual.html#Chapter5
+      // Although the value is between 1 and 9 and 0 means `use default`, ZStd can change it.
+      strategy = newValue;
+      return this;
+    }
+
     @Override
     public ZstdOptions setData(DataKind newValue) {
       return this; // We don't support setting DataKind in ZstdCodec.
@@ -136,6 +145,7 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
       ZstdOptions that = (ZstdOptions) o;
 
       if (level != that.level) return false;
+      if (strategy != that.strategy) return false;
       return windowLog == that.windowLog;
     }
 
@@ -143,12 +153,13 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
     public int hashCode() {
       int result = level;
       result = 31 * result + windowLog;
+      result = 31 * result + strategy;
       return result;
     }
   }
 
   private static final ZstdOptions DEFAULT_OPTIONS =
-      new ZstdOptions(3, 0);
+      new ZstdOptions(3, 0, 0);
 
   @Override
   public Options getDefaultOptions() {
@@ -183,6 +194,7 @@ public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
     zstdCompressCtx.setLevel(zso.level);
     zstdCompressCtx.setLong(zso.windowLog);
     zstdCompressCtx.setChecksum(false);
+    zstdCompressCtx.setStrategy(zso.strategy);
 
     try {
       byte[] compressed = getBuffer((int) Zstd.compressBound(inBytes));
