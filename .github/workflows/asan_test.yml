@@ -48,9 +48,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install dependencies
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y build-essential cmake libpthread-stubs0-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libpthread-stubs0-dev
     - name: Configure and Build with ASAN and UBSAN
       env:
         CC: ${{ matrix.cc }}
