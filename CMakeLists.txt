@@ -190,7 +190,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if (ENABLE_ASAN OR ENABLE_UBSAN)
     set(CMAKE_THREAD_LIBS_INIT "-lpthread")
     set(THREADS_PREFER_PTHREAD_FLAG ON)
-    message(STATUS "Forcing pthread linking for GCC on macOS with sanitizers")
+    message(STATUS "Forcing pthread linking for GCC with sanitizers")
   endif()
 endif()
 
