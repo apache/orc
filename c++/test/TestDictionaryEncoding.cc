@@ -35,6 +35,11 @@ namespace orc {
   const double DICT_THRESHOLD = 0.2;      // make sure dictionary is used
   const double FALLBACK_THRESHOLD = 0.0;  // make sure fallback happens
 
+  static bool doubleEquals(double a, double b) {
+    const double EPSILON = 1e-9;
+    return std::fabs(a - b) < EPSILON;
+  }
+
   static std::unique_ptr<Reader> createReader(MemoryPool* memoryPool,
                                               std::unique_ptr<InputStream> stream) {
     ReaderOptions options;
@@ -42,12 +47,39 @@ namespace orc {
     return createReader(std::move(stream), options);
   }
 
-  static std::unique_ptr<RowReader> createRowReader(Reader* reader) {
+  static void checkDictionaryEncoding(StringVectorBatch* batch) {
+    EXPECT_TRUE(batch->isEncoded);
+
+    const auto* encoded_batch = dynamic_cast<EncodedStringVectorBatch*>(batch);
+    EXPECT_TRUE(encoded_batch != nullptr);
+
+    const auto& dictionary = encoded_batch->dictionary;
+    EXPECT_TRUE(dictionary != nullptr);
+
+    // Check if the dictionary is sorted
+    std::string prev;
+    for (size_t i = 0; i < dictionary->dictionaryOffset.size() - 1; ++i) {
+      char* begin = nullptr;
+      int64_t length = 0;
+      dictionary->getValueByIndex(i, begin, length);
+
+      std::string curr = std::string(begin, static_cast<size_t>(length));
+      if (i) {
+        EXPECT_GT(curr, prev);
+      }
+
+      prev = std::move(curr);
+    }
+  }
+
+  static std::unique_ptr<RowReader> createRowReader(Reader* reader,
+                                                    bool enableEncodedBlock = false) {
     RowReaderOptions rowReaderOpts;
+    rowReaderOpts.setEnableLazyDecoding(enableEncodedBlock);
     return reader->createRowReader(rowReaderOpts);
   }
 
-  void testStringDictionary(bool enableIndex, double threshold) {
+  void testStringDictionary(bool enableIndex, double threshold, bool enableEncodedBlock = false) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:string>"));
@@ -87,16 +119,21 @@ namespace orc {
     std::unique_ptr<InputStream> inStream(
         new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
-    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), enableEncodedBlock);
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(rowCount);
     EXPECT_EQ(true, rowReader->next(*batch));
     EXPECT_EQ(rowCount, batch->numElements);
 
+    structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    if (doubleEquals(threshold, DICT_THRESHOLD) && enableEncodedBlock) {
+      checkDictionaryEncoding(strBatch);
+      strBatch->decodeDictionary();
+    }
+
     for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-      strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
       std::string str(strBatch->data[i], static_cast<size_t>(strBatch->length[i]));
       EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
     }
@@ -104,7 +141,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  void testVarcharDictionary(bool enableIndex, double threshold) {
+  void testVarcharDictionary(bool enableIndex, double threshold, bool enableEncodedBlock = false) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:varchar(2)>"));
@@ -144,17 +181,21 @@ namespace orc {
     std::unique_ptr<InputStream> inStream(
         new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
-    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), enableEncodedBlock);
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(rowCount);
     EXPECT_EQ(true, rowReader->next(*batch));
     EXPECT_EQ(rowCount, batch->numElements);
 
-    for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-      varcharBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    varcharBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    if (doubleEquals(threshold, DICT_THRESHOLD) && enableEncodedBlock) {
+      checkDictionaryEncoding(varcharBatch);
+      varcharBatch->decodeDictionary();
+    }
 
+    for (uint64_t i = 0; i < rowCount; ++i) {
       std::ostringstream os;
       os << (i % dictionarySize);
       EXPECT_FALSE(varcharBatch->length[i] > 2);
@@ -166,7 +207,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  void testCharDictionary(bool enableIndex, double threshold) {
+  void testCharDictionary(bool enableIndex, double threshold, bool enableEncodedBlock = false) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:char(3)>"));
@@ -204,17 +245,21 @@ namespace orc {
     std::unique_ptr<InputStream> inStream(
         new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
-    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), enableEncodedBlock);
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(rowCount);
     EXPECT_EQ(true, rowReader->next(*batch));
     EXPECT_EQ(rowCount, batch->numElements);
 
-    for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-      charBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    charBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    if (doubleEquals(threshold, DICT_THRESHOLD) && enableEncodedBlock) {
+      checkDictionaryEncoding(charBatch);
+      charBatch->decodeDictionary();
+    }
 
+    for (uint64_t i = 0; i < rowCount; ++i) {
       EXPECT_EQ(3, charBatch->length[i]);
       std::string charsRead(charBatch->data[i], static_cast<size_t>(charBatch->length[i]));
 
@@ -230,7 +275,8 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  void testStringDictionaryWithNull(double threshold, bool enableIndex) {
+  void testStringDictionaryWithNull(double threshold, bool enableIndex,
+                                    bool enableEncodedBlock = false) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:string>"));
@@ -277,17 +323,21 @@ namespace orc {
     std::unique_ptr<InputStream> inStream(
         new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
-    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), enableEncodedBlock);
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(rowCount);
     EXPECT_EQ(true, rowReader->next(*batch));
     EXPECT_EQ(rowCount, batch->numElements);
 
-    for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-      strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+    if (doubleEquals(threshold, DICT_THRESHOLD) && enableEncodedBlock) {
+      checkDictionaryEncoding(strBatch);
+      strBatch->decodeDictionary();
+    }
 
+    for (uint64_t i = 0; i < rowCount; ++i) {
       if (i % 2 == 0) {
         EXPECT_FALSE(strBatch->notNull[i]);
       } else {
@@ -357,9 +407,10 @@ namespace orc {
     for (uint64_t stripe = 0; stripe != stripeCount; ++stripe) {
       EXPECT_EQ(true, rowReader->next(*batch));
 
+      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+      strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+
       for (uint64_t i = 0; i < rowCount; ++i) {
-        structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
-        strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
         std::string str(strBatch->data[i], static_cast<size_t>(strBatch->length[i]));
         EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
       }
@@ -368,7 +419,6 @@ namespace orc {
 
     // test seeking to check positions
     batch = rowReader->createRowBatch(1);
-
     for (uint64_t stripe = 0; stripe != stripeCount; ++stripe) {
       for (uint64_t i = 0; i < rowCount; i += 10000 / 2) {
         rowReader->seekToRow(stripe * rowCount + i);
@@ -385,45 +435,61 @@ namespace orc {
   // test dictionary encoding with index disabled
   // the decision of using dictionary if made at the end of 1st stripe
   TEST(DictionaryEncoding, writeStringDictionaryEncodingWithoutIndex) {
-    testStringDictionary(false, DICT_THRESHOLD);
-    testStringDictionary(false, FALLBACK_THRESHOLD);
+    for (auto enableEncodedBlock : {false, true}) {
+      testStringDictionary(false, DICT_THRESHOLD, enableEncodedBlock);
+      testStringDictionary(false, FALLBACK_THRESHOLD, enableEncodedBlock);
+    }
   }
 
   // test dictionary encoding with index enabled
   // the decision of using dictionary if made at the end of 1st row group
   TEST(DictionaryEncoding, writeStringDictionaryEncodingWithIndex) {
-    testStringDictionary(true, DICT_THRESHOLD);
-    testStringDictionary(true, FALLBACK_THRESHOLD);
+    for (auto enableEncodedBlock : {false, true}) {
+      testStringDictionary(true, DICT_THRESHOLD, enableEncodedBlock);
+      testStringDictionary(true, FALLBACK_THRESHOLD, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, writeVarcharDictionaryEncodingWithoutIndex) {
-    testVarcharDictionary(false, DICT_THRESHOLD);
-    testVarcharDictionary(false, FALLBACK_THRESHOLD);
+    for (auto enableEncodedBlock : {false, true}) {
+      testVarcharDictionary(false, DICT_THRESHOLD, enableEncodedBlock);
+      testVarcharDictionary(false, FALLBACK_THRESHOLD, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, writeVarcharDictionaryEncodingWithIndex) {
-    testVarcharDictionary(true, DICT_THRESHOLD);
-    testVarcharDictionary(true, FALLBACK_THRESHOLD);
+    for (auto enableEncodedBlock : {false, true}) {
+      testVarcharDictionary(true, DICT_THRESHOLD, enableEncodedBlock);
+      testVarcharDictionary(true, FALLBACK_THRESHOLD, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, writeCharDictionaryEncodingWithoutIndex) {
-    testCharDictionary(false, DICT_THRESHOLD);
-    testCharDictionary(false, FALLBACK_THRESHOLD);
+    for (auto enableEncodedBlock : {false, true}) {
+      testCharDictionary(false, DICT_THRESHOLD, enableEncodedBlock);
+      testCharDictionary(false, FALLBACK_THRESHOLD, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, writeCharDictionaryEncodingWithIndex) {
-    testCharDictionary(true, DICT_THRESHOLD);
-    testCharDictionary(true, FALLBACK_THRESHOLD);
+    for (auto enableEncodedBlock : {false, true}) {
+      testCharDictionary(true, DICT_THRESHOLD, enableEncodedBlock);
+      testCharDictionary(true, FALLBACK_THRESHOLD, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, stringDictionaryWithNullWithIndex) {
-    testStringDictionaryWithNull(DICT_THRESHOLD, true);
-    testStringDictionaryWithNull(FALLBACK_THRESHOLD, true);
+    for (auto enableEncodedBlock : {false, true}) {
+      testStringDictionaryWithNull(DICT_THRESHOLD, true, enableEncodedBlock);
+      testStringDictionaryWithNull(FALLBACK_THRESHOLD, true, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, stringDictionaryWithNullWithoutIndex) {
-    testStringDictionaryWithNull(DICT_THRESHOLD, false);
-    testStringDictionaryWithNull(FALLBACK_THRESHOLD, false);
+    for (auto enableEncodedBlock : {false, true}) {
+      testStringDictionaryWithNull(DICT_THRESHOLD, false, enableEncodedBlock);
+      testStringDictionaryWithNull(FALLBACK_THRESHOLD, false, enableEncodedBlock);
+    }
   }
 
   TEST(DictionaryEncoding, multipleStripesWithIndex) {

@@ -150,7 +150,9 @@ source_files += files(
     'Compression.cc',
     'ConvertColumnReader.cc',
     'CpuInfoUtil.cc',
+    'Dictionary.cc',
     'Exceptions.cc',
+    'Geospatial.cc',
     'Int128.cc',
     'LzoDecompressor.cc',
     'MemoryPool.cc',
@@ -179,6 +181,9 @@ threads_dep = dependency('threads')
 orc_lib = library(
     'orc',
     sources: source_files,
+    cpp_args: [
+        '-DBUILD_SPARSEHASH'
+    ],
     dependencies: [
         orc_format_proto_dep,
         protobuf_dep,
@@ -187,6 +192,7 @@ orc_lib = library(
         lz4_dep,
         zstd_dep,
         threads_dep,
+        sparsehash_c11_dep,
     ],
     include_directories: incdir,
     install: true,

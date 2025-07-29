@@ -15,26 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# required dependencies
-protobuf_dep = dependency('protobuf', fallback: ['protobuf', 'protobuf_dep'])
-lz4_dep = dependency('liblz4')
-snappy_dep = dependency('snappy')
-zlib_dep = dependency('zlib')
-zstd_dep = dependency('libzstd')
-sparsehash_c11_dep = dependency('sparsehash-c11')
+[wrap-file]
+directory = sparsehash-c11-2.11.1
+source_url = https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v2.11.1.tar.gz
+source_filename = sparsehash-c11-2.11.1.tar.gz
+source_hash = d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755
+patch_filename = sparsehash-c11_2.11.1-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/sparsehash-c11_2.11.1-1/get_patch
+patch_hash = d04ddea94db2a0a7ad059c26186e3f6f37b02ddfba8fea11352767becb3d0cfa
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/sparsehash-c11_2.11.1-1/sparsehash-c11-2.11.1.tar.gz
+wrapdb_version = 2.11.1-1
 
-# optional dependencies (should be set later in configuration)
-gtest_dep = disabler()
-gmock_dep = disabler()
-
-subdir('include/orc')
-subdir('src')
-
-if get_option('tests').enabled()
-    gtest_dep = dependency('gtest')
-    gmock_dep = dependency('gmock')
-    subdir('test')
-endif
-
-pkg = import('pkgconfig')
-pkg.generate(orc_lib)
+[provide]
+sparsehash-c11 = sparsehash_c11_dep

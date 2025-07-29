@@ -26,6 +26,7 @@ set(ZLIB_VERSION "1.3.1")
 set(GTEST_VERSION "1.12.1")
 set(PROTOBUF_VERSION "3.5.1")
 set(ZSTD_VERSION "1.5.7")
+set(SPARSEHASH_VERSION "2.11.1")
 
 option(ORC_PREFER_STATIC_PROTOBUF "Prefer static protobuf library, if available" ON)
 option(ORC_PREFER_STATIC_SNAPPY   "Prefer static snappy library, if available"   ON)
@@ -581,8 +582,48 @@ if (NOT (ORC_PACKAGE_KIND STREQUAL "conan" OR ORC_PACKAGE_KIND STREQUAL "vcpkg")
 endif ()
 
 # ----------------------------------------------------------------------
-# LIBHDFSPP
+# SPARSEHASH
+if(BUILD_SPARSEHASH)
+  set(SPARSEHASH_HOME "${THIRDPARTY_DIR}/sparsehash_ep-install")
+  set(SPARSEHASH_INCLUDE_DIR "${SPARSEHASH_HOME}/include/google")
+  set(SPARSEHASH_CMAKE_ARGS
+      -DCMAKE_INSTALL_PREFIX=${SPARSEHASH_HOME}
+      -DBUILD_SHARED_LIBS=OFF
+      -DCMAKE_INSTALL_LIBDIR=lib
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  )
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(SPARSEHASH_CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
 
+  if (CMAKE_VERSION VERSION_GREATER "3.7")
+      set(SPARSEHASH_CONFIGURE SOURCE_SUBDIR "" CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS})
+    else()
+      set(SPARSEHASH_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${SPARSEHASH_CMAKE_ARGS}
+              "${CMAKE_CURRENT_BINARY_DIR}/sparsehash_ep-prefix/src/sparsehash_ep/")
+  endif()
+
+  ExternalProject_Add(sparsehash_ep
+      URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
+      ${SPARSEHASH_CONFIGURE}
+      ${THIRDPARTY_LOG_OPTIONS})
+
+  # sparsehash-c11 is header-only, create interface library
+  add_library(orc_sparsehash INTERFACE)
+  target_include_directories(orc_sparsehash INTERFACE 
+      $<BUILD_INTERFACE:${SPARSEHASH_INCLUDE_DIR}>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  add_dependencies(orc_sparsehash sparsehash_ep)
+
+  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_sparsehash")
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_sparsehash>")
+
+  add_library (orc::sparsehash ALIAS orc_sparsehash)
+  set (SPARSEHASH_LIBRARIES orc::sparsehash)
+endif()
+
+# ----------------------------------------------------------------------
+# LIBHDFSPP
 if(BUILD_LIBHDFSPP)
   set (BUILD_LIBHDFSPP FALSE)
   if(ORC_CXX_HAS_THREAD_LOCAL)

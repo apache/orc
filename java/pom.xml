@@ -17,7 +17,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>34</version>
+    <version>27</version>
   </parent>
   <groupId>org.apache.orc</groupId>
   <artifactId>orc</artifactId>
@@ -72,9 +72,9 @@
     <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
-    <maven.compiler.release>${java.version}</maven.compiler.release>
+    <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
-    <maven.version>3.9.10</maven.version>
+    <maven.version>3.9.11</maven.version>
 
     <mockito.version>5.10.0</mockito.version>
     <orc-format.version>1.1.0</orc-format.version>
@@ -83,9 +83,9 @@
     <protobuf.version>3.25.8</protobuf.version>
     <slf4j.version>2.0.17</slf4j.version>
     <storage-api.version>2.8.1</storage-api.version>
-    <surefire.version>3.5.3</surefire.version>
+    <surefire.version>3.5.2</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
-    <zstd-jni.version>1.5.7-3</zstd-jni.version>
+    <zstd-jni.version>1.5.7-4</zstd-jni.version>
   </properties>
 
   <dependencyManagement>
@@ -151,7 +151,8 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.17.0</version>
+        <version>3.18.0</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>io.airlift</groupId>
@@ -747,7 +748,7 @@
       <plugin>
         <groupId>org.cyclonedx</groupId>
         <artifactId>cyclonedx-maven-plugin</artifactId>
-        <version>2.9.1</version>
+        <version>2.7.11</version>
         <executions>
           <execution>
             <goals>
