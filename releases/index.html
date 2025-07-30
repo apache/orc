@@ -114,32 +114,30 @@
       <article>
         <h1>Releases</h1>
         
-<h2 id="current-release---213">Current Release - 2.1.3:</h2>
+<h2 id="current-release---220">Current Release - 2.2.0:</h2>
 
-<p>ORC 2.1.3 contains both the Java and C++ reader and writer
+<p>ORC 2.2.0 contains both the Java and C++ reader and writer
 for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.</p>
 
 <ul>
-  <li>Released: 9 May 2025</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.3/orc-2.1.3.tar.gz">orc-2.1.3.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.1.3/orc-2.1.3.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.3">rel/release-2.1.3</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.3%22">ORC 2.1.3</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.3/orc-2.1.3.tar.gz.sha256">75f3a876eb520ec8…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.3%22&amp;tempMax=500">ORC-2.1.3</a></li>
+  <li>Released: 29 July 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.2.0/orc-2.2.0.tar.gz">orc-2.2.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.2.0/orc-2.2.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.2.0">rel/release-2.2.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.2.0%22">ORC 2.2.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.2.0/orc-2.2.0.tar.gz.sha256">9a9cff7efa81c419…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.2.0%22&amp;tempMax=500">ORC-2.2.0</a></li>
 </ul>
 
-<p>The New Features and Notable Changes of ORC 2.1:</p>
+<p>The New Features and Notable Changes of ORC 2.2:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-262">ORC-262</a> [C++] Support async prefetch in Orc reader</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1388">ORC-1388</a> [C++] Support schema evolution from decimal to timestamp/string group</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1389">ORC-1389</a> [C++] Support schema evolution from string group to numeric/string group</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1390">ORC-1390</a> [C++] Support schema evolution from string group to decimal/timestamp</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1622">ORC-1622</a> [C++] Support conan packaging</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1807">ORC-1807</a> [C++] Native support for vcpkg</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1903">ORC-1903</a>: Support <code class="language-plaintext highlighter-rouge">Geometry</code> and <code class="language-plaintext highlighter-rouge">Geography</code> types</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1920">ORC-1920</a>: [C++] Support <code class="language-plaintext highlighter-rouge">Geometry</code> and <code class="language-plaintext highlighter-rouge">Geography</code> types</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1884">ORC-1884</a>: [C++] Add the maybe() function to the SearchArgumentBuilder</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1906">ORC-1906</a>: Support <code class="language-plaintext highlighter-rouge">Meson</code> build</li>
 </ul>
 
 <p>Known issues:</p>
@@ -170,11 +168,21 @@ committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
     
       
       <tr>
-        <td style="text-align: center">2.1.3</td>
-        <td style="text-align: center">2025-05-09</td>
+        <td style="text-align: center">2.2.0</td>
+        <td style="text-align: center">2025-07-29</td>
         <td style="text-align: center">latest</td>
         <td style="text-align: center">
-          <a href="/news/2025/05/09/ORC-2.1.3/">
+          <a href="/news/2025/07/29/ORC-2.2.0/">
+          ORC-2.2.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">2.1.3</td>
+        <td style="text-align: center">2025-07-09</td>
+        <td style="text-align: center">stable</td>
+        <td style="text-align: center">
+          <a href="/news/2025/07/09/ORC-2.1.3/">
           ORC-2.1.3</a></td>
       </tr>
     
