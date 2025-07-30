@@ -1,5 +1,6 @@
 org.apache.orc
 org.apache.orc.filter
+org.apache.orc.geospatial
 org.apache.orc.impl
 org.apache.orc.impl.filter
 org.apache.orc.impl.filter.leaf
