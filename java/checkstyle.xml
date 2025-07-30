@@ -61,5 +61,8 @@
       <property name="lineWrappingIndentation" value="4"/>
       <property name="arrayInitIndent" value="2"/>
     </module>
+    <module name="IllegalImport">
+      <property name="illegalPkgs" value="org.apache.commons.lang" />
+    </module>
   </module>
 </module>
