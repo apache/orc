@@ -60,6 +60,7 @@ namespace orc {
         ++pos;
       }
     }
+    EXPECT_EQ(size, pos);
   }
 
   void compressAndVerify(CompressionKind kind, OutputStream* outStream,
@@ -368,5 +369,32 @@ namespace orc {
     testSeekDecompressionStream(CompressionKind_ZLIB);
     testSeekDecompressionStream(CompressionKind_LZ4);
     testSeekDecompressionStream(CompressionKind_SNAPPY);
+  }
+
+  TEST(Compression, ZstdDecompressStreamCorrupted) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    CompressionKind kind = CompressionKind_ZSTD;
+
+    uint64_t capacity = 1024;
+    uint64_t block = 128;
+
+    char testData[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    // generate valid compressed data from testData
+    compressAndVerify(kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, testData,
+                      sizeof(testData));
+
+    // Corrupt the compressed data by flipping the 2nd byte counting from the end
+    std::string corruptedData(memStream.getData(), memStream.getLength());
+    size_t corruptedPos = corruptedData.size() - 2;
+    corruptedData.at(corruptedPos) ^= 0x1;
+
+    // create a new memStream with the corrupted data
+    MemoryOutputStream memStream2(DEFAULT_MEM_STREAM_SIZE);
+    memStream2.write(corruptedData.data(), corruptedData.size());
+
+    // The corruption shall be detected correctly.
+    EXPECT_THROW(decompressAndVerify(memStream2, kind, testData, sizeof(testData), *pool, capacity),
+                 CompressionError);
   }
 }  // namespace orc
