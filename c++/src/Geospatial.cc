@@ -66,8 +66,8 @@ namespace orc::geospatial {
 
 #if defined(_MSC_VER)
 #include <intrin.h>  // IWYU pragma: keep
-#define ORC_BYTE_SWAP64 _byteSwap_uint64
-#define ORC_BYTE_SWAP32 _byteSwap_ulong
+#define ORC_BYTE_SWAP64 _byteswap_uint64
+#define ORC_BYTE_SWAP32 _byteswap_ulong
 #else
 #define ORC_BYTE_SWAP64 __builtin_bswap64
 #define ORC_BYTE_SWAP32 __builtin_bswap32
