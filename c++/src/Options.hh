@@ -25,6 +25,7 @@
 
 #include "io/Cache.hh"
 
+#include <iostream>
 #include <limits>
 
 namespace orc {
@@ -153,6 +154,7 @@ namespace orc {
     bool useTightNumericVector;
     std::shared_ptr<Type> readType;
     bool throwOnSchemaEvolutionOverflow;
+    bool enableAsyncPrefetch;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -164,6 +166,7 @@ namespace orc {
       readerTimezone = "GMT";
       useTightNumericVector = false;
       throwOnSchemaEvolutionOverflow = false;
+      enableAsyncPrefetch = false;
     }
   };
 
@@ -338,6 +341,16 @@ namespace orc {
   std::shared_ptr<Type>& RowReaderOptions::getReadType() const {
     return privateBits_->readType;
   }
+
+  RowReaderOptions& RowReaderOptions::setEnableAsyncPrefetch(bool enable) {
+    privateBits_->enableAsyncPrefetch = enable;
+    return *this;
+  }
+
+  bool RowReaderOptions::getEnableAsyncPrefetch() const {
+    return privateBits_->enableAsyncPrefetch;
+  }
+
 }  // namespace orc
 
 #endif
