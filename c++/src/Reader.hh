@@ -73,10 +73,17 @@ namespace orc {
     std::unique_ptr<proto::Metadata> metadata;
     ReaderMetrics* readerMetrics;
 
+    // cache options to advise io coalescing in the read cache.
+    CacheOptions cacheOptions;
     // mutex to protect readCache_ from concurrent access
     std::mutex readCacheMutex;
     // cached io ranges. only valid when preBuffer is invoked.
     std::shared_ptr<ReadRangeCache> readCache;
+
+    // A thread-safe convenience method to cache ranges.
+    void cacheRanges(std::vector<ReadRange> ranges);
+    // A thread-safe convenience method to evict cache entries fully before a given boundary.
+    void evictCache(uint64_t boundary);
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -140,6 +147,7 @@ namespace orc {
     std::shared_ptr<FileContents> contents_;
     const bool throwOnHive11DecimalOverflow_;
     const int32_t forcedScaleOnHive11Decimal_;
+    const bool enableAsyncPrefetch_;
 
     // inputs
     std::vector<bool> selectedColumns_;

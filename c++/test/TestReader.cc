@@ -935,4 +935,172 @@ namespace orc {
       }
     }
   }
+
+  namespace {
+
+    uint64_t writeSampleData(MemoryOutputStream& memStream, uint64_t stripeSize = 1024,
+                             uint64_t rowsPerStripe = 1000) {
+      auto type = Type::buildTypeFromString("struct<id:int,name:string,value:double>");
+      WriterOptions options;
+      options.setStripeSize(stripeSize)
+          .setCompressionBlockSize(1024)
+          .setMemoryBlockSize(64)
+          .setCompression(CompressionKind_NONE)
+          .setRowIndexStride(100);
+      auto writer = createWriter(*type, &memStream, options);
+
+      uint64_t totalRows = rowsPerStripe * 3;
+      uint64_t batchSize = 100;
+      std::vector<std::string> names(totalRows, "");
+
+      for (uint64_t startRow = 0; startRow < totalRows; startRow += batchSize) {
+        uint64_t currentBatchSize = std::min(batchSize, totalRows - startRow);
+        auto batch = writer->createRowBatch(currentBatchSize);
+        auto& structBatch = static_cast<StructVectorBatch&>(*batch);
+        auto& idBatch = static_cast<LongVectorBatch&>(*structBatch.fields[0]);
+        auto& nameBatch = static_cast<StringVectorBatch&>(*structBatch.fields[1]);
+        auto& valueBatch = static_cast<DoubleVectorBatch&>(*structBatch.fields[2]);
+
+        for (uint64_t i = 0; i < currentBatchSize; ++i) {
+          idBatch.data[i] = static_cast<int64_t>(startRow + i);
+          names[startRow + i] = "name_" + std::to_string(startRow + i);
+          nameBatch.data[i] = const_cast<char*>(names[startRow + i].c_str());
+          nameBatch.length[i] = static_cast<int64_t>(names[startRow + i].length());
+          valueBatch.data[i] = static_cast<double>(startRow + i) * 1.5;
+        }
+
+        structBatch.numElements = currentBatchSize;
+        writer->add(*batch);
+      }
+
+      writer->close();
+      return totalRows;
+    }
+
+    uint64_t readAllRows(RowReader& rowReader, uint64_t batchSize = 1000) {
+      auto batch = rowReader.createRowBatch(batchSize);
+      uint64_t totalRows = 0;
+      while (rowReader.next(*batch)) {
+        totalRows += batch->numElements;
+      }
+      return totalRows;
+    }
+
+  }  // namespace
+
+  TEST(TestAsyncPrefetch, testAsyncPrefetchCorrectnessWithMultipleStripes) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    uint64_t totalRows = writeSampleData(memStream);
+
+    auto reader = createReader(
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+    ASSERT_GE(reader->getNumberOfStripes(), 2UL);
+
+    auto rowReader = reader->createRowReader(RowReaderOptions{}.setEnableAsyncPrefetch(true));
+    EXPECT_EQ(readAllRows(*rowReader), totalRows);
+  }
+
+  TEST(TestAsyncPrefetch, testAsyncPrefetchWithVariousConfigurations) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::ignore = writeSampleData(memStream);
+    auto reader = createReader(
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+    ASSERT_GE(reader->getNumberOfStripes(), 2UL);
+
+    struct TestCase {
+      std::string name;
+      std::function<void(RowReaderOptions&)> configureOptions;
+      std::function<void(RowReader&, uint64_t)> validateReader;
+    };
+
+    std::vector<TestCase> testCases = {
+        {"WithColumnSelection",
+         [](RowReaderOptions& opts) {
+           opts.include({0, 2});  // Select only id and value columns
+         },
+         [](RowReader& reader, uint64_t expectedRows) {
+           auto batch = reader.createRowBatch(1000);
+           uint64_t totalRows = 0;
+           while (reader.next(*batch)) {
+             totalRows += batch->numElements;
+             // Verify that only selected columns are present
+             auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+             EXPECT_EQ(2, structBatch.fields.size());
+           }
+           EXPECT_EQ(totalRows, expectedRows);
+         }},
+        {"WithSeek", [](RowReaderOptions& /*opts*/) { /* no additional config */ },
+         [](RowReader& reader, uint64_t expectedRows) {
+           auto batch = reader.createRowBatch(500);
+
+           // Read some data first
+           EXPECT_TRUE(reader.next(*batch));
+           EXPECT_GT(batch->numElements, 0UL);
+
+           // Seek to middle and continue reading
+           uint64_t seekPosition = expectedRows / 2;
+           reader.seekToRow(seekPosition);
+
+           EXPECT_TRUE(reader.next(*batch));
+           EXPECT_GT(batch->numElements, 0UL);
+           EXPECT_GE(reader.getRowNumber(), seekPosition);
+         }},
+        {"WithRange",
+         [](RowReaderOptions& /*opts*/) {
+           // Read only middle portion - will be set dynamically in test
+         },
+         [](RowReader& reader, uint64_t expectedRows) {
+           uint64_t totalRows = readAllRows(reader);
+           // Should read approximately the specified range (allowing tolerance for stripe
+           // boundaries)
+           EXPECT_LE(totalRows, expectedRows / 2 + 1000);
+         }}};
+
+    for (const auto& testCase : testCases) {
+      SCOPED_TRACE("Testing async prefetch " + testCase.name);
+
+      RowReaderOptions options;
+      options.setEnableAsyncPrefetch(true);
+
+      if (testCase.name == "WithRange") {
+        uint64_t startRow = reader->getNumberOfRows() / 4;
+        uint64_t endRow = 3 * reader->getNumberOfRows() / 4;
+        options.range(startRow, endRow - startRow);
+      } else {
+        testCase.configureOptions(options);
+      }
+
+      auto rowReader = reader->createRowReader(options);
+      testCase.validateReader(*rowReader, reader->getNumberOfRows());
+    }
+  }
+
+  TEST(TestAsyncPrefetch, testAsyncPrefetchEdgeCases) {
+    // Test with single stripe
+    {
+      MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+      uint64_t totalRows = writeSampleData(memStream, 1024 * 1024, 100);
+
+      auto reader = createReader(
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+      ASSERT_EQ(1UL, reader->getNumberOfStripes());
+
+      auto rowReader = reader->createRowReader(RowReaderOptions{}.setEnableAsyncPrefetch(true));
+      ASSERT_EQ(readAllRows(*rowReader), totalRows);
+    }
+
+    // Test basic functionality with reader metrics (ensure no crashes)
+    {
+      MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+      uint64_t totalRows = writeSampleData(memStream);
+
+      auto reader = createReader(
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+      ASSERT_GE(reader->getNumberOfStripes(), 2UL);
+
+      auto rowReader = reader->createRowReader(RowReaderOptions{}.setEnableAsyncPrefetch(true));
+      ASSERT_EQ(readAllRows(*rowReader), totalRows);
+    }
+  }
+
 }  // namespace orc
