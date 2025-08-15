@@ -19,7 +19,7 @@ set(ORC_VENDOR_DEPENDENCIES)
 set(ORC_SYSTEM_DEPENDENCIES)
 set(ORC_INSTALL_INTERFACE_TARGETS)
 
-set(ORC_FORMAT_VERSION "1.1.0")
+set(ORC_FORMAT_VERSION "1.1.1")
 set(LZ4_VERSION "1.10.0")
 set(SNAPPY_VERSION "1.2.2")
 set(ZLIB_VERSION "1.3.1")
@@ -141,12 +141,12 @@ if(DEFINED ENV{ORC_FORMAT_URL})
   set(ORC_FORMAT_SOURCE_URL "$ENV{ORC_FORMAT_URL}")
   message(STATUS "Using ORC_FORMAT_URL: ${ORC_FORMAT_SOURCE_URL}")
 else()
-  set(ORC_FORMAT_SOURCE_URL "https://www.apache.org/dyn/closer.lua/orc/orc-format-${ORC_FORMAT_VERSION}/orc-format-${ORC_FORMAT_VERSION}.tar.gz?action=download" )
+  set(ORC_FORMAT_SOURCE_URL "https://dist.apache.org/repos/dist/dev/orc/orc-format-1.1.1-rc1/orc-format-1.1.1.tar.gz" )
   message(STATUS "Using DEFAULT URL: ${ORC_FORMAT_SOURCE_URL}")
 endif()
 ExternalProject_Add (orc-format_ep
   URL ${ORC_FORMAT_SOURCE_URL}
-  URL_HASH SHA256=d4a7ac76c5442abf7119e2cb84e71b677e075aff53518aa866055e2ead0450d7
+  URL_HASH SHA256=584dfe2a4202946178fd8fc7d1239be7805b9ed4596ab2042dee739e7880992b
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
   INSTALL_COMMAND     ""
