@@ -31,6 +31,7 @@
 
 namespace orc {
 
+
   void printBuffer(std::ostream& out, const char* buffer, uint64_t length);
 
   class PositionProvider {
