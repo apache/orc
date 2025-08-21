@@ -30,8 +30,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  asan-test:
-    name: "ASAN with ${{ matrix.compiler }} on Ubuntu"
+  sanitizer-test:
+    name: "Sanitizer with ${{ matrix.compiler }} on Ubuntu"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -58,12 +58,18 @@ jobs:
       run: |
         mkdir -p build && cd build
         cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DBUILD_ENABLE_AVX512=ON -DBUILD_CPP_ENABLE_METRICS=ON -DBUILD_JAVA=OFF
-        make
+        cmake --build . --verbose
     - name: Run Tests
       working-directory: build
       env:
-        ASAN_OPTIONS: detect_leaks=1:symbolize=1:strict_string_checks=1:halt_on_error=0:detect_container_overflow=0
+        ASAN_OPTIONS: log_path=out.log:detect_leaks=1:symbolize=1:strict_string_checks=1:halt_on_error=1:detect_container_overflow=0
         LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/lsan-suppressions.txt
-        UBSAN_OPTIONS: print_stacktrace=1
+        UBSAN_OPTIONS: log_path=out.log:halt_on_error=1:print_stacktrace=1:suppressions=${{ github.workspace }}/.github/ubsan-suppressions.txt
       run: |
-        ctest --output-on-failure
+        ctest -V --output-on-failure
+    - name: Save the test output
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: test-output
+        path: "**/out.log*"
