@@ -114,6 +114,43 @@ jobs:
       run: |
         cat /home/runner/work/orc/orc/build/java/rat.txt
 
+  windows:
+    name: "C++ ${{ matrix.simd }} Test on Windows"
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        simd:
+          - General
+          - AVX512
+    env:
+      ORC_USER_SIMD_LEVEL: AVX512
+      ZLIB_HOME: C:/vcpkg/packages/zlib_x64-windows
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: x64
+    - name: Install ZLIB
+      shell: cmd
+      run: |
+        vcpkg install zlib:x64-windows
+        vcpkg install protobuf:x64-windows
+    - name: "Test"
+      shell: bash
+      run: |
+        mkdir build
+        cd build
+        if [ "${{ matrix.simd }}" = "General" ]; then
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+        else
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
+        fi
+        cmake --build . --config Debug
+        ctest -C Debug --output-on-failure
+
   simdUbuntu:
     name: "SIMD programming using C++ intrinsic functions on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}

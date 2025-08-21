@@ -400,7 +400,7 @@ add_library (orc::lz4 ALIAS orc_lz4)
 if (WIN32)
   SET(CURRENT_TZDATA_FILE "")
   SET(CURRENT_TZDATA_SHA512 "")
-  File(DOWNLOAD "https://ftp.osuosl.org/pub/cygwin/noarch/release/tzdata/sha512.sum" ${CMAKE_CURRENT_BINARY_DIR}/sha512.sum)
+  File(DOWNLOAD "https://cygwin.osuosl.org/noarch/release/tzdata/tzdata-right/sha512.sum" ${CMAKE_CURRENT_BINARY_DIR}/sha512.sum)
   File(READ ${CMAKE_CURRENT_BINARY_DIR}/sha512.sum TZDATA_SHA512_CONTENT)
   string(REPLACE "\n" ";" TZDATA_SHA512_LINE ${TZDATA_SHA512_CONTENT})
   foreach (LINE IN LISTS TZDATA_SHA512_LINE)
@@ -417,13 +417,13 @@ if (WIN32)
 
   if (NOT "${CURRENT_TZDATA_FILE}" STREQUAL "")
     ExternalProject_Add(tzdata_ep
-      URL "https://cygwin.osuosl.org/noarch/release/tzdata/${CURRENT_TZDATA_FILE}"
+      URL "https://cygwin.osuosl.org/noarch/release/tzdata/tzdata-right/${CURRENT_TZDATA_FILE}"
       URL_HASH SHA512=${CURRENT_TZDATA_SHA512}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND "")
     ExternalProject_Get_Property(tzdata_ep SOURCE_DIR)
-    set(TZDATA_DIR ${SOURCE_DIR}/share/zoneinfo)
+    set(TZDATA_DIR ${SOURCE_DIR}/share/zoneinfo/right)
   else()
     message(STATUS "WARNING: tzdata were not found")
   endif()
