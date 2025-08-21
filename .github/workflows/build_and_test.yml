@@ -125,7 +125,7 @@ jobs:
           - AVX512
     env:
       ORC_USER_SIMD_LEVEL: AVX512
-      ZLIB_HOME: C:/vcpkg/packages/zlib_x64-windows
+      VCPKG_ROOT: C:/vcpkg
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -133,7 +133,7 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
       with:
         msbuild-architecture: x64
-    - name: Install ZLIB
+    - name: Install Install dependencies via vcpkg
       shell: cmd
       run: |
         vcpkg install zlib:x64-windows
@@ -144,9 +144,9 @@ jobs:
         mkdir build
         cd build
         if [ "${{ matrix.simd }}" = "General" ]; then
-          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         else
-          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DBUILD_ENABLE_AVX512=ON -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         fi
         cmake --build . --config Debug
         ctest -C Debug --output-on-failure
