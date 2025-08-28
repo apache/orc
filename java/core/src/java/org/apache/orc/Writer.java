@@ -139,6 +139,7 @@ public interface Writer extends Closeable {
    * @deprecated use {@link #addUserMetadata(String, ByteBuffer)} instead
    * @since 1.1.0
    */
+  @Deprecated
   void appendUserMetadata(List<OrcProto.UserMetadataItem> userMetadata);
 
   /**

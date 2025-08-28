@@ -54,6 +54,7 @@ public interface DateColumnStatistics extends ColumnStatistics {
    * @return minimum value
    * @deprecated Use #getMinimumLocalDate instead
    */
+  @Deprecated
   Date getMinimum();
 
   /**
@@ -61,5 +62,6 @@ public interface DateColumnStatistics extends ColumnStatistics {
    * @return maximum value
    * @deprecated Use #getMaximumLocalDate instead
    */
+  @Deprecated
   Date getMaximum();
 }
