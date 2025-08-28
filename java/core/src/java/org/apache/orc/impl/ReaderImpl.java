@@ -480,6 +480,7 @@ public class ReaderImpl implements Reader {
    * @param buffer the tail of the file
    * @deprecated Use {@link ReaderImpl#ensureOrcFooter(FSDataInputStream, Path, int, ByteBuffer)} instead.
    */
+  @Deprecated
   protected static void ensureOrcFooter(ByteBuffer buffer, int psLen) throws IOException {
     int magicLength = OrcFile.MAGIC.length();
     int fullLength = magicLength + 1;
@@ -717,6 +718,7 @@ public class ReaderImpl implements Reader {
    * @deprecated Use {@link ReaderImpl#extractFileTail(FileSystem, Path, long)} instead.
    * This is for backward compatibility.
    */
+  @Deprecated
   public static OrcTail extractFileTail(ByteBuffer buffer)
       throws IOException {
     return extractFileTail(buffer, -1,-1);
@@ -738,6 +740,7 @@ public class ReaderImpl implements Reader {
    * @deprecated Use {@link ReaderImpl#extractFileTail(FileSystem, Path, long)} instead.
    * This is for backward compatibility.
    */
+  @Deprecated
   public static OrcTail extractFileTail(ByteBuffer buffer, long fileLen, long modificationTime)
       throws IOException {
     OrcProto.PostScript ps;

@@ -65,6 +65,7 @@ public interface MemoryManager {
    * @throws IOException
    * @deprecated Use {@link MemoryManager#checkMemory} instead
    */
+  @Deprecated
   void addedRow(int rows) throws IOException;
 
   /**
