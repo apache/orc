@@ -1119,6 +1119,7 @@ public class RecordReaderImpl implements RecordReader {
     /**
      * @deprecated Use the constructor having full parameters. This exists for backward compatibility.
      */
+    @Deprecated
     public SargApplier(SearchArgument sarg,
                        long rowIndexStride,
                        SchemaEvolution evolution,

@@ -207,6 +207,7 @@ public final class OrcTail {
    * @return the stripe statistics
    * @deprecated the user should use Reader.getStripeStatistics instead.
    */
+  @Deprecated
   public List<StripeStatistics> getStripeStatistics() throws IOException {
     if (reader == null) {
       LOG.warn("Please use Reader.getStripeStatistics or give `Reader` to OrcTail constructor.");

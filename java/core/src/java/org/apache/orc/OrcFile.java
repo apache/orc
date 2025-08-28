@@ -357,6 +357,7 @@ public class OrcFile {
     /**
      * @deprecated Use {@link #orcTail(OrcTail)} instead.
      */
+    @Deprecated
     public ReaderOptions fileMetadata(final FileMetadata metadata) {
       fileMetadata = metadata;
       return this;

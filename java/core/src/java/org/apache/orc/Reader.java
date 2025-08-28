@@ -145,6 +145,7 @@ public interface Reader extends Closeable {
    * @deprecated use getSchema instead
    * @since 1.1.0
    */
+  @Deprecated
   List<OrcProto.Type> getTypes();
 
   /**
@@ -756,6 +757,7 @@ public interface Reader extends Closeable {
    * @deprecated Use {@link #getStripeStatistics()} instead.
    * @since 1.1.0
    */
+  @Deprecated
   List<OrcProto.StripeStatistics> getOrcProtoStripeStatistics();
 
   /**
@@ -779,6 +781,7 @@ public interface Reader extends Closeable {
    * @deprecated Use {@link #getStatistics()} instead.
    * @since 1.1.0
    */
+  @Deprecated
   List<OrcProto.ColumnStatistics> getOrcProtoFileStatistics();
 
   /**

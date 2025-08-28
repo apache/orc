@@ -26,6 +26,7 @@ import java.util.List;
  * ORC stop depending on them too. Luckily, they shouldn't be very big.
  * @deprecated Use {@link org.apache.orc.impl.OrcTail} instead
  */
+@Deprecated
 public interface FileMetadata {
   boolean isOriginalFormat();
 

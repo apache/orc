@@ -134,6 +134,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * Obsolete method left for Hive, which extends this class.
    * @deprecated remove this method
    */
+  @Deprecated
   public void notifyWriters() throws IOException {
     // PASS
   }
