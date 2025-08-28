@@ -72,6 +72,7 @@
     <junit.version>5.13.1</junit.version>
     <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
+    <maven-enforcer-plugin.version>3.6.1</maven-enforcer-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
@@ -608,7 +609,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>${maven-enforcer-plugin.version}</version>
         <dependencies>
           <dependency>
             <groupId>org.codehaus.mojo</groupId>
