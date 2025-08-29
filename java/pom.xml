@@ -65,7 +65,7 @@
     <checkstyle.version>10.26.1</checkstyle.version>
     <commons-cli.version>1.10.0</commons-cli.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
-    <hadoop.version>3.4.1</hadoop.version>
+    <hadoop.version>3.4.2</hadoop.version>
     <java.version>17</java.version>
     <javadoc.location>${project.basedir}/../target/javadoc</javadoc.location>
     <jts.version>1.20.0</jts.version>
