@@ -162,7 +162,7 @@
 
 1.8.10:
   date: 2025-06-26
-  state: stable
+  state: archived
   tar: orc-1.8.10.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: c204243c55d34d83a1577c347b5450eb58ece9e91f6a0eaab2842d9ed3b1503a
