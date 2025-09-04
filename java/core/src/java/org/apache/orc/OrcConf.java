@@ -122,7 +122,7 @@ public enum OrcConf {
       "hive.exec.orc.dictionary.maxSizeInBytes",
       16 * 1024 * 1024,
       "If the total size of the dictionary is greater than this\n" +
-          ", turn off dictionary encoding.  Use 1 to always use dictionary encoding."),
+          ", turn off dictionary encoding."),
   ROW_INDEX_STRIDE_DICTIONARY_CHECK("orc.dictionary.early.check",
       "hive.orc.row.index.stride.dictionary.check",
       true,
