@@ -16,7 +16,7 @@
 # under the License.
 
 set(ORC_FORMAT_VERSION "1.0.0")
-set(LZ4_VERSION "1.9.3")
+set(LZ4_VERSION "1.10.0")
 set(SNAPPY_VERSION "1.2.2")
 set(ZLIB_VERSION "1.3.1")
 set(GTEST_VERSION "1.12.1")
