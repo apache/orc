@@ -67,7 +67,6 @@ jobs:
           - ubuntu-22.04
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          - macos-13
           - macos-14
           - macos-15
         java:
@@ -191,7 +190,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [13, 14, 15]
+        version: [14, 15]
     runs-on: macos-${{ matrix.version }}
     steps:
     - name: Checkout repository
