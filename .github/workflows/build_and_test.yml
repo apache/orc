@@ -82,6 +82,8 @@ jobs:
             cxx: g++
           - os: ubuntu-latest
             java: 25-ea
+          - os: macos-26
+            java: 21
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
