@@ -30,6 +30,7 @@ on:
     - 'conan/**'
     branches:
     - main
+  workflow_call:
 
 # Cancel previous PR build and test
 concurrency:
