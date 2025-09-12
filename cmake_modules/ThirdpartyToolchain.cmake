@@ -21,7 +21,7 @@ set(SNAPPY_VERSION "1.2.2")
 set(ZLIB_VERSION "1.3.1")
 set(GTEST_VERSION "1.12.1")
 set(PROTOBUF_VERSION "3.5.1")
-set(ZSTD_VERSION "1.5.5")
+set(ZSTD_VERSION "1.5.7")
 
 option(ORC_PREFER_STATIC_PROTOBUF "Prefer static protobuf library, if available" ON)
 option(ORC_PREFER_STATIC_SNAPPY   "Prefer static snappy library, if available"   ON)
