@@ -81,20 +81,12 @@ option(BUILD_ENABLE_AVX512
     "Enable build with AVX512 at compile time"
     OFF)
 
-option(ENABLE_ASAN
-    "Enable Address Sanitizer"
-    OFF)
-
 option(ORC_PACKAGE_KIND
     "Arbitrary string that identifies the kind of package"
     "")
 
 option(ORC_ENABLE_CLANG_TOOLS
     "Enable Clang tools"
-    OFF)
-
-option(ENABLE_UBSAN
-    "Enable Undefined Behavior Sanitizer"
     OFF)
 
 # Make sure that a build type is selected
@@ -168,35 +160,8 @@ elseif (MSVC)
   set (WARN_FLAGS "${WARN_FLAGS} -wd4521") # multiple copy constructors specified
   set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
 endif ()
-# Configure Address Sanitizer if enabled
-if (ENABLE_ASAN)
-  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-    message(STATUS "Address Sanitizer enabled")
-  else()
-    message(WARNING "Address Sanitizer is only supported for GCC and Clang compilers")
-  endif()
-endif()
-
-# Configure Undefined Behavior Sanitizer if enabled
-if (ENABLE_UBSAN)
-  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=alignment,vptr -fno-sanitize-recover=all")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-sanitize=alignment,vptr -fno-sanitize-recover=all")
-    message(STATUS "Undefined Behavior Sanitizer enabled")
-  else()
-    message(WARNING "Undefined Behavior Sanitizer is only supported for GCC and Clang compilers")
-  endif()
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if (ENABLE_ASAN OR ENABLE_UBSAN)
-    set(CMAKE_THREAD_LIBS_INIT "-lpthread")
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    message(STATUS "Forcing pthread linking for GCC with sanitizers")
-  endif()
-endif()
+# Include sanitizer configuration
+INCLUDE(OrcSanitizers)
 
 enable_testing()
 
