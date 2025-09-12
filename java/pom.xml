@@ -340,7 +340,7 @@
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.44.4</version>
+          <version>2.46.1</version>
           <configuration>
             <pom>
               <sortPom>
@@ -359,7 +359,7 @@
               <importOrder>
                 <order>,javax|java,\#</order>
               </importOrder>
-              <removeUnusedImports></removeUnusedImports>
+              <removeUnusedImports/>
             </java>
           </configuration>
           <executions>
@@ -687,8 +687,8 @@
             <phase>process-test-resources</phase>
             <configuration>
               <target>
-                <delete dir="${test.tmp.dir}"></delete>
-                <mkdir dir="${test.tmp.dir}"></mkdir>
+                <delete dir="${test.tmp.dir}"/>
+                <mkdir dir="${test.tmp.dir}"/>
               </target>
             </configuration>
           </execution>
@@ -727,7 +727,7 @@
             <test.tmp.dir>${test.tmp.dir}</test.tmp.dir>
             <example.dir>${example.dir}</example.dir>
             <org.slf4j.simpleLogger.log.org.apache.hadoop>error</org.slf4j.simpleLogger.log.org.apache.hadoop>
-            <com.google.protobuf.use_unsafe_pre22_gencode></com.google.protobuf.use_unsafe_pre22_gencode>
+            <com.google.protobuf.use_unsafe_pre22_gencode/>
           </systemPropertyVariables>
         </configuration>
       </plugin>
