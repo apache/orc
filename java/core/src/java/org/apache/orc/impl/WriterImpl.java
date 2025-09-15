@@ -327,7 +327,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   }
 
   private boolean checkMemory() throws IOException {
-    long size = treeWriter.estimateMemory();
+    long size = rowsSinceCheck < ROWS_PER_CHECK && STRIPE_SIZE_CHECK <= 0
+        ? 0 : treeWriter.estimateMemory();
     if (rowsSinceCheck >= ROWS_PER_CHECK || (STRIPE_SIZE_CHECK > 0 && size > STRIPE_SIZE_CHECK)) {
       rowsSinceCheck = 0;
       if (LOG.isDebugEnabled()) {
