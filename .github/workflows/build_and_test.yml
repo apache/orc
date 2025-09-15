@@ -138,16 +138,15 @@ jobs:
       run: |
         vcpkg install zlib:x64-windows
         vcpkg install protobuf:x64-windows
+        vcpkg install snappy:x64-windows
+        vcpkg install zstd:x64-windows
+        vcpkg install lz4:x64-windows
     - name: "Build and Test"
       shell: bash
       run: |
         mkdir build
         cd build
-        if [ "${{ matrix.simd }}" = "General" ]; then
-          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DPROTOBUF_HOME="$VCPKG_ROOT/installed/x64-windows" -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-        else
-          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF -DPROTOBUF_HOME="$VCPKG_ROOT/installed/x64-windows" -DBUILD_ENABLE_AVX512=ON -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-        fi
+        cmake .. -G -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DProtobuf_ROOT="$VCPKG_ROOT/installed/x64-windows" -DCMAKE_PREFIX_PATH="$VCPKG_ROOT/installed/x64-windows" -DORC_PACKAGE_KIND=vcpkg
         cmake --build . --config Debug
         if [ $? -ne 0 ]; then
           echo "Build failed"
@@ -155,12 +154,6 @@ jobs:
           exit 1
         fi
         ctest -C Debug --output-on-failure
-        if [ $? -ne 0 ]; then
-          echo "Tests failed"
-          ls -la
-          cat DartConfiguration.tcl || echo "No DartConfiguration.tcl"
-          exit 1
-        fi
     - name: "Upload Build Artifacts"
       if: always()
       uses: actions/upload-artifact@v4

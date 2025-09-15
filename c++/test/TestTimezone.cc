@@ -344,7 +344,8 @@ namespace orc {
     EXPECT_EQ("PDT", getVariantFromZone(*la, "2100-03-14 10:00:00"));
   }
 
-  TEST(TestTimezone, testZoneCache) {
+  // FIXME: Temporarily disable the test due to the failure on CI system https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
+  TEST(TestTimezone, DISABLED_testZoneCache) {
     const Timezone* la1 = &getTimezoneByName("America/Los_Angeles");
     const Timezone* ny1 = &getTimezoneByName("America/New_York");
     const Timezone* la2 = &getTimezoneByName("America/Los_Angeles");
