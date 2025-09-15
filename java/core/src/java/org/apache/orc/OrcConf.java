@@ -187,9 +187,10 @@ public enum OrcConf {
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +
       "testing.  Setting this too low may negatively affect performance."
         + " Use orc.stripe.row.count instead if the value larger than orc.stripe.row.count."),
-  STRIPE_SIZE_CHECK("orc.stripe.size.check", "hive.exec.orc.default.stripe.size.check",
-      128L * 1024 * 1024,
-      "Flush stripe if the tree writer size in bytes is larger than this, " +
+  STRIPE_SIZE_CHECKRATIO("orc.stripe.size.checkRatio",
+      "hive.exec.orc.default.stripe.size.checkRatio",
+      2.0,
+      "Flush stripe if the tree writer size in bytes is larger than (this * orc.stripe.size), " +
           "use 0 to disable this check."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
