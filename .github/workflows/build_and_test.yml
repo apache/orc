@@ -81,7 +81,7 @@ jobs:
             java: 17
             cxx: g++
           - os: ubuntu-latest
-            java: 25-ea
+            java: 25
           - os: macos-26
             java: 21
     env:
@@ -99,7 +99,7 @@ jobs:
     - name: "Test"
       run: |
         mkdir -p ~/.m2
-        if [ "${{ matrix.java }}" = "25-ea" ]; then
+        if [ "${{ matrix.java }}" = "25" ]; then
           cd java
           # JDK 25 Build
           ./mvnw package -DskipTests
