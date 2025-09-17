@@ -619,7 +619,8 @@ namespace orc {
     }
   }
 
-  // FIXME: Temporarily disable the test due to the failure on CI system https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
+  // FIXME: Temporarily disable the test due to the failure on CI system
+  // https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
   TEST_P(WriterTest, DISABLED_writeTimestamp) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
@@ -669,7 +670,8 @@ namespace orc {
     }
   }
 
-  // FIXME: Temporarily disable the test due to the failure on CI system https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
+  // FIXME: Temporarily disable the test due to the failure on CI system
+  // https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
   TEST_P(WriterTest, DISABLED_writeNegativeTimestamp) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
@@ -799,7 +801,8 @@ namespace orc {
     }
   }
 
-  // FIXME: Temporarily disable the test due to the failure on CI system https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
+  // FIXME: Temporarily disable the test due to the failure on CI system
+  // https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
   TEST_P(WriterTest, DISABLED_writeTimestampWithTimezone) {
     const int IS_DST = 1, NOT_DST = 0;
     testWriteTimestampWithTimezone(fileVersion, "GMT", "GMT", "2001-11-12 18:31:01");
@@ -838,7 +841,8 @@ namespace orc {
   }
 #endif
 
-  // FIXME: Temporarily disable the test due to the failure on CI system https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
+  // FIXME: Temporarily disable the test due to the failure on CI system
+  // https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
   TEST_P(WriterTest, DISABLED_writeTimestampInstant) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
