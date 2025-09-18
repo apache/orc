@@ -1171,6 +1171,8 @@ namespace orc {
 
     if (currentStripe_ < lastStripe_) {
       if (enableAsyncPrefetch_) {
+        contents_->evictCache(currentStripeInfo_.offset());
+
         if (fullyCachedStripes_.find(currentStripe_) != fullyCachedStripes_.cend()) {
           // Current stripe has been fully cached, do nothing.
         } else if (isSmallStripe(currentStripeInfo_, contents_->cacheOptions.rangeSizeLimit)) {
@@ -1200,8 +1202,6 @@ namespace orc {
                 nextStripe.footer_length()}});
           }
         }
-
-        contents_->evictCache(currentStripeInfo_.offset());
       }
 
       // get writer timezone info from stripe footer to help understand timestamp values.
