@@ -42,6 +42,9 @@ public interface Dictionary {
    */
   void visit(Visitor visitor) throws IOException;
 
+  /**
+   * Clear the dictionary.
+   */
   void clear();
 
   /**
@@ -53,6 +56,11 @@ public interface Dictionary {
    */
   void getText(Text result, int position);
 
+  /**
+   * Given the position index, return the original string before being encoded.
+   * @param position the position where the key was added
+   * @return the original string
+   */
   ByteBuffer getText(int position);
 
   /**
@@ -66,10 +74,25 @@ public interface Dictionary {
    */
   int writeTo(OutputStream out, int position) throws IOException;
 
+  /**
+   * Add a new key to the dictionary.
+   * @param bytes the bytes of the string to add
+   * @param offset the offset of the string
+   * @param length the length of the string
+   * @return the position of the key in the dictionary
+   */
   int add(byte[] bytes, int offset, int length);
 
+  /**
+   * Get the number of entries in the dictionary.
+   * @return the number of entries
+   */
   int size();
 
+  /**
+   * Get the size of the dictionary in bytes.
+   * @return the size in bytes
+   */
   long getSizeInBytes();
 
   /**

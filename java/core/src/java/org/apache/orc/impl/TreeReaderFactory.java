@@ -66,26 +66,71 @@ import java.util.function.Consumer;
  */
 public class TreeReaderFactory {
   public interface Context {
+    /**
+     * Get the schema evolution for the reader.
+     * @return the schema evolution
+     */
     SchemaEvolution getSchemaEvolution();
 
+    /**
+     * Get the set of column ids that are filtered.
+     * @return the set of column ids
+     */
     Set<Integer> getColumnFilterIds();
 
+    /**
+     * Get the callback for column filtering.
+     * @return the callback
+     */
     Consumer<OrcFilterContext> getColumnFilterCallback();
 
+    /**
+     * Check if corrupt records should be skipped.
+     * @return true if corrupt records should be skipped
+     */
     boolean isSkipCorrupt();
 
+    /**
+     * Check if UTC timestamp should be used.
+     * @return true if UTC timestamp should be used
+     */
     boolean getUseUTCTimestamp();
 
+    /**
+     * Get the timezone of the writer.
+     * @return the timezone of the writer
+     */
     String getWriterTimezone();
 
+    /**
+     * Get the file format version.
+     * @return the file format version
+     */
     OrcFile.Version getFileFormat();
 
+    /**
+     * Get the encryption information.
+     * @return the encryption information
+     */
     ReaderEncryption getEncryption();
 
+    /**
+     * Check if proleptic Gregorian calendar should be used.
+     * @return true if proleptic Gregorian calendar should be used
+     */
     boolean useProlepticGregorian();
 
+    /**
+     * Check if the file was written with proleptic Gregorian calendar.
+     * @return true if the file was written with proleptic Gregorian calendar
+     */
     boolean fileUsedProlepticGregorian();
 
+    /**
+     * Get the reader category for the given column id.
+     * @param columnId the column id
+     * @return the reader category
+     */
     TypeReader.ReaderCategory getReaderCategory(int columnId);
   }
 

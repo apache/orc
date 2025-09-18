@@ -21,7 +21,15 @@ package org.apache.orc;
  * Statistics for boolean columns.
  */
 public interface BooleanColumnStatistics extends ColumnStatistics {
+  /**
+   * Get the number of false values.
+   * @return the number of false values
+   */
   long getFalseCount();
 
+  /**
+   * Get the number of true values.
+   * @return the number of true values
+   */
   long getTrueCount();
 }

@@ -86,9 +86,21 @@ public interface WriterContext {
   @Deprecated
   OrcFile.BloomFilterVersion getBloomFilterVersion();
 
+  /**
+   * Write the row index.
+   * @param name the name of the stream
+   * @param index the index to write
+   * @throws IOException if there is an error
+   */
   void writeIndex(StreamName name,
                   OrcProto.RowIndex.Builder index) throws IOException;
 
+  /**
+   * Write the bloom filter.
+   * @param name the name of the stream
+   * @param bloom the bloom filter to write
+   * @throws IOException if there is an error
+   */
   void writeBloomFilter(StreamName name,
                         OrcProto.BloomFilterIndex.Builder bloom
                         ) throws IOException;

@@ -22,5 +22,9 @@ package org.apache.orc.impl;
  * An interface used for seeking to a row index.
  */
 public interface PositionProvider {
+  /**
+   * Get the next position.
+   * @return the next position
+   */
   long getNext();
 }

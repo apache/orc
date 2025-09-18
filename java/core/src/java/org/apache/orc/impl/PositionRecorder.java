@@ -21,5 +21,9 @@ package org.apache.orc.impl;
  * An interface for recording positions in a stream.
  */
 public interface PositionRecorder {
+  /**
+   * Add a position to the stream.
+   * @param offset the offset to add
+   */
   void addPosition(long offset);
 }

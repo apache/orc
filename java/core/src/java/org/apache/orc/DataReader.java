@@ -30,6 +30,12 @@ public interface DataReader extends AutoCloseable, Cloneable {
   /** Opens the DataReader, making it ready to use. */
   void open() throws IOException;
 
+  /**
+   * Read the stripe footer.
+   * @param stripe the stripe to read
+   * @return the stripe footer
+   * @throws IOException if there is an error reading the stripe footer
+   */
   OrcProto.StripeFooter readStripeFooter(StripeInformation stripe) throws IOException;
 
   /**

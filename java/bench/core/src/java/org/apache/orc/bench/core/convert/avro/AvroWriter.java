@@ -47,6 +47,12 @@ import java.util.List;
 public class AvroWriter implements BatchWriter {
 
   public interface AvroConverter {
+    /**
+     * Convert a value from ORC to Avro.
+     * @param vector the column vector to get the value from
+     * @param row the row to get
+     * @return the Avro value
+     */
     Object convert(ColumnVector vector, int row);
   }
 

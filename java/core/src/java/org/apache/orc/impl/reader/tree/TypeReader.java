@@ -28,24 +28,70 @@ import java.io.IOException;
 import java.util.EnumSet;
 
 public interface TypeReader {
+  /**
+   * Check the encoding of the column.
+   * @param encoding the encoding to check
+   * @throws IOException if the encoding is not supported
+   */
   void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException;
 
+  /**
+   * Start reading a stripe.
+   * @param planner the stripe planner
+   * @param readPhase the read phase
+   * @throws IOException if there is an error
+   */
   void startStripe(StripePlanner planner, ReadPhase readPhase) throws IOException;
 
+  /**
+   * Seek to a position in the stream.
+   * @param index the position provider
+   * @param readPhase the read phase
+   * @throws IOException if there is an error
+   */
   void seek(PositionProvider[] index, ReadPhase readPhase) throws IOException;
 
+  /**
+   * Seek to a position in the stream.
+   * @param index the position provider
+   * @param readPhase the read phase
+   * @throws IOException if there is an error
+   */
   void seek(PositionProvider index, ReadPhase readPhase) throws IOException;
 
+  /**
+   * Skip a number of rows.
+   * @param rows the number of rows to skip
+   * @param readPhase the read phase
+   * @throws IOException if there is an error
+   */
   void skipRows(long rows, ReadPhase readPhase) throws IOException;
 
+  /**
+   * Read the next vector of values.
+   * @param previous the previous vector
+   * @param isNull the isNull vector
+   * @param batchSize the batch size
+   * @param filterContext the filter context
+   * @param readPhase the read phase
+   * @throws IOException if there is an error
+   */
   void nextVector(ColumnVector previous,
                   boolean[] isNull,
                   int batchSize,
                   FilterContext filterContext,
                   ReadPhase readPhase) throws IOException;
 
+  /**
+   * Get the column id.
+   * @return the column id
+   */
   int getColumnId();
 
+  /**
+   * Get the reader category.
+   * @return the reader category
+   */
   ReaderCategory getReaderCategory();
 
   /**
