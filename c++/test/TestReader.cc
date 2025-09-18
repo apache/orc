@@ -1103,4 +1103,123 @@ namespace orc {
     }
   }
 
+  class IOCountingInputStream : public InputStream {
+   private:
+    std::unique_ptr<InputStream> wrapped_;
+    mutable std::atomic<uint64_t> readCount_;
+
+   public:
+    IOCountingInputStream(std::unique_ptr<InputStream> wrapped)
+        : wrapped_(std::move(wrapped)), readCount_(0) {}
+
+    uint64_t getLength() const override {
+      return wrapped_->getLength();
+    }
+
+    uint64_t getNaturalReadSize() const override {
+      return wrapped_->getNaturalReadSize();
+    }
+
+    void read(void* buf, uint64_t length, uint64_t offset) override {
+      readCount_.fetch_add(1, std::memory_order_relaxed);
+      wrapped_->read(buf, length, offset);
+    }
+
+    const std::string& getName() const override {
+      return wrapped_->getName();
+    }
+
+    uint64_t getReadCount() const {
+      return readCount_.load(std::memory_order_relaxed);
+    }
+
+    void resetReadCount() {
+      readCount_.store(0, std::memory_order_relaxed);
+    }
+  };
+
+  TEST(TestSmallStripeLookAhead, testIOCountWithDifferentLimits) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    uint64_t totalRows = writeSampleData(memStream, /*stripeSize*/ 1024, /*rowsPerStripe*/ 200);
+    EXPECT_GT(totalRows, 0UL);
+
+    uint64_t noPrefetchIOCount = 0;
+    uint64_t smallLimitIOCount = 0;
+    uint64_t largeLimitIOCount = 0;
+
+    // Test 1: No async prefetch - should have most I/O operations
+    {
+      auto countingStream = std::make_unique<IOCountingInputStream>(
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()));
+      auto* countingPtr = countingStream.get();
+
+      ReaderOptions readerOptions;
+      std::unique_ptr<Reader> reader = createReader(std::move(countingStream), readerOptions);
+
+      RowReaderOptions rowReaderOptions;
+      rowReaderOptions.setEnableAsyncPrefetch(false);
+      auto rowReader = reader->createRowReader(rowReaderOptions);
+
+      countingPtr->resetReadCount();
+      uint64_t readRows = readAllRows(*rowReader);
+
+      noPrefetchIOCount = countingPtr->getReadCount();
+      EXPECT_EQ(readRows, totalRows);
+      EXPECT_GT(noPrefetchIOCount, 0UL);
+
+      std::cout << "No async prefetch I/O count: " << noPrefetchIOCount << std::endl;
+    }
+
+    // Test 2: Async prefetch with small look ahead limit
+    {
+      auto countingStream = std::make_unique<IOCountingInputStream>(
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()));
+      auto* countingPtr = countingStream.get();
+
+      ReaderOptions readerOptions;
+      std::unique_ptr<Reader> reader = createReader(std::move(countingStream), readerOptions);
+
+      RowReaderOptions rowReaderOptions;
+      rowReaderOptions.setEnableAsyncPrefetch(true);
+      rowReaderOptions.setSmallStripeLookAheadLimit(1);  // Small limit (only 1 stripe ahead)
+      auto rowReader = reader->createRowReader(rowReaderOptions);
+
+      countingPtr->resetReadCount();
+      uint64_t readRows = readAllRows(*rowReader);
+
+      smallLimitIOCount = countingPtr->getReadCount();
+      EXPECT_EQ(readRows, totalRows);
+      EXPECT_GT(smallLimitIOCount, 0UL);
+
+      std::cout << "Small limit (1) prefetch I/O count: " << smallLimitIOCount << std::endl;
+    }
+
+    // Test 3: Async prefetch with large look ahead limit
+    {
+      auto countingStream = std::make_unique<IOCountingInputStream>(
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()));
+      auto* countingPtr = countingStream.get();
+
+      ReaderOptions readerOptions;
+      std::unique_ptr<Reader> reader = createReader(std::move(countingStream), readerOptions);
+
+      RowReaderOptions rowReaderOptions;
+      rowReaderOptions.setEnableAsyncPrefetch(true);
+      rowReaderOptions.setSmallStripeLookAheadLimit(3);  // Large limit (all remaining stripes)
+      auto rowReader = reader->createRowReader(rowReaderOptions);
+
+      countingPtr->resetReadCount();
+      uint64_t readRows = readAllRows(*rowReader);
+
+      largeLimitIOCount = countingPtr->getReadCount();
+      EXPECT_EQ(readRows, totalRows);
+      EXPECT_GT(largeLimitIOCount, 0UL);
+
+      std::cout << "Large limit (3) prefetch I/O count: " << largeLimitIOCount << std::endl;
+    }
+
+    EXPECT_LT(smallLimitIOCount, noPrefetchIOCount);
+    EXPECT_LT(largeLimitIOCount, smallLimitIOCount);
+  }
+
 }  // namespace orc

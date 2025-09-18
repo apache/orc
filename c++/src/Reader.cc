@@ -252,6 +252,7 @@ namespace orc {
         throwOnHive11DecimalOverflow_(opts.getThrowOnHive11DecimalOverflow()),
         forcedScaleOnHive11Decimal_(opts.getForcedScaleOnHive11Decimal()),
         enableAsyncPrefetch_(opts.getEnableAsyncPrefetch()),
+        smallStripeLookAheadLimit_(opts.getSmallStripeLookAheadLimit()),
         footer_(contents_->footer.get()),
         firstRowOfStripe_(*contents_->pool, 0),
         enableEncodedBlock_(opts.getEnableLazyDecoding()),
@@ -520,14 +521,38 @@ namespace orc {
   }
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
-                                      const FileContents& contents) {
+                                      FileContents& contents) {
     uint64_t stripeFooterStart = info.offset() + info.index_length() + info.data_length();
     uint64_t stripeFooterLength = info.footer_length();
-    std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
-        contents.compression,
-        std::make_unique<SeekableFileInputStream>(contents.stream.get(), stripeFooterStart,
-                                                  stripeFooterLength, *contents.pool),
-        contents.blockSize, *contents.pool, contents.readerMetrics);
+
+    std::unique_ptr<SeekableInputStream> pbStream;
+
+    // Try to read from cache first
+    {
+      std::lock_guard<std::mutex> lock(contents.readCacheMutex);
+      if (contents.readCache) {
+        ReadRange footerRange(stripeFooterStart, stripeFooterLength);
+        BufferSlice cachedData = contents.readCache->read(footerRange);
+        if (cachedData.buffer != nullptr) {
+          // Create a stream from cached data
+          pbStream = createDecompressor(
+              contents.compression,
+              std::make_unique<SeekableArrayInputStream>(
+                  cachedData.buffer->data() + cachedData.offset, cachedData.length),
+              contents.blockSize, *contents.pool, contents.readerMetrics);
+        }
+      }
+    }
+
+    // Fall back to reading from disk if not in cache
+    if (!pbStream) {
+      pbStream = createDecompressor(
+          contents.compression,
+          std::make_unique<SeekableFileInputStream>(contents.stream.get(), stripeFooterStart,
+                                                    stripeFooterLength, *contents.pool),
+          contents.blockSize, *contents.pool, contents.readerMetrics);
+    }
+
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
       throw ParseError(std::string("bad StripeFooter from ") + pbStream->getName());
@@ -1070,6 +1095,14 @@ namespace orc {
     }
   }
 
+  uint64_t getStripeSize(const proto::StripeInformation& stripeInfo) {
+    return stripeInfo.index_length() + stripeInfo.data_length() + stripeInfo.footer_length();
+  }
+
+  bool isSmallStripe(const proto::StripeInformation& stripeInfo, uint64_t threshold) {
+    return getStripeSize(stripeInfo) <= threshold;
+  }
+
   void RowReaderImpl::startNextStripe() {
     reader_.reset();  // ColumnReaders use lots of memory; free old memory first
     rowIndexes_.clear();
@@ -1138,13 +1171,37 @@ namespace orc {
 
     if (currentStripe_ < lastStripe_) {
       if (enableAsyncPrefetch_) {
-        // FIXME: this is very coarse since I/O ranges of all selected columns are about to
-        // prefetch. We can further evaluate index stream with knowledge of pruned row groups
-        // to issue less I/O ranges.
-        auto ranges = extractReadRangesForStripe(currentStripe_, currentStripeInfo_,
-                                                 currentStripeFooter_, selectedColumns_);
+        if (fullyCachedStripes_.find(currentStripe_) != fullyCachedStripes_.cend()) {
+          // Current stripe has been fully cached, do nothing.
+        } else if (isSmallStripe(currentStripeInfo_, contents_->cacheOptions.rangeSizeLimit)) {
+          std::vector<ReadRange> ranges;
+          uint64_t maxStripe =
+              std::min(lastStripe_, currentStripe_ + smallStripeLookAheadLimit_ + 1);
+          for (uint64_t stripe = currentStripe_; stripe < maxStripe; stripe++) {
+            const auto& stripeInfo = footer_->stripes(static_cast<int>(stripe));
+            if (!isSmallStripe(stripeInfo, contents_->cacheOptions.rangeSizeLimit)) {
+              break;
+            }
+            ranges.push_back(ReadRange{stripeInfo.offset(), getStripeSize(stripeInfo)});
+            fullyCachedStripes_.insert(stripe);
+          }
+          contents_->cacheRanges(std::move(ranges));
+        } else {
+          // This is very coarse since I/O ranges of all selected columns are about to prefetch.
+          // We can further evaluate index stream with knowledge of pruned row groups to issue
+          // less I/O ranges.
+          contents_->cacheRanges(extractReadRangesForStripe(
+              currentStripe_, currentStripeInfo_, currentStripeFooter_, selectedColumns_));
+          // Cache footer of next stripe to avoid blocking I/O.
+          if (currentStripe_ + 1 < lastStripe_) {
+            const auto& nextStripe = footer_->stripes(static_cast<int>(currentStripe_ + 1));
+            contents_->cacheRanges(std::vector<ReadRange>{ReadRange{
+                nextStripe.offset() + nextStripe.index_length() + nextStripe.data_length(),
+                nextStripe.footer_length()}});
+          }
+        }
+
         contents_->evictCache(currentStripeInfo_.offset());
-        contents_->cacheRanges(std::move(ranges));
       }
 
       // get writer timezone info from stripe footer to help understand timestamp values.

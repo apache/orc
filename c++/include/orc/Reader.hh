@@ -398,6 +398,16 @@ namespace orc {
      * Whether to enable async I/O prefetch of next stripe.
      */
     bool getEnableAsyncPrefetch() const;
+
+    /**
+     * Set the number of stripes to look ahead for small stripe prefetch.
+     */
+    RowReaderOptions& setSmallStripeLookAheadLimit(uint64_t numStripes);
+
+    /**
+     * Get the number of stripes to look ahead for small stripe prefetch.
+     */
+    uint64_t getSmallStripeLookAheadLimit() const;
   };
 
   class RowReader;

@@ -25,12 +25,11 @@
 #include "orc/Reader.hh"
 
 #include "ColumnReader.hh"
-#include "RLE.hh"
-#include "io/Cache.hh"
-
 #include "SchemaEvolution.hh"
-#include "TypeImpl.hh"
+#include "io/Cache.hh"
 #include "sargs/SargsApplier.hh"
+
+#include <unordered_set>
 
 namespace orc {
 
@@ -148,6 +147,7 @@ namespace orc {
     const bool throwOnHive11DecimalOverflow_;
     const int32_t forcedScaleOnHive11Decimal_;
     const bool enableAsyncPrefetch_;
+    const uint64_t smallStripeLookAheadLimit_;
 
     // inputs
     std::vector<bool> selectedColumns_;
@@ -171,6 +171,8 @@ namespace orc {
     proto::StripeInformation currentStripeInfo_;
     proto::StripeFooter currentStripeFooter_;
     std::unique_ptr<ColumnReader> reader_;
+    // stripe indices that whose entire I/O ranges have been fully cached.
+    std::unordered_set<uint64_t> fullyCachedStripes_;
 
     bool enableEncodedBlock_;
     bool useTightNumericVector_;
