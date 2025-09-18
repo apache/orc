@@ -27,6 +27,9 @@ public interface TestConf {
 
   Configuration conf = getNewConf();
 
+  /**
+   * Clear the configuration.
+   */
   @BeforeEach
   default void clear() {
     conf.clear();

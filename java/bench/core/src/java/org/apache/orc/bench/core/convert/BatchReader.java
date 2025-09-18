@@ -27,6 +27,12 @@ import java.io.IOException;
  */
 public interface BatchReader extends AutoCloseable {
 
+  /**
+   * Read the next batch of rows.
+   * @param batch the batch to read into
+   * @return true if a batch was read
+   * @throws IOException if there is an error reading the batch
+   */
   boolean nextBatch(VectorizedRowBatch batch) throws IOException;
 
   @Override

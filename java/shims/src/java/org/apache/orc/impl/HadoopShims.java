@@ -38,8 +38,20 @@ public interface HadoopShims {
   }
 
   interface DirectDecompressor {
+    /**
+     * Decompress the in buffer to the out buffer.
+     * @param var1 the bytes to decompress
+     * @param var2 the decompressed bytes
+     * @throws IOException if there is an error
+     */
     void decompress(ByteBuffer var1, ByteBuffer var2) throws IOException;
+    /**
+     * Reset the decompressor.
+     */
     void reset();
+    /**
+     * End the decompressor.
+     */
     void end();
   }
 
@@ -131,6 +143,11 @@ public interface HadoopShims {
    */
   boolean endVariableLengthBlock(OutputStream output) throws IOException;
 
+  /**
+   * Check if the Hadoop version supports vectored IO.
+   * @param version the Hadoop version string
+   * @return true if the Hadoop version supports vectored IO
+   */
   default boolean supportVectoredIO(String version) {
     // HADOOP-18103 is available since Apache Hadoop 3.3.5+
     String[] versionParts = version.split("[.-]");

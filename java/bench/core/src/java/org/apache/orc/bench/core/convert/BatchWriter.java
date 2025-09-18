@@ -28,6 +28,11 @@ import java.io.IOException;
  */
 public interface BatchWriter extends Closeable {
 
+  /**
+   * Write the next batch of rows.
+   * @param batch the batch to write from
+   * @throws IOException if there is an error writing the batch
+   */
   void writeBatch(VectorizedRowBatch batch) throws IOException;
 
   @Override

@@ -52,5 +52,9 @@ public interface IntegerWriter {
    */
   long estimateMemory();
 
+  /**
+   * Change the initialization vector for the encryption.
+   * @param modifier the function to modify the IV
+   */
   void changeIv(Consumer<byte[]> modifier);
 }

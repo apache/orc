@@ -391,11 +391,25 @@ public class OrcFile {
   }
 
   public interface WriterContext {
+    /**
+     * Get the writer.
+     * @return the writer
+     */
     Writer getWriter();
   }
 
   public interface WriterCallback {
+    /**
+     * A callback before the stripe is written.
+     * @param context the writer context
+     * @throws IOException if there is an error
+     */
     void preStripeWrite(WriterContext context) throws IOException;
+    /**
+     * A callback before the footer is written.
+     * @param context the writer context
+     * @throws IOException if there is an error
+     */
     void preFooterWrite(WriterContext context) throws IOException;
   }
 

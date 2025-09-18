@@ -77,6 +77,14 @@ public interface KeyProvider {
    * A service loader factory interface.
    */
   interface Factory {
+    /**
+     * Create a key provider.
+     * @param kind the kind of key provider
+     * @param conf the configuration
+     * @param random a random number generator
+     * @return the key provider
+     * @throws IOException if there is an error
+     */
     KeyProvider create(String kind,
                        Configuration conf,
                        Random random) throws IOException;

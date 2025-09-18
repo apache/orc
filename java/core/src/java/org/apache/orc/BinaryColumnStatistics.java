@@ -21,5 +21,9 @@ package org.apache.orc;
  * Statistics for binary columns.
  */
 public interface BinaryColumnStatistics extends ColumnStatistics {
+  /**
+   * Get the sum of the lengths of the binary values.
+   * @return the sum of the lengths
+   */
   long getSum();
 }

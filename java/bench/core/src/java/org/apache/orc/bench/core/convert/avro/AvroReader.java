@@ -79,6 +79,12 @@ public class AvroReader implements BatchReader {
   }
 
   public interface AvroConverter {
+    /**
+     * Convert a value from Avro to ORC.
+     * @param vector the column vector to put the value into
+     * @param row the row to update
+     * @param value the value to convert
+     */
     void convert(ColumnVector vector, int row, Object value);
   }
 
