@@ -155,6 +155,7 @@ namespace orc {
     std::shared_ptr<Type> readType;
     bool throwOnSchemaEvolutionOverflow;
     bool enableAsyncPrefetch;
+    uint64_t smallStripeLookAheadLimit;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -167,6 +168,7 @@ namespace orc {
       useTightNumericVector = false;
       throwOnSchemaEvolutionOverflow = false;
       enableAsyncPrefetch = false;
+      smallStripeLookAheadLimit = 8;
     }
   };
 
@@ -349,6 +351,15 @@ namespace orc {
 
   bool RowReaderOptions::getEnableAsyncPrefetch() const {
     return privateBits_->enableAsyncPrefetch;
+  }
+
+  RowReaderOptions& RowReaderOptions::setSmallStripeLookAheadLimit(uint64_t numStripes) {
+    privateBits_->smallStripeLookAheadLimit = numStripes;
+    return *this;
+  }
+
+  uint64_t RowReaderOptions::getSmallStripeLookAheadLimit() const {
+    return privateBits_->smallStripeLookAheadLimit;
   }
 
 }  // namespace orc
