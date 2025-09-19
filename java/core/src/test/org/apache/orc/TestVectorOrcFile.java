@@ -197,6 +197,7 @@ public class TestVectorOrcFile implements TestConf {
 
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
+    conf.set("orc.stripe.size.checkRatio", "0");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestVectorOrcFile." +
         testInfo.getTestMethod().get().getName().replaceFirst("\\[[0-9]+\\]", "")
