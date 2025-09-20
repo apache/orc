@@ -27,7 +27,6 @@
 #include "wrap/coded-stream-wrapper.h"
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <set>
@@ -246,6 +245,47 @@ namespace orc {
     buildTypeNameIdMap(contents_->schema.get());
   }
 
+  static const std::unordered_set<proto::Stream_Kind> DATA_STREAM_KINDS = {
+      proto::Stream_Kind_DATA, proto::Stream_Kind_DICTIONARY_DATA, proto::Stream_Kind_PRESENT,
+      proto::Stream_Kind_LENGTH, proto::Stream_Kind_SECONDARY};
+
+  static const std::unordered_set<proto::Stream_Kind> INDEX_STREAM_KINDS = {
+      proto::Stream_Kind_ROW_INDEX, proto::Stream_Kind_BLOOM_FILTER_UTF8};
+
+  std::vector<ReadRange> extractReadRangesForStripe(
+      uint64_t stripeIndex, const proto::StripeInformation& stripeInfo,
+      const proto::StripeFooter& stripeFooter, const std::vector<bool>& selectedColumns,
+      const std::unordered_set<proto::Stream_Kind>& allowedKinds = DATA_STREAM_KINDS) {
+    std::vector<ReadRange> ranges;
+
+    uint64_t stripeFooterStart =
+        stripeInfo.offset() + stripeInfo.index_length() + stripeInfo.data_length();
+    uint64_t offset = stripeInfo.offset();
+
+    for (int i = 0; i < stripeFooter.streams_size(); i++) {
+      const proto::Stream& stream = stripeFooter.streams(i);
+      if (offset + stream.length() > stripeFooterStart) {
+        std::stringstream msg;
+        msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex
+            << ": streamOffset=" << offset << ", streamLength=" << stream.length()
+            << ", stripeOffset=" << stripeInfo.offset()
+            << ", stripeIndexLength=" << stripeInfo.index_length()
+            << ", stripeDataLength=" << stripeInfo.data_length();
+        throw ParseError(msg.str());
+      }
+
+      if (stream.has_kind() && selectedColumns[stream.column()]) {
+        if (allowedKinds.find(stream.kind()) != allowedKinds.cend()) {
+          ranges.emplace_back(offset, stream.length());
+        }
+      }
+
+      offset += stream.length();
+    }
+
+    return ranges;
+  }
+
   RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& opts)
       : localTimezone_(getLocalTimezone()),
         contents_(contents),
@@ -442,6 +482,15 @@ namespace orc {
     rowIndexes_.clear();
     bloomFilterIndex_.clear();
 
+    if (enableAsyncPrefetch_ &&
+        fullyCachedStripes_.find(currentStripe_) == fullyCachedStripes_.end()) {
+      // Cache required ranges of index which are usually very small
+      auto ranges =
+          extractReadRangesForStripe(currentStripe_, currentStripeInfo_, currentStripeFooter_,
+                                     selectedColumns_, INDEX_STREAM_KINDS);
+      contents_->cacheRanges(std::move(ranges));
+    }
+
     // obtain row indexes for selected columns
     uint64_t offset = currentStripeInfo_.offset();
     for (int i = 0; i < currentStripeFooter_.streams_size(); ++i) {
@@ -450,11 +499,24 @@ namespace orc {
       if (selectedColumns_[colId] && pbStream.has_kind() &&
           (pbStream.kind() == proto::Stream_Kind_ROW_INDEX ||
            pbStream.kind() == proto::Stream_Kind_BLOOM_FILTER_UTF8)) {
-        std::unique_ptr<SeekableInputStream> inStream = createDecompressor(
-            getCompression(),
-            std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-                contents_->stream.get(), offset, pbStream.length(), *contents_->pool)),
-            getCompressionSize(), *contents_->pool, contents_->readerMetrics);
+        std::unique_ptr<SeekableInputStream> inStream;
+        BufferSlice slice;
+
+        {
+          std::lock_guard<std::mutex> lock(contents_->readCacheMutex);
+          if (contents_->readCache) {
+            slice = contents_->readCache->read(ReadRange(offset, pbStream.length()));
+          }
+        }
+        if (slice.buffer) {
+          inStream = std::make_unique<SeekableArrayInputStream>(slice.buffer->data() + slice.offset,
+                                                                slice.length);
+        } else {
+          inStream = std::make_unique<SeekableFileInputStream>(contents_->stream.get(), offset,
+                                                               pbStream.length(), *contents_->pool);
+        }
+        inStream = createDecompressor(getCompression(), std::move(inStream), getCompressionSize(),
+                                      *contents_->pool, contents_->readerMetrics);
 
         if (pbStream.kind() == proto::Stream_Kind_ROW_INDEX) {
           proto::RowIndex rowIndex;
@@ -526,32 +588,23 @@ namespace orc {
     uint64_t stripeFooterLength = info.footer_length();
 
     std::unique_ptr<SeekableInputStream> pbStream;
+    BufferSlice slice;
 
-    // Try to read from cache first
     {
       std::lock_guard<std::mutex> lock(contents.readCacheMutex);
       if (contents.readCache) {
-        ReadRange footerRange(stripeFooterStart, stripeFooterLength);
-        BufferSlice cachedData = contents.readCache->read(footerRange);
-        if (cachedData.buffer != nullptr) {
-          // Create a stream from cached data
-          pbStream = createDecompressor(
-              contents.compression,
-              std::make_unique<SeekableArrayInputStream>(
-                  cachedData.buffer->data() + cachedData.offset, cachedData.length),
-              contents.blockSize, *contents.pool, contents.readerMetrics);
-        }
+        slice = contents.readCache->read(ReadRange(stripeFooterStart, stripeFooterLength));
       }
     }
-
-    // Fall back to reading from disk if not in cache
-    if (!pbStream) {
-      pbStream = createDecompressor(
-          contents.compression,
-          std::make_unique<SeekableFileInputStream>(contents.stream.get(), stripeFooterStart,
-                                                    stripeFooterLength, *contents.pool),
-          contents.blockSize, *contents.pool, contents.readerMetrics);
+    if (slice.buffer) {
+      pbStream = std::make_unique<SeekableArrayInputStream>(slice.buffer->data() + slice.offset,
+                                                            slice.length);
+    } else {
+      pbStream = std::make_unique<SeekableFileInputStream>(contents.stream.get(), stripeFooterStart,
+                                                           stripeFooterLength, *contents.pool);
     }
+    pbStream = createDecompressor(contents.compression, std::move(pbStream), contents.blockSize,
+                                  *contents.pool, contents.readerMetrics);
 
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
@@ -565,43 +618,6 @@ namespace orc {
       throw ParseError(msg.str());
     }
     return result;
-  }
-
-  std::vector<ReadRange> extractReadRangesForStripe(uint64_t stripeIndex,
-                                                    const proto::StripeInformation& stripeInfo,
-                                                    const proto::StripeFooter& stripeFooter,
-                                                    const std::vector<bool>& selectedColumns) {
-    std::vector<ReadRange> ranges;
-
-    uint64_t stripeFooterStart =
-        stripeInfo.offset() + stripeInfo.index_length() + stripeInfo.data_length();
-    uint64_t offset = stripeInfo.offset();
-
-    for (int i = 0; i < stripeFooter.streams_size(); i++) {
-      const proto::Stream& stream = stripeFooter.streams(i);
-      if (offset + stream.length() > stripeFooterStart) {
-        std::stringstream msg;
-        msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex
-            << ": streamOffset=" << offset << ", streamLength=" << stream.length()
-            << ", stripeOffset=" << stripeInfo.offset()
-            << ", stripeIndexLength=" << stripeInfo.index_length()
-            << ", stripeDataLength=" << stripeInfo.data_length();
-        throw ParseError(msg.str());
-      }
-
-      if (stream.has_kind() && selectedColumns[stream.column()]) {
-        const auto& kind = stream.kind();
-        if (kind == proto::Stream_Kind_DATA || kind == proto::Stream_Kind_DICTIONARY_DATA ||
-            kind == proto::Stream_Kind_PRESENT || kind == proto::Stream_Kind_LENGTH ||
-            kind == proto::Stream_Kind_SECONDARY) {
-          ranges.emplace_back(offset, stream.length());
-        }
-      }
-
-      offset += stream.length();
-    }
-
-    return ranges;
   }
 
   ReaderImpl::ReaderImpl(std::shared_ptr<FileContents> contents, const ReaderOptions& opts,
@@ -1173,13 +1189,10 @@ namespace orc {
       if (enableAsyncPrefetch_) {
         contents_->evictCache(currentStripeInfo_.offset());
 
-        if (fullyCachedStripes_.find(currentStripe_) != fullyCachedStripes_.cend()) {
-          // Current stripe has been fully cached, do nothing.
-        } else if (isSmallStripe(currentStripeInfo_, contents_->cacheOptions.rangeSizeLimit)) {
+        auto extractSmallStripeRanges = [this](uint64_t startStripe) {
           std::vector<ReadRange> ranges;
-          uint64_t maxStripe =
-              std::min(lastStripe_, currentStripe_ + smallStripeLookAheadLimit_ + 1);
-          for (uint64_t stripe = currentStripe_; stripe < maxStripe; stripe++) {
+          uint64_t maxStripe = std::min(lastStripe_, startStripe + smallStripeLookAheadLimit_ + 1);
+          for (uint64_t stripe = startStripe; stripe < maxStripe; stripe++) {
             const auto& stripeInfo = footer_->stripes(static_cast<int>(stripe));
             if (!isSmallStripe(stripeInfo, contents_->cacheOptions.rangeSizeLimit)) {
               break;
@@ -1187,7 +1200,22 @@ namespace orc {
             ranges.push_back(ReadRange{stripeInfo.offset(), getStripeSize(stripeInfo)});
             fullyCachedStripes_.insert(stripe);
           }
-          contents_->cacheRanges(std::move(ranges));
+          return ranges;
+        };
+
+        if (fullyCachedStripes_.find(currentStripe_) != fullyCachedStripes_.cend()) {
+          // Current stripe has been fully cached, only prefetch next (small) stripe if not cached
+          auto nextStripe = currentStripe_ + 1;
+          if (nextStripe < lastStripe_ &&
+              fullyCachedStripes_.find(nextStripe) == fullyCachedStripes_.cend()) {
+            std::vector<ReadRange> ranges = extractSmallStripeRanges(nextStripe);
+            if (!ranges.empty()) {
+              contents_->cacheRanges(std::move(ranges));
+            }
+          }
+        } else if (smallStripeLookAheadLimit_ > 0 &&
+                   isSmallStripe(currentStripeInfo_, contents_->cacheOptions.rangeSizeLimit)) {
+          contents_->cacheRanges(extractSmallStripeRanges(currentStripe_));
         } else {
           // This is very coarse since I/O ranges of all selected columns are about to prefetch.
           // We can further evaluate index stream with knowledge of pruned row groups to issue
