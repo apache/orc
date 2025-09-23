@@ -306,3 +306,4 @@ jobs:
       run: |
         meson setup build -Dbuildtype=release
         meson compile -C build
+        meson test -C build
