@@ -670,8 +670,8 @@ namespace orc {
     }
   }
 
-  // FIXME: Temporarily disable the test due to the failure on CI system
-  // https://issues.apache.org/jira/projects/ORC/issues/ORC-1976?filter=allopenissues
+  // FIXME: Temporarily disable the test to make Windows CI happy
+  // https://issues.apache.org/jira/projects/ORC/issues/ORC-1976
   TEST_P(WriterTest, DISABLED_writeNegativeTimestamp) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
