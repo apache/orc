@@ -2,7 +2,7 @@
 
 ## Supported OSes
 
-* Debian 11 and 12
+* Debian 11, 12, and 13
 * Fedora 37
 * Ubuntu 22 and 24
 * Oracle Linux 9

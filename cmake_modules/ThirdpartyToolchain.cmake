@@ -539,7 +539,8 @@ else ()
                           -DCMAKE_INSTALL_LIBDIR=lib
                           -DCMAKE_POLICY_VERSION_MINIMUM=3.12
                           -DBUILD_SHARED_LIBS=OFF
-                          -Dprotobuf_BUILD_TESTS=OFF)
+                          -Dprotobuf_BUILD_TESTS=OFF
+                          -Wno-stringop-overread)
 
   if (BUILD_POSITION_INDEPENDENT_LIB)
     set(PROTOBUF_CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
