@@ -226,7 +226,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.stripeSize = opts.getStripeSize();
     memoryLimit = stripeSize;
     double stripeSizeCheckRatio = OrcConf.STRIPE_SIZE_CHECKRATIO.getDouble(conf);
-    STRIPE_SIZE_PER_CHECK = stripeSizeCheckRatio <= 0 ? 0 : stripeSizeCheckRatio * memoryLimit;
+    STRIPE_SIZE_PER_CHECK = stripeSizeCheckRatio <= 0 ? 0 : stripeSizeCheckRatio * stripeSize;
     memoryManager = opts.getMemoryManager();
     memoryManager.addWriter(path, stripeSize, this);
 
