@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+INCLUDE(ExternalProject)
+
 set(ORC_VENDOR_DEPENDENCIES)
 set(ORC_SYSTEM_DEPENDENCIES)
 set(ORC_INSTALL_INTERFACE_TARGETS)

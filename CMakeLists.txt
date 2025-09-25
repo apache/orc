@@ -102,69 +102,23 @@ SET(CPACK_GENERATOR "TGZ")
 SET(CPACK_PACKAGE_VENDOR "Apache ORC")
 SET(CPACK_PACKAGE_CONTACT "Apache ORC <dev@orc.apache.org>")
 
-INCLUDE(CPack)
-INCLUDE(ExternalProject)
-
+# Compiler specific flags
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (BUILD_POSITION_INDEPENDENT_LIB)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif ()
-
-#
-# Compiler specific flags
-#
-# This ensures that things like c++17 get passed correctly
-if(NOT DEFINED CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-elseif(${CMAKE_CXX_STANDARD} VERSION_LESS 17)
-  message(FATAL_ERROR "Cannot set a CMAKE_CXX_STANDARD smaller than 17")
-endif()
-# We require a C++17 compliant compiler
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (NOT MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG -fno-omit-frame-pointer")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 endif ()
 message(STATUS "compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
-    message(FATAL_ERROR "A c++17-compliant compiler is required, please use at least Clang 5")
-  else ()
-    set (CXX17_FLAGS "-std=c++17")
-  endif ()
-  set (WARN_FLAGS "-Wall -Wextra")
-  if (STOP_BUILD_ON_WARNING)
-    set (WARN_FLAGS "${WARN_FLAGS} -Werror")
-  endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
-    message(FATAL_ERROR "A c++17-compliant compiler is required, please use at least GCC 5")
-  else ()
-    set (CXX17_FLAGS "-std=c++17")
-  endif ()
-  set (WARN_FLAGS "-Wall -Wextra")
-  if (STOP_BUILD_ON_WARNING)
-    set (WARN_FLAGS "${WARN_FLAGS} -Werror")
-  endif ()
-elseif (MSVC)
-  include(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG("/std:c++17" CPP17_FLAG_SUPPORTED)
-  if (CPP17_FLAG_SUPPORTED)
-    add_compile_options("/std:c++17")
-  else ()
-    message(FATAL_ERROR "A c++17-compliant compiler is required")
-  endif ()
-  add_definitions (-D_SCL_SECURE_NO_WARNINGS)
-  add_definitions (-D_CRT_SECURE_NO_WARNINGS)
-  add_definitions (-D_CRT_NONSTDC_NO_DEPRECATE) # The POSIX name for this item is deprecated
-  set (WARN_FLAGS "${WARN_FLAGS} -wd4521") # multiple copy constructors specified
-  set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
-endif ()
-# Include sanitizer configuration
-INCLUDE(OrcSanitizers)
 
 enable_testing()
 
+INCLUDE(CPack)
+INCLUDE(OrcSanitizers)
 INCLUDE(GNUInstallDirs)  # Put it before ThirdpartyToolchain to make CMAKE_INSTALL_LIBDIR available.
 
 if (ORC_PACKAGE_KIND STREQUAL "vcpkg")

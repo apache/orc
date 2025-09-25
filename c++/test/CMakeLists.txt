@@ -15,15 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
-
-add_library (orc-test-include INTERFACE)
-target_include_directories (orc-test-include INTERFACE
-  ${PROJECT_BINARY_DIR}/c++/include
-  ${PROJECT_BINARY_DIR}/c++/src
-  ${PROJECT_SOURCE_DIR}/c++/src
-)
-
 if(BUILD_ENABLE_AVX512)
   set(SIMD_TEST_SRCS TestRleVectorDecoder.cc)
 endif(BUILD_ENABLE_AVX512)
@@ -77,7 +68,6 @@ target_link_libraries (orc-test
   orc::zlib
   orc::gtest
   orc::gmock
-  orc-test-include
 )
 
 add_executable (create-test-files
@@ -87,7 +77,6 @@ add_executable (create-test-files
 target_link_libraries (create-test-files
   orc
   orc::protobuf
-  orc-test-include
 )
 
 if (TEST_VALGRIND_MEMCHECK)
