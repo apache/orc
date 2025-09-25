@@ -83,6 +83,7 @@ public class TestFileDump implements TestConf {
 
   @BeforeEach
   public void openFileSystem () throws Exception {
+    conf.set("orc.stripe.size.checkRatio", "0");
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir + File.separator + "TestFileDump.testDump.orc");
     fs.delete(testFilePath, false);

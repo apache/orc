@@ -59,6 +59,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   // If the number of keys in a dictionary is greater than this fraction of
   //the total number of non-null rows, turn off dictionary encoding
   private final double dictionaryKeySizeThreshold;
+  private final long dictionaryMaxSizeInBytes;
   protected Dictionary dictionary;
   protected boolean useDictionaryEncoding = true;
   private boolean isDirectV2 = true;
@@ -101,6 +102,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     rowIndexValueCount.add(0L);
     buildIndex = context.buildIndex();
     dictionaryKeySizeThreshold = context.getDictionaryKeySizeThreshold(id);
+    dictionaryMaxSizeInBytes = OrcConf.DICTIONARY_MAX_SIZE_IN_BYTES.getLong(conf);
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
     if (dictionaryKeySizeThreshold <= 0.0) {
@@ -118,7 +120,9 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
       // based on whether or not the fraction of distinct keys over number of
       // non-null rows is less than the configured threshold
       float ratio = rows.size() > 0 ? (float) (dictionary.size()) / rows.size() : 0.0f;
-      useDictionaryEncoding = !isDirectV2 || ratio <= dictionaryKeySizeThreshold;
+      useDictionaryEncoding = !isDirectV2 || (ratio <= dictionaryKeySizeThreshold &&
+          (dictionaryMaxSizeInBytes <= 0 ||
+              dictionary.getSizeInBytes() <= dictionaryMaxSizeInBytes));
       doneDictionaryCheck = true;
     }
   }
