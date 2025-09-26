@@ -718,7 +718,7 @@
           <reuseForks>false</reuseForks>
           <argLine>-Xmx2048m -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED --enable-native-access=ALL-UNNAMED -XX:+EnableDynamicAgentLoading</argLine>
           <environmentVariables>
-            <TZ>US/Pacific</TZ>
+            <TZ>America/Los_Angeles</TZ>
             <LANG>en_US.UTF-8</LANG>
           </environmentVariables>
           <useSystemClassLoader>false</useSystemClassLoader>
