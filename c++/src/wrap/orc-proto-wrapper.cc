@@ -23,6 +23,7 @@
 DIAGNOSTIC_IGNORE("-Warray-bounds")
 DIAGNOSTIC_IGNORE("-Wconversion")
 DIAGNOSTIC_IGNORE("-Wdeprecated")
+DIAGNOSTIC_IGNORE("-Wdeprecated-declarations")
 DIAGNOSTIC_IGNORE("-Wignored-qualifiers")
 DIAGNOSTIC_IGNORE("-Wpadded")
 DIAGNOSTIC_IGNORE("-Wsign-compare")

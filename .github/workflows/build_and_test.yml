@@ -269,16 +269,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v5
-    - name: Install dependencies
-      run: |
-        brew update
-        brew install protobuf
     - name: Test
       run: |
         CMAKE_PREFIX_PATH=$(brew --prefix protobuf)
         mkdir -p build
         cd build
-        cmake .. -DBUILD_JAVA=OFF -DPROTOBUF_HOME=${CMAKE_PREFIX_PATH}
+        cmake .. -DBUILD_JAVA=OFF
         make package test-out
 
   meson:

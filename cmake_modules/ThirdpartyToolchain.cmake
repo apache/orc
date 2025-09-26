@@ -16,6 +16,7 @@
 # under the License.
 
 INCLUDE(ExternalProject)
+INCLUDE(FetchContent)
 
 set(ORC_VENDOR_DEPENDENCIES)
 set(ORC_SYSTEM_DEPENDENCIES)
@@ -138,6 +139,33 @@ function(orc_provide_find_module PACKAGE_NAME)
 endfunction()
 
 # ----------------------------------------------------------------------
+# FetchContent
+
+include(FetchContent)
+set(FC_DECLARE_COMMON_OPTIONS)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+  list(APPEND FC_DECLARE_COMMON_OPTIONS EXCLUDE_FROM_ALL TRUE)
+endif()
+
+macro(prepare_fetchcontent)
+  set(BUILD_SHARED_LIBS OFF)
+  set(BUILD_STATIC_LIBS ON)
+  set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
+  set(CMAKE_WARN_DEPRECATED OFF)
+  set(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.25)
+  if(BUILD_POSITION_INDEPENDENT_LIB)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  endif()
+  # Use "NEW" for CMP0077 by default.
+  #
+  # https://cmake.org/cmake/help/latest/policy/CMP0077.html
+  #
+  # option() honors normal variables.
+  set(CMAKE_POLICY_DEFAULT_CMP0077 NEW CACHE STRING "")
+endmacro()
+
+# ----------------------------------------------------------------------
 # ORC Format
 if(DEFINED ENV{ORC_FORMAT_URL})
   set(ORC_FORMAT_SOURCE_URL "$ENV{ORC_FORMAT_URL}")
@@ -156,6 +184,111 @@ ExternalProject_Add (orc-format_ep
 )
 
 # ----------------------------------------------------------------------
+# Protobuf
+#
+# XXX: It must be processed before ZLIB, otherwise ZLIB_LIBRARIES will interfere with building protobuf.
+
+if (ORC_PACKAGE_KIND STREQUAL "conan")
+  find_package (Protobuf REQUIRED CONFIG)
+  add_library (orc_protobuf INTERFACE)
+  target_link_libraries(orc_protobuf INTERFACE protobuf::protobuf)
+  list (APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::protobuf>")
+elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
+  find_package(Protobuf CONFIG REQUIRED)
+  add_library (orc_protobuf INTERFACE IMPORTED)
+  target_link_libraries(orc_protobuf INTERFACE protobuf::libprotobuf)
+  list (APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
+  set (PROTOBUF_EXECUTABLE protobuf::protoc)
+elseif (NOT "${PROTOBUF_HOME}" STREQUAL "")
+  find_package (ProtobufAlt REQUIRED)
+
+  if (ORC_PREFER_STATIC_PROTOBUF AND PROTOBUF_STATIC_LIB)
+    orc_add_resolved_library (orc_protobuf ${PROTOBUF_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
+  else ()
+    orc_add_resolved_library (orc_protobuf ${PROTOBUF_LIBRARY} ${PROTOBUF_INCLUDE_DIR})
+  endif ()
+
+  if (ORC_PREFER_STATIC_PROTOBUF AND PROTOC_STATIC_LIB)
+    orc_add_resolved_library (orc_protoc ${PROTOC_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
+  else ()
+    orc_add_resolved_library (orc_protoc ${PROTOC_LIBRARY} ${PROTOBUF_INCLUDE_DIR})
+  endif ()
+
+  list (APPEND ORC_SYSTEM_DEPENDENCIES ProtobufAlt)
+  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
+  orc_provide_find_module (ProtobufAlt)
+else ()
+  prepare_fetchcontent()
+
+  set(protobuf_INSTALL OFF)
+  set(protobuf_BUILD_TESTS OFF)
+  set(protobuf_BUILD_PROTOBUF_BINARIES ON)
+  set(protobuf_BUILD_PROTOC_BINARIES ON)
+  set(protobuf_WITH_ZLIB OFF)
+  set(protobuf_BUILD_SHARED_LIBS OFF)
+
+  # Set compiler flags to suppress warnings before fetching protobuf
+  set(CMAKE_CXX_FLAGS_BACKUP "${CMAKE_CXX_FLAGS}")
+  set(CMAKE_C_FLAGS_BACKUP "${CMAKE_C_FLAGS}")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
+  endif()
+
+  fetchcontent_declare(protobuf
+    URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
+    SOURCE_SUBDIR "cmake"
+    FIND_PACKAGE_ARGS
+    NAMES Protobuf
+    CONFIG
+    )
+  fetchcontent_makeavailable(protobuf)
+
+  # Restore original compiler flags after protobuf configuration
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_BACKUP}")
+
+  if(protobuf_SOURCE_DIR)
+    message(STATUS "Using vendored protobuf")
+
+    if(NOT TARGET protobuf::libprotobuf)
+      add_library(protobuf::libprotobuf ALIAS libprotobuf)
+    endif()
+    if(NOT TARGET protobuf::protoc)
+      add_executable(protobuf::protoc ALIAS protoc)
+    endif()
+
+    if(BUILD_POSITION_INDEPENDENT_LIB)
+      set_target_properties(libprotobuf PROPERTIES POSITION_INDEPENDENT_CODE ON)
+      set_target_properties(protoc PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+
+    if(INSTALL_VENDORED_LIBS)
+      set_target_properties(libprotobuf PROPERTIES OUTPUT_NAME "orc_vendored_protobuf")
+      install(TARGETS libprotobuf
+              EXPORT orc_targets
+              RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+              ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+              LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::libprotobuf>")
+  else()
+    message(STATUS "Using system protobuf")
+    list(APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
+  endif()
+
+  add_library(orc_protobuf INTERFACE IMPORTED)
+  target_link_libraries(orc_protobuf INTERFACE protobuf::libprotobuf)
+  set(PROTOBUF_EXECUTABLE protobuf::protoc)
+endif ()
+
+add_library (orc::protobuf ALIAS orc_protobuf)
+
+# ----------------------------------------------------------------------
 # Snappy
 if (ORC_PACKAGE_KIND STREQUAL "conan")
   find_package (Snappy REQUIRED CONFIG)
@@ -170,41 +303,68 @@ elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
   list (APPEND ORC_SYSTEM_DEPENDENCIES Snappy)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:Snappy::snappy>")
 elseif (NOT "${SNAPPY_HOME}" STREQUAL "")
-  find_package (Snappy REQUIRED)
+  find_package (SnappyAlt REQUIRED)
   if (ORC_PREFER_STATIC_SNAPPY AND SNAPPY_STATIC_LIB)
     orc_add_resolved_library (orc_snappy ${SNAPPY_STATIC_LIB} ${SNAPPY_INCLUDE_DIR})
   else ()
     orc_add_resolved_library (orc_snappy ${SNAPPY_LIBRARY} ${SNAPPY_INCLUDE_DIR})
   endif ()
-  list (APPEND ORC_SYSTEM_DEPENDENCIES Snappy)
+  list (APPEND ORC_SYSTEM_DEPENDENCIES SnappyAlt)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:Snappy::snappy>")
-  orc_provide_find_module (Snappy)
+  orc_provide_find_module (SnappyAlt)
 else ()
-  set(SNAPPY_HOME "${THIRDPARTY_DIR}/snappy_ep-install")
-  set(SNAPPY_INCLUDE_DIR "${SNAPPY_HOME}/include")
-  set(SNAPPY_STATIC_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}snappy${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(SNAPPY_STATIC_LIB "${SNAPPY_HOME}/lib/${SNAPPY_STATIC_LIB_NAME}")
-  set(SNAPPY_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SNAPPY_HOME}
-                        -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_LIBDIR=lib
-                        -DSNAPPY_BUILD_BENCHMARKS=OFF)
+  prepare_fetchcontent()
 
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(SNAPPY_CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  endif ()
+  set(SNAPPY_BUILD_TESTS OFF)
+  set(SNAPPY_BUILD_BENCHMARKS OFF)
+  set(SNAPPY_INSTALL OFF)
 
-  ExternalProject_Add (snappy_ep
+  fetchcontent_declare(Snappy
     URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
-    CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} -DSNAPPY_BUILD_TESTS=OFF
-    ${THIRDPARTY_LOG_OPTIONS}
-    BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
+    FIND_PACKAGE_ARGS
+    NAMES Snappy
+    CONFIG
+    )
+  fetchcontent_makeavailable(Snappy)
 
-  orc_add_built_library (snappy_ep orc_snappy ${SNAPPY_STATIC_LIB} ${SNAPPY_INCLUDE_DIR})
+  if(snappy_SOURCE_DIR)
+    message(STATUS "Using vendored snappy")
+    if(NOT TARGET Snappy::snappy)
+      add_library(Snappy::snappy INTERFACE IMPORTED)
+      target_link_libraries(Snappy::snappy INTERFACE snappy)
+      target_include_directories(Snappy::snappy INTERFACE ${snappy_SOURCE_DIR} ${snappy_BINARY_DIR})
+    endif()
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_snappy|${SNAPPY_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_snappy>")
+    if(BUILD_POSITION_INDEPENDENT_LIB)
+      set_target_properties(snappy POSITION_INDEPENDENT_CODE ON)
+    endif()
+
+    if(INSTALL_VENDORED_LIBS)
+      set_target_properties(snappy PROPERTIES OUTPUT_NAME "orc_vendored_snappy")
+
+      install(FILES ${snappy_SOURCE_DIR}/snappy-c.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+      install(FILES ${snappy_SOURCE_DIR}/snappy-sinksource.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+      install(FILES ${snappy_SOURCE_DIR}/snappy.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+      install(FILES ${snappy_BINARY_DIR}/snappy-stubs-public.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+      install(TARGETS snappy
+              EXPORT orc_targets
+              RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+              ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+              LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::snappy>")
+  else()
+    message(STATUS "Using system snappy")
+    list(APPEND ORC_SYSTEM_DEPENDENCIES Snappy)
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:Snappy::snappy>")
+  endif()
+
+  add_library(orc_snappy INTERFACE IMPORTED)
+  target_link_libraries(orc_snappy INTERFACE Snappy::snappy)
 endif ()
 
-add_library (orc::snappy ALIAS orc_snappy)
+add_library (orc::Snappy ALIAS orc_snappy)
 
 # ----------------------------------------------------------------------
 # ZLIB
@@ -223,48 +383,74 @@ elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
   list (APPEND ORC_SYSTEM_DEPENDENCIES ZLIB)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:ZLIB::ZLIB>")
 elseif (NOT "${ZLIB_HOME}" STREQUAL "")
-  find_package (ZLIB REQUIRED)
+  find_package (ZLIBAlt REQUIRED)
   if (ORC_PREFER_STATIC_ZLIB AND ZLIB_STATIC_LIB)
     orc_add_resolved_library (orc_zlib ${ZLIB_STATIC_LIB} ${ZLIB_INCLUDE_DIR})
   else ()
     orc_add_resolved_library (orc_zlib ${ZLIB_LIBRARY} ${ZLIB_INCLUDE_DIR})
   endif ()
-  list (APPEND ORC_SYSTEM_DEPENDENCIES ZLIB)
+  list (APPEND ORC_SYSTEM_DEPENDENCIES ZLIBAlt)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:ZLIB::ZLIB>")
-  orc_provide_find_module (ZLIB)
+  orc_provide_find_module (ZLIBAlt)
 else ()
-  set(ZLIB_PREFIX "${THIRDPARTY_DIR}/zlib_ep-install")
-  set(ZLIB_INCLUDE_DIR "${ZLIB_PREFIX}/include")
-  if (MSVC)
-    set(ZLIB_STATIC_LIB_NAME zlibstatic)
-    if (${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
-      set(ZLIB_STATIC_LIB_NAME ${ZLIB_STATIC_LIB_NAME}d)
-    endif ()
-  else ()
-    set(ZLIB_STATIC_LIB_NAME z)
-  endif ()
-  set(ZLIB_STATIC_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(ZLIB_STATIC_LIB "${ZLIB_PREFIX}/lib/${ZLIB_STATIC_LIB_NAME}")
-  set(ZLIB_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZLIB_PREFIX}
-                      -DBUILD_SHARED_LIBS=OFF)
+  prepare_fetchcontent()
 
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(ZLIB_CMAKE_ARGS ${ZLIB_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  endif ()
+  set(ZLIB_BUILD_EXAMPLES OFF)
+  set(ZLIB_BUILD_TESTING OFF)
+  set(ZLIB_BUILD_STATIC ON)
+  set(ZLIB_BUILD_SHARED OFF)
+  set(ZLIB_INSTALL OFF)
+  set(ZLIB_PREFIX OFF)
 
-  ExternalProject_Add (zlib_ep
-    URL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
-    CMAKE_ARGS ${ZLIB_CMAKE_ARGS}
-    ${THIRDPARTY_LOG_OPTIONS}
-    BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
+  fetchcontent_declare(zlib
+    # URL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
+    # See https://github.com/madler/zlib/issues/937
+    GIT_REPOSITORY "https://github.com/madler/zlib.git"
+    GIT_TAG 5a82f71ed1dfc0bec044d9702463dbdf84ea3b71
+    FIND_PACKAGE_ARGS
+    NAMES ZLIB
+    CONFIG
+    )
+  fetchcontent_makeavailable(zlib)
 
-  orc_add_built_library (zlib_ep orc_zlib ${ZLIB_STATIC_LIB} ${ZLIB_INCLUDE_DIR})
+  if(zlib_SOURCE_DIR)
+    message(STATUS "Using vendored zlib")
+    if(NOT TARGET ZLIB::ZLIB)
+      add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    endif()
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_zlib|${ZLIB_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_zlib>")
-endif ()
+    if(BUILD_POSITION_INDEPENDENT_LIB)
+      set_target_properties(zlibstatic POSITION_INDEPENDENT_CODE ON)
+    endif()
 
-add_library (orc::zlib ALIAS orc_zlib)
+    if(INSTALL_VENDORED_LIBS)
+      set_target_properties(zlibstatic PROPERTIES OUTPUT_NAME "orc_vendored_zlib")
+      install(TARGETS zlibstatic
+              EXPORT orc_targets
+              RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+              ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+              LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::ZLIBSTATIC>")
+    set(ZLIB_LIBRARIES "zlibstatic")
+    set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR}")
+  else()
+    message(STATUS "Using system zlib")
+    # FindZLIB guarantees that ZLIB::ZLIB target exists if found
+    # See https://cmake.org/cmake/help/latest/module/FindZLIB.html#imported-targets
+    if(NOT TARGET ZLIB::ZLIB)
+      message(FATAL_ERROR "Using system zlib, but ZLIB::ZLIB not found")
+    endif()
+    list(APPEND ORC_SYSTEM_DEPENDENCIES ZLIB)
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:ZLIB::ZLIB>")
+  endif()
+
+  add_library(orc_zlib INTERFACE IMPORTED)
+  target_link_libraries(orc_zlib INTERFACE ZLIB::ZLIB)
+endif()
+
+add_library(orc::zlib ALIAS orc_zlib)
 
 # ----------------------------------------------------------------------
 # Zstd
@@ -285,7 +471,7 @@ elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
   list(APPEND ORC_SYSTEM_DEPENDENCIES zstd)
   list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<IF:$<TARGET_EXISTS:zstd::libzstd_shared>,zstd::libzstd_shared,zstd::libzstd_static>>")
 elseif (NOT "${ZSTD_HOME}" STREQUAL "")
-  find_package (ZSTD REQUIRED)
+  find_package (ZSTDAlt REQUIRED)
   if (ORC_PREFER_STATIC_ZSTD AND ZSTD_STATIC_LIB)
     orc_add_resolved_library (orc_zstd ${ZSTD_STATIC_LIB} ${ZSTD_INCLUDE_DIR})
     list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:zstd::libzstd_static>")
@@ -293,40 +479,58 @@ elseif (NOT "${ZSTD_HOME}" STREQUAL "")
     orc_add_resolved_library (orc_zstd ${ZSTD_LIBRARY} ${ZSTD_INCLUDE_DIR})
     list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<IF:$<TARGET_EXISTS:zstd::libzstd_shared>,zstd::libzstd_shared,zstd::libzstd_static>>")
   endif ()
-  list (APPEND ORC_SYSTEM_DEPENDENCIES ZSTD)
-  orc_provide_find_module (ZSTD)
+  list (APPEND ORC_SYSTEM_DEPENDENCIES ZSTDAlt)
+  orc_provide_find_module (ZSTDAlt)
 else ()
-  set(ZSTD_HOME "${THIRDPARTY_DIR}/zstd_ep-install")
-  set(ZSTD_INCLUDE_DIR "${ZSTD_HOME}/include")
-  if (MSVC)
-    set(ZSTD_STATIC_LIB_NAME zstd_static)
-    if (${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
-      set(ZSTD_STATIC_LIB_NAME ${ZSTD_STATIC_LIB_NAME})
-    endif ()
-  else ()
-    set(ZSTD_STATIC_LIB_NAME zstd)
-  endif ()
-  set(ZSTD_STATIC_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(ZSTD_STATIC_LIB "${ZSTD_HOME}/lib/${ZSTD_STATIC_LIB_NAME}")
-  set(ZSTD_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZSTD_HOME}
-          -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_LIBDIR=lib)
+  prepare_fetchcontent()
 
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(ZSTD_CMAKE_ARGS ${ZSTD_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  endif ()
+  set(ZSTD_BUILD_TESTING OFF)
+  set(ZSTD_BUILD_PROGRAMS OFF)
+  set(ZSTD_BUILD_STATIC ON)
+  set(ZSTD_BUILD_SHARED OFF)
+  set(ZSTD_BUILD_CONTRIB OFF)
 
-  set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
+  fetchcontent_declare(zstd
+    URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
+    SOURCE_SUBDIR "build/cmake"
+    FIND_PACKAGE_ARGS
+    NAMES zstd
+    CONFIG
+    )
+  fetchcontent_makeavailable(zstd)
 
-  ExternalProject_Add(zstd_ep
-          URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
-          ${ZSTD_CONFIGURE}
-          ${THIRDPARTY_LOG_OPTIONS}
-          BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
+  if(zstd_SOURCE_DIR)
+    message(STATUS "Using vendored zstd")
+    if(NOT TARGET zstd::libzstd_static)
+      add_library(zstd::libzstd_static ALIAS libzstd_static)
+    endif()
+    
+    if(BUILD_POSITION_INDEPENDENT_LIB)
+      set_target_properties(libzstd_static POSITION_INDEPENDENT_CODE ON)
+    endif()
 
-  orc_add_built_library (zstd_ep orc_zstd ${ZSTD_STATIC_LIB} ${ZSTD_INCLUDE_DIR})
+    if(INSTALL_VENDORED_LIBS)
+      set_target_properties(libzstd_static PROPERTIES OUTPUT_NAME "orc_vendored_zstd")
+      install(TARGETS libzstd_static
+              EXPORT orc_targets
+              RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+              ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+              LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    endif()
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_zstd|${ZSTD_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_zstd>")
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::libzstd_static>")
+  else()
+    message(STATUS "Using system zstd")
+    list(APPEND ORC_SYSTEM_DEPENDENCIES zstd)
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:zstd::libzstd_shared>>")
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:zstd::libzstd_static>>")
+  endif()
+
+  add_library(orc_zstd INTERFACE IMPORTED)
+  target_link_libraries(orc_zstd INTERFACE
+    $<TARGET_NAME_IF_EXISTS:zstd::libzstd_static>
+    $<TARGET_NAME_IF_EXISTS:zstd::libzstd_shared>
+  )
 endif ()
 
 add_library (orc::zstd ALIAS orc_zstd)
@@ -349,40 +553,61 @@ elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
   list (APPEND ORC_SYSTEM_DEPENDENCIES lz4)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:LZ4::lz4>")
 elseif (NOT "${LZ4_HOME}" STREQUAL "")
-  find_package (LZ4 REQUIRED)
+  find_package (LZ4Alt REQUIRED)
   if (ORC_PREFER_STATIC_LZ4 AND LZ4_STATIC_LIB)
     orc_add_resolved_library (orc_lz4 ${LZ4_STATIC_LIB} ${LZ4_INCLUDE_DIR})
   else ()
     orc_add_resolved_library (orc_lz4 ${LZ4_LIBRARY} ${LZ4_INCLUDE_DIR})
   endif ()
-  list (APPEND ORC_SYSTEM_DEPENDENCIES LZ4)
+  list (APPEND ORC_SYSTEM_DEPENDENCIES LZ4Alt)
   list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:LZ4::lz4>")
-  orc_provide_find_module (LZ4)
+  orc_provide_find_module (LZ4Alt)
 else ()
-  set(LZ4_PREFIX "${THIRDPARTY_DIR}/lz4_ep-install")
-  set(LZ4_INCLUDE_DIR "${LZ4_PREFIX}/include")
-  set(LZ4_STATIC_LIB_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(LZ4_STATIC_LIB "${LZ4_PREFIX}/lib/${LZ4_STATIC_LIB_NAME}")
-  set(LZ4_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${LZ4_PREFIX}
-                     -DCMAKE_INSTALL_LIBDIR=lib
-                     -DBUILD_SHARED_LIBS=OFF)
+  prepare_fetchcontent()
 
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(LZ4_CMAKE_ARGS ${LZ4_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  endif ()
+  set(LZ4_BUILD_CLI OFF)
 
-  set(LZ4_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
-
-  ExternalProject_Add(lz4_ep
+  fetchcontent_declare(lz4
     URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz"
-    ${LZ4_CONFIGURE}
-    ${THIRDPARTY_LOG_OPTIONS}
-    BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
+    SOURCE_SUBDIR "build/cmake"
+    FIND_PACKAGE_ARGS
+    NAMES lz4
+    CONFIG
+    )
+  fetchcontent_makeavailable(lz4)
 
-  orc_add_built_library (lz4_ep orc_lz4 ${LZ4_STATIC_LIB} ${LZ4_INCLUDE_DIR})
+  if(lz4_SOURCE_DIR)
+    message(STATUS "Using vendored LZ4")
+    if(NOT TARGET LZ4::lz4_static)
+      add_library(LZ4::lz4_static ALIAS lz4_static)
+    endif()
 
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_lz4|${LZ4_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_lz4>")
+    if(BUILD_POSITION_INDEPENDENT_LIB)
+      set_target_properties(lz4_static POSITION_INDEPENDENT_CODE ON)
+    endif()
+
+    if(INSTALL_VENDORED_LIBS)
+      set_target_properties(lz4_static PROPERTIES OUTPUT_NAME "orc_vendored_lz4")
+      install(TARGETS lz4_static
+              EXPORT orc_targets
+              RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+              ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+              LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::lz4_static>")
+  else()
+    message(STATUS "Using system LZ4")
+    list(APPEND ORC_SYSTEM_DEPENDENCIES lz4)
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_shared>>")
+    list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_static>>")
+  endif()
+
+  add_library(orc_lz4 INTERFACE IMPORTED)
+  target_link_libraries(orc_lz4 INTERFACE
+    $<TARGET_NAME_IF_EXISTS:LZ4::lz4_shared>
+    $<TARGET_NAME_IF_EXISTS:LZ4::lz4_static>
+  )
 endif ()
 
 add_library (orc::lz4 ALIAS orc_lz4)
@@ -426,183 +651,78 @@ endif ()
 # GoogleTest (gtest now includes gmock)
 
 if (BUILD_CPP_TESTS)
+  add_library (orc_gmock INTERFACE)
+  add_library (orc_gtest INTERFACE)
+  add_library (orc::gmock ALIAS orc_gmock)
+  add_library (orc::gtest ALIAS orc_gtest)
+
   if (NOT "${GTEST_HOME}" STREQUAL "")
-    find_package (GTest REQUIRED)
-    set (GTEST_VENDORED FALSE)
+    find_package (GTestAlt REQUIRED)
+
+    # This is a bit special cased because gmock requires gtest and some
+    # distributions statically link gtest inside the gmock shared lib
+    if (ORC_PREFER_STATIC_GMOCK AND GMOCK_STATIC_LIB)
+      target_link_libraries (orc_gmock INTERFACE ${GMOCK_STATIC_LIB})
+      target_link_libraries (orc_gtest INTERFACE ${GTEST_STATIC_LIB})
+    else ()
+      target_link_libraries (orc_gmock INTERFACE ${GMOCK_LIBRARY})
+      target_link_libraries (orc_gtest INTERFACE ${GTEST_LIBRARY})
+    endif ()
+
+    target_include_directories (orc_gmock SYSTEM INTERFACE ${GTEST_INCLUDE_DIR})
+    target_include_directories (orc_gtest SYSTEM INTERFACE ${GTEST_INCLUDE_DIR})
+
+    if (NOT APPLE AND NOT MSVC)
+      target_link_libraries (orc_gmock INTERFACE Threads::Threads)
+      target_link_libraries (orc_gtest INTERFACE Threads::Threads)
+    endif ()
   else ()
-    set(GTEST_PREFIX "${THIRDPARTY_DIR}/googletest_ep-install")
-    set(GTEST_INCLUDE_DIR "${GTEST_PREFIX}/include")
-    set(GMOCK_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(GTEST_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(GTEST_SRC_URL "https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz")
-    if(APPLE)
-      set(GTEST_CMAKE_CXX_FLAGS " -DGTEST_USE_OWN_TR1_TUPLE=1 -Wno-unused-value -Wno-ignored-attributes")
+    prepare_fetchcontent()
+    fetchcontent_declare(googletest
+      URL "https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz"
+      FIND_PACKAGE_ARGS
+      NAMES GTest
+      CONFIG
+      )
+    fetchcontent_makeavailable(googletest)
+
+    if(googletest_SOURCE_DIR)
+      message(STATUS "Using vendored GTest")
+      if(NOT TARGET GTest::gtest)
+        add_library(GTest::gtest ALIAS gtest)
+      endif()
+      if(NOT TARGET GTest::gmock)
+        add_library(GTest::gmock ALIAS gmock)
+      endif()
+      if(BUILD_POSITION_INDEPENDENT_LIB)
+        set_target_properties(gtest PROPERTIES POSITION_INDEPENDENT_CODE ON)
+        set_target_properties(gmock PROPERTIES POSITION_INDEPENDENT_CODE ON)
+      endif()
     else()
-      set(GTEST_CMAKE_CXX_FLAGS "")
+      message(STATUS "Using system GTest")
     endif()
 
-    set(GTEST_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                         -DCMAKE_INSTALL_PREFIX=${GTEST_PREFIX}
-                         -DCMAKE_INSTALL_LIBDIR=lib
-                         -Dgtest_force_shared_crt=ON
-                         -DCMAKE_CXX_FLAGS=${GTEST_CMAKE_CXX_FLAGS})
-
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(GTEST_CMAKE_ARGS ${GTEST_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+    target_link_libraries (orc_gmock INTERFACE GTest::gmock)
+    target_link_libraries (orc_gtest INTERFACE GTest::gtest)
   endif ()
-
-    ExternalProject_Add(googletest_ep
-      BUILD_IN_SOURCE 1
-      URL ${GTEST_SRC_URL}
-      ${THIRDPARTY_LOG_OPTIONS}
-      CMAKE_ARGS ${GTEST_CMAKE_ARGS}
-      BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}" "${GTEST_STATIC_LIB}")
-
-    set(GMOCK_LIBRARY ${GMOCK_STATIC_LIB})
-    set(GTEST_LIBRARY ${GTEST_STATIC_LIB})
-    set(GTEST_VENDORED TRUE)
-  endif ()
-
-  # This is a bit special cased because gmock requires gtest and some
-  # distributions statically link gtest inside the gmock shared lib
-  add_library (orc_gmock INTERFACE)
-  add_library (orc::gmock ALIAS orc_gmock)
-  add_library (orc_gtest INTERFACE)
-  add_library (orc::gtest ALIAS orc_gtest)
-  if (ORC_PREFER_STATIC_GMOCK AND GMOCK_STATIC_LIB)
-    target_link_libraries (orc_gmock INTERFACE ${GMOCK_STATIC_LIB})
-    target_link_libraries (orc_gtest INTERFACE ${GTEST_STATIC_LIB})
-  else ()
-    target_link_libraries (orc_gmock INTERFACE ${GMOCK_LIBRARY})
-    target_link_libraries (orc_gtest INTERFACE ${GTEST_LIBRARY})
-  endif ()
-  target_include_directories (orc_gmock SYSTEM INTERFACE ${GTEST_INCLUDE_DIR})
-  target_include_directories (orc_gtest SYSTEM INTERFACE ${GTEST_INCLUDE_DIR})
-
-  if (GTEST_VENDORED)
-    add_dependencies (orc_gmock googletest_ep)
-    add_dependencies (orc_gtest googletest_ep)
-  endif ()
-
-  if (NOT APPLE AND NOT MSVC)
-    target_link_libraries (orc_gmock INTERFACE Threads::Threads)
-    target_link_libraries (orc_gtest INTERFACE Threads::Threads)
-  endif ()
-endif ()
-
-# ----------------------------------------------------------------------
-# Protobuf
-
-if (ORC_PACKAGE_KIND STREQUAL "conan")
-  find_package (Protobuf REQUIRED CONFIG)
-  add_library (orc_protobuf INTERFACE)
-  target_link_libraries(orc_protobuf INTERFACE protobuf::protobuf)
-  list (APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::protobuf>")
-elseif (ORC_PACKAGE_KIND STREQUAL "vcpkg")
-  find_package(Protobuf CONFIG REQUIRED)
-  add_library (orc_protobuf INTERFACE IMPORTED)
-  target_link_libraries(orc_protobuf INTERFACE protobuf::libprotobuf)
-  list (APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
-  set (PROTOBUF_EXECUTABLE protobuf::protoc)
-elseif (NOT "${PROTOBUF_HOME}" STREQUAL "")
-  find_package (Protobuf REQUIRED)
-
-  if (ORC_PREFER_STATIC_PROTOBUF AND PROTOBUF_STATIC_LIB)
-    orc_add_resolved_library (orc_protobuf ${PROTOBUF_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
-  else ()
-    orc_add_resolved_library (orc_protobuf ${PROTOBUF_LIBRARY} ${PROTOBUF_INCLUDE_DIR})
-  endif ()
-
-  if (ORC_PREFER_STATIC_PROTOBUF AND PROTOC_STATIC_LIB)
-    orc_add_resolved_library (orc_protoc ${PROTOC_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
-  else ()
-    orc_add_resolved_library (orc_protoc ${PROTOC_LIBRARY} ${PROTOBUF_INCLUDE_DIR})
-  endif ()
-
-  list (APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
-  orc_provide_find_module (Protobuf)
-else ()
-  set(PROTOBUF_PREFIX "${THIRDPARTY_DIR}/protobuf_ep-install")
-  set(PROTOBUF_INCLUDE_DIR "${PROTOBUF_PREFIX}/include")
-  set(PROTOBUF_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROTOBUF_PREFIX}
-                          -DCMAKE_INSTALL_LIBDIR=lib
-                          -DCMAKE_POLICY_VERSION_MINIMUM=3.12
-                          -DBUILD_SHARED_LIBS=OFF
-                          -Dprotobuf_BUILD_TESTS=OFF)
-
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(PROTOBUF_CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  endif ()
-
-  if (MSVC)
-    set(PROTOBUF_STATIC_LIB_PREFIX lib)
-    list(APPEND PROTOBUF_CMAKE_ARGS -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
-                                    -Dprotobuf_DEBUG_POSTFIX=)
-  else ()
-    set(PROTOBUF_STATIC_LIB_PREFIX ${CMAKE_STATIC_LIBRARY_PREFIX})
-  endif ()
-  set(PROTOBUF_STATIC_LIB_NAME "${PROTOBUF_STATIC_LIB_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(PROTOBUF_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${PROTOBUF_STATIC_LIB_NAME}")
-  set(PROTOC_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${PROTOBUF_STATIC_LIB_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc${CMAKE_EXECUTABLE_SUFFIX}")
-
-  set(PROTOBUF_CONFIGURE SOURCE_SUBDIR "cmake" CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS})
-
-  ExternalProject_Add(protobuf_ep
-    URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
-    ${PROTOBUF_CONFIGURE}
-    ${THIRDPARTY_LOG_OPTIONS}
-    BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}")
-
-  orc_add_built_library (protobuf_ep orc_protobuf ${PROTOBUF_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
-  orc_add_built_library (protobuf_ep orc_protoc ${PROTOC_STATIC_LIB} ${PROTOBUF_INCLUDE_DIR})
-
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_protobuf|${PROTOBUF_STATIC_LIB_NAME}")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_protobuf>")
-endif ()
-
-add_library (orc::protobuf ALIAS orc_protobuf)
-if (NOT (ORC_PACKAGE_KIND STREQUAL "conan" OR ORC_PACKAGE_KIND STREQUAL "vcpkg"))
-  add_library (orc::protoc ALIAS orc_protoc)
 endif ()
 
 # ----------------------------------------------------------------------
 # SPARSEHASH
 if(BUILD_SPARSEHASH)
-  set(SPARSEHASH_HOME "${THIRDPARTY_DIR}/sparsehash_ep-install")
-  set(SPARSEHASH_INCLUDE_DIR "${SPARSEHASH_HOME}/include/google")
-  set(SPARSEHASH_CMAKE_ARGS
-      -DCMAKE_INSTALL_PREFIX=${SPARSEHASH_HOME}
-      -DBUILD_SHARED_LIBS=OFF
-      -DCMAKE_INSTALL_LIBDIR=lib
-      -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-  )
-  if (BUILD_POSITION_INDEPENDENT_LIB)
-    set(SPARSEHASH_CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  endif ()
+  prepare_fetchcontent()
 
-  set(SPARSEHASH_CONFIGURE SOURCE_SUBDIR "" CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS})
+  fetchcontent_declare(sparsehash
+    URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
+    SOURCE_SUBDIR "sparsehash" # XXX: sparsehash bundles gtest which conflicts with our vendored one
+    )
+  fetchcontent_makeavailable(sparsehash)
+  message(STATUS "Using vendored sparsehash")
 
-  ExternalProject_Add(sparsehash_ep
-      URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
-      ${SPARSEHASH_CONFIGURE}
-      ${THIRDPARTY_LOG_OPTIONS})
-
-  # sparsehash-c11 is header-only, create interface library
+  # sparsehash-c11 is header-only
   add_library(orc_sparsehash INTERFACE)
-  target_include_directories(orc_sparsehash INTERFACE 
-      $<BUILD_INTERFACE:${SPARSEHASH_INCLUDE_DIR}>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-  add_dependencies(orc_sparsehash sparsehash_ep)
-
-  list (APPEND ORC_VENDOR_DEPENDENCIES "orc::vendored_sparsehash")
-  list (APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::vendored_sparsehash>")
-
-  add_library (orc::sparsehash ALIAS orc_sparsehash)
-  set (SPARSEHASH_LIBRARIES orc::sparsehash)
+  add_library(orc::sparsehash ALIAS orc_sparsehash)
+  target_include_directories(orc_sparsehash INTERFACE $<BUILD_INTERFACE:${sparsehash_SOURCE_DIR}>)
 endif()
 
 # ----------------------------------------------------------------------
