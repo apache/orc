@@ -34,19 +34,9 @@
 #   executable can just be removed, as it looks like it was written for testing
 #   alone.
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${CXX17_FLAGS} ${WARN_FLAGS}")
-
 add_library (orc-tools-common INTERFACE)
-target_include_directories (orc-tools-common INTERFACE
-  ${PROJECT_BINARY_DIR}/c++/include
-  ${PROJECT_BINARY_DIR}/c++/src
-  ${PROJECT_SOURCE_DIR}/c++/include
-  ${PROJECT_SOURCE_DIR}/c++/src
-)
-target_link_libraries (orc-tools-common INTERFACE
-  orc
-  ${CMAKE_THREAD_LIBS_INIT}
-)
+target_compile_options(orc-tools-common INTERFACE -g)
+target_link_libraries (orc-tools-common INTERFACE orc ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable (orc-contents
   FileContents.cc

@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
-
 INCLUDE(CheckCXXSourceCompiles)
 
 CHECK_CXX_SOURCE_COMPILES("
@@ -223,11 +221,17 @@ target_include_directories (orc
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/c++/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/c++/include>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/c++/src>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/c++/src>
   PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${LIBHDFSPP_INCLUDE_DIR}
 )
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(orc PRIVATE -Wall -Wextra $<$<BOOL:${STOP_BUILD_ON_WARNING}>:-Werror>)
+endif ()
 
 if (BUILD_LIBHDFSPP)
   target_compile_definitions(orc PUBLIC -DBUILD_LIBHDFSPP)

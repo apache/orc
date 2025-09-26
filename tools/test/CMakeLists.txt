@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
-
 add_executable (tool-test
   gzip.cc
   TestCSVFileImport.cc
@@ -38,10 +36,6 @@ target_link_libraries (tool-test
 )
 
 target_include_directories(tool-test PRIVATE
-  ${PROJECT_BINARY_DIR}/c++/include
-  ${PROJECT_BINARY_DIR}/c++/src
-  ${PROJECT_SOURCE_DIR}/c++/include
-  ${PROJECT_SOURCE_DIR}/c++/src
   ${PROJECT_SOURCE_DIR}/tools-c++/src
 )
 
