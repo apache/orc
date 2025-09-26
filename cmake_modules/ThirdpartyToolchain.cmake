@@ -315,12 +315,7 @@ else ()
     set(ZSTD_CMAKE_ARGS ${ZSTD_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
   endif ()
 
-  if (CMAKE_VERSION VERSION_GREATER "3.7")
-    set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
-  else()
-    set(ZSTD_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${ZSTD_CMAKE_ARGS}
-            "${CMAKE_CURRENT_BINARY_DIR}/zstd_ep-prefix/src/zstd_ep/build/cmake")
-  endif()
+  set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
 
   ExternalProject_Add(zstd_ep
           URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
@@ -376,12 +371,7 @@ else ()
     set(LZ4_CMAKE_ARGS ${LZ4_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
   endif ()
 
-  if (CMAKE_VERSION VERSION_GREATER "3.7")
-    set(LZ4_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
-  else()
-    set(LZ4_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${LZ4_CMAKE_ARGS}
-                                        "${CMAKE_CURRENT_BINARY_DIR}/lz4_ep-prefix/src/lz4_ep/build/cmake")
-  endif()
+  set(LZ4_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
 
   ExternalProject_Add(lz4_ep
     URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz"
@@ -559,12 +549,7 @@ else ()
   set(PROTOC_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${PROTOBUF_STATIC_LIB_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc${CMAKE_EXECUTABLE_SUFFIX}")
 
-  if (CMAKE_VERSION VERSION_GREATER "3.7")
-    set(PROTOBUF_CONFIGURE SOURCE_SUBDIR "cmake" CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS})
-  else()
-    set(PROTOBUF_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${PROTOBUF_CMAKE_ARGS}
-                                             "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-prefix/src/protobuf_ep/cmake")
-  endif()
+  set(PROTOBUF_CONFIGURE SOURCE_SUBDIR "cmake" CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS})
 
   ExternalProject_Add(protobuf_ep
     URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
@@ -599,12 +584,7 @@ if(BUILD_SPARSEHASH)
     set(SPARSEHASH_CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
   endif ()
 
-  if (CMAKE_VERSION VERSION_GREATER "3.7")
-      set(SPARSEHASH_CONFIGURE SOURCE_SUBDIR "" CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS})
-    else()
-      set(SPARSEHASH_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${SPARSEHASH_CMAKE_ARGS}
-              "${CMAKE_CURRENT_BINARY_DIR}/sparsehash_ep-prefix/src/sparsehash_ep/")
-  endif()
+  set(SPARSEHASH_CONFIGURE SOURCE_SUBDIR "" CMAKE_ARGS ${SPARSEHASH_CMAKE_ARGS})
 
   ExternalProject_Add(sparsehash_ep
       URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
