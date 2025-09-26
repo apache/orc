@@ -20,7 +20,7 @@
 # ZSTD_INCLUDE_DIR: directory containing headers
 # ZSTD_LIBRARY: path to libzstd
 # ZSTD_STATIC_LIB: path to libzstd.a
-# ZSTD_FOUND: whether zstd has been found
+# ZSTDAlt_FOUND: whether zstd has been found
 
 if (NOT ZSTD_HOME)
   if (DEFINED ENV{ZSTD_HOME})
@@ -52,14 +52,14 @@ find_library (ZSTD_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_ST
         PATH_SUFFIXES "lib")
 
 if (ZSTD_INCLUDE_DIR AND ZSTD_LIBRARY)
-  set (ZSTD_FOUND TRUE)
+  set (ZSTDAlt_FOUND TRUE)
   set (ZSTD_HEADER_NAME zstd.h)
   set (ZSTD_HEADER ${ZSTD_INCLUDE_DIR}/${ZSTD_HEADER_NAME})
 else ()
-  set (ZSTD_FOUND FALSE)
+  set (ZSTDAlt_FOUND FALSE)
 endif ()
 
-if (ZSTD_FOUND)
+if (ZSTDAlt_FOUND)
   message (STATUS "Found the zstd header: ${ZSTD_HEADER}")
   message (STATUS "Found the zstd library: ${ZSTD_LIBRARY}")
   if (ZSTD_STATIC_LIB)
@@ -85,7 +85,7 @@ mark_as_advanced (
         ZSTD_LIBRARY
 )
 
-if(ZSTD_FOUND)
+if(ZSTDAlt_FOUND)
   if(NOT TARGET zstd::libzstd_static AND ZSTD_STATIC_LIB)
     add_library(zstd::libzstd_static STATIC IMPORTED)
     set_target_properties(zstd::libzstd_static
