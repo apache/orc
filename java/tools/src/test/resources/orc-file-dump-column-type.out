@@ -58,7 +58,7 @@ File Statistics:
   Column 14: count: 2048 hasNull: false bytesOnDisk: 1277 min: 10000 max: 9999  sum: 10240
 
 Stripes:
-  Stripe: offset: 3 data: 15540 rows: 2048 tail: 225 index: 464
+  Stripe: offset: 3 data: 15540 rows: 2048 tail: 238 index: 464
     Stream: column 0 section ROW_INDEX start: 3 length 12
     Stream: column 1 section ROW_INDEX start: 15 length 24
     Stream: column 2 section ROW_INDEX start: 39 length 28
