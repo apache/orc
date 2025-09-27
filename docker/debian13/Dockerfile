@@ -36,8 +36,6 @@ RUN apt-get install -y \
   curl \
   maven \
   openjdk-${jdk}-jdk
-RUN mkdir -p /usr/share/zoneinfo/US
-RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /usr/share/zoneinfo/US/Pacific
 
 WORKDIR /root
 
