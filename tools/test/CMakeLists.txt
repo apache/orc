@@ -28,9 +28,6 @@ add_executable (tool-test
 
 target_link_libraries (tool-test
   orc
-  orc::protobuf
-  orc::zlib
-  orc::snappy
   orc::gtest
   orc::gmock
 )
