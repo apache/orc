@@ -62,10 +62,6 @@ add_executable (orc-test
 
 target_link_libraries (orc-test
   orc
-  orc::lz4
-  orc::protobuf
-  orc::snappy
-  orc::zlib
   orc::gtest
   orc::gmock
 )
@@ -76,7 +72,6 @@ add_executable (create-test-files
 
 target_link_libraries (create-test-files
   orc
-  orc::protobuf
 )
 
 if (TEST_VALGRIND_MEMCHECK)

@@ -22,7 +22,7 @@
 # GTEST_LIBRARY: path to libgtest
 # GMOCK_STATIC_LIB: is set to gmock.a static library
 # GTEST_STATIC_LIB: is set to gtest.a static library
-# GTEST_FOUND is set if GTEST is found
+# GTestAlt_FOUND is set if GTEST is found
 
 if (NOT "${GTEST_HOME}" STREQUAL "")
   message (STATUS "GTEST_HOME set: ${GTEST_HOME}")
@@ -52,14 +52,14 @@ find_library (GTEST_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_
   PATH_SUFFIXES "lib")
 
 if (GTEST_INCLUDE_DIR AND GMOCK_LIBRARY)
-  set (GTEST_FOUND TRUE)
+  set (GTestAlt_FOUND TRUE)
   set (GTEST_HEADER_NAME gmock/gmock.h)
   set (GTEST_HEADER ${GTEST_INCLUDE_DIR}/${GTEST_HEADER_NAME})
 else ()
-  set (GTEST_FOUND FALSE)
+  set (GTestAlt_FOUND FALSE)
 endif ()
 
-if (GTEST_FOUND)
+if (GTestAlt_FOUND)
   message (STATUS "Found the GTest header: ${GTEST_HEADER}")
   message (STATUS "Found the GTest library: ${GTEST_LIBRARY}")
   message (STATUS "Found the GMock library: ${GMOCK_LIBRARY}")

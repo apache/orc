@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required (VERSION 3.12.0)
+cmake_minimum_required (VERSION 3.25.0)
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif ()
@@ -99,6 +99,7 @@ endif ()
 
 # Set the package format
 SET(CPACK_GENERATOR "TGZ")
+SET(CPACK_SOURCE_GENERATOR "TGZ")
 SET(CPACK_PACKAGE_VENDOR "Apache ORC")
 SET(CPACK_PACKAGE_CONTACT "Apache ORC <dev@orc.apache.org>")
 
