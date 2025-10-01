@@ -40,7 +40,6 @@ message (STATUS "ZLIB_HOME: ${ZLIB_HOME}")
 
 find_path (ZLIB_INCLUDE_DIR zlib.h HINTS
   ${_zlib_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
 if (NOT ZLIB_STATIC_LIB_NAME)

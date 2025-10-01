@@ -40,7 +40,6 @@ message (STATUS "ZSTD_HOME: ${ZSTD_HOME}")
 
 find_path (ZSTD_INCLUDE_DIR zstd.h HINTS
         ${_zstd_path}
-        NO_DEFAULT_PATH
         PATH_SUFFIXES "include")
 
 find_library (ZSTD_LIBRARY NAMES zstd HINTS
