@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.7.2 Released</title>
+  <title>ORC 2.2.1 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -362,8 +362,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.7.2 Released
-    <a href="/news/2021/12/20/ORC-1.7.2/" class="permalink" title="Permalink">∞</a>
+    ORC 2.2.1 Released
+    <a href="/news/2025/10/01/ORC-2.2.1/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -372,52 +372,65 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      20 Dec 2021
+      01 Oct 2025
     </span>
     <span class="post-author">
       dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.7.2.</p>
+    <p>The ORC team is excited to announce the release of ORC v2.2.1.</p>
 
 <ul>
-  <li>Released: 20 December 2021</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.7.2/orc-1.7.2.tar.gz">orc-1.7.2.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.7.2/orc-1.7.2.tar.gz.asc">GPG Signature</a>
+  <li>Released: 1 October 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.2.1/orc-2.2.1.tar.gz">orc-2.2.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.2.1/orc-2.2.1.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.2">rel/release-1.7.2</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.2%22">ORC 1.7.2</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.7.2/orc-1.7.2.tar.gz.sha256">ef39bae755116fec…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.2%22&amp;tempMax=500">ORC-1.7.2</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.2.1">rel/release-2.2.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.2.1%22">ORC 2.2.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.2.1/orc-2.2.1.tar.gz.sha256">f3d21c5adc097059…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.2.1%22&amp;tempMax=500">ORC-2.2.1</a></li>
 </ul>
 
 <p>The bug fixes:</p>
-
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-492">ORC-492</a> Avoid potential ArrayIndexOutOfBoundsException when getting WriterVersionn</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1002">ORC-1053</a> Fix time zone offset precision when convert tool converts LocalDateTime to Timestamp is not consistent with the internal default precision of ORC</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1041">ORC-1041</a> Use memcpy during LZO decompression</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1059">ORC-1059</a> Align findColumns behaviour between 1.6 and 1.7 release</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1966">ORC-1966</a>: [C++] Fix ZSTD compress/decompress to propagate errors</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1967">ORC-1967</a>: [C++] Fix Windows build</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1968">ORC-1968</a>: Upgrade commons-cli to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1972">ORC-1972</a>: Upgrade ORC Format to 1.1.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1973">ORC-1973</a>: [C++] Use int64_t instead of google::protobuf::int64 for Protobuf v22+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1974">ORC-1974</a>: [C++] Use google::protobuf::TextFormat instead of DebugString for Protobuf v30+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1977">ORC-1977</a>: Add Deprecated annotations for all deprecated APIs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1979">ORC-1979</a>: Upgrade commons-csv to 1.14.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2007">ORC-2007</a>: Upgrade gson to 2.13.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2010">ORC-2010</a>: Use IANA Identifier America/Los_Angeles instead of US/Pacific in Java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2011">ORC-2011</a>: [C++] Fix Timezone to support legacy US TimeZone identifiers</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2012">ORC-2012</a>: Remove US timezone workaround from Debian 13 Docker image</li>
 </ul>
 
-<p>The ‘tools’ improvements:</p>
+<p>The test changes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1012">ORC-1012</a> Support specifying columns in orc-scan</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1017">ORC-1017</a> Add sizes tool to determine and display the sizes of each column in a set of files</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1023">ORC-1023</a> Support writing bloom filters in ConvertTool</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1964">ORC-1964</a> [CI] Fix CI ubsan-test with GNU</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1970">ORC-1970</a> [CI] Fix cpp-linter-action to use hash tag</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1984">ORC-1984</a> Add debian13 to docker tests, docs, and GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1995">ORC-1995</a> Add MacOS 26 to GitHub Action CI and docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1996">ORC-1996</a> Remove MacOS 13 from GitHub Action CI and docs</li>
 </ul>
 
-<p>The ‘tests’ fixes:</p>
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-915">ORC-915</a> Remove io.netty.netty from Spark benchmark</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-938">ORC-938</a> Bump netty-all from 4.1.42.Final to 4.1.66.Final</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-948">ORC-948</a> Add hive benchmark integration tests</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-957">ORC-957</a> Bump netty-all from 4.1.66.Final to 4.1.67.Final</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1021">ORC-1021</a> Add -fno-omit-frame-pointer in DEBUG and RELWITHDEBINFO builds</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1051">ORC-1051</a> Update benchmark dependencies</li>
-</ul>
+<p>The build and dependency changes:</p>
 
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1921">ORC-1921</a> Upgrade Hadoop to 3.4.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1978">ORC-1978</a> Upgrade maven-enforcer-plugin to 3.6.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1980">ORC-1980</a> Upgrade junit to 5.13.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1983">ORC-1983</a> [C++] Upgrade gtest to 1.17.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1987">ORC-1987</a> Upgrade Spark to 4.0.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1988">ORC-1988</a> Upgrade Parquet to 1.16.0 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1989">ORC-1989</a> Upgrade Hive to 4.1.0 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1998">ORC-1998</a> Use Java 25 instead of 25-ea</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1999">ORC-1999</a> Upgrade Checkstyle to 11.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2003">ORC-2003</a> Upgrade guava to 33.5.0-jre</li>
+</ul>
 
   </div>
 </article>
@@ -437,7 +450,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2025/10/01/ORC-2.2.1/">Version 2.2.1</a>
       </li>
       

@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2025/10/01/ORC-2.2.1/">ORC 2.2.1 Released</option>
+      
       <option value="/news/2025/07/29/ORC-2.2.0/">ORC 2.2.0 Released</option>
       
       <option value="/news/2025/07/09/ORC-2.1.3/">ORC 2.1.3 Released</option>
@@ -361,6 +363,83 @@
         
   <article>
   <h2>
+    <a href="/news/2025/10/01/ORC-2.2.1/">
+      ORC 2.2.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      01 Oct 2025
+    </span>
+    <span class="post-author">
+      dongjoon
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.2.1.</p>
+
+<ul>
+  <li>Released: 1 October 2025</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.2.1/orc-2.2.1.tar.gz">orc-2.2.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.2.1/orc-2.2.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.2.1">rel/release-2.2.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.2.1%22">ORC 2.2.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.2.1/orc-2.2.1.tar.gz.sha256">f3d21c5adc097059…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.2.1%22&amp;tempMax=500">ORC-2.2.1</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1966">ORC-1966</a>: [C++] Fix ZSTD compress/decompress to propagate errors</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1967">ORC-1967</a>: [C++] Fix Windows build</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1968">ORC-1968</a>: Upgrade commons-cli to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1972">ORC-1972</a>: Upgrade ORC Format to 1.1.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1973">ORC-1973</a>: [C++] Use int64_t instead of google::protobuf::int64 for Protobuf v22+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1974">ORC-1974</a>: [C++] Use google::protobuf::TextFormat instead of DebugString for Protobuf v30+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1977">ORC-1977</a>: Add Deprecated annotations for all deprecated APIs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1979">ORC-1979</a>: Upgrade commons-csv to 1.14.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2007">ORC-2007</a>: Upgrade gson to 2.13.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2010">ORC-2010</a>: Use IANA Identifier America/Los_Angeles instead of US/Pacific in Java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2011">ORC-2011</a>: [C++] Fix Timezone to support legacy US TimeZone identifiers</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2012">ORC-2012</a>: Remove US timezone workaround from Debian 13 Docker image</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1964">ORC-1964</a> [CI] Fix CI ubsan-test with GNU</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1970">ORC-1970</a> [CI] Fix cpp-linter-action to use hash tag</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1984">ORC-1984</a> Add debian13 to docker tests, docs, and GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1995">ORC-1995</a> Add MacOS 26 to GitHub Action CI and docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1996">ORC-1996</a> Remove MacOS 13 from GitHub Action CI and docs</li>
+</ul>
+
+<p>The build and dependency changes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1921">ORC-1921</a> Upgrade Hadoop to 3.4.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1978">ORC-1978</a> Upgrade maven-enforcer-plugin to 3.6.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1980">ORC-1980</a> Upgrade junit to 5.13.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1983">ORC-1983</a> [C++] Upgrade gtest to 1.17.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1987">ORC-1987</a> Upgrade Spark to 4.0.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1988">ORC-1988</a> Upgrade Parquet to 1.16.0 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1989">ORC-1989</a> Upgrade Hive to 4.1.0 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1998">ORC-1998</a> Use Java 25 instead of 25-ea</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1999">ORC-1999</a> Upgrade Checkstyle to 11.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2003">ORC-2003</a> Upgrade guava to 33.5.0-jre</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2025/07/29/ORC-2.2.0/">
       ORC 2.2.0 Released
     </a>
@@ -383,12 +462,12 @@
 
 <ul>
   <li>Released: 29 July 2025</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.2.0/orc-2.2.0.tar.gz">orc-2.2.0.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.2.0/orc-2.2.0.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.2.0/orc-2.2.0.tar.gz">orc-2.2.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-2.2.0/orc-2.2.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.2.0">rel/release-2.2.0</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.2.0%22">ORC 2.2.0</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.2.0/orc-2.2.0.tar.gz.sha256">9a9cff7efa81c419…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.2.0/orc-2.2.0.tar.gz.sha256">9a9cff7efa81c419…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.2.0%22&amp;tempMax=500">ORC-2.2.0</a></li>
 </ul>
 
@@ -7392,6 +7471,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2025/10/01/ORC-2.2.1/">Version 2.2.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2025/07/29/ORC-2.2.0/">Version 2.2.0</a>
       </li>
       
@@ -7407,13 +7490,11 @@ together with the Java implementation.</p>
         <a href="/news/2025/07/04/ORC-1.9.7/">Version 1.9.7</a>
       </li>
       
-      <li class="">
-        <a href="/news/2025/06/26/ORC-1.8.10/">Version 1.8.10</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
