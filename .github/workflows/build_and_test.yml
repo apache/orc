@@ -45,7 +45,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - debian11
           - debian12
           - debian13
           - ubuntu24
