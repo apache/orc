@@ -17,7 +17,7 @@
 # ORC compile for Amazon Linux 2023
 #
 
-FROM amazonlinux:2023
+FROM amazonlinux:2023.9.20250929.0
 LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.ref.name="Apache ORC on Amazon Linux 2023"
@@ -25,7 +25,6 @@ LABEL org.opencontainers.image.version=""
 
 RUN yum check-update || true
 RUN yum install -y \
-  cmake3 \
   curl-devel \
   cyrus-sasl-devel \
   expat-devel \
@@ -41,6 +40,12 @@ RUN yum install -y \
   which \
   zlib-devel \
   java-17-amazon-corretto-devel
+
+ARG cmake=3.26.0
+RUN curl -L \
+    "https://github.com/Kitware/CMake/releases/download/v${cmake}/cmake-${cmake}-linux-$(uname -m).tar.gz" | \
+    tar -xzf - --directory /usr/local --strip-components=1 && \
+    ln -fs /usr/local/bin/cmake /usr/bin/cmake
 
 ENV TZ=America/Los_Angeles
 WORKDIR /root
