@@ -1,4 +1,3 @@
-debian11
 debian12
 debian13
 ubuntu22
