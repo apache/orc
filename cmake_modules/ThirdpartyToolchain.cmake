@@ -207,17 +207,17 @@ else ()
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
     endif()
 
-    fetchcontent_declare(protobuf
+    fetchcontent_declare(Protobuf
       URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
       SOURCE_SUBDIR "cmake"
       FIND_PACKAGE_ARGS
       NAMES Protobuf
       CONFIG
       )
-    fetchcontent_makeavailable(protobuf)
+    fetchcontent_makeavailable(Protobuf)
 
     if(protobuf_SOURCE_DIR)
-      message(STATUS "Using vendored protobuf")
+      message(STATUS "Using vendored Protobuf")
 
       add_library(protobuf::libprotobuf ALIAS libprotobuf)
       add_executable(protobuf::protoc ALIAS protoc)
@@ -238,7 +238,7 @@ else ()
 
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::libprotobuf>")
     else()
-      message(STATUS "Using system protobuf")
+      message(STATUS "Using system Protobuf")
       list(APPEND ORC_SYSTEM_DEPENDENCIES Protobuf)
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:protobuf::libprotobuf>")
     endif()
@@ -292,7 +292,7 @@ else ()
     fetchcontent_makeavailable(Snappy)
 
     if(snappy_SOURCE_DIR)
-      message(STATUS "Using vendored snappy")
+      message(STATUS "Using vendored Snappy")
       if(NOT TARGET Snappy::snappy)
         add_library(Snappy::snappy INTERFACE IMPORTED)
         target_link_libraries(Snappy::snappy INTERFACE snappy)
@@ -319,7 +319,7 @@ else ()
 
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::snappy>")
     else()
-      message(STATUS "Using system snappy")
+      message(STATUS "Using system Snappy")
       list(APPEND ORC_SYSTEM_DEPENDENCIES Snappy)
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:Snappy::snappy>")
     endif()
@@ -368,7 +368,7 @@ else ()
     set(ZLIB_INSTALL OFF)
     set(ZLIB_PREFIX OFF)
 
-    fetchcontent_declare(zlib
+    fetchcontent_declare(ZLIB
       # URL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
       # See https://github.com/madler/zlib/issues/937
       GIT_REPOSITORY "https://github.com/madler/zlib.git"
@@ -377,10 +377,10 @@ else ()
       NAMES ZLIB
       CONFIG
       )
-    fetchcontent_makeavailable(zlib)
+    fetchcontent_makeavailable(ZLIB)
 
     if(zlib_SOURCE_DIR)
-      message(STATUS "Using vendored zlib")
+      message(STATUS "Using vendored ZLIB")
       if(NOT TARGET ZLIB::ZLIB)
         add_library(ZLIB::ZLIB ALIAS zlibstatic)
       endif()
@@ -402,11 +402,11 @@ else ()
       set(ZLIB_LIBRARIES "zlibstatic")
       set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR}")
     else()
-      message(STATUS "Using system zlib")
+      message(STATUS "Using system ZLIB")
       # FindZLIB guarantees that ZLIB::ZLIB target exists if found
       # See https://cmake.org/cmake/help/latest/module/FindZLIB.html#imported-targets
       if(NOT TARGET ZLIB::ZLIB)
-        message(FATAL_ERROR "Using system zlib, but ZLIB::ZLIB not found")
+        message(FATAL_ERROR "Using system ZLIB, but ZLIB::ZLIB not found")
       endif()
       list(APPEND ORC_SYSTEM_DEPENDENCIES ZLIB)
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:ZLIB::ZLIB>")
@@ -547,7 +547,7 @@ else ()
     fetchcontent_makeavailable(lz4)
 
     if(lz4_SOURCE_DIR)
-      message(STATUS "Using vendored LZ4")
+      message(STATUS "Using vendored lz4")
       if(NOT TARGET LZ4::lz4_static)
         add_library(LZ4::lz4_static ALIAS lz4_static)
       endif()
@@ -567,7 +567,7 @@ else ()
 
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:orc::lz4_static>")
     else()
-      message(STATUS "Using system LZ4")
+      message(STATUS "Using system lz4")
       list(APPEND ORC_SYSTEM_DEPENDENCIES lz4)
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_shared>>")
       list(APPEND ORC_INSTALL_INTERFACE_TARGETS "$<INSTALL_INTERFACE:$<TARGET_NAME_IF_EXISTS:LZ4::lz4_static>>")
@@ -650,15 +650,15 @@ if (BUILD_CPP_TESTS)
   else ()
     block()
       prepare_fetchcontent()
-      fetchcontent_declare(googletest
+      fetchcontent_declare(GTest
         URL "https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz"
         FIND_PACKAGE_ARGS
         NAMES GTest
         CONFIG
         )
-      fetchcontent_makeavailable(googletest)
+      fetchcontent_makeavailable(GTest)
 
-      if(googletest_SOURCE_DIR)
+      if(gtest_SOURCE_DIR)
         message(STATUS "Using vendored GTest")
         if(NOT TARGET GTest::gtest)
           add_library(GTest::gtest ALIAS gtest)
