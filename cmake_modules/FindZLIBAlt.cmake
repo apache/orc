@@ -20,7 +20,7 @@
 # ZLIB_INCLUDE_DIR: directory containing headers
 # ZLIB_LIBRARY: path to libz/libzlib
 # ZLIB_STATIC_LIB: path to zlib.a
-# ZLIB_FOUND: whether ZLIB has been found
+# ZLIBAlt_FOUND: whether ZLIB has been found
 
 if (NOT ZLIB_HOME)
   if (DEFINED ENV{ZLIB_HOME})
@@ -56,14 +56,14 @@ find_library (ZLIB_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_
   PATH_SUFFIXES "lib")
 
 if (ZLIB_INCLUDE_DIR AND ZLIB_LIBRARY)
-  set (ZLIB_FOUND TRUE)
+  set (ZLIBAlt_FOUND TRUE)
   set (ZLIB_HEADER_NAME zlib.h)
   set (ZLIB_HEADER ${ZLIB_INCLUDE_DIR}/${ZLIB_HEADER_NAME})
 else ()
-  set (ZLIB_FOUND FALSE)
+  set (ZLIBAlt_FOUND FALSE)
 endif ()
 
-if (ZLIB_FOUND)
+if (ZLIBAlt_FOUND)
   message (STATUS "Found the ZLIB header: ${ZLIB_HEADER}")
   message (STATUS "Found the ZLIB library: ${ZLIB_LIBRARY}")
   if (ZLIB_STATIC_LIB)
@@ -89,7 +89,7 @@ mark_as_advanced (
   ZLIB_LIBRARY
 )
 
-if(ZLIB_FOUND AND NOT TARGET ZLIB::ZLIB)
+if(ZLIBAlt_FOUND AND NOT TARGET ZLIB::ZLIB)
   add_library(ZLIB::ZLIB UNKNOWN IMPORTED)
   set_target_properties(ZLIB::ZLIB
                         PROPERTIES IMPORTED_LOCATION "${ZLIB_LIBRARY}"
