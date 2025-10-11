@@ -22,6 +22,7 @@
 #include "ByteRLE.hh"
 #include "ColumnReader.hh"
 #include "ConvertColumnReader.hh"
+#include "DictionaryLoader.hh"
 #include "RLE.hh"
 #include "SchemaEvolution.hh"
 #include "orc/Exceptions.hh"
@@ -33,19 +34,6 @@ namespace orc {
 
   StripeStreams::~StripeStreams() {
     // PASS
-  }
-
-  inline RleVersion convertRleVersion(proto::ColumnEncoding_Kind kind) {
-    switch (static_cast<int64_t>(kind)) {
-      case proto::ColumnEncoding_Kind_DIRECT:
-      case proto::ColumnEncoding_Kind_DICTIONARY:
-        return RleVersion_1;
-      case proto::ColumnEncoding_Kind_DIRECT_V2:
-      case proto::ColumnEncoding_Kind_DICTIONARY_V2:
-        return RleVersion_2;
-      default:
-        throw ParseError("Unknown encoding in convertRleVersion");
-    }
   }
 
   ColumnReader::ColumnReader(const Type& type, StripeStreams& stripe)
@@ -567,39 +555,15 @@ namespace orc {
 
   StringDictionaryColumnReader::StringDictionaryColumnReader(const Type& type,
                                                              StripeStreams& stripe)
-      : ColumnReader(type, stripe), dictionary_(new StringDictionary(stripe.getMemoryPool())) {
+      : ColumnReader(type, stripe) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId).kind());
-    uint32_t dictSize = stripe.getEncoding(columnId).dictionary_size();
     std::unique_ptr<SeekableInputStream> stream =
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (stream == nullptr) {
       throw ParseError("DATA stream not found in StringDictionaryColumn");
     }
     rle_ = createRleDecoder(std::move(stream), false, rleVersion, memoryPool, metrics);
-    stream = stripe.getStream(columnId, proto::Stream_Kind_LENGTH, false);
-    if (dictSize > 0 && stream == nullptr) {
-      throw ParseError("LENGTH stream not found in StringDictionaryColumn");
-    }
-    std::unique_ptr<RleDecoder> lengthDecoder =
-        createRleDecoder(std::move(stream), false, rleVersion, memoryPool, metrics);
-    dictionary_->dictionaryOffset.resize(dictSize + 1);
-    int64_t* lengthArray = dictionary_->dictionaryOffset.data();
-    lengthDecoder->next(lengthArray + 1, dictSize, nullptr);
-    lengthArray[0] = 0;
-    for (uint32_t i = 1; i < dictSize + 1; ++i) {
-      if (lengthArray[i] < 0) {
-        throw ParseError("Negative dictionary entry length");
-      }
-      lengthArray[i] += lengthArray[i - 1];
-    }
-    int64_t blobSize = lengthArray[dictSize];
-    dictionary_->dictionaryBlob.resize(static_cast<uint64_t>(blobSize));
-    std::unique_ptr<SeekableInputStream> blobStream =
-        stripe.getStream(columnId, proto::Stream_Kind_DICTIONARY_DATA, false);
-    if (blobSize > 0 && blobStream == nullptr) {
-      throw ParseError("DICTIONARY_DATA stream not found in StringDictionaryColumn");
-    }
-    readFully(dictionary_->dictionaryBlob.data(), blobSize, blobStream.get());
+    dictionary_ = loadStringDictionary(columnId, stripe, memoryPool);
   }
 
   StringDictionaryColumnReader::~StringDictionaryColumnReader() {
