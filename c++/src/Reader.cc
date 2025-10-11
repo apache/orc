@@ -19,7 +19,9 @@
 #include "Reader.hh"
 #include "Adaptor.hh"
 #include "BloomFilter.hh"
+#include "DictionaryLoader.hh"
 #include "Options.hh"
+#include "RLE.hh"
 #include "Statistics.hh"
 #include "StripeStream.hh"
 #include "Utils.hh"
@@ -32,6 +34,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace orc {
@@ -347,9 +350,10 @@ namespace orc {
     // prepare SargsApplier if SearchArgument is available
     if (opts.getSearchArgument() && footer_->row_index_stride() > 0) {
       sargs_ = opts.getSearchArgument();
-      sargsApplier_.reset(
-          new SargsApplier(*contents_->schema, sargs_.get(), footer_->row_index_stride(),
-                           getWriterVersionImpl(contents.get()), contents_->readerMetrics));
+      sargsApplier_ = std::make_unique<SargsApplier>(
+          *contents_->schema, sargs_.get(), footer_->row_index_stride(),
+          getWriterVersionImpl(contents.get()), opts.getDictionaryFilteringSizeThreshold(),
+          contents_->readerMetrics, &schemaEvolution_);
     }
 
     skipBloomFilters_ = hasBadBloomFilters();
@@ -1119,6 +1123,73 @@ namespace orc {
     return getStripeSize(stripeInfo) <= threshold;
   }
 
+  /**
+   * Load stripe dictionaries for dictionary-based predicate pushdown.
+   * Only loads dictionaries for STRING/VARCHAR/CHAR columns with IN expressions.
+   */
+  std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>> loadStripeDictionaries(
+      const proto::Footer& footer, const std::vector<bool>& selectedColumns,
+      const std::vector<uint64_t>& columnsWithInExpr, StripeStreams& stripe,
+      size_t dictSizeThreshold) {
+    std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>> dictionaries;
+
+    // Only load dictionaries for selected columns with IN expressions
+    for (uint64_t colId : columnsWithInExpr) {
+      if (!selectedColumns[colId] || colId >= static_cast<uint64_t>(footer.types_size())) {
+        continue;
+      }
+
+      auto encoding = stripe.getEncoding(colId);
+      if (encoding.kind() != proto::ColumnEncoding_Kind_DICTIONARY &&
+          encoding.kind() != proto::ColumnEncoding_Kind_DICTIONARY_V2) {
+        continue;
+      }
+
+      auto typeKind = footer.types(static_cast<int>(colId)).kind();
+      if (typeKind != proto::Type_Kind_STRING && typeKind != proto::Type_Kind_VARCHAR &&
+          typeKind != proto::Type_Kind_CHAR) {
+        continue;
+      }
+
+      if (encoding.dictionary_size() > dictSizeThreshold) {
+        continue;
+      }
+
+      dictionaries[colId] = loadStringDictionary(colId, stripe, stripe.getMemoryPool());
+    }
+
+    return dictionaries;
+  }
+
+  // Evaluate dictionaries for the current stripe to determine if it can be skipped.
+  bool evaluateStripeDictionaries(RowReaderImpl& reader, const proto::Footer& footer,
+                                  const std::vector<bool>& selectedColumns,
+                                  const proto::StripeFooter& stripeFooter,
+                                  const proto::StripeInformation& stripeInfo,
+                                  uint64_t currentStripe, SargsApplier* sargsApplier,
+                                  const Timezone& localTimezone, const Timezone& readerTimezone) {
+    const std::vector<uint64_t>& columnsWithInExpr = sargsApplier->getColumnsWithInExpressions();
+    if (columnsWithInExpr.empty()) {
+      return true;
+    }
+
+    const Timezone& writerTimezone = stripeFooter.has_writer_timezone()
+                                         ? getTimezoneByName(stripeFooter.writer_timezone())
+                                         : localTimezone;
+    StripeStreamsImpl stripeStreams(reader, currentStripe, stripeInfo, stripeFooter,
+                                    stripeInfo.offset(), *reader.getFileContents().stream,
+                                    writerTimezone, readerTimezone);
+
+    auto dictionaries =
+        loadStripeDictionaries(footer, selectedColumns, columnsWithInExpr, stripeStreams,
+                               sargsApplier->getDictionaryFilteringSizeThreshold());
+    if (!dictionaries.empty()) {
+      return sargsApplier->evaluateColumnDictionaries(dictionaries);
+    }
+
+    return true;
+  }
+
   void RowReaderImpl::startNextStripe() {
     reader_.reset();  // ColumnReaders use lots of memory; free old memory first
     rowIndexes_.clear();
@@ -1164,7 +1235,15 @@ namespace orc {
 
       if (isStripeNeeded) {
         currentStripeFooter_ = getStripeFooter(currentStripeInfo_, *contents_.get());
-        if (sargsApplier_) {
+
+        if (sargsApplier_ && sargsApplier_->getDictionaryFilteringSizeThreshold() > 0) {
+          // evaluate dictionaries for predicate pushdown
+          isStripeNeeded = evaluateStripeDictionaries(
+              *this, *footer_, selectedColumns_, currentStripeFooter_, currentStripeInfo_,
+              currentStripe_, sargsApplier_.get(), localTimezone_, readerTimezone_);
+        }
+
+        if (sargsApplier_ && isStripeNeeded) {
           // read row group statistics and bloom filters of current stripe
           loadStripeIndex();
 
