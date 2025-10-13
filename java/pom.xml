@@ -72,7 +72,7 @@
     <junit.version>6.0.0</junit.version>
     <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
     <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
-    <maven-enforcer-plugin.version>3.6.1</maven-enforcer-plugin.version>
+    <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
     <maven-shade-plugin.version>3.6.1</maven-shade-plugin.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
