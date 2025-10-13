@@ -245,7 +245,9 @@ else ()
 
     add_library(orc_protobuf INTERFACE IMPORTED)
     target_link_libraries(orc_protobuf INTERFACE protobuf::libprotobuf)
-    set(PROTOBUF_EXECUTABLE protobuf::protoc)
+    if(NOT PROTOBUF_EXECUTABLE)
+      set(PROTOBUF_EXECUTABLE protobuf::protoc)
+    endif()
   endblock()
 endif ()
 
