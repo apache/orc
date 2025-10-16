@@ -25,6 +25,7 @@
 
 #include "io/Cache.hh"
 
+#include <cstdint>
 #include <iostream>
 #include <limits>
 
@@ -156,6 +157,8 @@ namespace orc {
     bool throwOnSchemaEvolutionOverflow;
     bool enableAsyncPrefetch;
     uint64_t smallStripeLookAheadLimit;
+    bool enableDictionaryFiltering;
+    uint32_t dictionaryFilteringSizeThreshold;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -169,6 +172,8 @@ namespace orc {
       throwOnSchemaEvolutionOverflow = false;
       enableAsyncPrefetch = false;
       smallStripeLookAheadLimit = 8;
+      enableDictionaryFiltering = false;
+      dictionaryFilteringSizeThreshold = 0;
     }
   };
 
@@ -360,6 +365,15 @@ namespace orc {
 
   uint64_t RowReaderOptions::getSmallStripeLookAheadLimit() const {
     return privateBits_->smallStripeLookAheadLimit;
+  }
+
+  RowReaderOptions& RowReaderOptions::setDictionaryFilteringSizeThreshold(uint32_t threshold) {
+    privateBits_->dictionaryFilteringSizeThreshold = threshold;
+    return *this;
+  }
+
+  uint32_t RowReaderOptions::getDictionaryFilteringSizeThreshold() const {
+    return privateBits_->dictionaryFilteringSizeThreshold;
   }
 
 }  // namespace orc
