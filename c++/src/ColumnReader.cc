@@ -415,12 +415,10 @@ namespace orc {
           bits |= static_cast<int64_t>(readByte()) << (i * 8);
         }
       }
-      if constexpr (columnKind == TypeKind::FLOAT && std::is_same_v<ValueType, double>) {
-        auto* floatBits = reinterpret_cast<float*>(&bits);
-        return static_cast<ValueType>(*floatBits);
-      } else {
-        return *reinterpret_cast<ValueType*>(&bits);
-      }
+
+      using CastType = std::conditional_t<columnKind == TypeKind::DOUBLE, double, float>;
+      CastType* result = reinterpret_cast<CastType*>(&bits);
+      return static_cast<ValueType>(*result);
     }
   };
 
