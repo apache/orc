@@ -17,4 +17,3 @@ java/bench/data
 subprojects/*
 !subprojects/packagefiles
 !subprojects/*.wrap
-.vscode
