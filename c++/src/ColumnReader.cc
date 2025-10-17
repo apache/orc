@@ -472,8 +472,7 @@ namespace orc {
       // Number of values in the buffer that we can copy directly.
       // Only viable when the machine is little-endian.
       uint64_t bufferNum = 0;
-      if constexpr (isLittleEndian &&
-                    (columnKind == TypeKind::DOUBLE ? true : std::is_same_v<ValueType, float>)) {
+      if constexpr (isLittleEndian && std::is_same_v<ValueType, ItemType>) {
         bufferNum =
             std::min(numValues, static_cast<size_t>(bufferEnd_ - bufferPointer_) / bytesPerValue_);
         uint64_t bufferBytes = bufferNum * bytesPerValue_;
