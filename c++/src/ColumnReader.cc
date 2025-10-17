@@ -376,7 +376,8 @@ namespace orc {
 
    private:
     std::unique_ptr<SeekableInputStream> inputStream_;
-    const int64_t bytesPerValue_ = (columnKind == DOUBLE) ? 8 : 4;
+    using ItemType = std::conditional_t<columnKind == DOUBLE, double, float>;
+    const int64_t bytesPerValue_ = sizeof(ItemType);
     const char* bufferPointer_;
     const char* bufferEnd_;
 
@@ -416,8 +417,7 @@ namespace orc {
         }
       }
 
-      using CastType = std::conditional_t<columnKind == TypeKind::DOUBLE, double, float>;
-      CastType* result = reinterpret_cast<CastType*>(&bits);
+      ItemType* result = reinterpret_cast<ItemType*>(&bits);
       return static_cast<ValueType>(*result);
     }
   };
