@@ -28,6 +28,7 @@
 
 #include <math.h>
 #include <iostream>
+#include <type_traits>
 
 namespace orc {
 
@@ -375,7 +376,8 @@ namespace orc {
 
    private:
     std::unique_ptr<SeekableInputStream> inputStream_;
-    const uint64_t bytesPerValue_ = (columnKind == FLOAT) ? 4 : 8;
+    using ItemType = std::conditional_t<columnKind == DOUBLE, double, float>;
+    const int64_t bytesPerValue_ = sizeof(ItemType);
     const char* bufferPointer_;
     const char* bufferEnd_;
 
@@ -390,55 +392,33 @@ namespace orc {
       return static_cast<unsigned char>(*(bufferPointer_++));
     }
 
-    template <typename FloatType>
-    FloatType readDouble() {
-      int64_t bits = 0;
-      if (bufferEnd_ - bufferPointer_ >= 8) {
-        if (isLittleEndian) {
+    ValueType read() {
+      using BitType = std::conditional_t<columnKind == TypeKind::DOUBLE, int64_t, int32_t>;
+      BitType bits = 0;
+      if (bufferEnd_ - bufferPointer_ >= bytesPerValue_) {
+        if constexpr (isLittleEndian) {
           memcpy(&bits, bufferPointer_, sizeof(bits));
         } else {
-          bits = static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[0]));
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[1])) << 8;
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[2])) << 16;
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[3])) << 24;
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[4])) << 32;
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[5])) << 40;
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[6])) << 48;
-          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer_[7])) << 56;
+          bits = static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[0]));
+          bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[1])) << 8;
+          bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[2])) << 16;
+          bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[3])) << 24;
+          if constexpr (columnKind == TypeKind::DOUBLE) {
+            bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[4])) << 32;
+            bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[5])) << 40;
+            bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[6])) << 48;
+            bits |= static_cast<BitType>(static_cast<unsigned char>(bufferPointer_[7])) << 56;
+          }
         }
-        bufferPointer_ += 8;
+        bufferPointer_ += bytesPerValue_;
       } else {
-        for (uint64_t i = 0; i < 8; i++) {
+        for (int64_t i = 0; i < bytesPerValue_; i++) {
           bits |= static_cast<int64_t>(readByte()) << (i * 8);
         }
       }
-      FloatType* result = reinterpret_cast<FloatType*>(&bits);
-      return *result;
-    }
 
-    template <typename FloatType>
-    FloatType readFloat() {
-      int32_t bits = 0;
-      if (bufferEnd_ - bufferPointer_ >= 4) {
-        if (isLittleEndian) {
-          memcpy(&bits, bufferPointer_, sizeof(bits));
-        } else {
-          bits = static_cast<unsigned char>(bufferPointer_[0]);
-          bits |= static_cast<unsigned char>(bufferPointer_[1]) << 8;
-          bits |= static_cast<unsigned char>(bufferPointer_[2]) << 16;
-          bits |= static_cast<unsigned char>(bufferPointer_[3]) << 24;
-        }
-        bufferPointer_ += 4;
-      } else {
-        for (uint64_t i = 0; i < 4; i++) {
-          bits |= readByte() << (i * 8);
-        }
-      }
-      float* result = reinterpret_cast<float*>(&bits);
-      if (!result) {
-        std::cerr << "read float empty." << std::endl;
-      }
-      return static_cast<FloatType>(*result);
+      ItemType* result = reinterpret_cast<ItemType*>(&bits);
+      return static_cast<ValueType>(*result);
     }
   };
 
@@ -482,41 +462,27 @@ namespace orc {
     ValueType* outArray =
         reinterpret_cast<ValueType*>(dynamic_cast<BatchType&>(rowBatch).data.data());
 
-    if constexpr (columnKind == FLOAT) {
-      if (notNull) {
-        for (size_t i = 0; i < numValues; ++i) {
-          if (notNull[i]) {
-            outArray[i] = readFloat<ValueType>();
-          }
-        }
-      } else {
-        for (size_t i = 0; i < numValues; ++i) {
-          outArray[i] = readFloat<ValueType>();
+    if (notNull) {
+      for (size_t i = 0; i < numValues; ++i) {
+        if (notNull[i]) {
+          outArray[i] = read();
         }
       }
     } else {
-      if (notNull) {
-        for (size_t i = 0; i < numValues; ++i) {
-          if (notNull[i]) {
-            outArray[i] = readDouble<ValueType>();
-          }
+      // Number of values in the buffer that we can copy directly.
+      // Only viable when the machine is little-endian.
+      uint64_t bufferNum = 0;
+      if constexpr (isLittleEndian && std::is_same_v<ValueType, ItemType>) {
+        bufferNum =
+            std::min(numValues, static_cast<size_t>(bufferEnd_ - bufferPointer_) / bytesPerValue_);
+        uint64_t bufferBytes = bufferNum * bytesPerValue_;
+        if (bufferBytes > 0) {
+          memcpy(outArray, bufferPointer_, bufferBytes);
+          bufferPointer_ += bufferBytes;
         }
-      } else {
-        // Number of values in the buffer that we can copy directly.
-        // Only viable when the machine is little-endian.
-        uint64_t bufferNum = 0;
-        if (isLittleEndian) {
-          bufferNum = std::min(numValues,
-                               static_cast<size_t>(bufferEnd_ - bufferPointer_) / bytesPerValue_);
-          uint64_t bufferBytes = bufferNum * bytesPerValue_;
-          if (bufferBytes > 0) {
-            memcpy(outArray, bufferPointer_, bufferBytes);
-            bufferPointer_ += bufferBytes;
-          }
-        }
-        for (size_t i = bufferNum; i < numValues; ++i) {
-          outArray[i] = readDouble<ValueType>();
-        }
+      }
+      for (size_t i = bufferNum; i < numValues; ++i) {
+        outArray[i] = read();
       }
     }
   }
