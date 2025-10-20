@@ -1,10 +1,21 @@
-Wed Aug 30 10:56:51 EDT 2017
-HDFS-10787
-commit 9587bb04a818a2661e264f619b09c15ce10ff38e
-Author: Anatoli Shein <anatoli.shein@hpe.com>
-Date:   Wed Aug 30 10:49:42 2017 -0400
+Wed Mar 27 11:52:21 PM CST 2024
+trunk
+commit 032796a0fb21b432b8d873902fe00b44afa2496c
+Author: Syed Shameerur Rahman <rhmanns@amazon.com>
+Date:   Tue Mar 26 20:59:35 2024 +0530
 
-    fixed warnings3
+    HADOOP-19047: S3A: Support in-memory tracking of Magic Commit data (#6468)
+    
+    
+    If the option fs.s3a.committer.magic.track.commits.in.memory.enabled
+    is set to true, then rather than save data about in-progress uploads
+    to S3, this information is cached in memory.
+    
+    If the number of files being committed is low, this will save network IO
+    in both the generation of .pending and marker files, and in the scanning
+    of task attempt directory trees during task commit.
+    
+    Contributed by Syed Shameerur Rahman
 diffs: --------------
        --------------
-Wed Aug 30 10:56:51 EDT 2017
+Wed Mar 27 11:52:21 PM CST 2024
