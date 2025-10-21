@@ -166,6 +166,13 @@ permalink: /docs/core-java-config.html
   </td>
 </tr>
 <tr>
+  <td><code>orc.dictionary.max.size.bytes</code></td>
+  <td>16777216</td>
+  <td>
+    If the total size of the dictionary is greater than this, turn off dictionary encoding. Use 0 to disable this check.
+  </td>
+</tr>
+<tr>
   <td><code>orc.dictionary.early.check</code></td>
   <td>true</td>
   <td>
@@ -282,6 +289,13 @@ permalink: /docs/core-java-config.html
   <td>5000</td>
   <td>
     How often should MemoryManager check the memory sizes? Measured in rows added to all of the writers.  Valid range is [1,10000] and is primarily meant fortesting.  Setting this too low may negatively affect performance. Use orc.stripe.row.count instead if the value larger than orc.stripe.row.count.
+  </td>
+</tr>
+<tr>
+  <td><code>orc.stripe.size.check.ratio</code></td>
+  <td>2.0</td>
+  <td>
+    Flush stripe if the tree writer size in bytes is larger than (this * orc.stripe.size). Use 0 to disable this check.
   </td>
 </tr>
 <tr>
