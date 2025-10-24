@@ -193,6 +193,9 @@ namespace orc {
     // match read and file types
     SchemaEvolution schemaEvolution_;
 
+    // Dictionary optimization
+    std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>> sharedDictionaries_;
+
     // load stripe index if not done so
     void loadStripeIndex();
 
@@ -266,6 +269,14 @@ namespace orc {
     std::shared_ptr<ReadRangeCache> getReadCache() const {
       return contents_->readCache;
     }
+
+    // Method to set shared dictionaries from external functions
+    void setSharedDictionaries(const std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>>& dictionaries);
+
+    // Method to get a shared dictionary by column id
+    std::shared_ptr<StringDictionary> getSharedDictionary(uint64_t columnId) const;
+
+   private:
   };
 
   class ReaderImpl : public Reader {

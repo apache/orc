@@ -548,4 +548,103 @@ namespace orc {
       TestFirstStripeSelectedWithStripeStats(reader.get(), pos);
     }
   }
+
+  // Create a test file with dictionary-encoded string columns for testing
+  // dictionary-based predicate pushdown
+  void createDictionaryTestFile(MemoryOutputStream& memStream) {
+    MemoryPool* pool = getDefaultPool();
+    auto type = std::unique_ptr<Type>(
+        Type::buildTypeFromString("struct<id:bigint,category:string,status:string>"));
+    WriterOptions options;
+    options
+        .setStripeSize(64 * 1024)  // Small stripe size to create multiple stripes
+        .setCompressionBlockSize(1024)
+        .setMemoryBlockSize(64)
+        .setCompression(CompressionKind_ZLIB)
+        .setMemoryPool(pool)
+        .setDictionaryKeySizeThreshold(1.0)
+        .setRowIndexStride(1000);
+
+    auto writer = createWriter(*type, &memStream, options);
+    auto batch = writer->createRowBatch(1000);
+    auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+    auto& idBatch = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+    auto& categoryBatch = dynamic_cast<StringVectorBatch&>(*structBatch.fields[1]);
+    auto& statusBatch = dynamic_cast<StringVectorBatch&>(*structBatch.fields[2]);
+
+    const char* categories[] = {"A", "B", "C", "X", "Y"};
+    const char* statuses[] = {"active", "inactive", "pending"};
+
+    char categoryBuffer[10000];
+    char statusBuffer[20000];
+    uint64_t categoryOffset = 0;
+    uint64_t statusOffset = 0;
+
+    for (uint64_t i = 0; i < 10000; ++i) {
+      idBatch.data[i % 1000] = static_cast<int64_t>(i);
+
+      const char* category = categories[i % 5];
+      size_t catLen = strlen(category);
+      memcpy(categoryBuffer + categoryOffset, category, catLen);
+      categoryBatch.data[i % 1000] = categoryBuffer + categoryOffset;
+      categoryBatch.length[i % 1000] = static_cast<int64_t>(catLen);
+      categoryOffset += catLen;
+
+      const char* status = statuses[i % 3];
+      size_t statusLen = strlen(status);
+      memcpy(statusBuffer + statusOffset, status, statusLen);
+      statusBatch.data[i % 1000] = statusBuffer + statusOffset;
+      statusBatch.length[i % 1000] = static_cast<int64_t>(statusLen);
+      statusOffset += statusLen;
+
+      if ((i + 1) % 1000 == 0) {
+        structBatch.numElements = 1000;
+        idBatch.numElements = 1000;
+        categoryBatch.numElements = 1000;
+        statusBatch.numElements = 1000;
+        writer->add(*batch);
+        categoryOffset = 0;
+        statusOffset = 0;
+      }
+    }
+
+    writer->close();
+  }
+
+  TEST(TestPredicatePushdown, testDictionaryFiltering) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    createDictionaryTestFile(memStream);
+
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    ReaderOptions readerOptions;
+    readerOptions.setMemoryPool(*pool);
+    std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
+    EXPECT_EQ(10000, reader->getNumberOfRows());
+
+    struct Param {
+      uint32_t dictSizeThreshold;
+      uint64_t expectedRowsRead;
+    };
+
+    for (const auto& param : {Param{0, 10000}, Param{10, 0}}) {
+      RowReaderOptions options;
+      options.searchArgument(
+          SearchArgumentFactory::newBuilder()
+              ->in("category", PredicateDataType::STRING, {Literal("M", 1), Literal("N", 1)})
+              .build());
+      if (param.dictSizeThreshold > 0) {
+        options.enableDictionaryFiltering(true)
+               .setDictionaryFilteringSizeThreshold(param.dictSizeThreshold);
+      }
+      auto rowReader = reader->createRowReader(options);
+      auto batch = rowReader->createRowBatch(1000);
+      uint64_t rowsRead = 0;
+      while (rowReader->next(*batch)) {
+        rowsRead += batch->numElements;
+      }
+      EXPECT_EQ(rowsRead, param.expectedRowsRead);
+    }
+  }
+
 }  // namespace orc

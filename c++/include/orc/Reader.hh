@@ -408,6 +408,33 @@ namespace orc {
      * Get the number of stripes to look ahead for small stripe prefetch.
      */
     uint64_t getSmallStripeLookAheadLimit() const;
+
+    /**
+     * Enable or disable dictionary filtering.
+     *
+     * Defaults to false.
+     */
+    RowReaderOptions& enableDictionaryFiltering(bool enable = true);
+
+    /**
+     * Check if dictionary filtering is enabled.
+     */
+    bool isDictionaryFilteringEnabled() const;
+
+    /**
+     * Set the maximum dictionary size threshold for evaluation.
+     *
+     * Dictionaries with more entries than this threshold will not be evaluated.
+     * 0 to disable dictionary filtering.
+     *
+     * Defaults to 0.
+     */
+    RowReaderOptions& setDictionaryFilteringSizeThreshold(uint32_t threshold);
+
+    /**
+     * Get the dictionary filtering size threshold.
+     */
+    uint32_t getDictionaryFilteringSizeThreshold() const;
   };
 
   class RowReader;
