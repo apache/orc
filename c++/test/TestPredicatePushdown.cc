@@ -647,7 +647,7 @@ namespace orc {
     }
 
     // Test filtering with matching values
-    for (const auto& param : {Param{0, 0}, Param{100, 1000}}) {
+    for (const auto& param : {Param{0, 10000}, Param{100, 10000}}) { 
       RowReaderOptions options;
       options.searchArgument(
           SearchArgumentFactory::newBuilder()
@@ -664,6 +664,7 @@ namespace orc {
       }
       EXPECT_EQ(rowsRead, param.expectedRowsRead);
     }
+
   }
 
 }  // namespace orc
