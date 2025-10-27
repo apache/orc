@@ -543,7 +543,7 @@ namespace orc {
    public:
     StringDictionaryColumnReader(const Type& type, StripeStreams& stripe);
     StringDictionaryColumnReader(const Type& type, StripeStreams& stripe,
-                                std::shared_ptr<StringDictionary> dictionary);
+                                 std::shared_ptr<StringDictionary> dictionary);
     ~StringDictionaryColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;

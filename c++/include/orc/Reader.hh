@@ -410,18 +410,6 @@ namespace orc {
     uint64_t getSmallStripeLookAheadLimit() const;
 
     /**
-     * Enable or disable dictionary filtering.
-     *
-     * Defaults to false.
-     */
-    RowReaderOptions& enableDictionaryFiltering(bool enable = true);
-
-    /**
-     * Check if dictionary filtering is enabled.
-     */
-    bool isDictionaryFilteringEnabled() const;
-
-    /**
      * Set the maximum dictionary size threshold for evaluation.
      *
      * Dictionaries with more entries than this threshold will not be evaluated.

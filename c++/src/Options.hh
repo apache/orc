@@ -157,7 +157,6 @@ namespace orc {
     bool throwOnSchemaEvolutionOverflow;
     bool enableAsyncPrefetch;
     uint64_t smallStripeLookAheadLimit;
-    bool enableDictionaryFiltering;
     uint32_t dictionaryFilteringSizeThreshold;
 
     RowReaderOptionsPrivate() {
@@ -172,7 +171,6 @@ namespace orc {
       throwOnSchemaEvolutionOverflow = false;
       enableAsyncPrefetch = false;
       smallStripeLookAheadLimit = 8;
-      enableDictionaryFiltering = false;
       dictionaryFilteringSizeThreshold = 0;
     }
   };
@@ -367,29 +365,9 @@ namespace orc {
     return privateBits_->smallStripeLookAheadLimit;
   }
 
-  RowReaderOptions& RowReaderOptions::enableDictionaryFiltering(bool enable) {
-    privateBits_->enableDictionaryFiltering = enable;
-    if (enable && privateBits_->dictionaryFilteringSizeThreshold == 0) {
-      // Set a default threshold when enabling
-      privateBits_->dictionaryFilteringSizeThreshold = 10000;
-    }
-    return *this;
-  }
-
   RowReaderOptions& RowReaderOptions::setDictionaryFilteringSizeThreshold(uint32_t threshold) {
     privateBits_->dictionaryFilteringSizeThreshold = threshold;
-    if (threshold > 0) {
-      // Automatically enable when setting a non-zero threshold
-      privateBits_->enableDictionaryFiltering = true;
-    } else {
-      // Disable when setting threshold to 0
-      privateBits_->enableDictionaryFiltering = false;
-    }
     return *this;
-  }
-
-  bool RowReaderOptions::isDictionaryFilteringEnabled() const {
-    return privateBits_->enableDictionaryFiltering;
   }
 
   uint32_t RowReaderOptions::getDictionaryFilteringSizeThreshold() const {

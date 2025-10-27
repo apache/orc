@@ -634,8 +634,7 @@ namespace orc {
               ->in("category", PredicateDataType::STRING, {Literal("M", 1), Literal("N", 1)})
               .build());
       if (param.dictSizeThreshold > 0) {
-        options.enableDictionaryFiltering(true)
-               .setDictionaryFilteringSizeThreshold(param.dictSizeThreshold);
+        options.setDictionaryFilteringSizeThreshold(param.dictSizeThreshold);
       }
       auto rowReader = reader->createRowReader(options);
       auto batch = rowReader->createRowBatch(1000);

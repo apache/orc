@@ -353,7 +353,7 @@ namespace orc {
       sargsApplier_ = std::make_unique<SargsApplier>(
           *contents_->schema, sargs_.get(), footer_->row_index_stride(),
           getWriterVersionImpl(contents.get()), opts.getDictionaryFilteringSizeThreshold(),
-          opts.isDictionaryFilteringEnabled(), contents_->readerMetrics, &schemaEvolution_);
+          contents_->readerMetrics, &schemaEvolution_);
     }
 
     skipBloomFilters_ = hasBadBloomFilters();
@@ -1254,8 +1254,7 @@ namespace orc {
       if (isStripeNeeded) {
         currentStripeFooter_ = getStripeFooter(currentStripeInfo_, *contents_.get());
 
-        if (sargsApplier_ && sargsApplier_->isDictionaryFilteringEnabled() && 
-            sargsApplier_->getDictionaryFilteringSizeThreshold() > 0) {
+        if (sargsApplier_ && sargsApplier_->getDictionaryFilteringSizeThreshold() > 0) {
           // evaluate dictionaries for predicate pushdown
           isStripeNeeded = evaluateStripeDictionaries(
               *this, *footer_, selectedColumns_, currentStripeFooter_, currentStripeInfo_,

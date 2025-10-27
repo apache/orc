@@ -36,8 +36,7 @@ namespace orc {
    public:
     SargsApplier(const Type& type, const SearchArgument* searchArgument, uint64_t rowIndexStride,
                  WriterVersion writerVersion, size_t dictionaryFilteringSizeThreshold,
-                 bool enableDictionaryFiltering, ReaderMetrics* metrics,
-                 const SchemaEvolution* schemaEvolution);
+                 ReaderMetrics* metrics, const SchemaEvolution* schemaEvolution);
 
     /**
      * Evaluate search argument on file statistics
@@ -140,13 +139,6 @@ namespace orc {
       return dictionaryFilteringSizeThreshold_;
     }
 
-    /**
-     * Check if dictionary filtering is enabled
-     */
-    bool isDictionaryFilteringEnabled() const {
-      return enableDictionaryFiltering_;
-    }
-
    private:
     // evaluate column statistics in the form of protobuf::RepeatedPtrField
     typedef ::google::protobuf::RepeatedPtrField<proto::ColumnStatistics> PbColumnStatistics;
@@ -168,7 +160,6 @@ namespace orc {
     const uint64_t rowIndexStride_;
     const WriterVersion writerVersion_;
     const uint32_t dictionaryFilteringSizeThreshold_;
-    const bool enableDictionaryFiltering_;
     // column ids for each predicate leaf in the search argument
     std::vector<uint64_t> filterColumns_;
     // column ids that have IN expressions for dictionary filtering
