@@ -627,11 +627,31 @@ namespace orc {
       uint64_t expectedRowsRead;
     };
 
+    // Test filtering all rows when dictionary size threshold is large enough
     for (const auto& param : {Param{0, 10000}, Param{10, 0}}) {
       RowReaderOptions options;
       options.searchArgument(
           SearchArgumentFactory::newBuilder()
               ->in("category", PredicateDataType::STRING, {Literal("M", 1), Literal("N", 1)})
+              .build());
+      if (param.dictSizeThreshold > 0) {
+        options.setDictionaryFilteringSizeThreshold(param.dictSizeThreshold);
+      }
+      auto rowReader = reader->createRowReader(options);
+      auto batch = rowReader->createRowBatch(1000);
+      uint64_t rowsRead = 0;
+      while (rowReader->next(*batch)) {
+        rowsRead += batch->numElements;
+      }
+      EXPECT_EQ(rowsRead, param.expectedRowsRead);
+    }
+
+    // Test filtering with matching values
+    for (const auto& param : {Param{0, 0}, Param{100, 1000}}) {
+      RowReaderOptions options;
+      options.searchArgument(
+          SearchArgumentFactory::newBuilder()
+              ->in("category", PredicateDataType::STRING, {Literal("A", 1), Literal("C", 1)})
               .build());
       if (param.dictSizeThreshold > 0) {
         options.setDictionaryFilteringSizeThreshold(param.dictSizeThreshold);
