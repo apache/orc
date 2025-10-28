@@ -1161,7 +1161,8 @@ namespace orc {
     return dictionaries;
   }
 
-  // Evaluate dictionaries for the current stripe to determine if it can be skipped.
+  // Evaluate dictionaries for the current stripe to determine if it can be
+  // skipped.
   bool evaluateStripeDictionaries(RowReaderImpl& reader, const proto::Footer& footer,
                                   const std::vector<bool>& selectedColumns,
                                   const proto::StripeFooter& stripeFooter,
@@ -1186,7 +1187,7 @@ namespace orc {
     if (!dictionaries.empty()) {
       // Store the loaded dictionaries for use by ColumnReaders
       reader.setSharedDictionaries(dictionaries);
-      
+
       return sargsApplier->evaluateColumnDictionaries(dictionaries);
     }
 
@@ -1200,18 +1201,19 @@ namespace orc {
     }
     return nullptr;
   }
-  
-  void RowReaderImpl::setSharedDictionaries(const std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>>& dictionaries) {
+
+  void RowReaderImpl::setSharedDictionaries(
+      const std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>>& dictionaries) {
     for (const auto& pair : dictionaries) {
       sharedDictionaries_[pair.first] = pair.second;
     }
   }
-  
+
   void RowReaderImpl::startNextStripe() {
     reader_.reset();  // ColumnReaders use lots of memory; free old memory first
     rowIndexes_.clear();
     bloomFilterIndex_.clear();
-    sharedDictionaries_.clear(); // Clear dictionaries from previous stripe
+    sharedDictionaries_.clear();  // Clear dictionaries from previous stripe
 
     // evaluate file statistics if it exists
     if (sargsApplier_ &&

@@ -271,7 +271,8 @@ namespace orc {
     }
 
     // Method to set shared dictionaries from external functions
-    void setSharedDictionaries(const std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>>& dictionaries);
+    void setSharedDictionaries(
+        const std::unordered_map<uint64_t, std::shared_ptr<StringDictionary>>& dictionaries);
 
     // Method to get a shared dictionary by column id
     std::shared_ptr<StringDictionary> getSharedDictionary(uint64_t columnId) const;

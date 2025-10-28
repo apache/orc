@@ -16,19 +16,20 @@
  * limitations under the License.
  */
 
-#include "orc/Int128.hh"
+#include "ColumnReader.hh"
+
+#include <math.h>
+
+#include <iostream>
 
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
-#include "ColumnReader.hh"
 #include "ConvertColumnReader.hh"
 #include "DictionaryLoader.hh"
 #include "RLE.hh"
 #include "SchemaEvolution.hh"
 #include "orc/Exceptions.hh"
-
-#include <math.h>
-#include <iostream>
+#include "orc/Int128.hh"
 
 namespace orc {
 
@@ -542,8 +543,9 @@ namespace orc {
 
    public:
     StringDictionaryColumnReader(const Type& type, StripeStreams& stripe);
+
     StringDictionaryColumnReader(const Type& type, StripeStreams& stripe,
-                                 std::shared_ptr<StringDictionary> dictionary);
+                                 const std::shared_ptr<StringDictionary> dictionary);
     ~StringDictionaryColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -553,7 +555,7 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
     void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override;
-    
+
     // Method to set dictionary if we have a pre-loaded one
     void setDictionary(std::shared_ptr<StringDictionary> dictionary) {
       if (dictionary) {
@@ -564,20 +566,10 @@ namespace orc {
 
   StringDictionaryColumnReader::StringDictionaryColumnReader(const Type& type,
                                                              StripeStreams& stripe)
-      : ColumnReader(type, stripe) {
-    RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId).kind());
-    std::unique_ptr<SeekableInputStream> stream =
-        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
-    if (stream == nullptr) {
-      throw ParseError("DATA stream not found in StringDictionaryColumn");
-    }
-    rle_ = createRleDecoder(std::move(stream), false, rleVersion, memoryPool, metrics);
-    dictionary_ = loadStringDictionary(columnId, stripe, memoryPool);
-  }
-  
-  StringDictionaryColumnReader::StringDictionaryColumnReader(const Type& type,
-                                                             StripeStreams& stripe,
-                                                             std::shared_ptr<StringDictionary> dictionary)
+      : StringDictionaryColumnReader(type, stripe, nullptr) {}
+
+  StringDictionaryColumnReader::StringDictionaryColumnReader(
+      const Type& type, StripeStreams& stripe, const std::shared_ptr<StringDictionary> dictionary)
       : ColumnReader(type, stripe), dictionary_(dictionary) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId).kind());
     std::unique_ptr<SeekableInputStream> stream =
@@ -586,7 +578,7 @@ namespace orc {
       throw ParseError("DATA stream not found in StringDictionaryColumn");
     }
     rle_ = createRleDecoder(std::move(stream), false, rleVersion, memoryPool, metrics);
-    
+
     // If no dictionary was provided, load it
     if (!dictionary_) {
       dictionary_ = loadStringDictionary(columnId, stripe, memoryPool);
@@ -1711,7 +1703,8 @@ namespace orc {
    * Create a reader for the given stripe.
    */
   std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe,
-                                            bool useTightNumericVector, bool throwOnSchemaEvolutionOverflow,
+                                            bool useTightNumericVector,
+                                            bool throwOnSchemaEvolutionOverflow,
                                             bool convertToReadType) {
     if (convertToReadType && stripe.getSchemaEvolution() &&
         stripe.getSchemaEvolution()->needConvert(type)) {
@@ -1748,8 +1741,7 @@ namespace orc {
               return std::unique_ptr<ColumnReader>(
                   new StringDictionaryColumnReader(type, stripe, dictionary));
             } else {
-              return std::unique_ptr<ColumnReader>(
-                  new StringDictionaryColumnReader(type, stripe));
+              return std::unique_ptr<ColumnReader>(new StringDictionaryColumnReader(type, stripe));
             }
           }
           case proto::ColumnEncoding_Kind_DIRECT:
