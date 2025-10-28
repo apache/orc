@@ -62,7 +62,6 @@ jobs:
             java: 21
             cxx: g++
     env:
-      CMAKE_POLICY_VERSION_MINIMUM: 3.5
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
     steps:
