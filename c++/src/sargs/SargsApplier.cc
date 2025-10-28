@@ -236,7 +236,7 @@ namespace orc {
       for (const auto& literalView : literalViews) {
         if (dictEntry == literalView) {
           // Found a match - stripe might contain matching rows
-          return TruthValue::YES;
+          return TruthValue::YES_NO_NULL;
         }
       }
     }
