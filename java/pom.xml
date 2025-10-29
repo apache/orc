@@ -62,7 +62,7 @@
   <properties>
     <bouncycastle.version>1.82</bouncycastle.version>
     <brotli4j.version>1.20.0</brotli4j.version>
-    <checkstyle.version>11.1.0</checkstyle.version>
+    <checkstyle.version>12.1.0</checkstyle.version>
     <commons-cli.version>1.10.0</commons-cli.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.4.2</hadoop.version>
@@ -87,7 +87,7 @@
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.5.3</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
-    <zstd-jni.version>1.5.7-5</zstd-jni.version>
+    <zstd-jni.version>1.5.7-6</zstd-jni.version>
   </properties>
 
   <dependencyManagement>
