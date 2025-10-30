@@ -227,6 +227,9 @@ namespace orc {
     const char* blob = dictionary.dictionaryBlob.data();
     size_t dictSize = dictionary.dictionaryOffset.size() - 1;
 
+    // Use a set to store matching dictionary entries
+    std::set<size_t> matchingDictEntries;
+
     for (size_t i = 0; i < dictSize; ++i) {
       int64_t start = offsets[i];
       int64_t length = offsets[i + 1] - start;
@@ -235,14 +238,24 @@ namespace orc {
       // Check if this dictionary entry matches any literal in the IN list
       for (const auto& literalView : literalViews) {
         if (dictEntry == literalView) {
-          // Found a match - stripe might contain matching rows
-          return TruthValue::YES_NO_NULL;
+          matchingDictEntries.insert(i);
+          break;
         }
       }
     }
 
+    // If all dictionary entries match, return YES
+    if (matchingDictEntries.size() == dictSize) {
+      return TruthValue::YES;
+    }
+    // If any dictionary entry matches, stripe might contain matching rows
+    else if (!matchingDictEntries.empty()) {
+      return TruthValue::YES_NO_NULL;
+    }
     // No dictionary entry matches any literal in the IN list - skip stripe
-    return TruthValue::NO;
+    else {
+      return TruthValue::NO;
+    }
   }
 
   bool SargsApplier::evaluateColumnDictionaries(

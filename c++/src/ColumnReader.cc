@@ -524,13 +524,6 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
 
     void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override;
-
-    // Method to set dictionary if we have a pre-loaded one
-    void setDictionary(std::shared_ptr<StringDictionary> dictionary) {
-      if (dictionary) {
-        dictionary_ = dictionary;
-      }
-    }
   };
 
   StringDictionaryColumnReader::StringDictionaryColumnReader(const Type& type,
@@ -1707,8 +1700,7 @@ namespace orc {
             // Check if we have a pre-loaded dictionary we can use
             auto dictionary = stripe.getSharedDictionary(type.getColumnId());
             if (dictionary) {
-              return std::unique_ptr<ColumnReader>(
-                  new StringDictionaryColumnReader(type, stripe, dictionary));
+              return std::make_unique<StringDictionaryColumnReader>(type, stripe, dictionary);
             } else {
               return std::unique_ptr<ColumnReader>(new StringDictionaryColumnReader(type, stripe));
             }

@@ -557,7 +557,7 @@ namespace orc {
         Type::buildTypeFromString("struct<id:bigint,category:string,status:string>"));
     WriterOptions options;
     options
-        .setStripeSize(64 * 1024)  // Small stripe size to create multiple stripes
+        .setStripeSize(512)  // Small stripe size to create multiple stripes
         .setCompressionBlockSize(1024)
         .setMemoryBlockSize(64)
         .setCompression(CompressionKind_ZLIB)
@@ -621,6 +621,7 @@ namespace orc {
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
     EXPECT_EQ(10000, reader->getNumberOfRows());
+    EXPECT_TRUE(reader->getNumberOfStripes() > 1);
 
     struct Param {
       uint32_t dictSizeThreshold;
