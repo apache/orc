@@ -41,6 +41,7 @@ namespace orc {
     MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t());
     MOCK_CONST_METHOD0(isDecimalAsLong, bool());
     MOCK_CONST_METHOD0(getSchemaEvolution, const SchemaEvolution*());
+    MOCK_CONST_METHOD1(getSharedDictionary, std::shared_ptr<StringDictionary>(uint64_t));
 
     MemoryPool& getMemoryPool() const override;
 
