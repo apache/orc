@@ -249,7 +249,7 @@ namespace orc {
       return TruthValue::YES;
     }
     // If any dictionary entry matches, stripe might contain matching rows
-    else if (!matchedEntriesCount == 0) {
+    else if (matchedEntriesCount != 0) {
       return TruthValue::YES_NO_NULL;
     }
     // No dictionary entry matches any literal in the IN list - skip stripe
