@@ -228,7 +228,7 @@ namespace orc {
     size_t dictSize = dictionary.dictionaryOffset.size() - 1;
 
     // Use a set to store matching dictionary entries
-    std::set<size_t> matchingDictEntries;
+    size_t matchedEntriesCount = 0;
 
     for (size_t i = 0; i < dictSize; ++i) {
       int64_t start = offsets[i];
@@ -238,18 +238,18 @@ namespace orc {
       // Check if this dictionary entry matches any literal in the IN list
       for (const auto& literalView : literalViews) {
         if (dictEntry == literalView) {
-          matchingDictEntries.insert(i);
+          matchedEntriesCount++;
           break;
         }
       }
     }
 
     // If all dictionary entries match, return YES
-    if (matchingDictEntries.size() == dictSize) {
+    if (matchedEntriesCount == dictSize) {
       return TruthValue::YES;
     }
     // If any dictionary entry matches, stripe might contain matching rows
-    else if (!matchingDictEntries.empty()) {
+    else if (!matchedEntriesCount == 0) {
       return TruthValue::YES_NO_NULL;
     }
     // No dictionary entry matches any literal in the IN list - skip stripe
