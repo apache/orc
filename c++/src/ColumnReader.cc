@@ -18,9 +18,7 @@
 
 #include "ColumnReader.hh"
 
-#include <math.h>
-
-#include <iostream>
+#include <cmath>
 
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
