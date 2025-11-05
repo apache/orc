@@ -151,6 +151,7 @@ source_files += files(
     'ConvertColumnReader.cc',
     'CpuInfoUtil.cc',
     'Dictionary.cc',
+    'DictionaryLoader.cc',
     'Exceptions.cc',
     'Geospatial.cc',
     'Int128.cc',

@@ -169,6 +169,7 @@ set(SOURCE_FILES
   ConvertColumnReader.cc
   CpuInfoUtil.cc
   Dictionary.cc
+  DictionaryLoader.cc
   Exceptions.cc
   Geospatial.cc
   Int128.cc
