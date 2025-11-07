@@ -47,7 +47,7 @@ jobs:
       matrix:
         os:
           - ubuntu-22.04
-          - macos-15
+          - macos-14
         java:
           - 8
           - 11
