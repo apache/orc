@@ -93,6 +93,9 @@ jobs:
         echo "Downloading cmake.rb from $cmake_rb_link"
         curl -fsSL "$cmake_rb_link" -o "$cmake_rb_path"
 
+        echo "uninstalling existing cmake..."
+        brew uninstall cmake
+
         echo "Installing cmake 3.31.6 from custom tap..."
         brew install "$tap_name/cmake"
     - name: "Test"
