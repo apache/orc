@@ -119,5 +119,6 @@ namespace orc {
   void SortedStringDictionary::clear() {
     totalLength_ = 0;
     keyToIndex_.clear();
+    arena_->Reset();
   }
 }  // namespace orc
