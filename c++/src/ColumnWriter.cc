@@ -1224,7 +1224,8 @@ namespace orc {
     }
 
     if (useDictionary) {
-      // flush dictionary data & length streams
+      // flush dictionary data & length streams and
+      // convert index from insertion order to dictionary order
       dictionary.flush(dictStream.get(), dictLengthEncoder.get(), dictionary.idxInDictBuffer_);
 
       // write data sequences
