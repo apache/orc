@@ -38,12 +38,7 @@ namespace orc {
    */
   class SortedStringDictionary {
    public:
-    SortedStringDictionary() : totalLength_(0) {
-#ifdef BUILD_SPARSEHASH
-      /// Need to set empty key otherwise dense_hash_map will not work correctly
-      keyToIndex_.set_empty_key(std::string_view{});
-#endif
-    }
+    SortedStringDictionary();
 
     ~SortedStringDictionary();
 

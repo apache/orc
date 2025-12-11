@@ -19,11 +19,20 @@
 #include "Dictionary.hh"
 
 #include <google/protobuf/arena.h>
+#include <memory>
 #include <utility>
 
 using google::protobuf::Arena;
 
 namespace orc {
+  SortedStringDictionary::SortedStringDictionary()
+      : totalLength_(0), arena_(std::make_unique<Arena>()) {
+#ifdef BUILD_SPARSEHASH
+    /// Need to set empty key otherwise dense_hash_map will not work correctly
+    keyToIndex_.set_empty_key(std::string_view{});
+#endif
+  }
+
   SortedStringDictionary::~SortedStringDictionary() = default;
 
   // insert a new string into dictionary, return its insertion order
