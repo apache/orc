@@ -46,7 +46,6 @@ namespace orc {
     keyToIndex_.reserve(size);
   }
 
-  // write dictionary data & length to output buffer
   /**
    * Write dictionary data & length to output buffer and
    * reorder input index buffer from insertion order to dictionary order
