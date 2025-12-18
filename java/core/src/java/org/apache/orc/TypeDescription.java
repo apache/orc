@@ -247,8 +247,8 @@ public class TypeDescription
           "precision " + precision + " must be between 1 and " + MAX_PRECISION
       );
     } else if (scale > precision) {
-      throw new IllegalArgumentException("the scale " + scale + " must be less than" +
-          " or equal to precision " + precision);
+      throw new IllegalArgumentException("scale " + scale +
+          " must be less than or equal to precision " + precision);
     }
     this.precision = precision;
     return this;
