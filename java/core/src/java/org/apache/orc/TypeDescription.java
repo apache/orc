@@ -241,10 +241,14 @@ public class TypeDescription
   public TypeDescription withPrecision(int precision) {
     if (category != Category.DECIMAL) {
       throw new IllegalArgumentException("precision is only allowed on decimal"+
-         " and not " + category.name);
-    } else if (precision < 1 || precision > MAX_PRECISION || scale > precision){
-      throw new IllegalArgumentException("precision " + precision +
-          " is out of range 1 .. " + scale);
+          " and not " + category.name);
+    } else if (precision < 1 || precision > MAX_PRECISION) {
+      throw new IllegalArgumentException(
+          "precision " + precision + " must be between 1 and " + MAX_PRECISION
+      );
+    } else if (scale > precision) {
+      throw new IllegalArgumentException("scale " + scale +
+          " must be less than or equal to precision " + precision);
     }
     this.precision = precision;
     return this;
