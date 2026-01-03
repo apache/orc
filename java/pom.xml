@@ -63,7 +63,7 @@
     <bouncycastle.version>1.80</bouncycastle.version>
     <brotli4j.version>1.18.0</brotli4j.version>
     <checkstyle.version>11.0.1</checkstyle.version>
-    <commons-cli.version>1.10.0</commons-cli.version>
+    <commons-cli.version>1.11.0</commons-cli.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>3.4.2</hadoop.version>
     <java.version>17</java.version>
