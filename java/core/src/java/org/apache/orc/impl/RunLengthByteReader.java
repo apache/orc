@@ -55,7 +55,7 @@ public class RunLengthByteReader {
       repeat = true;
       numLiterals = control + RunLengthByteWriter.MIN_REPEAT_SIZE;
       if (numSkipRows >= numLiterals) {
-        IOUtils.skipFully(input,1);
+        input.skipNBytes(1);
       } else {
         int val = input.read();
         if (val == -1) {
@@ -68,7 +68,7 @@ public class RunLengthByteReader {
       numLiterals = 0x100 - control;
       numSkipRows = Math.min(numSkipRows, numLiterals);
       if (numSkipRows > 0) {
-        IOUtils.skipFully(input, numSkipRows);
+        input.skipNBytes(numSkipRows);
       }
       int bytes = numSkipRows;
       while (bytes < numLiterals) {
