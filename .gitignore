@@ -9,6 +9,7 @@ dependency-reduced-pom.xml
 *.ipr
 *.iws
 .idea
+.vscode
 .DS_Store
 .java-version
 java/bench/data
