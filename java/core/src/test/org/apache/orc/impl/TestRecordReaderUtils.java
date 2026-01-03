@@ -209,30 +209,31 @@ class TestRecordReaderUtils {
 
   @Test
   public void testChunkReaderCreateReqBytesAndReadBytesValidation() {
+    int MAX_ARRAY_SIZE = RecordReaderUtils.MAX_ARRAY_SIZE;
     BufferChunkList rangeList = new TestOrcLargeStripe.RangeBuilder()
-      .range(0, IOUtils.MAX_ARRAY_SIZE)
-      .range(1L + IOUtils.MAX_ARRAY_SIZE, IOUtils.MAX_ARRAY_SIZE + 1)
-      .range(2L * IOUtils.MAX_ARRAY_SIZE, IOUtils.MAX_ARRAY_SIZE - 4)
-      .range(3L * IOUtils.MAX_ARRAY_SIZE, 2)
+      .range(0, MAX_ARRAY_SIZE)
+      .range(1L + MAX_ARRAY_SIZE, MAX_ARRAY_SIZE + 1)
+      .range(2L * MAX_ARRAY_SIZE, MAX_ARRAY_SIZE - 4)
+      .range(3L * MAX_ARRAY_SIZE, 2)
       .build();
 
     // reqBytes,readBytes boundary value
     RecordReaderUtils.ChunkReader chunkReader = RecordReaderUtils.ChunkReader.create(rangeList.get(0), 0);
-    assertEquals(chunkReader.getReadBytes(), IOUtils.MAX_ARRAY_SIZE);
-    assertEquals(chunkReader.getReqBytes(), IOUtils.MAX_ARRAY_SIZE);
+    assertEquals(chunkReader.getReadBytes(), MAX_ARRAY_SIZE);
+    assertEquals(chunkReader.getReqBytes(), MAX_ARRAY_SIZE);
 
-    // reqBytes > IOUtils.MAX_ARRAY_SIZE validation
+    // reqBytes > MAX_ARRAY_SIZE validation
     assertThrowsExactly(IllegalArgumentException.class,
       () -> RecordReaderUtils.ChunkReader.create(rangeList.get(1), 0),
       () -> String.format("invalid reqBytes value %d,out of bounds %d",
-                          rangeList.get(1).getLength(), IOUtils.MAX_ARRAY_SIZE)
+                          rangeList.get(1).getLength(), MAX_ARRAY_SIZE)
     );
 
-    // readBytes > IOUtils.MAX_ARRAY_SIZE validation
+    // readBytes > MAX_ARRAY_SIZE validation
     assertThrowsExactly(IllegalArgumentException.class,
       () -> RecordReaderUtils.ChunkReader.create(rangeList.get(2), 100),
       () -> String.format("invalid readBytes value %d,out of bounds %d",
-                          rangeList.get(3).getEnd() - rangeList.get(2).getOffset(), IOUtils.MAX_ARRAY_SIZE)
+                          rangeList.get(3).getEnd() - rangeList.get(2).getOffset(), MAX_ARRAY_SIZE)
     );
   }
 
