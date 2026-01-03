@@ -108,7 +108,7 @@ public final class SerializationUtils {
   }
 
   public void skipFloat(InputStream in, int numOfFloats) throws IOException {
-    IOUtils.skipFully(in, numOfFloats * 4L);
+    in.skipNBytes(numOfFloats * 4L);
   }
 
   public void writeFloat(OutputStream output,
@@ -154,7 +154,7 @@ public final class SerializationUtils {
   }
 
   public void skipDouble(InputStream in, int numOfDoubles) throws IOException {
-    IOUtils.skipFully(in, numOfDoubles * 8L);
+    in.skipNBytes(numOfDoubles * 8L);
   }
 
   public void writeDouble(OutputStream output, double value)
