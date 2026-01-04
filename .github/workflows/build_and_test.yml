@@ -69,8 +69,8 @@ jobs:
           - ubuntu-22.04
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          - macos-14
           - macos-15
+          - macos-26
         java:
           - 17
           - 21
@@ -82,7 +82,7 @@ jobs:
             cxx: g++
           - os: ubuntu-latest
             java: 25
-          - os: macos-26
+          - os: macos-14
             java: 21
     env:
       MAVEN_OPTS: -Xmx2g
@@ -264,7 +264,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [14, 15]
+        version: [14, 15, 26]
     runs-on: macos-${{ matrix.version }}
     steps:
     - name: Checkout repository
@@ -289,6 +289,7 @@ jobs:
           - ubuntu-24.04-arm
           - macos-14
           - macos-15
+          - macos-26
     steps:
     - name: Checkout
       uses: actions/checkout@v5
