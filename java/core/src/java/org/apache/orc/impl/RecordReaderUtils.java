@@ -47,6 +47,11 @@ import java.util.function.Supplier;
  * Stateless methods shared between RecordReaderImpl and EncodedReaderImpl.
  */
 public class RecordReaderUtils {
+  /**
+   * The maximum size of array to allocate, value being the same as {@link java.util.Hashtable}
+   */
+  public static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
   private static final boolean supportVectoredIO =
       SHIMS.supportVectoredIO(VersionInfo.getVersion());
@@ -836,12 +841,12 @@ public class RecordReaderUtils {
         current = (BufferChunk) current.next;
       }
       reqBytes += currentEnd - currentStart;
-      if (reqBytes > IOUtils.MAX_ARRAY_SIZE) {
-        throw new IllegalArgumentException("invalid reqBytes value " + reqBytes + ",out of bounds " + IOUtils.MAX_ARRAY_SIZE);
+      if (reqBytes > MAX_ARRAY_SIZE) {
+        throw new IllegalArgumentException("invalid reqBytes value " + reqBytes + ",out of bounds " + MAX_ARRAY_SIZE);
       }
       long readBytes = end - start;
-      if (readBytes > IOUtils.MAX_ARRAY_SIZE) {
-        throw new IllegalArgumentException("invalid readBytes value " + readBytes + ",out of bounds " + IOUtils.MAX_ARRAY_SIZE);
+      if (readBytes > MAX_ARRAY_SIZE) {
+        throw new IllegalArgumentException("invalid readBytes value " + readBytes + ",out of bounds " + MAX_ARRAY_SIZE);
       }
       return new ChunkReader(from, to, (int) readBytes, (int) reqBytes);
     }
