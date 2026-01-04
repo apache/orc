@@ -44,7 +44,6 @@ import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +122,7 @@ public class StripePlanner {
                        boolean ignoreNonUtf8BloomFilter,
                        long maxBufferSize) {
     this(schema, encryption, dataReader, version, ignoreNonUtf8BloomFilter, maxBufferSize,
-         Collections.emptySet());
+         Set.of());
   }
 
   public StripePlanner(StripePlanner old) {
