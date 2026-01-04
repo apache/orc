@@ -82,8 +82,6 @@ jobs:
             cxx: g++
           - os: ubuntu-latest
             java: 25
-          - os: macos-14
-            java: 21
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
@@ -264,7 +262,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [14, 15, 26]
+        version: [15, 26]
     runs-on: macos-${{ matrix.version }}
     steps:
     - name: Checkout repository
@@ -287,7 +285,6 @@ jobs:
           - ubuntu-22.04
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          - macos-14
           - macos-15
           - macos-26
     steps:
