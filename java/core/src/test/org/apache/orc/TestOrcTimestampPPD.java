@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
@@ -34,6 +33,7 @@ import org.junit.jupiter.api.TestInfo;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -81,7 +81,7 @@ public class TestOrcTimestampPPD implements TestConf {
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000)
             .version(OrcFile.Version.CURRENT));
 
-    List<Timestamp> tslist = Lists.newArrayList();
+    List<Timestamp> tslist = new ArrayList<>();
     tslist.add(Timestamp.valueOf("1970-01-01 00:00:00.0005"));
 
     VectorizedRowBatch batch = schema.createRowBatch();
@@ -138,7 +138,7 @@ public class TestOrcTimestampPPD implements TestConf {
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000)
             .version(OrcFile.Version.CURRENT));
 
-    List<Timestamp> tslist = Lists.newArrayList();
+    List<Timestamp> tslist = new ArrayList<>();
     tslist.add(Timestamp.valueOf("2037-01-01 00:00:00.001109"));
     tslist.add(Timestamp.valueOf("2037-01-01 00:00:00.001279"));
     tslist.add(Timestamp.valueOf("2037-01-01 00:00:00.001499"));

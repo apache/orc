@@ -18,7 +18,6 @@
 
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -436,7 +435,7 @@ public class TestVectorOrcFile implements TestConf {
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
             .bufferSize(10000).version(fileFormat));
-    List<Timestamp> tslist = Lists.newArrayList();
+    List<Timestamp> tslist = new ArrayList<>();
     tslist.add(Timestamp.valueOf("2037-01-01 00:00:00.000999"));
     tslist.add(Timestamp.valueOf("2003-01-01 00:00:00.000000222"));
     tslist.add(Timestamp.valueOf("1999-01-01 00:00:00.999999999"));

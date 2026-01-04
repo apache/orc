@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
@@ -30,6 +29,7 @@ import org.junit.jupiter.api.TestInfo;
 import java.io.File;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -72,7 +72,7 @@ public class TestOrcTimezone4 implements TestConf {
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
             .bufferSize(10000));
-    List<String> ts = Lists.newArrayList();
+    List<String> ts = new ArrayList<>();
     ts.add("1969-12-31 15:59:56.007");
     ts.add("1969-12-31 16:00:14.007");
     ts.add("1969-12-31 16:00:06.021");

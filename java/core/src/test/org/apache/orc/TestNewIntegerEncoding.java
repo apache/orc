@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
@@ -121,7 +121,7 @@ public class TestNewIntegerEncoding implements TestConf {
         2, 5, 1, 3, 7, 1, 9, 2, 6, 3, 7, 1, 9, 2, 6, 3, 7, 1, 9, 2, 6, 3, 7, 1,
         9, 2, 6, 3, 7, 1, 9, 2, 6, 2000, 2, 1, 1, 1, 1, 1, 3, 7, 1, 9, 2, 6, 1,
         1, 1, 1, 1 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
     Writer writer = OrcFile.createWriter(testFilePath,
                                          OrcFile.writerOptions(conf)
                                          .setSchema(schema)
@@ -159,7 +159,7 @@ public class TestNewIntegerEncoding implements TestConf {
         2, 5, 1, 3, 7, 1, 9, 2, 6, 3, 7, 1, 9, 2, 6, 3, 7, 1, 9, 2, 6, 3, 7, 1,
         9, 2, 6, 3, 7, 1, 9, 2, 6, 2000, 2, 1, 1, 1, 1, 1, 3, 7, 1, 9, 2, 6, 1,
         1, 1, 1, 1 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -194,7 +194,7 @@ public class TestNewIntegerEncoding implements TestConf {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { -500, -400, -350, -325, -310 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -229,7 +229,7 @@ public class TestNewIntegerEncoding implements TestConf {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { -500, -600, -650, -675, -710 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -264,7 +264,7 @@ public class TestNewIntegerEncoding implements TestConf {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { 500, 400, 350, 325, 310 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -299,7 +299,7 @@ public class TestNewIntegerEncoding implements TestConf {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { 500, 600, 650, 675, 710 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -335,7 +335,7 @@ public class TestNewIntegerEncoding implements TestConf {
     long[] inp = new long[]{4513343538618202719L, 4513343538618202711L,
         2911390882471569739L,
         -9181829309989854913L};
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(
         testFilePath,
@@ -368,7 +368,7 @@ public class TestNewIntegerEncoding implements TestConf {
     long[] inp = new long[]{Long.MAX_VALUE, 4513343538618202711L,
         2911390882471569739L,
         Long.MIN_VALUE};
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(
         testFilePath,
@@ -400,7 +400,7 @@ public class TestNewIntegerEncoding implements TestConf {
 
     long[] inp = new long[]{-4513343538618202711L, -2911390882471569739L, -2,
         Long.MAX_VALUE};
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(
         testFilePath,
@@ -431,7 +431,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testIntegerMin(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     input.add((long) Integer.MIN_VALUE);
 
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -465,7 +465,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testIntegerMax(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     input.add((long) Integer.MAX_VALUE);
 
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -500,7 +500,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testLongMin(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     input.add(Long.MIN_VALUE);
 
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -535,7 +535,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testLongMax(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     input.add(Long.MAX_VALUE);
 
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -570,7 +570,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testRandomInt(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 100000; i++) {
       input.add((long) rand.nextInt());
@@ -608,7 +608,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testRandomLong(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 100000; i++) {
       input.add(rand.nextLong());
@@ -658,7 +658,7 @@ public class TestNewIntegerEncoding implements TestConf {
         2, 2, 1, 1, 8, 1, 1, 2, 1, 5, 9, 2, 3, 112, 13, 2, 2, 1, 5, 10, 3, 1,
         1, 13, 2, 3, 4, 1, 3, 1, 1, 2, 1, 1, 2, 4, 2, 207, 1, 1, 2, 4, 3, 3, 2,
         2, 16 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -704,7 +704,7 @@ public class TestNewIntegerEncoding implements TestConf {
         2, 2, 1, 1, 8, 1, 1, 2, 1, 5, 9, 2, 3, 112, 13, 2, 2, 1, 5, 10, 3, 1,
         1, 13, 2, 3, 4, 1, 3, 1, 1, 2, 1, 1, 2, 4, 2, 207, 1, 1, 2, 4, 3, 3, 2,
         2, 16 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -750,7 +750,7 @@ public class TestNewIntegerEncoding implements TestConf {
         2, 2, 1, 1, 8, 1, 1, 2, 1, 5, 9, 2, 3, 112, 13, 2, 2, 1, 5, 10, 3, 1,
         1, 13, 2, 3, 4, 1, 3, 1, 1, 2, 1, 1, 2, 4, 2, 207, 1, 1, 2, 4, 3, 3, 2,
         2, 16 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -787,7 +787,7 @@ public class TestNewIntegerEncoding implements TestConf {
     long[] inp = new long[] { 13, 13, 11, 8, 13, 10, 10, 11, 11, 14, 11, 7, 13,
         12, 12, 11, 15, 12, 12, 9, 8, 10, 13, 11, 8, 6, 5, 6, 11, 7, 15, 10, 7,
         6, 8, 7, 9, 9, 11, 33, 11, 3, 7, 4, 6, 10, 14, 12, 5, 14, 7, 6 };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -821,7 +821,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseAt0(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(100));
@@ -860,7 +860,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseAt1(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(100));
@@ -898,7 +898,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseAt255(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(100));
@@ -936,7 +936,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseAt256(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(100));
@@ -974,7 +974,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBase510(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(100));
@@ -1012,7 +1012,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBase511(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(100));
@@ -1050,7 +1050,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseMax1(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for (int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(60));
@@ -1088,7 +1088,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseMax2(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for (int i = 0; i < 5120; i++) {
       input.add((long) rand.nextInt(60));
@@ -1128,7 +1128,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseMax3(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     input.add(371946367L);
     input.add(11963367L);
     input.add(68639400007L);
@@ -1180,7 +1180,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testPatchedBaseMax4(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     for (int i = 0; i < 25; i++) {
       input.add(371292224226367L);
       input.add(119622332222267L);
@@ -1245,7 +1245,7 @@ public class TestNewIntegerEncoding implements TestConf {
             .encodingStrategy(encodingStrategy));
     VectorizedRowBatch batch = schema.createRowBatch();
 
-    List<Timestamp> tslist = Lists.newArrayList();
+    List<Timestamp> tslist = new ArrayList<>();
     tslist.add(Timestamp.valueOf("2099-01-01 00:00:00"));
     tslist.add(Timestamp.valueOf("2003-01-01 00:00:00"));
     tslist.add(Timestamp.valueOf("1999-01-01 00:00:00"));
@@ -1346,7 +1346,7 @@ public class TestNewIntegerEncoding implements TestConf {
   public void testSeek(OrcFile.EncodingStrategy encodingStrategy) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
-    List<Long> input = Lists.newArrayList();
+    List<Long> input = new ArrayList<>();
     Random rand = new Random();
     for(int i = 0; i < 100000; i++) {
       input.add((long) rand.nextInt());
