@@ -56,6 +56,10 @@
       <property name="format" value="Collections\.emptySet"/>
       <property name="message" value="Use Set.of() instead." />
     </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="com\.google\.common\.collect\.Lists"/>
+      <property name="message" value="Use Java API instead." />
+    </module>
     <module name="Indentation">
       <property name="severity" value="error"/>
       <property name="basicOffset" value="2"/>

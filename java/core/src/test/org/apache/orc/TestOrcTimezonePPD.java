@@ -15,7 +15,6 @@
  */
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
@@ -42,6 +41,7 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
@@ -118,7 +118,7 @@ public class TestOrcTimezonePPD implements TestConf {
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
-    List<String> ts = Lists.newArrayList();
+    List<String> ts = new ArrayList<>();
     ts.add("2007-08-01 00:00:00.0");
     ts.add("2007-08-01 04:00:00.0");
     VectorizedRowBatch batch = schema.createRowBatch();
@@ -204,7 +204,7 @@ public class TestOrcTimezonePPD implements TestConf {
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000).bloomFilterColumns("ts").writerVersion(OrcFile.WriterVersion.ORC_101));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
-    List<String> ts = Lists.newArrayList();
+    List<String> ts = new ArrayList<>();
     ts.add("2007-08-01 00:00:00.0");
     ts.add("2007-08-01 04:00:00.0");
     VectorizedRowBatch batch = schema.createRowBatch();
@@ -277,7 +277,7 @@ public class TestOrcTimezonePPD implements TestConf {
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
         .bufferSize(10000).bloomFilterColumns("ts"));
     assertEquals(writerTimeZone, TimeZone.getDefault().getID());
-    List<String> ts = Lists.newArrayList();
+    List<String> ts = new ArrayList<>();
     ts.add("2007-08-01 00:00:00.0");
     ts.add("2007-08-01 04:00:00.0");
     VectorizedRowBatch batch = schema.createRowBatch();

@@ -18,7 +18,6 @@
 
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -77,7 +77,7 @@ public class TestUnrolledBitPack implements TestConf {
         0, val, 0, 0, val, 0, val, 0, val, 0, 0, val, 0, val, 0, val, 0, 0, val, 0, val, 0, val, 0,
         0, val, 0, val, 0, val, 0, 0, val, 0, val, 0, val, 0, 0, val, 0, val, 0, val, 0, 0, val, 0,
         val, 0, val, 0, 0, val, 0, val, 0, 0, val, val };
-    List<Long> input = Lists.newArrayList(Longs.asList(inp));
+    List<Long> input = new ArrayList<>(Longs.asList(inp));
 
     Writer writer = OrcFile.createWriter(
         testFilePath,

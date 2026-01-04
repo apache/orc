@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -33,6 +32,7 @@ import org.junit.jupiter.api.TestInfo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -158,7 +158,7 @@ public class TestOrcNullOptimization implements TestConf {
 
     RecordReader rows = reader.rows();
 
-    List<Boolean> expected = Lists.newArrayList();
+    List<Boolean> expected = new ArrayList<>();
     for (StripeInformation sinfo : reader.getStripes()) {
       expected.add(false);
     }
@@ -166,7 +166,7 @@ public class TestOrcNullOptimization implements TestConf {
     expected.set(0, true);
     expected.set(expected.size() - 1, true);
 
-    List<Boolean> got = Lists.newArrayList();
+    List<Boolean> got = new ArrayList<>();
     // check if the strip footer contains PRESENT stream
     for (StripeInformation sinfo : reader.getStripes()) {
       OrcProto.StripeFooter sf = ((RecordReaderImpl) rows).readStripeFooter(sinfo);
@@ -273,12 +273,12 @@ public class TestOrcNullOptimization implements TestConf {
     RecordReader rows = reader.rows();
 
     // none of the stripes will have PRESENT stream
-    List<Boolean> expected = Lists.newArrayList();
+    List<Boolean> expected = new ArrayList<>();
     for (StripeInformation sinfo : reader.getStripes()) {
       expected.add(false);
     }
 
-    List<Boolean> got = Lists.newArrayList();
+    List<Boolean> got = new ArrayList<>();
     // check if the strip footer contains PRESENT stream
     for (StripeInformation sinfo : reader.getStripes()) {
       OrcProto.StripeFooter sf = ((RecordReaderImpl) rows).readStripeFooter(sinfo);
@@ -372,13 +372,13 @@ public class TestOrcNullOptimization implements TestConf {
 
     RecordReader rows = reader.rows();
     // only the last strip will have PRESENT stream
-    List<Boolean> expected = Lists.newArrayList();
+    List<Boolean> expected = new ArrayList<>();
     for (StripeInformation sinfo : reader.getStripes()) {
       expected.add(false);
     }
     expected.set(expected.size() - 1, true);
 
-    List<Boolean> got = Lists.newArrayList();
+    List<Boolean> got = new ArrayList<>();
     // check if the strip footer contains PRESENT stream
     for (StripeInformation sinfo : reader.getStripes()) {
       OrcProto.StripeFooter sf = ((RecordReaderImpl) rows).readStripeFooter(sinfo);
