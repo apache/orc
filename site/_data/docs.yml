@@ -18,6 +18,7 @@
 - title: Using in Python
   docs:
   - pyarrow
+  - pandas
   - dask
 
 - title: Using in Hive
