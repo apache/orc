@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2026/01/08/ORC-2.0.7/">ORC 2.0.7 Released</option>
+      
       <option value="/news/2026/01/08/ORC-1.9.8/">ORC 1.9.8 Released</option>
       
       <option value="/news/2025/10/01/ORC-2.2.1/">ORC 2.2.1 Released</option>
@@ -363,6 +365,65 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2026/01/08/ORC-2.0.7/">
+      ORC 2.0.7 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      08 Jan 2026
+    </span>
+    <span class="post-author">
+      william
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.0.7.</p>
+
+<ul>
+  <li>Released: 8 January 2026</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.7/orc-2.0.7.tar.gz">orc-2.0.7.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.0.7/orc-2.0.7.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.7">rel/release-2.0.7</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.7%22">ORC 2.0.7</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.7/orc-2.0.7.tar.gz.sha256">fc331c4f46b5d65c…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.7%22&amp;tempMax=500">ORC-2.0.7</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1825">ORC-1825</a>: Bump Snappy to 1.2.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1827">ORC-1827</a>: Bump ZLIB to 1.3.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1828">ORC-1828</a>: Bump LZ4 to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1892">ORC-1892</a>: Upgrade snappy to 1.2.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1893">ORC-1893</a>: Upgrade zstd to 1.5.7</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1973">ORC-1973</a>: Use int64_t instead of google::protobuf::int64 for Protobuf v22+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1974">ORC-1974</a>: Use google::protobuf::TextFormat instead of DebugString for Protobuf v30+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2010">ORC-2010</a>: Use IANA Identifier America/Los_Angeles instead of US/Pacific in Java</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1996">ORC-1996</a>: Remove MacOS 13 from GitHub Action CI and docs</li>
+</ul>
+
+<p>Tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1896">ORC-1896</a>: Add CMAKE_POLICY_VERSION_MINIMUM=3.12 to ThirdpartyToolchain.cmake</li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2026/01/08/ORC-1.9.8/">
@@ -751,12 +812,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 7 July 2025</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.0.6/orc-2.0.6.tar.gz">orc-2.0.6.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.0.6/orc-2.0.6.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.0.6/orc-2.0.6.tar.gz">orc-2.0.6.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-2.0.6/orc-2.0.6.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.0.6">rel/release-2.0.6</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.0.6%22">ORC 2.0.6</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.0.6/orc-2.0.6.tar.gz.sha256">81167d31d7ec51de…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.0.6/orc-2.0.6.tar.gz.sha256">81167d31d7ec51de…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.0.6%22&amp;tempMax=500">ORC-2.0.6</a></li>
 </ul>
 
@@ -7521,6 +7582,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2026/01/08/ORC-2.0.7/">Version 2.0.7</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2026/01/08/ORC-1.9.8/">Version 1.9.8</a>
       </li>
       
@@ -7536,13 +7601,11 @@ together with the Java implementation.</p>
         <a href="/news/2025/07/09/ORC-2.1.3/">Version 2.1.3</a>
       </li>
       
-      <li class="">
-        <a href="/news/2025/07/07/ORC-2.0.6/">Version 2.0.6</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
