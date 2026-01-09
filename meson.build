@@ -18,7 +18,7 @@
 project(
     'orc',
     'cpp',
-    version: '2.2.2-SNAPSHOT',
+    version: '2.2.2',
     license: 'Apache-2.0',
     meson_version: '>=1.3.0',
     default_options: [
