@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.6.8 Released</title>
+  <title>ORC 2.1.4 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -368,8 +368,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.6.8 Released
-    <a href="/news/2021/05/21/ORC-1.6.8/" class="permalink" title="Permalink">∞</a>
+    ORC 2.1.4 Released
+    <a href="/news/2026/01/09/ORC-2.1.4/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -378,39 +378,42 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      21 May 2021
+      09 Jan 2026
     </span>
     <span class="post-author">
-      dongjoon
+      william
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.6.8.</p>
+    <p>The ORC team is excited to announce the release of ORC v2.1.4.</p>
 
 <ul>
-  <li>Released: 21 May 2021</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.6.8/orc-1.6.8.tar.gz">orc-1.6.8.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.6.8/orc-1.6.8.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.8">rel/release-1.6.8</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.8%22">ORC 1.6.8</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.6.8/orc-1.6.8.tar.gz.sha256">93d2e5f7c9f76ea5…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.8%22&amp;tempMax=500">ORC-1.6.8</a></li>
+  <li>Released: 10 January 2026</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.4/orc-2.1.4.tar.gz">orc-2.1.4.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.1.4/orc-2.1.4.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.4">rel/release-2.1.4</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.4%22">ORC 2.1.4</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.4/orc-2.1.4.tar.gz.sha256">c3481370582dea92…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.4%22&amp;tempMax=500">ORC-2.1.4</a></li>
 </ul>
 
-<p>The new features of ORC 1.6:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-14">ORC-14</a> Add column encryption.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-189">ORC-189</a> Add timestamp with local timezone</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-203">ORC-203</a> Trim minimum and maximum string values</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-363">ORC-363</a> Add zstd support in Java</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-397">ORC-397</a> Support selectively disabling dictionaries</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-522">ORC-522</a> Add type annotations</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1892">ORC-1892</a>: Upgrade <code class="language-plaintext highlighter-rouge">snappy</code> to 1.2.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1893">ORC-1893</a>: Upgrade <code class="language-plaintext highlighter-rouge">zstd</code> to 1.5.7</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1952">ORC-1952</a>: [C++] Fix the issue where the value of headerThirdByte exceeds the valid byte range</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1973">ORC-1973</a>: Use <code class="language-plaintext highlighter-rouge">int64_t</code> instead of <code class="language-plaintext highlighter-rouge">google::protobuf::int64</code> for Protobuf v22+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1974">ORC-1974</a>: Use <code class="language-plaintext highlighter-rouge">google::protobuf::TextFormat</code> instead of <code class="language-plaintext highlighter-rouge">DebugString</code> for Protobuf v30+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2010">ORC-2010</a>: Use <code class="language-plaintext highlighter-rouge">IANA</code> Identifier <code class="language-plaintext highlighter-rouge">America/Los_Angeles</code> instead of <code class="language-plaintext highlighter-rouge">US/Pacific</code> in Java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2027">ORC-2027</a>: Undefined behavior in DoubleColumnReader::readFloat()</li>
 </ul>
 
-<p>Known issues:</p>
-
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1970">ORC-1970</a>: [CI] Update cpp-linter-action to f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1996">ORC-1996</a>: Remove <code class="language-plaintext highlighter-rouge">MacOS 13</code> from GitHub Action CI and docs</li>
+</ul>
 
   </div>
 </article>
@@ -430,7 +433,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2026/01/09/ORC-2.1.4/">Version 2.1.4</a>
       </li>
       
