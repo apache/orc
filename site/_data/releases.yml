@@ -25,7 +25,7 @@
   known-issues:
 
 2.1.4:
-  date: 2026-01-10
+  date: 2026-01-09
   state: stable
   tar: orc-2.1.4.tar.gz
   signed-by: William Hyun (DECDFA29)
