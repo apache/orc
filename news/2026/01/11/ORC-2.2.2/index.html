@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.8.6 Released</title>
+  <title>ORC 2.2.2 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -370,8 +370,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.8.6 Released
-    <a href="/news/2023/11/10/ORC-1.8.6/" class="permalink" title="Permalink">∞</a>
+    ORC 2.2.2 Released
+    <a href="/news/2026/01/11/ORC-2.2.2/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -380,39 +380,50 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      10 Nov 2023
+      11 Jan 2026
     </span>
     <span class="post-author">
       dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.8.6.</p>
+    <p>The ORC team is excited to announce the release of ORC v2.2.2.</p>
 
 <ul>
-  <li>Released: 10 November 2023</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.8.6/orc-1.8.6.tar.gz">orc-1.8.6.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.8.6/orc-1.8.6.tar.gz.asc">GPG Signature</a>
+  <li>Released: 12 January 2026</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.2.2/orc-2.2.2.tar.gz">orc-2.2.2.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.2.2/orc-2.2.2.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.6">rel/release-1.8.6</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.6%22">ORC 1.8.6</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.8.6/orc-1.8.6.tar.gz.sha256">5675b18118df4dd7…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.6%22&amp;tempMax=500">ORC-1.8.6</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.2.2">rel/release-2.2.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.2.2%22">ORC 2.2.2</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.2.2/orc-2.2.2.tar.gz.sha256">4214bfc8e0131630…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.2.2%22&amp;tempMax=500">ORC-2.2.2</a></li>
 </ul>
 
 <p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1525">ORC-1525</a> Fix bad read in RleDecoderV2::readByte</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2027">ORC-2027</a>: [C++] Fix undefined behavior in DoubleColumnReader::readFloat()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2032">ORC-2032</a>: Upgrade <code class="language-plaintext highlighter-rouge">zstd-jni</code> to 1.5.7-6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2040">ORC-2040</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-cli</code> to 1.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2051">ORC-2051</a>: Fix <code class="language-plaintext highlighter-rouge">Meson</code> build to use <code class="language-plaintext highlighter-rouge">ORC Format</code> 1.1.1</li>
 </ul>
 
 <p>The test changes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1432">ORC-1432</a> Add MacOS 13 GitHub Action Job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2037">ORC-2037</a>: Upgrade Spark to 4.1.0 and Scala to 2.13.17</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2041">ORC-2041</a>: Update <code class="language-plaintext highlighter-rouge">cpp-linter-action</code> hash to match ASF infra</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2050">ORC-2050</a>: Add <code class="language-plaintext highlighter-rouge">MacOS 26</code> to <code class="language-plaintext highlighter-rouge">meson/macos-cpp-check</code> and use mainly in <code class="language-plaintext highlighter-rouge">build</code> GitHub Action job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2058">ORC-2058</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-lang3</code> to 3.20.0</li>
 </ul>
 
-<p>Documentations:</p>
+<p>The build and dependency changes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1499">ORC-1499</a> Add MacOS 13 and 14 to building.md</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2042">ORC-2042</a> Upgrade maven.version to 3.9.12</li>
+</ul>
+
+<p>The documentation changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2057">ORC-2057</a> Add <code class="language-plaintext highlighter-rouge">Pandas</code> page at <code class="language-plaintext highlighter-rouge">Using in Python</code> section</li>
 </ul>
 
   </div>
@@ -433,7 +444,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2026/01/11/ORC-2.2.2/">Version 2.2.2</a>
       </li>
       
