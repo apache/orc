@@ -21,8 +21,8 @@ FROM oraclelinux:9
 LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
-RUN yum check-update || true
-RUN yum install -y \
+RUN dnf check-update || true
+RUN dnf install -y \
   cmake3 \
   curl-devel \
   cyrus-sasl-devel \
