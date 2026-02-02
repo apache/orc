@@ -50,6 +50,7 @@ jobs:
           - ubuntu24
           - oraclelinux8
           - oraclelinux9
+          - oraclelinux10
           - amazonlinux23
     steps:
     - name: Checkout
