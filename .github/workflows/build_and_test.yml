@@ -48,7 +48,6 @@ jobs:
           - debian12
           - debian13
           - ubuntu24
-          - oraclelinux8
           - oraclelinux9
           - oraclelinux10
           - amazonlinux23
