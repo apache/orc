@@ -12,7 +12,7 @@ The C++ library is supported on the following operating systems:
 * MacOS 15 to 26
 * Debian 12 to 13
 * Ubuntu 22.04 to 24.04
-* Oracle Linux 8 to 9
+* Oracle Linux 8 to 10
 * Amazon Linux 2023
 
 You'll want to install the usual set of developer tools, but at least:
@@ -32,6 +32,7 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 * [Ubuntu 24]({{ page.dockerUrl }}/ubuntu24/Dockerfile)
 * [Oracle Linux 8]({{ page.dockerUrl }}/oraclelinux8/Dockerfile)
 * [Oracle Linux 9]({{ page.dockerUrl }}/oraclelinux9/Dockerfile)
+* [Oracle Linux 10]({{ page.dockerUrl }}/oraclelinux10/Dockerfile)
 * [Amazon Linux 2023]({{ page.dockerUrl }}/amazonlinux23/Dockerfile)
 
 To build a normal release:

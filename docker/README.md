@@ -5,7 +5,7 @@
 * Debian 12, and 13
 * Fedora 37
 * Ubuntu 22 and 24
-* Oracle Linux 9
+* Oracle Linux 9 and 10
 * Amazon Linux 2023
 
 ## Pre-built Images

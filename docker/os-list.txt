@@ -4,4 +4,5 @@ ubuntu22
 ubuntu24
 oraclelinux8
 oraclelinux9
+oraclelinux10
 amazonlinux23
