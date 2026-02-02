@@ -50,5 +50,5 @@ USER orc
 WORKDIR /home/orc/site
 
 EXPOSE 4000
-CMD bundle exec jekyll serve -H 0.0.0.0
+CMD ["bundle", "exec", "jekyll", "serve", "-H", "0.0.0.0"]
 
