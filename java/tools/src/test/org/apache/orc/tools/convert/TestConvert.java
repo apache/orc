@@ -69,7 +69,7 @@ public class TestConvert implements TestConf {
 
   @Test
   public void testConvertCustomTimestampFromCsv() throws IOException, ParseException {
-    Path csvFile = new Path("test.csv");
+    Path csvFile = new Path(workDir + File.separator + "test.csv");
     FSDataOutputStream stream = fs.create(csvFile, true);
     String[] timeValues = new String[] {"0001-01-01 00:00:00.000", "2021-12-01 18:36:00.800"};
     stream.writeBytes(String.join("\n", timeValues));
