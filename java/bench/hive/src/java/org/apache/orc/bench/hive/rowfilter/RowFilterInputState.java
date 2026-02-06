@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.orc.bench.hive.rowfilter;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
