@@ -2346,7 +2346,7 @@ public class TestVectorOrcFile implements TestConf {
     WriterOptions opts = OrcFile.writerOptions(conf)
         .setSchema(schema).stripeSize(1000).bufferSize(100).version(fileFormat);
 
-    CompressionCodec snappyCodec, zlibCodec, zstdCodec;
+    CompressionCodec snappyCodec, zlibCodec, zstdCodec, lz4Codec;
     snappyCodec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.SNAPPY), batch);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
@@ -2374,6 +2374,13 @@ public class TestVectorOrcFile implements TestConf {
     codec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.ZSTD), batch);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.ZSTD));
     assertSame(zstdCodec, codec);
+
+    lz4Codec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.LZ4), batch);
+    assertNotSame(zstdCodec, lz4Codec);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.LZ4));
+    codec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.LZ4), batch);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.LZ4));
+    assertSame(lz4Codec, codec);
 
     assertSame(snappyCodec, OrcCodecPool.getCodec(CompressionKind.SNAPPY));
     CompressionCodec snappyCodec2 = writeBatchesAndGetCodec(
