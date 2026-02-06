@@ -11,10 +11,10 @@ header:
     - '**/.gitignore'
     - '**/Doxyfile'
     - '.github/**'
+    - 'java/.mvn/jvm.config'
     - 'dev/**'
     - 'docker/**'
     - 'examples/**'
-    - 'java/**'
     - 'site/**'
     - 'c++/libs/**'
     - 'c++/test/test-orc.suppress'
@@ -23,5 +23,9 @@ header:
     - '.clang-format'
     - '.asf.yaml'
     - '.nojekyll'
+    - '**/*.json'
+    - '**/*.orc'
+    - '**/*.out'
+    - '**/*.schema'
 
   comment: on-failure
