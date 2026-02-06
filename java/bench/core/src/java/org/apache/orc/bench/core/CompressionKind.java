@@ -18,6 +18,7 @@
 
 package org.apache.orc.bench.core;
 
+import io.airlift.compress.lz4.Lz4Codec;
 import io.airlift.compress.snappy.SnappyCodec;
 import org.apache.hadoop.fs.Path;
 
@@ -34,6 +35,7 @@ public enum CompressionKind {
   NONE("none"),
   ZLIB("gz"),
   SNAPPY("snappy"),
+  LZ4("lz4"),
   ZSTD("zstd");
 
   CompressionKind(String extension) {
@@ -54,6 +56,8 @@ public enum CompressionKind {
         return new GZIPOutputStream(out);
       case SNAPPY:
         return new SnappyCodec().createOutputStream(out);
+      case LZ4:
+        return new Lz4Codec().createOutputStream(out);
       default:
         throw new IllegalArgumentException("Unhandled kind " + this);
     }
@@ -67,6 +71,8 @@ public enum CompressionKind {
         return new GZIPInputStream(in);
       case SNAPPY:
         return new SnappyCodec().createInputStream(in);
+      case LZ4:
+        return new Lz4Codec().createInputStream(in);
       default:
         throw new IllegalArgumentException("Unhandled kind " + this);
     }
