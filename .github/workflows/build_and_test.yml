@@ -40,6 +40,7 @@ concurrency:
 jobs:
   docker:
     name: "Docker ${{ matrix.os }}"
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -61,15 +62,13 @@ jobs:
 
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
+    needs: [license-check, doc]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-22.04
           - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - macos-15
           - macos-26
         java:
           - 17
@@ -80,6 +79,12 @@ jobs:
           - os: ubuntu-22.04
             java: 17
             cxx: g++
+          - os: macos-15
+            java: 17
+            cxx: clang++
+          - os: ubuntu-24.04-arm
+            java: 17
+            cxx: clang++
           - os: ubuntu-latest
             java: 25
     env:
@@ -116,6 +121,7 @@ jobs:
 
   windows:
     name: "C++ ${{ matrix.simd }} Test on Windows"
+    needs: build
     runs-on: windows-2025
     strategy:
       fail-fast: false
@@ -168,6 +174,7 @@ jobs:
 
   simdUbuntu:
     name: "SIMD programming using C++ intrinsic functions on ${{ matrix.os }}"
+    needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -218,6 +225,7 @@ jobs:
 
   cpp-linter:
     runs-on: ubuntu-24.04
+    needs: [license-check]
     steps:
       - uses: actions/checkout@v5
       - name: Run build
@@ -259,6 +267,7 @@ jobs:
 
   macos-cpp-check:
     name: "C++ Test on macOS"
+    needs: [cpp-linter]
     strategy:
       fail-fast: false
       matrix:
