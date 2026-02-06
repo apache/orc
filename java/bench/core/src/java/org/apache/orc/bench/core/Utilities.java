@@ -58,6 +58,8 @@ public class Utilities {
         return org.apache.orc.CompressionKind.ZLIB;
       case SNAPPY:
         return org.apache.orc.CompressionKind.SNAPPY;
+      case LZ4:
+        return org.apache.orc.CompressionKind.LZ4;
       case ZSTD:
         return org.apache.orc.CompressionKind.ZSTD;
       default:
