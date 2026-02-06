@@ -63,6 +63,39 @@ public interface CompressionCodec extends Closeable {
   }
 
   /**
+   * A null implementation of Options that ignores all settings.
+   * Useful for codecs that don't support any configuration options.
+   */
+  class NullOptions implements Options {
+    public static final NullOptions INSTANCE = new NullOptions();
+
+    @Override
+    public Options copy() {
+      return this;
+    }
+
+    @Override
+    public Options setSpeed(SpeedModifier newValue) {
+      return this;
+    }
+
+    @Override
+    public Options setData(DataKind newValue) {
+      return this;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other != null && getClass() == other.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+  }
+
+  /**
    * Get the default options for this codec.
    * @return the default options object
    */
