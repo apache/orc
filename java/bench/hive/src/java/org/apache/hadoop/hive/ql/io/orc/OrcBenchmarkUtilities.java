@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.hadoop.hive.ql.io.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
