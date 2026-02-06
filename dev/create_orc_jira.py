@@ -77,7 +77,7 @@ def create_and_checkout_branch(jira_id):
 
 def create_commit(jira_id, title):
     try:
-        run_cmd(['git', 'commit', '-m', '%s: %s' % (jira_id, title)])
+        run_cmd(['git', 'commit', '-a', '-m', '%s: %s' % (jira_id, title)])
         print("Created a commit with message: %s: %s" % (jira_id, title))
     except subprocess.CalledProcessError as e:
         fail("Failed to create commit: %s" % e)
