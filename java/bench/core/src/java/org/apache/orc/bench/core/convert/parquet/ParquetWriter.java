@@ -51,6 +51,8 @@ public class ParquetWriter implements BatchWriter {
         return CompressionCodecName.SNAPPY;
       case ZSTD:
         return CompressionCodecName.ZSTD;
+      case LZ4:
+        return CompressionCodecName.LZ4_RAW;
       default:
         throw new IllegalArgumentException("Unhandled compression type " + kind);
     }
