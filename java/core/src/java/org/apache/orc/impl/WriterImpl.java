@@ -300,8 +300,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         return new AircompressorCodec(kind, new LzoCompressor(),
             new LzoDecompressor());
       case LZ4:
-        return new AircompressorCodec(kind, new Lz4Compressor(),
-            new Lz4Decompressor());
+        if ("aircompressor".equalsIgnoreCase(System.getProperty("orc.compress.lz4.impl"))) {
+          return new AircompressorCodec(kind, new Lz4Compressor(),
+              new Lz4Decompressor());
+        } else {
+          return new Lz4Codec();
+        }
       case ZSTD:
         if ("java".equalsIgnoreCase(System.getProperty("orc.compression.zstd.impl"))) {
           return new AircompressorCodec(kind, new ZstdCompressor(),
