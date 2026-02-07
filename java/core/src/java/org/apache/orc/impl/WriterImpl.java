@@ -295,7 +295,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case ZLIB:
         return new ZlibCodec();
       case SNAPPY:
-        return new SnappyCodec();
+        if ("aircompressor".equalsIgnoreCase(System.getProperty("orc.compress.snappy.impl"))) {
+          return new SnappyCodec();
+        } else {
+          return new XerialSnappyCodec();
+        }
       case LZO:
         return new AircompressorCodec(kind, new LzoCompressor(),
             new LzoDecompressor());
