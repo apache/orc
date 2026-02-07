@@ -89,6 +89,7 @@
     <project.build.outputTimestamp>2025-07-08T15:22:41Z</project.build.outputTimestamp>
     <protobuf.version>3.25.8</protobuf.version>
     <slf4j.version>2.0.17</slf4j.version>
+    <snappy.version>1.1.10.8</snappy.version>
     <storage-api.version>2.8.1</storage-api.version>
     <surefire.version>3.5.3</surefire.version>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
@@ -165,6 +166,11 @@
         <groupId>io.airlift</groupId>
         <artifactId>aircompressor</artifactId>
         <version>2.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${snappy.version}</version>
       </dependency>
       <dependency>
         <groupId>at.yawk.lz4</groupId>
