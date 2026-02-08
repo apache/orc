@@ -44,6 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 20
       matrix:
         os:
           - debian12
@@ -66,6 +67,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      max-parallel: 20
       matrix:
         os:
           - ubuntu-24.04
@@ -125,6 +127,7 @@ jobs:
     runs-on: windows-2025
     strategy:
       fail-fast: false
+      max-parallel: 20
       matrix:
         simd:
           - General
@@ -178,6 +181,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      max-parallel: 20
       matrix:
         os:
           - ubuntu-22.04
@@ -270,6 +274,7 @@ jobs:
     needs: [cpp-linter]
     strategy:
       fail-fast: false
+      max-parallel: 20
       matrix:
         version: [15, 26]
     runs-on: macos-${{ matrix.version }}
@@ -289,6 +294,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      max-parallel: 20
       matrix:
         os:
           - ubuntu-22.04
