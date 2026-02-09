@@ -45,8 +45,8 @@
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.17.0</parquet.version>
     <scala.binary.version>2.13</scala.binary.version>
-    <scala.version>2.13.17</scala.version>
-    <spark.version>4.1.1</spark.version>
+    <scala.version>2.13.18</scala.version>
+    <spark.version>4.2.0-preview2</spark.version>
   </properties>
 
   <dependencyManagement>
@@ -97,7 +97,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
-        <version>4.1.110.Final</version>
+        <version>4.2.10.Final</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
