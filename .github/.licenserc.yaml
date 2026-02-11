@@ -12,6 +12,7 @@ header:
     - '**/Doxyfile'
     - '.github/**'
     - 'java/.mvn/jvm.config'
+    - 'java/.mvn/maven.config'
     - 'dev/**'
     - 'docker/**'
     - 'examples/**'
