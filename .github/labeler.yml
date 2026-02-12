@@ -41,3 +41,7 @@ JAVA:
 CPP:
   - "c++/**/*"
   - "tools/**/*"
+MESON:
+  - "**/meson.build"
+  - "**/meson.options"
+  - "subprojects/**/*"
