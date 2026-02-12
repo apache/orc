@@ -156,7 +156,7 @@ public class TestOutStream {
       // I included these hardcoded values to make sure that we are getting
       // AES128 encryption.
       //
-      // I used http://extranet.cryptomathic.com/aescalc/index to compute these:
+      // I used https://extranet.cryptomathic.com/aescalc/index to compute these:
       // key: 000102030405060708090a0b0c0d0e0f
       // input: 00003400010000120000000000000000
       // ecb encrypt output: 822252A81CC7E7FE3E51F50E0E9B64B1

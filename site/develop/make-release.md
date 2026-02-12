@@ -99,7 +99,7 @@ Update the final tag and remove the rc tag.
 % git push apache :release-X.Y.Zrc0
 ~~~
 
-Publish the artifacts to Maven central staging. Make sure to have this [setup](http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env) for Apache releases
+Publish the artifacts to Maven central staging. Make sure to have this [setup](https://www.apache.org/dev/publishing-maven-artifacts.html#dev-env) for Apache releases
 
 ~~~
 % cd java
