@@ -108,7 +108,7 @@ Timber adopted ORC for it's S3 based logging platform that stores
 petabytes of log data. ORC has been key in ensuring a fast,
 cost-effective strategy for persisting and querying that data.
 
-### [Vertica](http://www8.hp.com/us/en/software-solutions/advanced-sql-big-data-analytics/)
+### [Vertica](https://www.vertica.com/)
 
 HPE Vertica has contributed significantly to the ORC C++ library. ORC
 is a significant part of Vertica SQL-on-Hadoop (VSQLoH) which brings

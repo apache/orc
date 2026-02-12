@@ -29,7 +29,7 @@ import java.util.Random;
  *       column IN ( list-of-values )
  * <p>
  * For details on the algorithm, see R. Pagh and F. F. Rodler, "Cuckoo Hashing,"
- * Elsevier Science preprint, Dec. 2003. http://www.itu.dk/people/pagh/papers/cuckoo-jour.pdf.
+ * Elsevier Science preprint, Dec. 2003. https://www.itu.dk/people/pagh/papers/cuckoo-jour.pdf.
  * <p>
  * Copied from CuckooSetBytes@Apache Hive project for convenience
  */
@@ -330,7 +330,7 @@ public class CuckooSetBytes {
        *    14  9  3  7 17  3
        * Well, "9 15 3 18 27 15" didn't quite get 32 bits diffing for
        * "differ" defined as + with a one-bit base and a two-bit delta.  I
-       * used http://burtleburtle.net/bob/hash/avalanche.html to choose
+       * used https://burtleburtle.net/bob/hash/avalanche.html to choose
        * the operations, constants, and arrangements of the variables.
        *
        * This does not achieve avalanche.  There are input bits of (a,b,c)
