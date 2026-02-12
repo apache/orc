@@ -4,7 +4,7 @@
 
 * Debian 12, and 13
 * Fedora 37
-* Ubuntu 22 and 24
+* Ubuntu 22, 24 and 26
 * Oracle Linux 9 and 10
 * Amazon Linux 2023
 
