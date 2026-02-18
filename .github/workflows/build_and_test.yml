@@ -64,7 +64,7 @@ jobs:
 
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
-    needs: [license-check, doc]
+    needs: [license-check]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
