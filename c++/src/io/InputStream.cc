@@ -102,7 +102,7 @@ namespace orc {
   bool SeekableArrayInputStream::Skip(int count) {
     if (count >= 0) {
       uint64_t unsignedCount = static_cast<uint64_t>(count);
-      if (unsignedCount + position <= length) {
+      if (unsignedCount <= length - position) {
         position += unsignedCount;
         return true;
       } else {
@@ -186,7 +186,11 @@ namespace orc {
       return false;
     }
     uint64_t count = static_cast<uint64_t>(signedCount);
-    position = std::min(position + count, length);
+    if (count > length - position) {
+      position = length;
+    } else {
+      position += count;
+    }
     pushBack = 0;
     return position < length;
   }
