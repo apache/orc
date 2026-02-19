@@ -457,6 +457,7 @@
               <exclude>**/*.iml</exclude>
               <exclude>**/dependency-reduced-pom.xml</exclude>
               <exclude>.mvn/jvm.config</exclude>
+              <exclude>.mvn/maven.config</exclude>
             </excludes>
           </configuration>
           <executions>
