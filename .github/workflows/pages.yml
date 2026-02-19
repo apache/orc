@@ -40,12 +40,12 @@ jobs:
     if: github.repository == 'apache/orc'
     steps:
       - name: Checkout ORC repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: apache/orc
           ref: 'main'
       - name: Install Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 17
@@ -64,7 +64,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: 'site/target'
       - name: Deploy to GitHub Pages
