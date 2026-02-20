@@ -4,7 +4,7 @@
 
 * Debian 12, and 13
 * Fedora 37
-* Ubuntu 22, 24 and 26
+* Ubuntu 24 and 26
 * Oracle Linux 9 and 10
 * Amazon Linux 2023
 
@@ -12,7 +12,7 @@
 
 Apache ORC community provides a set of pre-built docker images and uses it during testing.
 
-    docker pull apache/orc-dev:ubuntu22
+    docker pull apache/orc-dev:ubuntu24
 
 You can find all tags here.
 

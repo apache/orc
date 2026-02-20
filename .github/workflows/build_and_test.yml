@@ -79,9 +79,6 @@ jobs:
         cxx:
           - clang++
         include:
-          - os: ubuntu-22.04
-            java: 17
-            cxx: g++
           - os: macos-15
             java: 17
             cxx: clang++
@@ -185,7 +182,7 @@ jobs:
       max-parallel: 20
       matrix:
         os:
-          - ubuntu-22.04
+          - ubuntu-24.04
         cxx:
           - clang++
     env:
@@ -298,7 +295,6 @@ jobs:
       max-parallel: 20
       matrix:
         os:
-          - ubuntu-22.04
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - macos-15

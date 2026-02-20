@@ -11,7 +11,7 @@ The C++ library is supported on the following operating systems:
 
 * MacOS 15 to 26
 * Debian 12 to 13
-* Ubuntu 22.04 to 26.04
+* Ubuntu 24.04 to 26.04
 * Oracle Linux 9 to 10
 * Amazon Linux 2023
 
@@ -28,7 +28,6 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 
 * [Debian 12]({{ page.dockerUrl }}/debian12/Dockerfile)
 * [Debian 13]({{ page.dockerUrl }}/debian13/Dockerfile)
-* [Ubuntu 22]({{ page.dockerUrl }}/ubuntu22/Dockerfile)
 * [Ubuntu 24]({{ page.dockerUrl }}/ubuntu24/Dockerfile)
 * [Ubuntu 26]({{ page.dockerUrl }}/ubuntu26/Dockerfile)
 * [Oracle Linux 9]({{ page.dockerUrl }}/oraclelinux9/Dockerfile)
