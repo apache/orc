@@ -249,7 +249,8 @@ def fix_version_from_branch(branch, versions):
 def resolve_jira_issue(merge_branches, comment, default_jira_id=""):
     asf_jira = jira.client.JIRA(
         {"server": JIRA_API_BASE},
-        token_auth=JIRA_ACCESS_TOKEN
+        token_auth=JIRA_ACCESS_TOKEN,
+        timeout=(3.05, 30)
     )
 
     jira_id = input("Enter a JIRA id [%s]: " % default_jira_id)

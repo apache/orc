@@ -53,7 +53,8 @@ import argparse
 def create_jira_issue(title, parent_jira_id=None, issue_type=None):
     asf_jira = jira.client.JIRA(
         {"server": JIRA_API_BASE},
-        token_auth=JIRA_ACCESS_TOKEN
+        token_auth=JIRA_ACCESS_TOKEN,
+        timeout=(3.05, 30)
     )
 
     versions = asf_jira.project_versions("ORC")
