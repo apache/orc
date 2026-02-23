@@ -27,7 +27,14 @@ Releases:
 
 The current build status:
 
-* Main branch [![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain)
+| Branch | Build Status |
+| :--- | :--- |
+| main | [![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain) |
+| branch-2.3 | [![branch-2.3 build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=branch-2.3)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Abranch-2.3) |
+| branch-2.2 | [![branch-2.2 build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=branch-2.2)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Abranch-2.2) |
+| branch-2.1 | [![branch-2.1 build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=branch-2.1)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Abranch-2.1) |
+| branch-2.0 | [![branch-2.0 build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=branch-2.0)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Abranch-2.0) |
+| branch-1.9 | [![branch-1.9 build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=branch-1.9)](https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Abranch-1.9) |
 
 Bug tracking: [Apache Jira](https://orc.apache.org/bugs)
 
