@@ -18,6 +18,7 @@
 #
 
 import os
+import re
 import subprocess
 import sys
 import traceback
@@ -47,18 +48,34 @@ def run_cmd(cmd):
         return subprocess.check_output(cmd.split(" ")).decode("utf-8")
 
 
-def create_jira_issue(title):
+import argparse
+
+def create_jira_issue(title, parent_jira_id=None, issue_type=None):
     asf_jira = jira.client.JIRA(
         {"server": JIRA_API_BASE},
         token_auth=JIRA_ACCESS_TOKEN
     )
 
+    versions = asf_jira.project_versions("ORC")
+    # Consider only x.y.z, unreleased, unarchived versions
+    versions = [
+        x for x in versions
+        if not x.raw["released"] and not x.raw["archived"] and re.match(r"\d+\.\d+\.\d+", x.name)
+    ]
+    versions = sorted(versions, key=lambda x: x.name, reverse=True)
+
     issue_dict = {
         'project': {'key': 'ORC'},
         'summary': title,
         'description': '',
-        'issuetype': {'name': 'Improvement'},
+        'versions': [{'name': versions[0].name}],
     }
+
+    if parent_jira_id:
+        issue_dict['issuetype'] = {'name': 'Sub-task'}
+        issue_dict['parent'] = {'key': parent_jira_id}
+    else:
+        issue_dict['issuetype'] = {'name': issue_type if issue_type else 'Improvement'}
 
     try:
         new_issue = asf_jira.create_issue(fields=issue_dict)
@@ -90,18 +107,23 @@ def main():
     if not JIRA_ACCESS_TOKEN:
         fail("The env-var JIRA_ACCESS_TOKEN is not set.")
 
-    if len(sys.argv) < 2:
-        fail("Usage: %s <JIRA title>" % sys.argv[0])
+    parser = argparse.ArgumentParser(description="Create an ORC JIRA issue.")
+    parser.add_argument("title", help="Title of the JIRA issue")
+    parser.add_argument("-p", "--parent", help="Parent JIRA ID for subtasks")
+    parser.add_argument("-t", "--type", help="Issue type to create when no parent is specified (e.g. Bug). Defaults to Improvement.")
+    args = parser.parse_args()
 
-    title = sys.argv[1]
-    print("Creating JIRA issue with title: %s" % title)
+    if args.parent:
+        print("Creating a subtask of %s with title: %s" % (args.parent, args.title))
+    else:
+        print("Creating JIRA issue with title: %s" % args.title)
 
-    jira_id = create_jira_issue(title)
+    jira_id = create_jira_issue(args.title, args.parent, args.type)
     print("Created JIRA issue: %s" % jira_id)
 
     create_and_checkout_branch(jira_id)
 
-    create_commit(jira_id, title)
+    create_commit(jira_id, args.title)
 
 
 if __name__ == "__main__":
