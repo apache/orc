@@ -17,14 +17,14 @@
 # ORC compile for Amazon Linux 2023
 #
 
-FROM amazonlinux:2023.9.20250929.0
+FROM amazonlinux:2023.10.20260202.2
 LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.ref.name="Apache ORC on Amazon Linux 2023"
 LABEL org.opencontainers.image.version=""
 
-RUN yum check-update || true
-RUN yum install -y \
+RUN dnf check-update || true
+RUN dnf install -y \
   curl-devel \
   cyrus-sasl-devel \
   expat-devel \
