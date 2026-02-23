@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.25.0)
 project(test_package LANGUAGES CXX)
 
 find_package(orc REQUIRED CONFIG)
