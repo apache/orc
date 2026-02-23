@@ -136,14 +136,6 @@ namespace orc {
                                              ReaderMetrics* metrics = nullptr);
 
   /**
-   * Create a stream to an HDFS file.
-   * @param path the uri of the file in HDFS
-   * @param metrics the metrics of the reader
-   */
-  [[deprecated("readHdfsFile is deprecated in 2.0.1")]] std::unique_ptr<InputStream> readHdfsFile(
-      const std::string& path, ReaderMetrics* metrics = nullptr);
-
-  /**
    * Create a reader to read the ORC file.
    * @param stream the stream to read
    * @param options the options for reading the file

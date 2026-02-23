@@ -191,9 +191,6 @@ set(SOURCE_FILES
   Vector.cc
   Writer.cc)
 
-if(BUILD_LIBHDFSPP)
-  set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)
-endif(BUILD_LIBHDFSPP)
 
 if(BUILD_ENABLE_AVX512)
   set(SOURCE_FILES
@@ -212,7 +209,6 @@ target_link_libraries (orc
     $<BUILD_INTERFACE:orc::Snappy>
     $<BUILD_INTERFACE:orc::lz4>
     $<BUILD_INTERFACE:orc::zstd>
-    $<BUILD_INTERFACE:${LIBHDFSPP_LIBRARIES}>
     $<BUILD_INTERFACE:$<TARGET_NAME_IF_EXISTS:orc::sparsehash>>
   )
 
@@ -227,16 +223,12 @@ target_include_directories (orc
   PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${LIBHDFSPP_INCLUDE_DIR}
 )
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(orc PRIVATE -Wall -Wextra $<$<BOOL:${STOP_BUILD_ON_WARNING}>:-Werror>)
 endif ()
 
-if (BUILD_LIBHDFSPP)
-  target_compile_definitions(orc PUBLIC -DBUILD_LIBHDFSPP)
-endif (BUILD_LIBHDFSPP)
 
 if (BUILD_SPARSEHASH)
   target_compile_definitions(orc PUBLIC -DBUILD_SPARSEHASH)

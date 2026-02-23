@@ -41,9 +41,6 @@ option (ANALYZE_JAVA
     "Run static analysis of the Java"
      OFF)
 
-option (BUILD_LIBHDFSPP
-    "Include LIBHDFSPP library in the build process"
-     OFF)
 
 option (BUILD_SPARSEHASH
     "Include sparsehash library in the build process"

@@ -119,7 +119,6 @@ class OrcRecipe(ConanFile):
         tc.variables["BUILD_JAVA"] = False
         tc.variables["BUILD_CPP_TESTS"] = False
         tc.variables["BUILD_TOOLS"] = self.options.build_tools
-        tc.variables["BUILD_LIBHDFSPP"] = False
         tc.variables["BUILD_POSITION_INDEPENDENT_LIB"] = bool(self.options.get_safe("fPIC", True))
         tc.variables["INSTALL_VENDORED_LIBS"] = False
         # AVX512 support is determined by ORC_USER_SIMD_LEVEL env var at runtime, defaults to off

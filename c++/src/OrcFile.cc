@@ -103,15 +103,7 @@ namespace orc {
   }
 
   std::unique_ptr<InputStream> readFile(const std::string& path, ReaderMetrics* metrics) {
-#ifdef BUILD_LIBHDFSPP
-    if (strncmp(path.c_str(), "hdfs://", 7) == 0) {
-      return orc::readHdfsFile(std::string(path), metrics);
-    } else {
-#endif
-      return orc::readLocalFile(std::string(path), metrics);
-#ifdef BUILD_LIBHDFSPP
-    }
-#endif
+    return orc::readLocalFile(std::string(path), metrics);
   }
 
   DIAGNOSTIC_POP
