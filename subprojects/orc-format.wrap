@@ -16,10 +16,10 @@
 # under the License.
 
 [wrap-file]
-directory = orc-format-1.1.0
-source_url = https://www.apache.org/dyn/closer.lua/orc/orc-format-1.1.0/orc-format-1.1.0.tar.gz?action=download
-source_filename = orc-format-1-1.0.tar.gz
-source_hash = d4a7ac76c5442abf7119e2cb84e71b677e075aff53518aa866055e2ead0450d7
+directory = orc-format-1.1.1
+source_url = https://www.apache.org/dyn/closer.lua/orc/orc-format-1.1.1/orc-format-1.1.1.tar.gz?action=download
+source_filename = orc-format-1.1.1.tar.gz
+source_hash = 584dfe2a4202946178fd8fc7d1239be7805b9ed4596ab2042dee739e7880992b
 patch_directory = orc-format
 
 [provide]
