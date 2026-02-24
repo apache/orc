@@ -219,8 +219,24 @@ else ()
     if(protobuf_SOURCE_DIR)
       message(STATUS "Using vendored Protobuf")
 
-      add_library(protobuf::libprotobuf ALIAS libprotobuf)
-      add_executable(protobuf::protoc ALIAS protoc)
+      # Protobuf >= 3.21 exports protobuf::libprotobuf/protobuf::protoc itself.
+      # Guard alias creation to avoid duplicate target errors.
+      if(TARGET libprotobuf AND NOT TARGET protobuf::libprotobuf)
+        add_library(protobuf::libprotobuf ALIAS libprotobuf)
+      endif()
+      if(TARGET protoc AND NOT TARGET protobuf::protoc)
+        add_executable(protobuf::protoc ALIAS protoc)
+      endif()
+
+      # Avoid exporting build/source paths in install interface.
+      # Mark as SYSTEM so compiler suppresses warnings from protobuf headers
+      # (e.g. -Wunused-parameter) without affecting ORC's own code.
+      if(TARGET libprotobuf)
+        set_property(TARGET libprotobuf PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+        target_include_directories(libprotobuf SYSTEM INTERFACE
+          "$<BUILD_INTERFACE:${protobuf_SOURCE_DIR}/src>"
+          "$<BUILD_INTERFACE:${protobuf_BINARY_DIR}>")
+      endif()
 
       if(BUILD_POSITION_INDEPENDENT_LIB)
         set_target_properties(libprotobuf PROPERTIES POSITION_INDEPENDENT_CODE ON)
