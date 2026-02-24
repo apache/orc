@@ -16,10 +16,18 @@
 # under the License.
 
 [wrap-file]
-directory = protobuf-3.5.1
-source_url = https://github.com/google/protobuf/releases/download/v3.5.1/protobuf-all-3.5.1.tar.gz
-source_filename = protobuf-all-3.5.1.tar.gz
-source_hash = 72d43863f58567a9ea2054671fdb667867f9cf7865df623c7be630978ff97dff
-patch_url = https://wrapdb.mesonbuild.com/v2/protobuf_3.5.1-3/get_patch
-patch_filename = protobuf-3.5.1-3-wrap.zip
-patch_hash = 9316ee29244a590545d8175136fd916149ca81e3f33f20d3cffc5bd3e6812e67
+directory = protobuf-3.21.12
+source_url = https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.21.12.tar.gz
+source_filename = protobuf-3.21.12.tar.gz
+source_hash = 930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53
+patch_filename = protobuf_3.21.12-5_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/protobuf_3.21.12-5/get_patch
+patch_hash = 8ae4d39ca9748a6edf7e028e15f5c7499b1c6ce687454a5709711d47cfd4e293
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/protobuf_3.21.12-5/protobuf-3.21.12.tar.gz
+wrapdb_version = 3.21.12-5
+
+[provide]
+protobuf = protobuf_dep
+protobuf-lite = protobuf_lite_dep
+protoc = protoc_dep
+program_names = protoc
