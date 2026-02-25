@@ -22,7 +22,7 @@ LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.ref.name="Apache ORC on Ubuntu 26"
 LABEL org.opencontainers.image.version=""
-ARG jdk=21
+ARG jdk=25
 ARG cc=gcc
 
 RUN apt-get update
