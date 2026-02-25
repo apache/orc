@@ -50,7 +50,7 @@ def run_cmd(cmd):
 
 import argparse
 
-def create_jira_issue(title, parent_jira_id=None, issue_type=None, version=None):
+def create_jira_issue(title, parent_jira_id=None, issue_type=None, version=None, component=None):
     asf_jira = jira.client.JIRA(
         {"server": JIRA_API_BASE},
         token_auth=JIRA_ACCESS_TOKEN,
@@ -75,6 +75,9 @@ def create_jira_issue(title, parent_jira_id=None, issue_type=None, version=None)
         'description': '',
         'versions': [{'name': affected_version}],
     }
+
+    if component:
+        issue_dict['components'] = [{'name': component}]
 
     if parent_jira_id:
         issue_dict['issuetype'] = {'name': 'Sub-task'}
@@ -117,6 +120,7 @@ def main():
     parser.add_argument("-p", "--parent", help="Parent JIRA ID for subtasks")
     parser.add_argument("-t", "--type", help="Issue type to create when no parent is specified (e.g. Bug). Defaults to Improvement.")
     parser.add_argument("-v", "--version", help="Version to use for the issue")
+    parser.add_argument("-c", "--component", help="Component for the issue")
     args = parser.parse_args()
 
     if args.parent:
@@ -124,7 +128,7 @@ def main():
     else:
         print("Creating JIRA issue with title: %s" % args.title)
 
-    jira_id = create_jira_issue(args.title, args.parent, args.type, args.version)
+    jira_id = create_jira_issue(args.title, args.parent, args.type, args.version, args.component)
     print("Created JIRA issue: %s" % jira_id)
 
     create_and_checkout_branch(jira_id)
