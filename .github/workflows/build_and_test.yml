@@ -86,6 +86,9 @@ jobs:
           - os: ubuntu-24.04-arm
             java: 17
             cxx: clang++
+          - os: ubuntu-latest
+            java: 26-ea
+            cxx: clang++
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
