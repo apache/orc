@@ -5,3 +5,4 @@ ubuntu26
 oraclelinux9
 oraclelinux10
 amazonlinux23
+ubi10

@@ -14,6 +14,7 @@ The C++ library is supported on the following operating systems:
 * Ubuntu 24.04 to 26.04
 * Oracle Linux 9 to 10
 * Amazon Linux 2023
+* UBI 10
 
 You'll want to install the usual set of developer tools, but at least:
 
@@ -33,6 +34,7 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 * [Oracle Linux 9]({{ page.dockerUrl }}/oraclelinux9/Dockerfile)
 * [Oracle Linux 10]({{ page.dockerUrl }}/oraclelinux10/Dockerfile)
 * [Amazon Linux 2023]({{ page.dockerUrl }}/amazonlinux23/Dockerfile)
+* [UBI 10]({{ page.dockerUrl }}/ubi10/Dockerfile)
 
 To build a normal release:
 
