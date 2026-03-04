@@ -37,7 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Spark Jackson version may not be same as ORC -->
-    <spark.jackson.version>2.18.2</spark.jackson.version>
+    <spark.jackson.version>2.21.1</spark.jackson.version>
   </properties>
 
   <dependencies>
@@ -114,19 +114,11 @@
       <artifactId>scala-library</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
+      <groupId>com.fasterxml.jackson</groupId>
+      <artifactId>jackson-bom</artifactId>
       <version>${spark.jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${spark.jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${spark.jackson.version}</version>
+      <scope>import</scope>
+      <type>pom</type>
     </dependency>
     <!-- This should be the same with Spark's dependency. -->
     <dependency>
