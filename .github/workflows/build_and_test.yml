@@ -54,6 +54,7 @@ jobs:
           - oraclelinux9
           - oraclelinux10
           - amazonlinux23
+          - ubi10
     steps:
     - name: Checkout
       uses: actions/checkout@v6
