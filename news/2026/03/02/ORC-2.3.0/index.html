@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 2.1.4 Released</title>
+  <title>ORC 2.3.0 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v4.3.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -372,8 +372,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 2.1.4 Released
-    <a href="/news/2026/01/09/ORC-2.1.4/" class="permalink" title="Permalink">∞</a>
+    ORC 2.3.0 Released
+    <a href="/news/2026/03/02/ORC-2.3.0/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -382,41 +382,183 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      09 Jan 2026
+      02 Mar 2026
     </span>
     <span class="post-author">
-      william
+      dongjoon
     </span>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v2.1.4.</p>
+    <p>The ORC team is excited to announce the release of ORC v2.3.0.</p>
 
 <ul>
-  <li>Released: 9 January 2026</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.1.4/orc-2.1.4.tar.gz">orc-2.1.4.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.1.4/orc-2.1.4.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.1.4">rel/release-2.1.4</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.1.4%22">ORC 2.1.4</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.1.4/orc-2.1.4.tar.gz.sha256">c3481370582dea92…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.1.4%22&amp;tempMax=500">ORC-2.1.4</a></li>
+  <li>Released: 2 March 2026</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.3.0/orc-2.3.0.tar.gz">orc-2.3.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.3.0/orc-2.3.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.3.0">rel/release-2.3.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.3.0%22">ORC 2.3.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.3.0/orc-2.3.0.tar.gz.sha256">6c9e2f6663ac9ef3…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.3.0%22&amp;tempMax=500">ORC-2.3.0</a></li>
+</ul>
+
+<p>New features:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2119">ORC-2119</a>: Support Java 25</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2075">ORC-2075</a>: Support new Lz4Codec based on lz4-java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2083">ORC-2083</a>: Support XerialSnappyCodec</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1986">ORC-1986</a>: Trigger flush stripe for large input rows</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2000">ORC-2000</a>: [C++] Add support to prefetch small stripes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2002">ORC-2002</a>: [C++] Improve stripe prefetch</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1969">ORC-1969</a>: [C++] Support async I/O prefetch of next stripe</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2013">ORC-2013</a>: [C++] Bump CMake minimum requirement to 3.25 to leverage FetchContent</li>
+</ul>
+
+<p>The improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1994">ORC-1994</a>: [C++] Improve CMake by extracting OrcSanitizers.cmake</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2008">ORC-2008</a>: [C++] Simplify CMake flags and compile options</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2009">ORC-2009</a>: Remove unused code for CMake 3.6 and older</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2014">ORC-2014</a>: Rename variables and configurations for periodic stripe size and dictionary size checks</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2021">ORC-2021</a>: Fallback to UTC when /etc/localtime does not exist</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2022">ORC-2022</a>: [C++] Add support to use dictionary for IN expression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2029">ORC-2029</a>: support Float fast read by memcpy in DoubleColumnReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2031">ORC-2031</a>: Document orc.dictionary.max.size.bytes and orc.stripe.size.check.ratio</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2036">ORC-2036</a>: optimize SortedStringDictionary performance</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2038">ORC-2038</a>: Improve error message in TypeDescription.withPrecision()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2048">ORC-2048</a>: Use Java <code class="language-plaintext highlighter-rouge">InputStream.skipNBytes</code> instead of <code class="language-plaintext highlighter-rouge">IOUtils.skipFully</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2049">ORC-2049</a>: Move <code class="language-plaintext highlighter-rouge">MAX_ARRAY_SIZE</code> to <code class="language-plaintext highlighter-rouge">RecordReaderUtils</code> from <code class="language-plaintext highlighter-rouge">IOUtils</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2052">ORC-2052</a>: Remove unused <code class="language-plaintext highlighter-rouge">IOUtils</code> class</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2053">ORC-2053</a>: Use Java <code class="language-plaintext highlighter-rouge">Set.of</code> instead of <code class="language-plaintext highlighter-rouge">Collections.emptySet</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2055">ORC-2055</a>: Use Java <code class="language-plaintext highlighter-rouge">ArrayList</code> constructors instead of <code class="language-plaintext highlighter-rouge">Lists.newArrayList</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2077">ORC-2077</a>: Introduce <code class="language-plaintext highlighter-rouge">NullOptions</code> class for <code class="language-plaintext highlighter-rouge">CompressionCodec</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2081">ORC-2081</a>: Support ORC LZ4 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2082">ORC-2082</a>: Support Parquet LZ4 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2085">ORC-2085</a>: Set <code class="language-plaintext highlighter-rouge">strategy.max-parrallel</code> to 20 for all GitHub Action jobs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2089">ORC-2089</a>: Disable Maven Parallel PUT</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2090">ORC-2090</a>: Add a new label rule for <code class="language-plaintext highlighter-rouge">MESON</code> build</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2091">ORC-2091</a>: Use HTTPS instead of HTTP</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2111">ORC-2111</a>: Ensure <code class="language-plaintext highlighter-rouge">Annotation Processing</code> in Java compilation for Java 23+</li>
 </ul>
 
 <p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1892">ORC-1892</a>: Upgrade <code class="language-plaintext highlighter-rouge">snappy</code> to 1.2.2</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1893">ORC-1893</a>: Upgrade <code class="language-plaintext highlighter-rouge">zstd</code> to 1.5.7</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1952">ORC-1952</a>: [C++] Fix the issue where the value of headerThirdByte exceeds the valid byte range</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1921">ORC-1921</a>: Upgrade Hadoop to 3.4.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1966">ORC-1966</a>: ZSTD compress/decompress needs handle error properly</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1967">ORC-1967</a>: C++ compilation issue with VS2022</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1972">ORC-1972</a>: Upgrade <code class="language-plaintext highlighter-rouge">ORC Format</code> to 1.1.1</li>
   <li><a href="https://issues.apache.org/jira/browse/ORC-1973">ORC-1973</a>: Use <code class="language-plaintext highlighter-rouge">int64_t</code> instead of <code class="language-plaintext highlighter-rouge">google::protobuf::int64</code> for Protobuf v22+</li>
   <li><a href="https://issues.apache.org/jira/browse/ORC-1974">ORC-1974</a>: Use <code class="language-plaintext highlighter-rouge">google::protobuf::TextFormat</code> instead of <code class="language-plaintext highlighter-rouge">DebugString</code> for Protobuf v30+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1977">ORC-1977</a>: Add <code class="language-plaintext highlighter-rouge">Deprecated</code> annotations for all deprecated APIs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2007">ORC-2007</a>: Upgrade <code class="language-plaintext highlighter-rouge">gson</code> to 2.13.2</li>
   <li><a href="https://issues.apache.org/jira/browse/ORC-2010">ORC-2010</a>: Use <code class="language-plaintext highlighter-rouge">IANA</code> Identifier <code class="language-plaintext highlighter-rouge">America/Los_Angeles</code> instead of <code class="language-plaintext highlighter-rouge">US/Pacific</code> in Java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2011">ORC-2011</a>: Fix <code class="language-plaintext highlighter-rouge">Timezone</code> to support legacy <code class="language-plaintext highlighter-rouge">US</code> TimeZone identifiers</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2024">ORC-2024</a>: Upgrade <code class="language-plaintext highlighter-rouge">zstd-jni</code> to 1.5.7-5</li>
   <li><a href="https://issues.apache.org/jira/browse/ORC-2027">ORC-2027</a>: Undefined behavior in DoubleColumnReader::readFloat()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2028">ORC-2028</a>: evictEntriesBefore has deleted buffers used in unfinished coroutines causes panic</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2032">ORC-2032</a>: Upgrade <code class="language-plaintext highlighter-rouge">zstd-jni</code> to 1.5.7-6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2042">ORC-2042</a>: Upgrade maven version to 3.9.12</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2051">ORC-2051</a>: Fix <code class="language-plaintext highlighter-rouge">Meson</code> build to use <code class="language-plaintext highlighter-rouge">ORC Format</code> 1.1.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2054">ORC-2054</a>: Fix <code class="language-plaintext highlighter-rouge">Meson</code> build version string to <code class="language-plaintext highlighter-rouge">2.3.0-SNAPSHOT</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2069">ORC-2069</a>: Fix convert tool failed to read csv</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2078">ORC-2078</a>: Fix <code class="language-plaintext highlighter-rouge">TestConverter</code> to respect <code class="language-plaintext highlighter-rouge">test.tmp.dir</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2087">ORC-2087</a>: Upgrade <code class="language-plaintext highlighter-rouge">zstd-jni</code> to 1.5.7-7</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2103">ORC-2103</a>: Update CMake requirements to 3.25+ consistently</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2105">ORC-2105</a>: Fix <code class="language-plaintext highlighter-rouge">orc-format.wrap</code> to use ORC Format 1.1.1</li>
 </ul>
 
 <p>The test changes:</p>
 <ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2112">ORC-2112</a>: Use <code class="language-plaintext highlighter-rouge">Java 25</code> for <code class="language-plaintext highlighter-rouge">Ubuntu 26.04</code> docker test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1968">ORC-1968</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-cli</code> to 1.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1982">ORC-1982</a>: Upgrade <code class="language-plaintext highlighter-rouge">brotli4j</code> to 1.20.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1992">ORC-1992</a>: Bump <code class="language-plaintext highlighter-rouge">opencsv</code> to 5.12.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2040">ORC-2040</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-cli</code> to 1.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2068">ORC-2068</a>: Upgrade Hadoop to 3.4.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2084">ORC-2084</a>: Upgrade <code class="language-plaintext highlighter-rouge">mockito</code> to 5.21.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1924">ORC-1924</a>: Add <code class="language-plaintext highlighter-rouge">Windows 2025</code> GitHub Action job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1964">ORC-1964</a>: [CI] Fix CI ubsan-test with GNU</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1965">ORC-1965</a>: Ban <code class="language-plaintext highlighter-rouge">org.apache.commons.lang</code> package</li>
   <li><a href="https://issues.apache.org/jira/browse/ORC-1970">ORC-1970</a>: [CI] Update cpp-linter-action to f91c446a32ae3eb9f98fef8c9ed4c7cb613a4f8a</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1979">ORC-1979</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-csv</code> to 1.14.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1980">ORC-1980</a>: Upgrade <code class="language-plaintext highlighter-rouge">junit</code> to 5.13.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1983">ORC-1983</a>: Upgrade <code class="language-plaintext highlighter-rouge">gtest</code> to 1.17.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1984">ORC-1984</a>: Add <code class="language-plaintext highlighter-rouge">debian13</code> to docker tests, docs, and GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1987">ORC-1987</a>: Upgrade Spark to 4.0.1 in <code class="language-plaintext highlighter-rouge">bench</code> module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1988">ORC-1988</a>: Upgrade <code class="language-plaintext highlighter-rouge">Parquet</code> to 1.16.0 in <code class="language-plaintext highlighter-rouge">bench</code> module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1989">ORC-1989</a>: Upgrade Hive to 4.1.0 in <code class="language-plaintext highlighter-rouge">bench</code> module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1990">ORC-1990</a>: Upgrade <code class="language-plaintext highlighter-rouge">bcpkix-jdk18on</code> to 1.81</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1991">ORC-1991</a>: Upgrade <code class="language-plaintext highlighter-rouge">snappy-java</code> to 1.1.10.8 in <code class="language-plaintext highlighter-rouge">bench</code> module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1993">ORC-1993</a>: Upgrade spotless-maven-plugin to 2.46.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1995">ORC-1995</a>: Add <code class="language-plaintext highlighter-rouge">MacOS 26</code> to GitHub Action CI and docs</li>
   <li><a href="https://issues.apache.org/jira/browse/ORC-1996">ORC-1996</a>: Remove <code class="language-plaintext highlighter-rouge">MacOS 13</code> from GitHub Action CI and docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1997">ORC-1997</a>: Add a daily build-and-test GitHub Action Job for <code class="language-plaintext highlighter-rouge">main</code> branch</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1998">ORC-1998</a>: Use Java 25 instead of 25-ea</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1999">ORC-1999</a>: Upgrade <code class="language-plaintext highlighter-rouge">Checkstyle</code> to 11.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2003">ORC-2003</a>: Upgrade <code class="language-plaintext highlighter-rouge">guava</code> to 33.5.0-jre</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2004">ORC-2004</a>: Upgrade <code class="language-plaintext highlighter-rouge">bouncycastle</code> to 1.82</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2005">ORC-2005</a>: Upgrade <code class="language-plaintext highlighter-rouge">spotbugs-maven-plugin</code> to 4.9.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2006">ORC-2006</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-shade-plugin</code> to 3.6.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2012">ORC-2012</a>: Remove <code class="language-plaintext highlighter-rouge">US</code> timezone workaround from <code class="language-plaintext highlighter-rouge">Debian 13</code> Docker image</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2015">ORC-2015</a>: Remove <code class="language-plaintext highlighter-rouge">Debian 11</code> Support</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2016">ORC-2016</a>: Upgrade <code class="language-plaintext highlighter-rouge">CMake</code> to 3.26.0 in <code class="language-plaintext highlighter-rouge">amazonlinux:2023</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2017">ORC-2017</a>: Upgrade <code class="language-plaintext highlighter-rouge">checkstyle</code> to 11.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2018">ORC-2018</a>: Upgrade <code class="language-plaintext highlighter-rouge">spotless-maven-plugin</code> to 3.0.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2019">ORC-2019</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-lang3</code> to 3.19.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2020">ORC-2020</a>: Upgrade <code class="language-plaintext highlighter-rouge">junit</code> to 6.0.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2026">ORC-2026</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-enforcer-plugin</code> to 3.6.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2034">ORC-2034</a>: Upgrade <code class="language-plaintext highlighter-rouge">Checkstyle</code> to 12.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2037">ORC-2037</a>: Upgrade Spark to 4.1.0 and Scala to 2.13.17</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2039">ORC-2039</a>: Upgrade <code class="language-plaintext highlighter-rouge">junit</code> to 6.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2045">ORC-2045</a>: Upgrade <code class="language-plaintext highlighter-rouge">checkstyle</code> to 12.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2050">ORC-2050</a>: Add <code class="language-plaintext highlighter-rouge">MacOS 26</code> to <code class="language-plaintext highlighter-rouge">meson/macos-cpp-check</code> and use mainly in <code class="language-plaintext highlighter-rouge">build</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2056">ORC-2056</a>: Remove <code class="language-plaintext highlighter-rouge">MacOS 14</code> from GitHub Action CI and docs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2058">ORC-2058</a>: Upgrade <code class="language-plaintext highlighter-rouge">commons-lang3</code> to 3.20.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2059">ORC-2059</a>: Upgrade <code class="language-plaintext highlighter-rouge">spotless-maven-plugin</code> to 3.1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2061">ORC-2061</a>: Upgrade <code class="language-plaintext highlighter-rouge">byte-buddy</code> to 1.18.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2062">ORC-2062</a>: Upgrade <code class="language-plaintext highlighter-rouge">objenesis</code> to 3.5</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2063">ORC-2063</a>: Upgrade <code class="language-plaintext highlighter-rouge">Spark</code> to 4.1.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2064">ORC-2064</a>: Update <code class="language-plaintext highlighter-rouge">oraclelinux9</code> to use <code class="language-plaintext highlighter-rouge">dnf</code> instead of <code class="language-plaintext highlighter-rouge">yum</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2065">ORC-2065</a>: Bump <code class="language-plaintext highlighter-rouge">parquet</code> to 1.17.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2066">ORC-2066</a>: Upgrade <code class="language-plaintext highlighter-rouge">spotbugs-maven-plugin</code> to 4.9.8.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2067">ORC-2067</a>: Upgrade <code class="language-plaintext highlighter-rouge">junit</code> to 6.0.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2070">ORC-2070</a>: Add <code class="language-plaintext highlighter-rouge">oraclelinux10</code> to docker tests and GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2071">ORC-2071</a>: Upgrade <code class="language-plaintext highlighter-rouge">spotless-maven-plugin</code> to 3.2.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2072">ORC-2072</a>: Remove <code class="language-plaintext highlighter-rouge">OracleLinux 8</code> Support</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2073">ORC-2073</a>: Fix <code class="language-plaintext highlighter-rouge">JSONArgsRecommended</code> warnings of <code class="language-plaintext highlighter-rouge">Dockerfile</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2074">ORC-2074</a>: Reduce GitHub Action concurrency</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2076">ORC-2076</a>: Use <code class="language-plaintext highlighter-rouge">license-check</code> to check <code class="language-plaintext highlighter-rouge">java</code> directory</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2079">ORC-2079</a>: Add <code class="language-plaintext highlighter-rouge">lz4</code> codec pool test coverage</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2086">ORC-2086</a>: Upgrade Spark to 4.2.0-preview2 and Netty to 4.2.10.Final</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2088">ORC-2088</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-dependency-plugin</code> to 3.10.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2092">ORC-2092</a>: Add <code class="language-plaintext highlighter-rouge">ubuntu26</code> to docker tests and GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2097">ORC-2097</a>: Make <code class="language-plaintext highlighter-rouge">actions/*</code> GitHub Actions jobs up-to-date</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2098">ORC-2098</a>: Exclude <code class="language-plaintext highlighter-rouge">.mvn/maven.config</code> for <code class="language-plaintext highlighter-rouge">apache-rat-plugin</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2099">ORC-2099</a>: Remove <code class="language-plaintext highlighter-rouge">Ubuntu 24.04</code> Support</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2101">ORC-2101</a>: Enable GitHub Action CI in <code class="language-plaintext highlighter-rouge">branch-2.3</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2104">ORC-2104</a>: Update <code class="language-plaintext highlighter-rouge">amazonlinux</code> with <code class="language-plaintext highlighter-rouge">2023.10.20260202.2</code> and use <code class="language-plaintext highlighter-rouge">dnf</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2110">ORC-2110</a>: Enable <code class="language-plaintext highlighter-rouge">Java 25</code> to build and verify all tests</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1891">ORC-1891</a>: Upgrade to Apache parent pom 34 along with maven plugins</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1951">ORC-1951</a>: Setting version to 2.3.0-SNAPSHOT</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1975">ORC-1975</a>: Improve <code class="language-plaintext highlighter-rouge">merge_orc_pr.py</code> to accept PR numbers as a CLI argument</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1978">ORC-1978</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-enforcer-plugin</code> to 3.6.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1981">ORC-1981</a>: Upgrade <code class="language-plaintext highlighter-rouge">build-helper-maven-plugin</code> to 3.6.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1985">ORC-1985</a>: Upgrade <code class="language-plaintext highlighter-rouge">actions/checkout</code> to v5</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2001">ORC-2001</a>: Add method descriptions to all public Java interfaces</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2023">ORC-2023</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-dependency-plugin</code> to 3.9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2025">ORC-2025</a>: Upgrade <code class="language-plaintext highlighter-rouge">extra-enforcer-rules</code> to 1.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2043">ORC-2043</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-jar-plugin</code> to 3.5.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2044">ORC-2044</a>: Upgrade <code class="language-plaintext highlighter-rouge">maven-assembly-plugin</code> to 3.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2047">ORC-2047</a>: Add <code class="language-plaintext highlighter-rouge">.vscode</code> to <code class="language-plaintext highlighter-rouge">.gitignore</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2057">ORC-2057</a>: Add <code class="language-plaintext highlighter-rouge">Pandas</code> page at <code class="language-plaintext highlighter-rouge">Using in Python</code> section</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2060">ORC-2060</a>: Upgrade <code class="language-plaintext highlighter-rouge">bouncycastle</code> to 1.83</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2080">ORC-2080</a>: Add <code class="language-plaintext highlighter-rouge">create_orc_jira.py</code> script</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2093">ORC-2093</a>: Remove <code class="language-plaintext highlighter-rouge">labeler</code> GitHub Action job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2096">ORC-2096</a>: Remove <code class="language-plaintext highlighter-rouge">doc</code> dependency from <code class="language-plaintext highlighter-rouge">build</code> GitHub Actions job</li>
 </ul>
 
   </div>
@@ -437,7 +579,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2026/03/02/ORC-2.3.0/">Version 2.3.0</a>
       </li>
       
@@ -445,7 +587,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
         <a href="/news/2026/01/12/ORC-2.2.2/">Version 2.2.2</a>
       </li>
       
-      <li class="current">
+      <li class="">
         <a href="/news/2026/01/09/ORC-2.1.4/">Version 2.1.4</a>
       </li>
       
