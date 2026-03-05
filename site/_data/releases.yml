@@ -1,8 +1,17 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+2.3.0:
+  date: 2026-03-02
+  state: latest
+  tar: orc-2.3.0.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: 6c9e2f6663ac9ef34ca4ae5ae4f004a651e5fe31f2e05b6eb5d99d105091d87c
+  known-issues:
+    ORC-2116: Java 25 G1GC Optional Evacuations may evacuate pinned objects
+
 2.2.2:
   date: 2026-01-12
-  state: latest
+  state: stable
   tar: orc-2.2.2.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: 4214bfc8e01316305e915a3bd7d2675bf3b95d79243aa5fb6c471ea0765add8e
