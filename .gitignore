@@ -11,6 +11,7 @@ dependency-reduced-pom.xml
 .idea
 .vscode
 .DS_Store
+.claude/
 .java-version
 java/bench/data
 *.swp
