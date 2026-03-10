@@ -36,6 +36,9 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.1.0
+ */
 public abstract class InStream extends InputStream {
 
   private static final Logger LOG = LoggerFactory.getLogger(InStream.class);

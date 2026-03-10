@@ -36,6 +36,7 @@ import java.net.URI;
  * This class provides an adaptor so that tools that want to read an ORC
  * file from an FSDataInputStream can do so. Create an instance with the
  * stream, path, and fileSize and pass it in to the reader as the FileSystem.
+ * @since 1.7.0
  */
 public class StreamWrapperFileSystem extends FileSystem {
   private final FSDataInputStream stream;

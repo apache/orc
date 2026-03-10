@@ -24,6 +24,9 @@ import org.apache.hadoop.hive.ql.io.filter.FilterContext;
 import java.io.EOFException;
 import java.io.IOException;
 
+/**
+ * @since 1.1.0
+ */
 public final class BitFieldReader {
   private final RunLengthByteReader input;
   private int current;

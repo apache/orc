@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 
 /**
  * Interface for writing integers.
+ * @since 1.1.0
  */
 public interface IntegerWriter {
 

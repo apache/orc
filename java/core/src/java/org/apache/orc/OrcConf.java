@@ -26,6 +26,7 @@ import java.util.Properties;
 
 /**
  * Define the configuration properties that Orc understands.
+ * @since 1.1.0
  */
 public enum OrcConf {
   STRIPE_SIZE("orc.stripe.size", "hive.exec.orc.default.stripe.size",

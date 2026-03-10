@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 /**
  * A red-black tree that stores strings. The strings are stored as UTF-8 bytes
  * and an offset for each entry.
+ * @since 1.1.0
  */
 public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   private final DynamicByteArray byteArray = new DynamicByteArray();

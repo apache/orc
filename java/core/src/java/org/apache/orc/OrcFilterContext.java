@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.ql.io.filter.MutableFilterContext;
  * <p>
  * This offers a convenience method of finding the column vector from a given column name
  * that the filters can invoke to get access to the column vector.
+ * @since 1.7.0
  */
 public interface OrcFilterContext extends MutableFilterContext {
   /**

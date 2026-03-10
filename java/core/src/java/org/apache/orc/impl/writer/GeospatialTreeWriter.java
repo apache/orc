@@ -31,6 +31,9 @@ import org.apache.orc.impl.StreamName;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @since 2.2.0
+ */
 public class GeospatialTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream stream;
   private final IntegerWriter length;

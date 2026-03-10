@@ -26,6 +26,7 @@ import java.util.function.Consumer;
  * Defines a batch filter that can operate on a
  * {@link org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch} and filter rows by using the
  * selected vector to determine the eligible rows.
+ * @since 1.7.0
  */
 public interface BatchFilter extends Consumer<OrcFilterContext> {
 

@@ -61,6 +61,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * @since 1.1.0
+ */
 public class ReaderImpl implements Reader {
 
   private static final Logger LOG = LoggerFactory.getLogger(ReaderImpl.class);

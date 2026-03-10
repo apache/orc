@@ -21,6 +21,9 @@ package org.apache.orc;
 import org.apache.orc.geospatial.BoundingBox;
 import org.apache.orc.geospatial.GeospatialTypes;
 
+/**
+ * @since 2.2.0
+ */
 public interface GeospatialColumnStatistics extends ColumnStatistics {
   /**
    * Get the bounding box for the column.

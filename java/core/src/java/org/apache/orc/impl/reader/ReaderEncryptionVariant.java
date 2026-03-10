@@ -46,6 +46,7 @@ import java.util.Map;
 
 /**
  * Information about an encrypted column.
+ * @since 1.6.0
  */
 public class ReaderEncryptionVariant implements EncryptionVariant {
   private static final Logger LOG =

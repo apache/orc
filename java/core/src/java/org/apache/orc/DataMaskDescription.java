@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Information about the DataMask used to mask the unencrypted data.
+ * @since 1.6.0
  */
 public interface DataMaskDescription {
 

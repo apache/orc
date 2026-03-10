@@ -23,6 +23,7 @@ import org.apache.orc.DataMask;
 
 /**
  * Masking routine that converts every value to NULL.
+ * @since 1.5.0
  */
 public class NullifyMask implements DataMask {
 

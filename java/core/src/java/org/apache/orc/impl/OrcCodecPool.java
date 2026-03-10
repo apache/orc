@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A clone of Hadoop codec pool for ORC; cause it has its own codecs...
+ * @since 1.4.0
  */
 public final class OrcCodecPool {
   private static final Logger LOG = LoggerFactory.getLogger(OrcCodecPool.class);

@@ -25,6 +25,7 @@ import java.util.List;
  * protobuf structs actually, we could just store what we need, but that would require that
  * ORC stop depending on them too. Luckily, they shouldn't be very big.
  * @deprecated Use {@link org.apache.orc.impl.OrcTail} instead
+ * @since 1.1.0
  */
 @Deprecated
 public interface FileMetadata {

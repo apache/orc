@@ -32,6 +32,7 @@ import java.io.IOException;
  * TreeWriter that handles column encryption.
  * We create a TreeWriter for each of the alternatives with an WriterContext
  * that creates encrypted streams.
+ * @since 1.6.0
  */
 public class EncryptionTreeWriter implements TreeWriter {
   // the different writers

@@ -35,6 +35,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 // TODO: Make OrcTail implement FileMetadata or Reader interface
+/**
+ * @since 1.2.0
+ */
 public final class OrcTail {
   private static final Logger LOG = LoggerFactory.getLogger(OrcTail.class);
 

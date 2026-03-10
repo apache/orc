@@ -28,6 +28,9 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @since 1.6.0
+ */
 public class WriterEncryptionVariant implements EncryptionVariant {
   private int id;
   private final WriterEncryptionKey key;

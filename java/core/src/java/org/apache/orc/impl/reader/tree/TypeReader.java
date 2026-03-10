@@ -27,6 +27,9 @@ import org.apache.orc.impl.reader.StripePlanner;
 import java.io.IOException;
 import java.util.EnumSet;
 
+/**
+ * @since 1.7.0
+ */
 public interface TypeReader {
   /**
    * Check the encoding of the column.

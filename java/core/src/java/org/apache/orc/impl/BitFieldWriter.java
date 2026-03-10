@@ -21,6 +21,9 @@ package org.apache.orc.impl;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.1.0
+ */
 public class BitFieldWriter {
   private RunLengthByteWriter output;
   private final int bitSize;

@@ -23,6 +23,7 @@ import java.util.Date;
 
 /**
  * Statistics for DATE columns.
+ * @since 1.1.0
  */
 public interface DateColumnStatistics extends ColumnStatistics {
 

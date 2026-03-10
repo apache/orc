@@ -24,6 +24,7 @@ import java.util.List;
 
 /**
  * The statistics for a stripe.
+ * @since 1.1.0
  */
 public class StripeStatistics {
   protected final List<OrcProto.ColumnStatistics> cs;

@@ -25,6 +25,9 @@ import org.apache.orc.TypeDescription;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @since 1.6.0
+ */
 public class StripeStatisticsImpl extends StripeStatistics  {
   public StripeStatisticsImpl(TypeDescription schema,
                               List<OrcProto.ColumnStatistics> list,

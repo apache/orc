@@ -24,6 +24,7 @@ import org.apache.orc.DataMask;
 
 /**
  * An identity data mask for integer types.
+ * @since 1.5.0
  */
 public class LongIdentity implements DataMask {
   @Override

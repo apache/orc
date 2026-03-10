@@ -26,6 +26,9 @@ import org.apache.orc.TypeDescription;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * @since 1.3.0
+ */
 public class BloomFilterIO  {
 
   public enum Encoding {

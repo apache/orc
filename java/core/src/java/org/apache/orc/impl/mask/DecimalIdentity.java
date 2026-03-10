@@ -24,6 +24,7 @@ import org.apache.orc.DataMask;
 
 /**
  * An identity data mask for decimal types.
+ * @since 1.5.0
  */
 public class DecimalIdentity implements DataMask {
   @Override

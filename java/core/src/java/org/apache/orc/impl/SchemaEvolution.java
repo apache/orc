@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 /**
  * Infer and track the evolution between the schema as stored in the file and
  * the schema that has been requested by the reader.
+ * @since 1.1.0
  */
 public class SchemaEvolution {
   // indexed by reader column id

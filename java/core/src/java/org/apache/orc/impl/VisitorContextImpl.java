@@ -27,6 +27,7 @@ import java.io.OutputStream;
 /**
  * Base implementation for {@link org.apache.orc.impl.Dictionary.VisitorContext} used to traversing
  * all nodes in a dictionary.
+ * @since 1.7.0
  */
 public class VisitorContextImpl implements Dictionary.VisitorContext {
   private int originalPosition;

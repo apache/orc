@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 1.7.0
+ */
 public class DictionaryUtils {
   private DictionaryUtils() {
     // Utility class does nothing in constructor

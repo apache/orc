@@ -32,6 +32,9 @@ import java.util.Properties;
 
 import static org.apache.hadoop.util.StringUtils.COMMA_STR;
 
+/**
+ * @since 1.1.0
+ */
 public class OrcUtils {
 
   /**

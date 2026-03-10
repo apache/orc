@@ -44,6 +44,7 @@ import java.util.Properties;
 
 /**
  * Contains factory methods to read or write ORC files.
+ * @since 1.1.0
  */
 public class OrcFile {
   private static final Logger LOG = LoggerFactory.getLogger(OrcFile.class);

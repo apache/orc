@@ -27,6 +27,7 @@ import java.io.IOException;
 /**
  * The top level interface that the reader uses to read the columns from the
  * ORC file.
+ * @since 1.7.0
  */
 public abstract class BatchReader {
   // The row type reader

@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * @since 1.6.0
+ */
 public class WriterEncryptionKey implements EncryptionKey {
   private final HadoopShims.KeyMetadata metadata;
   private final List<WriterEncryptionVariant> roots = new ArrayList<>();

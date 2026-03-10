@@ -30,6 +30,7 @@ import java.util.Arrays;
 /**
  * A class that is a growable array of bytes. Growth is managed in terms of
  * chunks that are allocated when needed.
+ * @since 1.1.0
  */
 public final class DynamicByteArray {
   static final int DEFAULT_CHUNKSIZE = 32 * 1024;

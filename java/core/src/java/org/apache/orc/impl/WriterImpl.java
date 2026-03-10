@@ -80,6 +80,7 @@ import java.util.TreeMap;
  * Caveat: the MemoryManager is created during WriterOptions create, that has
  * to be confined to a single thread as well.
  *
+ * @since 1.1.0
  */
 public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 

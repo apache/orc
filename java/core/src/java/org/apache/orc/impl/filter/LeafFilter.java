@@ -21,6 +21,9 @@ package org.apache.orc.impl.filter;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.OrcFilterContext;
 
+/**
+ * @since 1.7.0
+ */
 public abstract class LeafFilter implements VectorFilter {
   public String getColName() {
     return colName;

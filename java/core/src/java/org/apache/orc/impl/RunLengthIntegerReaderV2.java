@@ -30,6 +30,7 @@ import java.util.Arrays;
  * A reader that reads a sequence of light weight compressed integers. Refer
  * {@link RunLengthIntegerWriterV2} for description of various lightweight
  * compression techniques.
+ * @since 1.1.0
  */
 public class RunLengthIntegerReaderV2 implements IntegerReader {
   public static final Logger LOG = LoggerFactory.getLogger(RunLengthIntegerReaderV2.class);

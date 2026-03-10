@@ -47,6 +47,7 @@ import java.util.List;
  * is written by an instance of this class. The compound types (struct,
  * list, map, and union) have children tree writers that write the children
  * types.
+ * @since 1.5.0
  */
 public abstract class TreeWriterBase implements TreeWriter {
   protected final int id;

@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.1.0
+ */
 public abstract class PositionedOutputStream extends OutputStream {
 
   /**

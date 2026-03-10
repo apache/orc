@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
  * level details.
  * <p>
  * This API is limited to being used by LLAP.
+ * @since 1.3.0
  */
 public interface PhysicalWriter {
 

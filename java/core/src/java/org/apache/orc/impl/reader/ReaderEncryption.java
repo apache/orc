@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.List;
 
+/**
+ * @since 1.6.0
+ */
 public class ReaderEncryption {
   private final KeyProvider keyProvider;
   private final ReaderEncryptionKey[] keys;

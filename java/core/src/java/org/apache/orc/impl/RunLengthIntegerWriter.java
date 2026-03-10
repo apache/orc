@@ -26,6 +26,7 @@ import java.util.function.Consumer;
  * each run with positive values 0 to 127 meaning 3 to 130 repetitions, each
  * repetition is offset by a delta. If the control byte is -1 to -128, 1 to 128
  * literal vint values follow.
+ * @since 1.1.0
  */
 public class RunLengthIntegerWriter implements IntegerWriter {
   static final int MIN_REPEAT_SIZE = 3;

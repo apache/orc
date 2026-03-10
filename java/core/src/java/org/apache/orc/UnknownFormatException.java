@@ -25,6 +25,7 @@ import java.io.IOException;
 
 /**
  * @deprecated This will be removed in the future releases.
+ * @since 1.5.0
  */
 @Deprecated
 public class UnknownFormatException extends IOException {

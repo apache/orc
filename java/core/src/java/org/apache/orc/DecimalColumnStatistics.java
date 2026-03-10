@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 
 /**
  * Statistics for decimal columns.
+ * @since 1.1.0
  */
 public interface DecimalColumnStatistics extends ColumnStatistics {
 

@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Statistics for boolean columns.
+ * @since 1.1.0
  */
 public interface BooleanColumnStatistics extends ColumnStatistics {
   /**

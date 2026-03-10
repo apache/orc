@@ -36,6 +36,9 @@ import java.sql.Date;
 import java.util.Arrays;
 import java.util.TimeZone;
 
+/**
+ * @since 1.1.0
+ */
 public final class SerializationUtils {
   private static final Logger LOG = LoggerFactory.getLogger(SerializationUtils.class);
 

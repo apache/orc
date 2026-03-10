@@ -30,6 +30,7 @@ import java.util.List;
 
 /**
  * This tracks the keys for reading encrypted columns.
+ * @since 1.6.0
  */
 public class ReaderEncryptionKey implements EncryptionKey {
   private final String name;
