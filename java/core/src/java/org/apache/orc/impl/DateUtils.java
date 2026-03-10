@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * These utilities will be fast for the common case (&gt; 1582 AD), but slow
  * for old dates.
+ * @since 1.7.0
  */
 public class DateUtils {
   private static final ZoneId UTC = ZoneId.of("UTC");

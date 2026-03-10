@@ -29,6 +29,7 @@ import java.util.ServiceLoader;
  * They apply to an individual column (via ColumnVector) instead of a
  * VectorRowBatch.
  *
+ * @since 1.5.0
  */
 public interface DataMask {
 

@@ -22,6 +22,7 @@ import org.apache.orc.Writer;
 
 /**
  * The ORC internal API to the writer.
+ * @since 1.5.0
  */
 public interface WriterInternal extends Writer {
 

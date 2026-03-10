@@ -22,6 +22,7 @@ import org.apache.orc.OrcFilterContext;
 
 /**
  * Wrapper class for the selected vector that centralizes the convenience functions
+ * @since 1.7.0
  */
 public class Selected {
   // Sorted array of row indices

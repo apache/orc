@@ -22,6 +22,7 @@ import java.sql.Timestamp;
 
 /**
  * Statistics for Timestamp columns.
+ * @since 1.1.0
  */
 public interface TimestampColumnStatistics extends ColumnStatistics {
   /**

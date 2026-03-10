@@ -20,6 +20,9 @@ package org.apache.orc.impl;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * @since 1.6.0
+ */
 public final class Utf8Utils {
 
   public static int charLength(byte[] data, int offset, int length) {

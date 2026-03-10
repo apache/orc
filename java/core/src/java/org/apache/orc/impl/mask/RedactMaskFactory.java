@@ -65,6 +65,7 @@ import java.util.concurrent.TimeUnit;
  *     second (0 to 59, default 0)
  * <p>
  * Parameters use "_" for preserve original.
+ * @since 1.5.0
  */
 public class RedactMaskFactory extends MaskFactory {
 

@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
  * The sections of stripe that we have read.
  * This might not match diskRange - 1 disk range can be multiple buffer chunks,
  * depending on DFS block boundaries.
+ * @since 1.1.0
  */
 public class BufferChunk extends DiskRangeList {
 

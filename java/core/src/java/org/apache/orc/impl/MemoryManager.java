@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 
 /**
  * Shim for backwards compatibility with Hive
+ * @since 1.1.0
  */
 @Deprecated
 public class MemoryManager extends MemoryManagerImpl {

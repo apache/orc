@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Statistics that are available for all types of columns.
+ * @since 1.1.0
  */
 public interface ColumnStatistics {
   /**

@@ -32,6 +32,9 @@ import org.apache.orc.impl.StreamName;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.5.0
+ */
 public class BinaryTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream stream;
   private final IntegerWriter length;

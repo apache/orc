@@ -24,6 +24,7 @@ import java.io.IOException;
 
 /**
  * Interface for reading integers.
+ * @since 1.1.0
  */
 public interface IntegerReader {
 

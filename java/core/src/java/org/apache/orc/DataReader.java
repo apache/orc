@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /** An abstract data reader that IO formats can use to read bytes from underlying storage. */
+/**
+ * @since 1.1.0
+ */
 public interface DataReader extends AutoCloseable, Cloneable {
 
   /** Opens the DataReader, making it ready to use. */

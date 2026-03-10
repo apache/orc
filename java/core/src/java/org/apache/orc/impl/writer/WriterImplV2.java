@@ -45,6 +45,7 @@ import java.io.IOException;
  * Caveat: the MemoryManager is created during WriterOptions create, that has
  * to be confined to a single thread as well.
  *
+ * @since 1.5.0
  */
 public class WriterImplV2 extends WriterImpl {
 

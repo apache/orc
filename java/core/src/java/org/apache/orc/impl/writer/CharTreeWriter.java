@@ -29,6 +29,7 @@ import java.util.Arrays;
 
 /**
  * Under the covers, char is written to ORC the same way as string.
+ * @since 1.5.0
  */
 public class CharTreeWriter extends StringBaseTreeWriter {
   private final int maxLength;

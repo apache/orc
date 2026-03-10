@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 
 /**
  * This class has routines to work with encryption within ORC files.
+ * @since 1.6.0
  */
 public class CryptoUtils {
 

@@ -33,6 +33,7 @@ import java.util.Map;
  * <p>
  * This offers a convenience method of finding the column vector from a given column name
  * that the filters can invoke to get access to the column vector.
+ * @since 1.7.0
  */
 public class OrcFilterContextImpl implements OrcFilterContext {
   private VectorizedRowBatch batch = null;

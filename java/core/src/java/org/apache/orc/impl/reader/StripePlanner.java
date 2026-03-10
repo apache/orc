@@ -59,6 +59,7 @@ import java.util.Set;
  *   <li>row group selection</li>
  *   <li>encryption</li>
  * </ul>
+ * @since 1.6.0
  */
 public class StripePlanner {
   private static final Logger LOG = LoggerFactory.getLogger(StripePlanner.class);

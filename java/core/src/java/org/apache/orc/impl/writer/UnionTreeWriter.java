@@ -32,6 +32,9 @@ import org.apache.orc.impl.StreamName;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * @since 1.5.0
+ */
 public class UnionTreeWriter extends TreeWriterBase {
   private final RunLengthByteWriter tags;
   private final TreeWriter[] childrenWriters;

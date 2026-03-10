@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Under the covers, varchar is written to ORC the same way as string.
+ * @since 1.5.0
  */
 public class VarcharTreeWriter extends StringBaseTreeWriter {
   private final int maxLength;

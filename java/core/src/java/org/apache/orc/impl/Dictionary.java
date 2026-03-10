@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 /**
  * Interface to define the dictionary used for encoding value in columns
  * of specific types like string, char, varchar, etc.
+ * @since 1.7.0
  */
 public interface Dictionary {
   enum IMPL {

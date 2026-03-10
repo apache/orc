@@ -25,6 +25,9 @@ import org.apache.orc.OrcConf;
 
 import java.util.function.Supplier;
 
+/**
+ * @since 1.1.0
+ */
 public final class DataReaderProperties {
 
   private final Supplier<FileSystem> fileSystemSupplier;

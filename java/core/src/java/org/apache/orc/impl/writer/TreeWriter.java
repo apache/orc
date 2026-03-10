@@ -30,6 +30,7 @@ import java.io.IOException;
 /**
  * The writers for the specific writers of each type. This provides
  * the generic API that they must all implement.
+ * @since 1.5.0
  */
 public interface TreeWriter {
 

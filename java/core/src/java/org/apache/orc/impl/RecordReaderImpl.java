@@ -76,6 +76,9 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.1.0
+ */
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
   private static final boolean isLogDebugEnabled = LOG.isDebugEnabled();

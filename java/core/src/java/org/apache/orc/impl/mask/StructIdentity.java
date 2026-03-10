@@ -25,6 +25,7 @@ import org.apache.orc.DataMask;
 /**
  * A data mask for struct types that applies the given masks to its
  * children, but doesn't mask at this level.
+ * @since 1.5.0
  */
 public class StructIdentity implements DataMask {
   private final DataMask[] children;

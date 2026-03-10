@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Statistics for string columns.
+ * @since 1.1.0
  */
 public interface StringColumnStatistics extends ColumnStatistics {
   /**

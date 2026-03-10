@@ -26,6 +26,7 @@ import org.apache.orc.OrcFilterContext;
  * <p>
  * This is the interface that is the basis of both the leaf filters such as Equals, In and logical
  * filters such as And, Or and Not
+ * @since 1.7.0
  */
 public interface VectorFilter {
 

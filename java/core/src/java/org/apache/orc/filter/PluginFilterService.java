@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
  * combined using AND.
  * The filter is expected to be deterministic (for reattempts) and agnostic of the application order
  * which is non-deterministic.
+ * @since 1.8.0
  */
 public interface PluginFilterService {
   /**

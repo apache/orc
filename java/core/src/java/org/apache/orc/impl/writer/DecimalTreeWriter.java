@@ -36,6 +36,9 @@ import org.apache.orc.impl.StreamName;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.5.0
+ */
 public class DecimalTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream valueStream;
   private final SerializationUtils utils = new SerializationUtils();

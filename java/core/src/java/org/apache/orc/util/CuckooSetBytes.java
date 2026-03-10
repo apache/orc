@@ -32,6 +32,7 @@ import java.util.Random;
  * Elsevier Science preprint, Dec. 2003. https://www.itu.dk/people/pagh/papers/cuckoo-jour.pdf.
  * <p>
  * Copied from CuckooSetBytes@Apache Hive project for convenience
+ * @since 1.7.0
  */
 public class CuckooSetBytes {
   private byte[][] t1;

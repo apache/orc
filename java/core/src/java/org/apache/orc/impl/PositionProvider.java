@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 /**
  * An interface used for seeking to a row index.
+ * @since 1.1.0
  */
 public interface PositionProvider {
   /**

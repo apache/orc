@@ -26,6 +26,9 @@ import java.io.IOException;
 /**
  * A reader that reads a sequence of integers.
  * */
+/**
+ * @since 1.1.0
+ */
 public class RunLengthIntegerReader implements IntegerReader {
   private InStream input;
   private final boolean signed;

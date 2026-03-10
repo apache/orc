@@ -29,6 +29,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * @since 1.6.0
+ */
 public class MaskDescriptionImpl implements DataMaskDescription,
                                             Comparable<MaskDescriptionImpl> {
   private int id;

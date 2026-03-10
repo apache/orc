@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
  * and an offset for each entry. It is using chaining for collision resolution.
  * <p>
  * This implementation is not thread-safe.
+ * @since 1.7.0
  */
 public class StringHashTableDictionary implements Dictionary {
 

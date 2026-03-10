@@ -31,6 +31,7 @@ import java.io.IOException;
  * Handles the Struct rootType for batch handling. The handling assumes that the root
  * {@link org.apache.orc.impl.TreeReaderFactory.StructTreeReader} no nulls. Root Struct vector is
  * not represented as part of the final {@link org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch}.
+ * @since 1.7.0
  */
 public class StructBatchReader extends BatchReader {
   // The reader context including row-filtering details

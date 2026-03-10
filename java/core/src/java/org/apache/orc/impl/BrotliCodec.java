@@ -27,6 +27,9 @@ import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 2.0.0
+ */
 public class BrotliCodec implements CompressionCodec, DirectDecompressionCodec {
   // load jni library.
   static {

@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Statistics for float and double columns.
+ * @since 1.1.0
  */
 public interface DoubleColumnStatistics extends ColumnStatistics {
 

@@ -25,6 +25,9 @@ import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 1.1.0
+ */
 public class SnappyCodec extends AircompressorCodec
     implements DirectDecompressionCodec{
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();

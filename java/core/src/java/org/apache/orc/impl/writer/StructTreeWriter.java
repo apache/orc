@@ -28,6 +28,9 @@ import org.apache.orc.TypeDescription;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * @since 1.5.0
+ */
 public class StructTreeWriter extends TreeWriterBase {
   final TreeWriter[] childrenWriters;
 

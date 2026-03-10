@@ -116,6 +116,7 @@ import java.util.function.Consumer;
  * <li>Delta blob - only positive values. monotonicity and orderness are decided
  * based on the sign of the base value and delta base</li>
  * </ul>
+ * @since 1.1.0
  */
 public class RunLengthIntegerWriterV2 implements IntegerWriter {
 

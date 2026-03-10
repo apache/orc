@@ -31,6 +31,9 @@ import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 
+/**
+ * @since 1.5.0
+ */
 public class BooleanTreeWriter extends TreeWriterBase {
   private final BitFieldWriter writer;
 

@@ -25,6 +25,9 @@ import org.xerial.snappy.Snappy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 2.3.0
+ */
 public class XerialSnappyCodec implements CompressionCodec, DirectDecompressionCodec {
   private static final ThreadLocal<byte[]> threadBuffer = ThreadLocal.withInitial(() -> null);
 

@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Information about a key used for column encryption in an ORC file.
+ * @since 1.6.0
  */
 public interface EncryptionKey extends Comparable<EncryptionKey> {
 

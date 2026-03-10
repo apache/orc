@@ -21,6 +21,7 @@ package org.apache.orc;
 /**
  * Statistics for all of the integer columns, such as byte, short, int, and
  * long.
+ * @since 1.1.0
  */
 public interface IntegerColumnStatistics extends ColumnStatistics {
   /**

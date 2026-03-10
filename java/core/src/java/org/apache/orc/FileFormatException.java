@@ -22,6 +22,7 @@ import java.io.IOException;
 
 /**
  * Thrown when an invalid file format is encountered.
+ * @since 1.1.0
  */
 public class FileFormatException extends IOException {
 
