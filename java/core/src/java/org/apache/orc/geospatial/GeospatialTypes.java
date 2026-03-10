@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
  *
  * When invalid, the types list is cleared and remains empty. All subsequent
  * updates and merges are ignored until reset() is called.
+ * @since 2.2.0
  */
 public class GeospatialTypes {
 

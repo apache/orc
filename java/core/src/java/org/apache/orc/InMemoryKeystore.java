@@ -53,6 +53,7 @@ import java.util.TreeMap;
  * constant IV is not a problem.
  * <p>
  * This class is not thread safe.
+ * @since 1.5.0
  */
 public class InMemoryKeystore implements KeyProvider {
   /**

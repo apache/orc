@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 /**
  * The output stream for writing to ORC files.
  * It handles both compression and encryption.
+ * @since 1.1.0
  */
 public class OutStream extends PositionedOutputStream {
   private static final Logger LOG = LoggerFactory.getLogger(OutStream.class);

@@ -46,6 +46,7 @@ import java.util.function.Supplier;
 
 /**
  * Stateless methods shared between RecordReaderImpl and EncodedReaderImpl.
+ * @since 1.1.0
  */
 public class RecordReaderUtils {
   /**

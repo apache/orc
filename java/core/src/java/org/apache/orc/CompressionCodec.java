@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 /**
  * The API for compression codecs for ORC.
  * Closeable.close() returns this codec to the OrcCodecPool.
+ * @since 1.1.0
  */
 public interface CompressionCodec extends Closeable {
 

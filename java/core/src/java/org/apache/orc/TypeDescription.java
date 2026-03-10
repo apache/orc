@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 /**
  * This is the description of the types in an ORC file.
+ * @since 1.1.0
  */
 public class TypeDescription
     implements Comparable<TypeDescription>, Serializable, Cloneable {

@@ -26,6 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 
 /**
  * The factory for getting the proper version of the Hadoop shims.
+ * @since 1.5.0
  */
 public class HadoopShimsFactory {
   private static final Logger LOG = LoggerFactory.getLogger(HadoopShimsFactory.class);

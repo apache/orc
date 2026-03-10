@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 /**
  * Statistics about the ACID operations in an ORC file
+ * @since 1.1.0
  */
 public class AcidStats {
   public long inserts;

@@ -44,6 +44,9 @@ import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
 import static org.apache.orc.impl.Dictionary.INITIAL_DICTIONARY_SIZE;
 
 
+/**
+ * @since 1.5.0
+ */
 public abstract class StringBaseTreeWriter extends TreeWriterBase {
   // Stream for dictionary's key
   private final OutStream stringOutput;

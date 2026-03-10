@@ -33,6 +33,7 @@ import java.util.Arrays;
  * <p>
  * NOTE: Like standard Collection implementations/arrays, this class is not
  * synchronized.
+ * @since 1.1.0
  */
 public final class DynamicIntArray {
   static final int DEFAULT_CHUNKSIZE = 8 * 1024;

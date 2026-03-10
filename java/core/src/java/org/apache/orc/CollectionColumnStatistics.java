@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Statistics for all of collections such as Map and List.
+ * @since 1.6.0
  */
 public interface CollectionColumnStatistics extends ColumnStatistics {
   /**

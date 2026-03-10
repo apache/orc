@@ -23,6 +23,9 @@ import org.apache.orc.CompressionCodec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 1.1.0
+ */
 public interface DirectDecompressionCodec extends CompressionCodec {
   /**
    * Check if the codec is available.

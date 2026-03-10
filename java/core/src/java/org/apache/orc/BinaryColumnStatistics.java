@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Statistics for binary columns.
+ * @since 1.1.0
  */
 public interface BinaryColumnStatistics extends ColumnStatistics {
   /**

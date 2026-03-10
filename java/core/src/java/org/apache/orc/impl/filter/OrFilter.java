@@ -20,6 +20,9 @@ package org.apache.orc.impl.filter;
 
 import org.apache.orc.OrcFilterContext;
 
+/**
+ * @since 1.7.0
+ */
 public class OrFilter implements VectorFilter {
 
   public final VectorFilter[] filters;

@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This class represents the fix from ORC-101 where we fixed the bloom filter
  * from using the JVM's default character set to always using UTF-8.
+ * @since 1.3.0
  */
 public class BloomFilterUtf8 extends BloomFilter {
 

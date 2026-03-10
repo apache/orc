@@ -30,6 +30,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * @since 1.1.0
+ */
 public class OrcAcidUtils {
   public static final String ACID_STATS = "hive.acid.stats";
   public static final String DELTA_SIDE_FILE_SUFFIX = "_flush_length";

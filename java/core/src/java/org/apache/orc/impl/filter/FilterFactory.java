@@ -37,6 +37,9 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
+/**
+ * @since 1.7.0
+ */
 public class FilterFactory {
   private static final Logger LOG = LoggerFactory.getLogger(FilterFactory.class);
 

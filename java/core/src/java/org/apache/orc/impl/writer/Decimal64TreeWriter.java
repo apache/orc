@@ -35,6 +35,7 @@ import java.io.IOException;
 
 /**
  * Writer for short decimals in ORCv2.
+ * @since 1.5.0
  */
 public class Decimal64TreeWriter extends TreeWriterBase {
   private final RunLengthIntegerWriterV2 valueWriter;

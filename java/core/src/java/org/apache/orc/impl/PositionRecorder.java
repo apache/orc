@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 /**
  * An interface for recording positions in a stream.
+ * @since 1.1.0
  */
 public interface PositionRecorder {
   /**

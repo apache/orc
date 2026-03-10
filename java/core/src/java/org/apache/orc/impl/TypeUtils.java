@@ -34,6 +34,9 @@ import org.apache.orc.TypeDescription;
 
 import java.util.List;
 
+/**
+ * @since 1.6.0
+ */
 public class TypeUtils {
   private TypeUtils() {}
 

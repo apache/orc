@@ -24,6 +24,9 @@ import org.apache.orc.impl.reader.StripePlanner;
 
 import java.io.IOException;
 
+/**
+ * @since 1.7.0
+ */
 public class PrimitiveBatchReader extends BatchReader {
 
   public PrimitiveBatchReader(TypeReader rowReader) {

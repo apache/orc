@@ -59,6 +59,7 @@ import java.util.Arrays;
  * All Binary type of any length will be converted to 32 byte length SHA256
  * hash.
  * </p>
+ * @since 1.5.0
  */
 public class SHA256MaskFactory extends MaskFactory {
 

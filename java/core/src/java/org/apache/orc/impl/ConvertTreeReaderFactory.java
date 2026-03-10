@@ -56,6 +56,7 @@ import java.util.TimeZone;
 
 /**
  * Convert ORC tree readers.
+ * @since 1.1.0
  */
 public class ConvertTreeReaderFactory extends TreeReaderFactory {
 

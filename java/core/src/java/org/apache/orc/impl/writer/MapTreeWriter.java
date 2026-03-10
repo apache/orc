@@ -32,6 +32,9 @@ import org.apache.orc.impl.StreamName;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * @since 1.5.0
+ */
 public class MapTreeWriter extends TreeWriterBase {
   private final IntegerWriter lengths;
   private final boolean isDirectV2;

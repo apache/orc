@@ -21,6 +21,7 @@ package org.apache.orc;
 /**
  * An enumeration that lists the generic compression algorithms that
  * can be applied to ORC files.
+ * @since 1.1.0
  */
 public enum CompressionKind {
   NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD, BROTLI

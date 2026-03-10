@@ -24,6 +24,7 @@ import org.apache.orc.TypeDescription;
 
 /**
  * The Provider for all of the built-in data masks.
+ * @since 1.5.0
  */
 public class MaskProvider implements DataMask.Provider {
 

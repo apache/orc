@@ -25,6 +25,9 @@ import org.apache.orc.TypeDescription;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * @since 1.5.0
+ */
 public class StringTreeWriter extends StringBaseTreeWriter {
   StringTreeWriter(TypeDescription schema,
                    WriterEncryptionVariant encryption,

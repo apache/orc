@@ -30,6 +30,7 @@ import java.security.Key;
  *   <li>Encrypted original</li>
  *   <li>Unencrypted masked</li>
  * </ul>
+ * @since 1.6.0
  */
 public interface EncryptionVariant extends Comparable<EncryptionVariant> {
 

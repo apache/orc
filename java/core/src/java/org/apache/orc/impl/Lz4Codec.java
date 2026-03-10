@@ -27,6 +27,9 @@ import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 2.3.0
+ */
 public class Lz4Codec implements CompressionCodec, DirectDecompressionCodec {
   private static final LZ4Factory lz4Factory = LZ4Factory.fastestInstance();
   private static final ThreadLocal<byte[]> threadBuffer = ThreadLocal.withInitial(() -> null);

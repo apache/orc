@@ -27,6 +27,7 @@ import java.io.IOException;
  * A reader that reads a sequence of bytes. A control byte is read before
  * each run with positive values 0 to 127 meaning 3 to 130 repetitions. If the
  * byte is -1 to -128, 1 to 128 literal byte values follow.
+ * @since 1.1.0
  */
 public class RunLengthByteReader {
   private InStream input;

@@ -26,6 +26,9 @@ import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 2.1.0
+ */
 public class ZstdCodec implements CompressionCodec, DirectDecompressionCodec {
   private ZstdOptions zstdOptions = null;
   private ZstdCompressCtx zstdCompressCtx = null;

@@ -29,6 +29,7 @@ package org.apache.orc.util;
  * From homepage of MurmurHash (https://code.google.com/p/smhasher/),
  * "All MurmurHash versions are public domain software, and the author disclaims all copyright
  * to their code."
+ * @since 1.3.0
  */
 public class Murmur3 {
   // from 64-bit linear congruential generator

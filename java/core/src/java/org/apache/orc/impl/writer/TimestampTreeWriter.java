@@ -36,6 +36,9 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.function.Consumer;
 
+/**
+ * @since 1.5.0
+ */
 public class TimestampTreeWriter extends TreeWriterBase {
   public static final int MILLIS_PER_SECOND = 1000;
   public static final String BASE_TIMESTAMP_STRING = "2015-01-01 00:00:00";

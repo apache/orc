@@ -25,6 +25,7 @@ import org.apache.orc.DataMask;
 /**
  * A data mask for union types that applies the given masks to its
  * children, but doesn't mask at this level.
+ * @since 1.5.0
  */
 public class UnionIdentity implements DataMask {
   private final DataMask[] children;

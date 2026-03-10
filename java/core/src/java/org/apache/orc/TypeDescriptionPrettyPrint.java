@@ -23,6 +23,7 @@ import java.util.List;
 
 /**
  * A pretty printer for TypeDescription.
+ * @since 1.5.0
  */
 public class TypeDescriptionPrettyPrint {
 

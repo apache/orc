@@ -36,6 +36,9 @@ import java.util.stream.Collectors;
 
 import static org.apache.orc.impl.TreeReaderFactory.isDecimalAsLong;
 
+/**
+ * @since 1.7.0
+ */
 public class LeafFilterFactory {
   private LeafFilterFactory() {}
 

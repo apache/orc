@@ -28,6 +28,7 @@ import java.util.List;
  * A mask factory framework that automatically builds a recursive mask.
  * The subclass defines how to mask the primitive types and the factory
  * builds a recursive tree of data masks that matches the schema tree.
+ * @since 1.5.0
  */
 public abstract class MaskFactory {
 

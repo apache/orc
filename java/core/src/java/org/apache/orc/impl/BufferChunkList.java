@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 /**
  * Builds a list of buffer chunks
+ * @since 1.6.0
  */
 public class BufferChunkList {
   private BufferChunk head;

@@ -26,6 +26,7 @@ import org.locationtech.jts.geom.Geometry;
  * Bounding box for Geometry or Geography type in the representation of min/max
  * value pairs of coordinates from each axis.
  * A bounding box is considered valid if none of the X / Y dimensions contain NaN.
+ * @since 2.2.0
  */
 public class BoundingBox {
 

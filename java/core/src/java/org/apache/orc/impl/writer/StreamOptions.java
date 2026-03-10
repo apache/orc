@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 
 /**
  * The compression and encryption options for writing a stream.
+ * @since 1.6.0
  */
 public class StreamOptions {
   private CompressionCodec codec;

@@ -30,6 +30,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * @since 1.6.0
+ */
 public class ParserUtils {
   private static final TypeDescription.Category[] TYPE_DESCRIPTION_CATEGORY_VALUES
       = TypeDescription.Category.values();

@@ -20,6 +20,7 @@ package org.apache.orc;
 
 /**
  * Information about the stripes in an ORC file that is provided by the Reader.
+ * @since 1.1.0
  */
 public interface StripeInformation {
   /**

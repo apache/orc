@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * This class is not thread safe, but is re-entrant - ensure creation and all
  * invocations are triggered from the same thread.
+ * @since 1.4.0
  */
 public class MemoryManagerImpl implements MemoryManager {
 

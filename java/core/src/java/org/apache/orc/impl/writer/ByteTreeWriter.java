@@ -30,6 +30,9 @@ import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 
+/**
+ * @since 1.5.0
+ */
 public class ByteTreeWriter extends TreeWriterBase {
   private final RunLengthByteWriter writer;
 

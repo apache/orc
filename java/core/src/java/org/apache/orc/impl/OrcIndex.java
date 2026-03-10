@@ -20,6 +20,9 @@ package org.apache.orc.impl;
 
 import org.apache.orc.OrcProto;
 
+/**
+ * @since 1.1.0
+ */
 public final class OrcIndex {
   OrcProto.RowIndex[] rowGroupIndex;
   OrcProto.Stream.Kind[] bloomFilterKinds;

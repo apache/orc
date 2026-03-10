@@ -63,6 +63,7 @@ import java.util.function.Consumer;
 
 /**
  * Factory for creating ORC tree readers.
+ * @since 1.1.0
  */
 public class TreeReaderFactory {
   public interface Context {

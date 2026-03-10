@@ -26,6 +26,9 @@ import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @since 1.2.0
+ */
 public class AircompressorCodec implements CompressionCodec {
   private final CompressionKind kind;
   private final Compressor compressor;

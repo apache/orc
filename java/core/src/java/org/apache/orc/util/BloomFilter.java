@@ -42,6 +42,7 @@ import java.util.Arrays;
  * Note that this class is here for backwards compatibility, because it uses
  * the JVM default character set for strings. All new users should
  * BloomFilterUtf8, which always uses UTF8 for the encoding.
+ * @since 1.3.0
  */
 public class BloomFilter {
   public static final double DEFAULT_FPP = 0.05;
