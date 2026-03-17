@@ -167,7 +167,7 @@ permalink: /docs/core-java-config.html
 </tr>
 <tr>
   <td><code>orc.dictionary.max.size.bytes</code></td>
-  <td>16777216</td>
+  <td>0</td>
   <td>
     If the total size of the dictionary is greater than this, turn off dictionary encoding. Use 0 to disable this check.
   </td>
@@ -293,7 +293,7 @@ permalink: /docs/core-java-config.html
 </tr>
 <tr>
   <td><code>orc.stripe.size.check.ratio</code></td>
-  <td>2.0</td>
+  <td>0.0</td>
   <td>
     Flush stripe if the tree writer size in bytes is larger than (this * orc.stripe.size). Use 0 to disable this check.
   </td>
