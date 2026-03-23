@@ -121,6 +121,7 @@ def main():
     parser.add_argument("-t", "--type", help="Issue type to create when no parent is specified (e.g. Bug). Defaults to Improvement.")
     parser.add_argument("-v", "--version", help="Version to use for the issue")
     parser.add_argument("-c", "--component", help="Component for the issue")
+    parser.add_argument("-n", "--no-commit", action="store_true", help="Skip creating a commit")
     args = parser.parse_args()
 
     if args.parent:
@@ -133,7 +134,10 @@ def main():
 
     create_and_checkout_branch(jira_id)
 
-    create_commit(jira_id, args.title)
+    if not args.no_commit:
+        create_commit(jira_id, args.title)
+    else:
+        print("Skipped commit creation")
 
 
 if __name__ == "__main__":
