@@ -121,7 +121,7 @@ public enum OrcConf {
           "dictionary encoding.  Use 1 to always use dictionary encoding."),
   DICTIONARY_MAX_SIZE_IN_BYTES("orc.dictionary.max.size.bytes",
       "orc.dictionary.max.size.bytes",
-      16 * 1024 * 1024,
+      0,
       "If the total size of the dictionary is greater than this\n" +
           ", turn off dictionary encoding. Use 0 to disable this check."),
   ROW_INDEX_STRIDE_DICTIONARY_CHECK("orc.dictionary.early.check",
@@ -190,7 +190,7 @@ public enum OrcConf {
         + " Use orc.stripe.row.count instead if the value larger than orc.stripe.row.count."),
   STRIPE_SIZE_CHECKRATIO("orc.stripe.size.check.ratio",
       "orc.stripe.size.check.ratio",
-      2.0,
+      0.0,
       "Flush stripe if the tree writer size in bytes is larger than (this * orc.stripe.size). " +
           "Use 0 to disable this check."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
