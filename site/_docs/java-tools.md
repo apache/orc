@@ -17,7 +17,7 @@ The subcommands for the tools are:
   * data - print the data of an ORC file
   * json-schema (since ORC 1.4) - determine the schema of JSON documents
   * key (since ORC 1.5) - print information about the encryption keys
-  * merge (since ORC 2.0.1) - merge multiple ORC files into a single ORC file
+  * merge (since ORC 2.0.1) - merge multiple ORC files into one or more ORC files
   * meta - print the metadata of an ORC file
   * scan (since ORC 1.3) - scan the data for benchmarking
   * sizes (since ORC 1.7.2) - list size on disk of each column
@@ -356,10 +356,36 @@ ______________________________________________________________________
 
 ## Java Merge
 
-The merge command can merge multiple ORC files that all have the same schema into a single ORC file.
+The merge command can merge multiple ORC files that all have the same schema. By default
+it writes a single output file. If `--maxSize` is set, `--output` is treated as a directory
+and the tool writes multiple part files (`part-00000.orc`, `part-00001.orc`, …) under it.
+Input files are grouped using their on-disk sizes so that each part’s total input size
+does not exceed the given threshold (a single input file larger than the threshold is still
+merged into its own part).
+
+`-h,--help`
+  : Print help
+
+`-i,--ignoreExtension`
+  : Include files that do not end in `.orc`
+
+`-m,--maxSize <bytes>`
+  : Maximum size in bytes for each output part; enables multi-file output under `--output`
+
+`-o,--output <path>`
+  : Output ORC filename (single-file mode) or output directory (when `--maxSize` is set)
+
+Merge into one ORC file:
 
 ~~~ shell
 % java -jar orc-tools-X.Y.Z-uber.jar merge --output /path/to/merged.orc /path/to/input_orc/
+______________________________________________________________________
+~~~
+
+Merge into multiple ORC files under a directory (each part bounded by size):
+
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar merge --output /path/to/out_dir/ --maxSize 1073741824 /path/to/input_orc/
 ______________________________________________________________________
 ~~~
 
