@@ -93,7 +93,7 @@ public class Driver {
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   json-schema - scan JSON files to determine their schema");
       System.err.println("   key - print information about the keys");
-      System.err.println("   merge - merge multiple ORC files into a single ORC file");
+      System.err.println("   merge - merge multiple ORC files into one or more ORC files");
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   scan - scan the ORC file");
       System.err.println("   sizes - list size on disk of each column");
