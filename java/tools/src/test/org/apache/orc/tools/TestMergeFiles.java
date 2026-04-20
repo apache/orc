@@ -118,7 +118,7 @@ public class TestMergeFiles implements TestConf {
   public void testMergeWithMaxSize() throws Exception {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
 
-    // Create 3 source ORC files with different row counts.
+    // Create 3 source ORC files.
     String[] sourceNames = {
         workDir + File.separator + "ms-1.orc",
         workDir + File.separator + "ms-2.orc",
@@ -158,11 +158,14 @@ public class TestMergeFiles implements TestConf {
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
-    MergeFiles.main(conf, new String[]{workDir.toString(),
-        "--output", outputDir.toString(),
-        "--maxSize", String.valueOf(maxSize)});
-    System.out.flush();
-    System.setOut(origOut);
+    try {
+      MergeFiles.main(conf, new String[]{workDir.toString(),
+          "--output", outputDir.toString(),
+          "--maxSize", String.valueOf(maxSize)});
+      System.out.flush();
+    } finally {
+      System.setOut(origOut);
+    }
     String output = myOut.toString(StandardCharsets.UTF_8);
     System.out.println(output);
 

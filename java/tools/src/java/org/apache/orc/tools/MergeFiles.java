@@ -62,7 +62,12 @@ public class MergeFiles {
 
     long maxSizeBytes = 0;
     if (cli.hasOption("maxSize")) {
-      maxSizeBytes = Long.parseLong(cli.getOptionValue("maxSize"));
+      try {
+        maxSizeBytes = Long.parseLong(cli.getOptionValue("maxSize"));
+      } catch (NumberFormatException e) {
+        System.err.println("--maxSize requires a numeric value in bytes.");
+        System.exit(1);
+      }
       if (maxSizeBytes <= 0) {
         System.err.println("--maxSize must be a positive number of bytes.");
         System.exit(1);
@@ -145,7 +150,18 @@ public class MergeFiles {
                                               Path outputDir,
                                               long maxSizeBytes) throws Exception {
     FileSystem outFs = outputDir.getFileSystem(conf);
-    outFs.mkdirs(outputDir);
+    if (outFs.exists(outputDir)) {
+      if (!outFs.getFileStatus(outputDir).isDirectory()) {
+        throw new IllegalArgumentException(
+            "Output path already exists and is not a directory: " + outputDir);
+      }
+      if (outFs.listStatus(outputDir).length > 0) {
+        throw new IllegalArgumentException(
+            "Output directory must be empty for multi-file merge: " + outputDir);
+      }
+    } else if (!outFs.mkdirs(outputDir)) {
+      throw new IllegalStateException("Failed to create output directory: " + outputDir);
+    }
 
     // Group input files into batches where each batch's total size <= maxSizeBytes.
     List<List<Path>> batches = new ArrayList<>();
@@ -172,7 +188,7 @@ public class MergeFiles {
     for (int i = 0; i < batches.size(); i++) {
       List<Path> batch = batches.get(i);
       Path partOutput = new Path(outputDir, String.format(PART_FILE_FORMAT, i));
-      List<Path> merged = OrcFile.mergeFiles(partOutput, OrcFile.writerOptions(conf), batch);
+      List<Path> merged = OrcFile.mergeFiles(partOutput, writerOptions.clone(), batch);
       totalMerged += merged.size();
 
       if (merged.size() != batch.size()) {
@@ -213,10 +229,11 @@ public class MergeFiles {
 
     result.addOption(Option.builder("m")
         .longOpt("maxSize")
-        .desc("Maximum size in bytes for each output ORC file. When set, --output is treated as "
-            + "an output directory and merged files are written as part-00000.orc, "
-            + "part-00001.orc, etc. Files are grouped at file boundaries so an individual "
-            + "file larger than this threshold will still be placed in its own part.")
+        .desc("Maximum cumulative input file size in bytes per output ORC file. When set, "
+            + "--output is treated as an output directory and merged files are written as "
+            + "part-00000.orc, part-00001.orc, etc. Input files are grouped at file "
+            + "boundaries so an individual file larger than this threshold will still be "
+            + "placed in its own part.")
         .hasArg()
         .build());
 
