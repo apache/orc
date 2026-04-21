@@ -323,6 +323,8 @@ namespace orc {
             nanoBuffer[i] *= 10;
           }
         }
+
+        // ORC-306: compensate -1s for JDK bug in java.sql.Timestamp
         int64_t writerTime = secsBuffer[i] + epochOffset_;
         if (writerTime < 0 && nanoBuffer[i] > 999999) {
           writerTime -= 1;
