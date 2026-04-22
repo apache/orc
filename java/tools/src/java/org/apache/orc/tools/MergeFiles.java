@@ -214,9 +214,6 @@ public class MergeFiles {
           "Input path must be an existing directory with --preserveStructure: " + inputRoot);
     }
 
-    FileSystem outFs = outputRoot.getFileSystem(conf);
-    prepareOutputDir(outFs, outputRoot, overwrite, "--preserveStructure");
-
     Path qualifiedInputRoot = inFs.makeQualified(inputRoot);
     List<Path> leaves = new ArrayList<>();
     collectLeafDirs(inFs, qualifiedInputRoot, ignoreExtension, leaves);
@@ -225,6 +222,9 @@ public class MergeFiles {
       System.err.println("No leaf directories containing ORC files found under: " + inputRoot);
       System.exit(1);
     }
+
+    FileSystem outFs = outputRoot.getFileSystem(conf);
+    prepareOutputDir(outFs, outputRoot, overwrite, "--preserveStructure");
 
     long effectiveMax = maxSizeBytes > 0 ? maxSizeBytes : Long.MAX_VALUE;
     int totalInputFiles = 0;
@@ -305,13 +305,26 @@ public class MergeFiles {
     }
 
     int totalMerged = 0;
+    int partFilesWritten = 0;
     List<Path> allUnmerged = new ArrayList<>();
 
-    for (int i = 0; i < batches.size(); i++) {
-      List<Path> batch = batches.get(i);
-      Path partOutput = new Path(outputDir, String.format(PART_FILE_FORMAT, i));
+    // Advance the part index only when a file is actually written, so
+    // part-NNNNN.orc stays contiguous and the reported count matches disk.
+    for (List<Path> batch : batches) {
+      Path partOutput = new Path(outputDir, String.format(PART_FILE_FORMAT, partFilesWritten));
       List<Path> merged = OrcFile.mergeFiles(partOutput, writerOptions.clone(), batch);
+
+      if (merged.isEmpty()) {
+        // Drop any 0-stripe placeholder left behind and skip this slot.
+        if (outFs.exists(partOutput)) {
+          outFs.delete(partOutput, false);
+        }
+        allUnmerged.addAll(batch);
+        continue;
+      }
+
       totalMerged += merged.size();
+      partFilesWritten++;
 
       if (merged.size() != batch.size()) {
         Set<Path> mergedSet = new HashSet<>(merged);
@@ -323,7 +336,7 @@ public class MergeFiles {
       }
     }
 
-    return new DirMergeResult(batches.size(), totalMerged, allUnmerged);
+    return new DirMergeResult(partFilesWritten, totalMerged, allUnmerged);
   }
 
   /**
