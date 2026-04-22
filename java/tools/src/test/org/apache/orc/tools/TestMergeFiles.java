@@ -264,8 +264,8 @@ public class TestMergeFiles implements TestConf {
     // Without --overwrite: should reject non-empty output directory and leave it untouched.
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
         () -> MergeFiles.main(conf, baseArgs));
-    assertTrue(ex.getMessage().contains("not empty")
-            && ex.getMessage().contains("--overwrite"),
+    assertTrue(ex.getMessage().contains("not empty") &&
+            ex.getMessage().contains("--overwrite"),
         "Error should mention --overwrite: " + ex.getMessage());
     assertTrue(fs.exists(stale),
         "Existing content must be preserved when overwrite is refused");
