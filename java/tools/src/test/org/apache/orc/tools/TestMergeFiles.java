@@ -29,7 +29,6 @@ import org.apache.orc.Reader;
 import org.apache.orc.TestConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.tools.MergeFiles;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -100,7 +99,6 @@ public class TestMergeFiles implements TestConf {
     System.out.flush();
     System.setOut(origOut);
     String output = myOut.toString(StandardCharsets.UTF_8);
-    System.out.println(output);
     assertTrue(output.contains("Input files size: 2, Merge files size: 2"));
 
     try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf))) {
@@ -120,15 +118,18 @@ public class TestMergeFiles implements TestConf {
   public void testMergeWithMaxSize() throws Exception {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
 
-    // Create 3 source ORC files.
-    String[] sourceNames = {
-        workDir + File.separator + "ms-1.orc",
-        workDir + File.separator + "ms-2.orc",
-        workDir + File.separator + "ms-3.orc"
+    // Keep the input directory disjoint from the output directory; multi-file
+    // modes reject any overlap between the two.
+    Path inputDir = new Path(workDir, "ms-in");
+    fs.mkdirs(inputDir);
+    Path[] sources = {
+        new Path(inputDir, "ms-1.orc"),
+        new Path(inputDir, "ms-2.orc"),
+        new Path(inputDir, "ms-3.orc")
     };
     int[] rowCounts = {5000, 5000, 5000};
-    for (int f = 0; f < sourceNames.length; f++) {
-      Writer writer = OrcFile.createWriter(new Path(sourceNames[f]),
+    for (int f = 0; f < sources.length; f++) {
+      Writer writer = OrcFile.createWriter(sources[f],
           OrcFile.writerOptions(conf).setSchema(schema));
       VectorizedRowBatch batch = schema.createRowBatch();
       LongColumnVector x = (LongColumnVector) batch.cols[0];
@@ -149,18 +150,18 @@ public class TestMergeFiles implements TestConf {
       writer.close();
     }
 
-    long firstTwo = fs.getFileStatus(new Path(sourceNames[0])).getLen()
-        + fs.getFileStatus(new Path(sourceNames[1])).getLen();
+    long firstTwo = fs.getFileStatus(sources[0]).getLen()
+        + fs.getFileStatus(sources[1]).getLen();
     long maxSize = firstTwo + 1;
 
-    Path outputDir = new Path(workDir + File.separator + "merge-multi-out");
+    Path outputDir = new Path(workDir, "ms-out");
     fs.delete(outputDir, true);
 
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8));
     try {
-      MergeFiles.main(conf, new String[]{workDir.toString(),
+      MergeFiles.main(conf, new String[]{inputDir.toString(),
           "--output", outputDir.toString(),
           "--maxSize", String.valueOf(maxSize)});
       System.out.flush();
@@ -168,7 +169,6 @@ public class TestMergeFiles implements TestConf {
       System.setOut(origOut);
     }
     String output = myOut.toString(StandardCharsets.UTF_8);
-    System.out.println(output);
 
     assertTrue(output.contains("Input files size: 3"), "Should report 3 input files");
     assertTrue(output.contains("Merge files size: 3"), "All 3 files should be merged");
@@ -223,7 +223,6 @@ public class TestMergeFiles implements TestConf {
       System.setOut(origOut);
     }
     String output = myOut.toString(StandardCharsets.UTF_8);
-    System.out.println(output);
 
     assertTrue(output.contains("Input files size: 1"), "Should report 1 input file");
     assertTrue(output.contains("Merge files size: 1"), "The giant file should be merged");
@@ -297,6 +296,44 @@ public class TestMergeFiles implements TestConf {
   }
 
   /**
+   * Multi-file modes must reject configurations where the output path overlaps
+   * with any input root (equal, under, or containing), so --overwrite cannot
+   * delete files that were enumerated as inputs.
+   */
+  @Test
+  public void testMultiFileModeRejectsOutputInsideInput() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
+    Path inputDir = new Path(workDir, "overlap-in");
+    fs.mkdirs(inputDir);
+    writeOrcFile(new Path(inputDir, "a.orc"), schema, 10);
+
+    // Output directly under inputDir -> overlap.
+    Path badOutput = new Path(inputDir, "out");
+
+    IllegalArgumentException maxSizeEx = assertThrows(IllegalArgumentException.class,
+        () -> MergeFiles.main(conf, new String[]{inputDir.toString(),
+            "--output", badOutput.toString(),
+            "--maxSize", "1048576"}));
+    assertTrue(maxSizeEx.getMessage().contains("must not overlap"),
+        "Unexpected error: " + maxSizeEx.getMessage());
+
+    IllegalArgumentException psEx = assertThrows(IllegalArgumentException.class,
+        () -> MergeFiles.main(conf, new String[]{inputDir.toString(),
+            "--output", badOutput.toString(),
+            "--preserveStructure"}));
+    assertTrue(psEx.getMessage().contains("must not overlap"),
+        "Unexpected error: " + psEx.getMessage());
+
+    // Input equal to output is also overlap.
+    IllegalArgumentException eqEx = assertThrows(IllegalArgumentException.class,
+        () -> MergeFiles.main(conf, new String[]{inputDir.toString(),
+            "--output", inputDir.toString(),
+            "--maxSize", "1048576"}));
+    assertTrue(eqEx.getMessage().contains("must not overlap"),
+        "Unexpected error: " + eqEx.getMessage());
+  }
+
+  /**
    * Creates an ORC file at the given path with {@code rowCount} rows of the fixed
    * {@code struct<x:int,y:string>} schema used across these tests.
    */
@@ -357,7 +394,6 @@ public class TestMergeFiles implements TestConf {
       System.setOut(origOut);
     }
     String output = myOut.toString(StandardCharsets.UTF_8);
-    System.out.println(output);
 
     assertTrue(output.contains("Leaves: 3"),
         "Expected 3 leaves in summary, got:\n" + output);
@@ -440,7 +476,6 @@ public class TestMergeFiles implements TestConf {
       System.setOut(origOut);
     }
     String output = myOut.toString(StandardCharsets.UTF_8);
-    System.out.println(output);
 
     assertTrue(output.contains("Leaves: 1"),
         "Expected exactly 1 leaf (hidden dir ignored), got:\n" + output);

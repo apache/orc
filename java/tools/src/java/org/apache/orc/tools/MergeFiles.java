@@ -57,7 +57,7 @@ public class MergeFiles {
     }
     String outputFilename = cli.getOptionValue("output");
     if (outputFilename == null || outputFilename.isEmpty()) {
-      System.err.println("output filename is null");
+      System.err.println("--output path is required.");
       formatter.printHelp("merge", opts);
       return;
     }
@@ -81,6 +81,14 @@ public class MergeFiles {
 
     String[] files = cli.getArgs();
     OrcFile.WriterOptions writerOptions = OrcFile.writerOptions(conf);
+    Path outputPath = new Path(outputFilename);
+
+    // Multi-file modes rewrite the output directory in place, so its subtree must
+    // not overlap with any input root; otherwise --overwrite could delete files
+    // that were already enumerated as inputs.
+    if (preserveStructure || maxSizeBytes > 0) {
+      assertOutputNotOverlappingInputs(conf, outputPath, files);
+    }
 
     if (preserveStructure) {
       if (files.length != 1) {
@@ -89,7 +97,7 @@ public class MergeFiles {
         System.exit(1);
       }
       mergePreserveStructure(conf, writerOptions, new Path(files[0]),
-          new Path(outputFilename), maxSizeBytes, ignoreExtension, overwrite);
+          outputPath, maxSizeBytes, ignoreExtension, overwrite);
       return;
     }
 
@@ -111,16 +119,41 @@ public class MergeFiles {
 
     inputStatuses.sort(Comparator.comparing(FileStatus::getPath));
 
-    List<Path> inputFiles = new ArrayList<>(inputStatuses.size());
-    for (LocatedFileStatus s : inputStatuses) {
-      inputFiles.add(s.getPath());
-    }
-
     if (maxSizeBytes > 0) {
-      mergeIntoMultipleFiles(conf, writerOptions, inputStatuses, inputFiles,
-          new Path(outputFilename), maxSizeBytes, overwrite);
+      mergeIntoMultipleFiles(conf, writerOptions, inputStatuses,
+          outputPath, maxSizeBytes, overwrite);
     } else {
-      mergeIntoSingleFile(writerOptions, inputFiles, new Path(outputFilename), outputFilename);
+      List<Path> inputFiles = new ArrayList<>(inputStatuses.size());
+      for (LocatedFileStatus s : inputStatuses) {
+        inputFiles.add(s.getPath());
+      }
+      mergeIntoSingleFile(writerOptions, inputFiles, outputPath, outputFilename);
+    }
+  }
+
+  /**
+   * Reject any configuration where {@code outputPath} equals, lies under, or
+   * contains any of the given input roots (after qualification). Used by
+   * multi-file output modes where the output directory is rewritten in place.
+   */
+  private static void assertOutputNotOverlappingInputs(Configuration conf,
+                                                       Path outputPath,
+                                                       String[] inputRoots) throws IOException {
+    FileSystem outFs = outputPath.getFileSystem(conf);
+    Path qualifiedOutput = outFs.makeQualified(outputPath);
+    String outStr = qualifiedOutput.toString();
+    String outPrefix = outStr.endsWith("/") ? outStr : outStr + "/";
+    for (String root : inputRoots) {
+      Path rootPath = new Path(root);
+      FileSystem inFs = rootPath.getFileSystem(conf);
+      Path qualifiedInput = inFs.makeQualified(rootPath);
+      String inStr = qualifiedInput.toString();
+      String inPrefix = inStr.endsWith("/") ? inStr : inStr + "/";
+      if (outStr.equals(inStr) || outStr.startsWith(inPrefix) || inStr.startsWith(outPrefix)) {
+        throw new IllegalArgumentException(
+            "Output path must not overlap with any input path: "
+                + "output=" + outputPath + ", input=" + root);
+      }
     }
   }
 
@@ -164,7 +197,6 @@ public class MergeFiles {
   private static void mergeIntoMultipleFiles(Configuration conf,
                                               OrcFile.WriterOptions writerOptions,
                                               List<LocatedFileStatus> inputStatuses,
-                                              List<Path> inputFiles,
                                               Path outputDir,
                                               long maxSizeBytes,
                                               boolean overwrite) throws Exception {
@@ -178,7 +210,7 @@ public class MergeFiles {
 
     System.out.printf(
         "Output path: %s, Input files size: %d, Merge files size: %d, Output files: %d%n",
-        outputDir, inputFiles.size(), r.mergedFileCount, r.partFileCount);
+        outputDir, inputStatuses.size(), r.mergedFileCount, r.partFileCount);
     if (!r.unmergedFiles.isEmpty()) {
       System.exit(1);
     }
