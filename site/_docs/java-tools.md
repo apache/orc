@@ -17,7 +17,7 @@ The subcommands for the tools are:
   * data - print the data of an ORC file
   * json-schema (since ORC 1.4) - determine the schema of JSON documents
   * key (since ORC 1.5) - print information about the encryption keys
-  * merge (since ORC 2.0.1) - merge multiple ORC files into a single ORC file
+  * merge (since ORC 2.0.1) - merge multiple ORC files into one or more ORC files
   * meta - print the metadata of an ORC file
   * scan (since ORC 1.3) - scan the data for benchmarking
   * sizes (since ORC 1.7.2) - list size on disk of each column
@@ -356,10 +356,73 @@ ______________________________________________________________________
 
 ## Java Merge
 
-The merge command can merge multiple ORC files that all have the same schema into a single ORC file.
+The merge command can merge multiple ORC files that all have the same schema. By default
+it writes a single output file. If `--maxSize` is set, `--output` is treated as a directory
+and the tool writes multiple part files (`part-00000.orc`, `part-00001.orc`, …) under it.
+Input files are sorted by path for deterministic output and grouped using their on-disk
+sizes so that each part’s total input size does not exceed the given threshold (a single
+input file larger than the threshold is still merged into its own part).
+
+For the multi-file output modes (`--maxSize` and `--preserveStructure`) the tool refuses
+to run when `--output` points to a non-empty existing directory, so that existing data is
+not silently destroyed. Use `--overwrite` to delete the directory's current contents
+before writing new part files.
+
+`-h,--help`
+  : Print help
+
+`-i,--ignoreExtension`
+  : Include files that do not end in `.orc`
+
+`-m,--maxSize <bytes>`
+  : Maximum size in bytes for each output part; enables multi-file output under `--output`.
+    Must be a positive integer — a value of `0`, a negative value, or a non-numeric value
+    causes the tool to exit with an error.
+
+`-o,--output <path>`
+  : Output ORC filename (single-file mode) or output directory (when `--maxSize` or
+    `--preserveStructure` is set)
+
+`--overwrite`
+  : If the output directory already exists and is non-empty, delete its contents
+    before writing merged part files. Only applies to multi-file output modes
+    (`--maxSize` and `--preserveStructure`). Without this flag, the tool aborts
+    with an error when the output directory is non-empty so that existing data
+    is not silently destroyed. Intentionally provided as long-form only to avoid
+    confusion with `-o,--output`.
+
+`-p,--preserveStructure`
+  : Mirror the input directory structure under `--output`. Every directory that directly
+    contains ORC files (a "leaf" directory, e.g. a Hive partition path such as
+    `d=2025-04-25/h=01`) is merged independently and written to the corresponding relative
+    path under `--output`. Works with any nesting depth. Requires exactly one input
+    directory. Hidden files/directories (names starting with `_` or `.`, such as
+    `_SUCCESS` or `_temporary`) are always skipped to match Hive/Spark conventions. A
+    directory that contains both ORC files and subdirectories is rejected.
+
+Merge into one ORC file:
 
 ~~~ shell
 % java -jar orc-tools-X.Y.Z-uber.jar merge --output /path/to/merged.orc /path/to/input_orc/
+______________________________________________________________________
+~~~
+
+Merge into multiple ORC files under a directory (each part bounded by size):
+
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar merge --output /path/to/out_dir/ --maxSize 1073741824 /path/to/input_orc/
+______________________________________________________________________
+~~~
+
+Merge a partitioned input tree while preserving the directory structure (each leaf
+partition is merged independently; `--maxSize` is optional):
+
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar merge \
+    --output /path/to/out_dir/ \
+    --preserveStructure \
+    --maxSize 2147483648 \
+    /warehouse/db/table/d=2025-04-25/
 ______________________________________________________________________
 ~~~
 
