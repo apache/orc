@@ -860,9 +860,8 @@ namespace orc {
     const char* writerTimezone = "America/Los_Angeles";
     const char* readerTimezone = "Asia/Shanghai";
 
-    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024, 256 * 1024, 
-                           CompressionKind_ZLIB, *type, pool,
-                           &memStream, fileVersion, 0, writerTimezone);    
+    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024, 256 * 1024, CompressionKind_ZLIB, *type,
+                               pool, &memStream, fileVersion, 0, writerTimezone);
 
     auto batch = writer->createRowBatch(2);
     auto* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
