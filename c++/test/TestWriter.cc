@@ -839,6 +839,73 @@ namespace orc {
     testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "America/Los_Angeles",
                                    "2014-06-06 12:34:56", IS_DST);
   }
+
+  // Test that the ORC-306 compensation (-1s for pre-1970 timestamps with
+  // nanos > 999999) is applied BEFORE timezone conversion in the Reader.
+  //
+  // We write secs = -5756401 (1s before the 1969 PDT->PST boundary in LA)
+  // with nanos = 1000000. The C++ Writer applies +1, storing -5756400 in the
+  // ORC file (exactly at the DST boundary). On read, the Reader must apply
+  // -1 BEFORE timezone conversion so that getVariant() sees -5756401 (PDT).
+  // If compensation were applied AFTER timezone conversion, getVariant() would
+  // see -5756400 (PST), producing a gmtOffset that differs by 3600 seconds.
+  TEST_P(WriterTest, DISABLED_writeNegativeTimestampAtDSTBoundary) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:timestamp>"));
+
+    // 1969-10-26 09:00:00 UTC is the PDT->PST boundary in America/Los_Angeles.
+    // secs = -5756401 is 1 second before this boundary (still in PDT).
+    const int64_t secsBeforeBoundary = -5756401;
+    const char* writerTimezone = "America/Los_Angeles";
+    const char* readerTimezone = "Asia/Shanghai";
+
+    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024, 256 * 1024, CompressionKind_ZLIB, *type,
+                               pool, &memStream, fileVersion, 0, writerTimezone);
+
+    auto batch = writer->createRowBatch(2);
+    auto* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    auto* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
+
+    // Row 0: nanos <= 999999 — no Writer +1 or Reader -1 compensation.
+    // Writer stores secs = -5756401 directly (no +1 since nanos <= 999999).
+    // Reader reads writerTime = -5756401 (no -1 since nanos <= 999999).
+    // getVariant(-5756401) -> PDT (correct baseline).
+    tsBatch->data[0] = secsBeforeBoundary;
+    tsBatch->nanoseconds[0] = 999999;
+
+    // Row 1: nanos > 999999 — triggers Writer +1 and Reader -1 compensation.
+    // Writer stores secs = -5756401 + 1 = -5756400 (at DST boundary).
+    // Reader reads writerTime = -5756400, then compensates -1 -> -5756401.
+    // If compensation is BEFORE tz conversion: getVariant(-5756401) -> PDT ✓
+    // If compensation is AFTER tz conversion:  getVariant(-5756400) -> PST ✗
+    tsBatch->data[1] = secsBeforeBoundary;
+    tsBatch->nanoseconds[1] = 1000000;
+
+    structBatch->numElements = 2;
+    tsBatch->numElements = 2;
+    writer->add(*batch);
+    writer->close();
+
+    // Read with a different timezone to exercise the timezone conversion path
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    auto reader = createReader(pool, std::move(inStream));
+    auto rowReader = createRowReader(reader.get(), readerTimezone);
+    batch = rowReader->createRowBatch(2);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
+
+    // Both rows represent the same wall-clock second. The seconds values
+    // returned by the Reader must be equal. If the -1 compensation were
+    // applied after timezone conversion, Row 1 would differ from Row 0
+    // by 3600 seconds (the DST offset) because getVariant() would pick
+    // the wrong DST rule.
+    EXPECT_EQ(tsBatch->data[0], tsBatch->data[1]);
+    EXPECT_EQ(999999, tsBatch->nanoseconds[0]);
+    EXPECT_EQ(1000000, tsBatch->nanoseconds[1]);
+  }
 #endif
 
   // FIXME: Temporarily disable the test to make Windows CI happy
