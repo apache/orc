@@ -323,7 +323,12 @@ namespace orc {
             nanoBuffer[i] *= 10;
           }
         }
+
         int64_t writerTime = secsBuffer[i] + epochOffset_;
+        if (writerTime < 0 && nanoBuffer[i] > 999999) {
+          writerTime -= 1;
+        }
+
         if (!sameTimezone_) {
           // adjust timestamp value to same wall clock time if writer and reader
           // time zones have different rules, which is required for Apache Orc.
@@ -338,9 +343,6 @@ namespace orc {
           }
         }
         secsBuffer[i] = writerTime;
-        if (secsBuffer[i] < 0 && nanoBuffer[i] > 999999) {
-          secsBuffer[i] -= 1;
-        }
       }
     }
   }
