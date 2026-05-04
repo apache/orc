@@ -19,6 +19,8 @@ updates:
     directory: "/java"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     ignore:
       # Pin gson to 2.9.0 because of Hive
       - dependency-name: "com.google.code.gson:gson"
