@@ -189,7 +189,7 @@ namespace orc {
     EXPECT_EQ(20, len);
     stream.BackUp(10);
     EXPECT_EQ(10, stream.ByteCount());
-    stream.Skip(4);
+    ASSERT_TRUE(stream.Skip(4));
     EXPECT_EQ(14, stream.ByteCount());
     ASSERT_EQ(true, stream.Next(&ptr, &len));
     EXPECT_EQ(bytes.data() + 14, static_cast<const char*>(ptr));
@@ -268,7 +268,7 @@ namespace orc {
     EXPECT_EQ(20, len);
     stream.BackUp(10);
     EXPECT_EQ(10, stream.ByteCount());
-    stream.Skip(4);
+    ASSERT_TRUE(stream.Skip(4));
     EXPECT_EQ(14, stream.ByteCount());
     ASSERT_EQ(true, stream.Next(&ptr, &len));
     checkBytes(static_cast<const char*>(ptr), len, 14);
@@ -322,7 +322,7 @@ namespace orc {
                            32768, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
-    result->Next(&ptr, &length);
+    ASSERT_TRUE(result->Next(&ptr, &length));
     for (unsigned int i = 0; i < bytes.size(); ++i) {
       EXPECT_EQ(static_cast<char>(i), static_cast<const char*>(ptr)[i]);
     }
@@ -412,7 +412,12 @@ namespace orc {
         128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
-    EXPECT_THROW(result->Next(&ptr, &length), ParseError);
+    EXPECT_THROW(
+        {
+          bool next = result->Next(&ptr, &length);
+          static_cast<void>(next);
+        },
+        ParseError);
   }
 
   TEST_F(TestDecompression, testLz4Empty) {
@@ -600,7 +605,7 @@ namespace orc {
     int length;
     ASSERT_EQ(true, result->Next(&ptr, &length));
     ASSERT_EQ(2, length);
-    result->Skip(2);
+    ASSERT_TRUE(result->Skip(2));
     ASSERT_EQ(true, result->Next(&ptr, &length));
     ASSERT_EQ(3, length);
     EXPECT_EQ(4, static_cast<const char*>(ptr)[0]);
@@ -611,7 +616,7 @@ namespace orc {
     ASSERT_EQ(2, length);
     EXPECT_EQ(5, static_cast<const char*>(ptr)[0]);
     EXPECT_EQ(6, static_cast<const char*>(ptr)[1]);
-    result->Skip(8);
+    ASSERT_TRUE(result->Skip(8));
     ASSERT_EQ(true, result->Next(&ptr, &length));
     ASSERT_EQ(2, length);
     EXPECT_EQ(15, static_cast<const char*>(ptr)[0]);

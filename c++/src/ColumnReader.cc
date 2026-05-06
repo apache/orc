@@ -435,7 +435,7 @@ namespace orc {
       const size_t cap = static_cast<size_t>(std::numeric_limits<int>::max());
       while (sizeToSkip != 0) {
         size_t step = sizeToSkip > cap ? cap : sizeToSkip;
-        inputStream_->Skip(static_cast<int>(step));
+        static_cast<void>(inputStream_->Skip(static_cast<int>(step)));
         sizeToSkip -= step;
       }
       bufferEnd_ = nullptr;
@@ -681,7 +681,7 @@ namespace orc {
       const size_t cap = static_cast<size_t>(std::numeric_limits<int>::max());
       while (totalBytes != 0) {
         size_t step = totalBytes > cap ? cap : totalBytes;
-        blobStream_->Skip(static_cast<int>(step));
+        static_cast<void>(blobStream_->Skip(static_cast<int>(step)));
         totalBytes -= step;
       }
       lastBufferLength_ = 0;

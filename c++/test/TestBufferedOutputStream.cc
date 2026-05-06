@@ -122,7 +122,7 @@ namespace orc {
     EXPECT_EQ(ps.ByteSizeLong(), memStream.getLength());
 
     proto::PostScript ps2;
-    ps2.ParseFromArray(memStream.getData(), static_cast<int>(memStream.getLength()));
+    EXPECT_TRUE(ps2.ParseFromArray(memStream.getData(), static_cast<int>(memStream.getLength())));
 
     EXPECT_EQ(ps.footer_length(), ps2.footer_length());
     EXPECT_EQ(ps.compression(), ps2.compression());
