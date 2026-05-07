@@ -3717,6 +3717,76 @@ namespace orc {
               batch.toString());
   }
 
+  const unsigned char INVALID_UNION_TAG[] = {0xff, 0xc8};
+  const unsigned char ONE_PRESENT_VALUE[] = {0x00, 0x80};
+
+  std::unique_ptr<Type> createTwoChildUnionRowType() {
+    std::unique_ptr<Type> unionType = createUnionType();
+    unionType->addUnionChild(createPrimitiveType(LONG));
+    unionType->addUnionChild(createPrimitiveType(INT));
+    std::unique_ptr<Type> rowType = createStructType();
+    rowType->addStructField("col0", std::move(unionType));
+    return rowType;
+  }
+
+  std::unique_ptr<ColumnReader> buildInvalidUnionTagReader(MockStripeStreams& streams,
+                                                           bool hasNulls = false) {
+    std::vector<bool> selectedColumns(4, false);
+    selectedColumns[0] = true;
+    selectedColumns[1] = true;
+    EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+    EXPECT_CALL(streams, getSchemaEvolution()).WillRepeatedly(testing::Return(nullptr));
+
+    proto::ColumnEncoding directEncoding;
+    directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+
+    EXPECT_CALL(streams, getStreamProxy(testing::_, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+
+    if (hasNulls) {
+      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+          .WillRepeatedly(testing::Return(
+              new SeekableArrayInputStream(ONE_PRESENT_VALUE, ARRAY_SIZE(ONE_PRESENT_VALUE))));
+    }
+
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+        .WillRepeatedly(testing::Return(
+            new SeekableArrayInputStream(INVALID_UNION_TAG, ARRAY_SIZE(INVALID_UNION_TAG))));
+
+    std::unique_ptr<Type> rowType = createTwoChildUnionRowType();
+    return buildReader(*rowType, streams);
+  }
+
+  void addSingleUnionBatch(StructVectorBatch& batch) {
+    batch.fields.push_back(new UnionVectorBatch(1, *getDefaultPool()));
+  }
+
+  TEST(TestColumnReader, testUnionRejectsInvalidTag) {
+    MockStripeStreams streams;
+    std::unique_ptr<ColumnReader> reader = buildInvalidUnionTagReader(streams);
+
+    StructVectorBatch batch(1, *getDefaultPool());
+    addSingleUnionBatch(batch);
+    EXPECT_THROW(reader->next(batch, 1, 0), ParseError);
+  }
+
+  TEST(TestColumnReader, testUnionRejectsInvalidTagWithNulls) {
+    MockStripeStreams streams;
+    std::unique_ptr<ColumnReader> reader = buildInvalidUnionTagReader(streams, true);
+
+    StructVectorBatch batch(1, *getDefaultPool());
+    addSingleUnionBatch(batch);
+    EXPECT_THROW(reader->next(batch, 1, 0), ParseError);
+  }
+
+  TEST(TestColumnReader, testUnionSkipRejectsInvalidTag) {
+    MockStripeStreams streams;
+    std::unique_ptr<ColumnReader> reader = buildInvalidUnionTagReader(streams);
+
+    EXPECT_THROW(reader->skip(1), ParseError);
+  }
+
   TEST(TestColumnReader, testUnionWithNulls) {
     MockStripeStreams streams;
 

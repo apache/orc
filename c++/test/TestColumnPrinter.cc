@@ -506,6 +506,25 @@ namespace orc {
     }
   }
 
+  TEST(TestColumnPrinter, UnionColumnPrinterRejectsInvalidTag) {
+    std::string line;
+    std::unique_ptr<Type> type = createUnionType();
+    type->addUnionChild(createPrimitiveType(LONG));
+    type->addUnionChild(createPrimitiveType(INT));
+    std::unique_ptr<ColumnPrinter> printer = createColumnPrinter(line, type.get());
+
+    UnionVectorBatch batch(1, *getDefaultPool());
+    batch.children.push_back(new LongVectorBatch(1, *getDefaultPool()));
+    batch.children.push_back(new LongVectorBatch(1, *getDefaultPool()));
+    batch.numElements = 1;
+    batch.hasNulls = false;
+    batch.tags[0] = 200;
+    batch.offsets[0] = 0;
+
+    printer->reset(batch);
+    EXPECT_THROW(printer->printRow(0), ParseError);
+  }
+
   TEST(TestColumnPrinter, StructColumnPrinter) {
     std::string line;
     std::unique_ptr<Type> type = createStructType();
