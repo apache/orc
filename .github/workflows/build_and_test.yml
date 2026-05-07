@@ -144,7 +144,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 17 2022" \
+        cmake .. -G "Visual Studio 18 2026" \
           -DCMAKE_BUILD_TYPE=RELEASE \
           -DBUILD_TOOLS=OFF \
           -DBUILD_JAVA=OFF \
