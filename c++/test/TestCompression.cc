@@ -218,7 +218,7 @@ namespace orc {
         kind, std::move(inputStream), capacity, *pool, getDefaultReaderMetrics());
 
     proto::PostScript ps2;
-    ps2.ParseFromZeroCopyStream(decompressStream.get());
+    EXPECT_TRUE(ps2.ParseFromZeroCopyStream(decompressStream.get()));
 
     EXPECT_EQ(ps.footer_length(), ps2.footer_length());
     EXPECT_EQ(ps.compression(), ps2.compression());
@@ -351,14 +351,14 @@ namespace orc {
 
     // seek to positions between first two batches
     decompressStream->seek(provider1);
-    decompressStream->Next(&data, &size);
+    ASSERT_TRUE(decompressStream->Next(&data, &size));
     std::string data1(static_cast<const char*>(data), 4);
     std::string expected1 = "1024";
     EXPECT_EQ(expected1, data1);
 
     // seek to positions between last two batches
     decompressStream->seek(provider2);
-    decompressStream->Next(&data, &size);
+    ASSERT_TRUE(decompressStream->Next(&data, &size));
     std::string data2(static_cast<const char*>(data), 4);
     std::string expected2 = "2048";
     EXPECT_EQ(expected2, data2);

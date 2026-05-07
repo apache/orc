@@ -212,7 +212,9 @@ namespace orc {
       }
     }
     // write row index to output stream
-    rowIndex->SerializeToZeroCopyStream(indexStream.get());
+    if (!rowIndex->SerializeToZeroCopyStream(indexStream.get())) {
+      throw std::logic_error("Failed to write row index stream.");
+    }
 
     // construct row index stream
     proto::Stream stream;

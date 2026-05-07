@@ -27,8 +27,8 @@
 #include "orc/OrcFile.hh"
 
 // #include "Adaptor.hh"
-#include "wrap/orc-proto-wrapper.hh"
 #include <google/protobuf/text_format.h>
+#include "wrap/orc-proto-wrapper.hh"
 
 void printStripeInformation(std::ostream& out, uint64_t index, uint64_t columns,
                             std::unique_ptr<orc::StripeInformation> stripe, bool verbose) {
@@ -85,7 +85,9 @@ void printRawTail(std::ostream& out, const char* filename) {
   }
   google::protobuf::TextFormat::Printer printer;
   std::string text_output;
-  printer.PrintToString(tail, &text_output);
+  if (!printer.PrintToString(tail, &text_output)) {
+    throw orc::ParseError("Failed to print the file tail");
+  }
   out << text_output;
 }
 
