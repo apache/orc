@@ -16,15 +16,10 @@
 # under the License.
 
 [wrap-file]
-directory = protobuf-3.21.12
-source_url = https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.21.12.tar.gz
-source_filename = protobuf-3.21.12.tar.gz
-source_hash = 930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53
-patch_filename = protobuf_3.21.12-5_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/protobuf_3.21.12-5/get_patch
-patch_hash = 8ae4d39ca9748a6edf7e028e15f5c7499b1c6ce687454a5709711d47cfd4e293
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/protobuf_3.21.12-5/protobuf-3.21.12.tar.gz
-wrapdb_version = 3.21.12-5
+directory = protobuf-33.5
+source_url = https://github.com/protocolbuffers/protobuf/archive/refs/tags/v33.5.tar.gz
+source_filename = protobuf-33.5.tar.gz
+source_hash = 440848dffa209beb8a04e41cc352762e44f8e91342b2a43aab6af9b30713c2f6
 
 [provide]
 protobuf = protobuf_dep

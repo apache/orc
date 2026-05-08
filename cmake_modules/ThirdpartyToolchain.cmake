@@ -26,7 +26,7 @@ set(LZ4_VERSION "1.10.0")
 set(SNAPPY_VERSION "1.2.2")
 set(ZLIB_VERSION "1.3.2")
 set(GTEST_VERSION "1.17.0")
-set(PROTOBUF_VERSION "3.21.12")
+set(PROTOBUF_VERSION "33.5")
 set(ZSTD_VERSION "1.5.7")
 set(SPARSEHASH_VERSION "2.11.1")
 
@@ -209,7 +209,6 @@ else ()
 
     fetchcontent_declare(Protobuf
       URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
-      SOURCE_SUBDIR "cmake"
       FIND_PACKAGE_ARGS
       NAMES Protobuf
       CONFIG
@@ -245,7 +244,14 @@ else ()
 
       if(INSTALL_VENDORED_LIBS)
         set_target_properties(libprotobuf PROPERTIES OUTPUT_NAME "orc_vendored_protobuf")
-        install(TARGETS libprotobuf
+        set(_PROTOBUF_INSTALL_TARGETS libprotobuf)
+        if(TARGET utf8_range)
+          list(APPEND _PROTOBUF_INSTALL_TARGETS utf8_range)
+        endif()
+        if(TARGET utf8_validity)
+          list(APPEND _PROTOBUF_INSTALL_TARGETS utf8_validity)
+        endif()
+        install(TARGETS ${_PROTOBUF_INSTALL_TARGETS}
                 EXPORT orc_targets
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
