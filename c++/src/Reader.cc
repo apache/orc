@@ -1770,8 +1770,8 @@ namespace orc {
     contents_->evictCache(boundary);
   }
 
-  void ReaderImpl::preBuffer(const std::vector<uint32_t>& stripes,
-                             const std::list<uint64_t>& includeTypes) {
+  std::vector<std::pair<uint64_t, uint64_t>> ReaderImpl::preBufferRange(
+      const std::vector<uint32_t>& stripes, const std::list<uint64_t>& includeTypes) {
     std::vector<uint32_t> newStripes;
     for (auto stripe : stripes) {
       if (stripe < static_cast<uint32_t>(footer_->stripes_size())) newStripes.push_back(stripe);
@@ -1783,7 +1783,7 @@ namespace orc {
     }
 
     if (newStripes.empty() || newIncludeTypes.empty()) {
-      return;
+      return {};
     }
 
     orc::RowReaderOptions rowReaderOptions;
@@ -1792,12 +1792,33 @@ namespace orc {
     std::vector<bool> selectedColumns;
     columnSelector.updateSelected(selectedColumns, rowReaderOptions);
 
+    std::vector<std::pair<uint64_t, uint64_t>> ranges;
+
     for (auto stripe : newStripes) {
       const auto& stripeInfo = footer_->stripes(stripe);
       proto::StripeFooter stripeFooter = getStripeFooter(stripeInfo, *contents_);
-      auto ranges = extractReadRangesForStripe(stripe, stripeInfo, stripeFooter, selectedColumns);
-      contents_->cacheRanges(std::move(ranges));
+      auto stripeRanges =
+          extractReadRangesForStripe(stripe, stripeInfo, stripeFooter, selectedColumns);
+      for (const auto& range : stripeRanges) {
+        ranges.emplace_back(range.offset, range.length);
+      }
     }
+    return ranges;
+  }
+
+  void ReaderImpl::preBuffer(const std::vector<uint32_t>& stripes,
+                             const std::list<uint64_t>& includeTypes) {
+    auto ranges = preBufferRange(stripes, includeTypes);
+    if (ranges.empty()) {
+      return;
+    }
+
+    std::vector<ReadRange> readRanges;
+    readRanges.reserve(ranges.size());
+    for (const auto& range : ranges) {
+      readRanges.emplace_back(range.first, range.second);
+    }
+    contents_->cacheRanges(std::move(readRanges));
   }
 
   RowReader::~RowReader() {
