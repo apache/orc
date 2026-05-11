@@ -54,11 +54,7 @@ namespace orc {
 
   template <class T>
   DataBuffer<T>::DataBuffer(MemoryPool& pool, uint64_t newSize, bool ownBuf)
-      : memoryPool_(pool),
-        buf_(nullptr),
-        currentSize_(0),
-        currentCapacity_(0),
-        ownBuffer_(ownBuf) {
+      : memoryPool_(pool), buf_(nullptr), currentSize_(0), currentCapacity_(0), ownBuffer_(ownBuf) {
     if (ownBuffer_) {
       reserve(newSize);
       currentSize_ = newSize;

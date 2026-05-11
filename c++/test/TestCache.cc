@@ -172,7 +172,8 @@ namespace orc {
       EXPECT_EQ(sizeof(external), buffer.size());
     }
 
-    // setData may release previously owned internal memory, but destruction should not free external.
+    // setData may release previously owned internal memory, but destruction should not free
+    // external.
     EXPECT_EQ(freeCountAfterSetData, pool.freeCount);
   }
 }  // namespace orc
