@@ -63,8 +63,7 @@ namespace orc {
     EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
         .WillRepeatedly(testing::Return(new SeekableArrayInputStream(blob, ARRAY_SIZE(blob))));
     EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
-        .WillRepeatedly(
-            testing::Return(new SeekableArrayInputStream(lengthData, lengthDataSize)));
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(lengthData, lengthDataSize)));
 
     std::unique_ptr<Type> rowType = createStructType();
     rowType->addStructField("col0", createPrimitiveType(STRING));
@@ -931,10 +930,9 @@ namespace orc {
 
   TEST(TestColumnReader, testStringDirectRejectsLengthOverflow) {
     // RLEv1 literal run with three INT64_MAX lengths.
-    const unsigned char lengthData[] = {
-        0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0x7f};
+    const unsigned char lengthData[] = {0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
+                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff,
+                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f};
     expectStringDirectLengthError(lengthData, ARRAY_SIZE(lengthData), 3, false);
     expectStringDirectLengthError(lengthData, ARRAY_SIZE(lengthData), 3, true);
   }
