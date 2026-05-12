@@ -666,7 +666,11 @@ namespace orc {
     while (done < numValues) {
       uint64_t step = std::min(BUFFER_SIZE, static_cast<size_t>(numValues - done));
       lengthRle_->next(buffer, step, nullptr);
-      totalBytes += computeSize(buffer, nullptr, step);
+      size_t stepBytes = computeSize(buffer, nullptr, step);
+      if (totalBytes > std::numeric_limits<size_t>::max() - stepBytes) {
+        throw ParseError("String length overflow in StringDirectColumn");
+      }
+      totalBytes += stepBytes;
       done += step;
     }
     if (totalBytes <= lastBufferLength_) {
@@ -694,16 +698,31 @@ namespace orc {
   size_t StringDirectColumnReader::computeSize(const int64_t* lengths, const char* notNull,
                                                uint64_t numValues) {
     size_t totalLength = 0;
+    bool hasNegativeLength = false;
+    bool hasLengthOverflow = false;
+    auto addLength = [&](int64_t value) {
+      hasNegativeLength |= value < 0;
+      size_t length = static_cast<size_t>(value);
+      size_t nextTotalLength = totalLength + length;
+      hasLengthOverflow |= nextTotalLength < totalLength;
+      totalLength = nextTotalLength;
+    };
     if (notNull) {
       for (size_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
-          totalLength += static_cast<size_t>(lengths[i]);
+          addLength(lengths[i]);
         }
       }
     } else {
       for (size_t i = 0; i < numValues; ++i) {
-        totalLength += static_cast<size_t>(lengths[i]);
+        addLength(lengths[i]);
       }
+    }
+    if (hasNegativeLength) {
+      throw ParseError("Negative string length in StringDirectColumn");
+    }
+    if (hasLengthOverflow) {
+      throw ParseError("String length overflow in StringDirectColumn");
     }
     return totalLength;
   }
