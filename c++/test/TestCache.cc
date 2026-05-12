@@ -26,6 +26,22 @@
 
 namespace orc {
 
+  class CountingMemoryPool : public MemoryPool {
+   public:
+    uint64_t allocCount = 0;
+    uint64_t freeCount = 0;
+
+    char* malloc(uint64_t size) override {
+      ++allocCount;
+      return static_cast<char*>(std::malloc(size));
+    }
+
+    void free(char* p) override {
+      ++freeCount;
+      std::free(p);
+    }
+  };
+
   TEST(TestReadRangeCombiner, testBasics) {
     ReadRangeCombiner combinator{0, 100};
     /// Ranges with partial overlap and identical offsets
@@ -138,5 +154,26 @@ namespace orc {
     assert_slice_equal(slice, "klmn");
     slice = cache.read({20, 2});
     assert_slice_equal(slice, "uv");
+  }
+
+  TEST(TestDataBuffer, testExternalBufferNonOwning) {
+    CountingMemoryPool pool;
+    char external[16] = {0};
+    uint64_t freeCountAfterSetData = 0;
+
+    {
+      DataBuffer<char> buffer(pool, 0);
+      buffer.setData(external, sizeof(external));
+      freeCountAfterSetData = pool.freeCount;
+
+      // Non-owning buffer should keep external size and ignore resize.
+      EXPECT_EQ(sizeof(external), buffer.size());
+      buffer.resize(8);
+      EXPECT_EQ(sizeof(external), buffer.size());
+    }
+
+    // setData may release previously owned internal memory, but destruction should not free
+    // external.
+    EXPECT_EQ(freeCountAfterSetData, pool.freeCount);
   }
 }  // namespace orc
