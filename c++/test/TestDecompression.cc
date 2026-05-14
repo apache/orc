@@ -357,6 +357,36 @@ namespace orc {
     ASSERT_TRUE(!result->Next(&ptr, &length));
   }
 
+  TEST_F(TestDecompression, testLzoTruncatedStopCommand) {
+    const unsigned char missingTrailer[] = {0x02, 0x00, 0x00, 0x11};
+    std::unique_ptr<SeekableInputStream> missingTrailerResult = createDecompressor(
+        CompressionKind_LZO,
+        std::make_unique<SeekableArrayInputStream>(missingTrailer, ARRAY_SIZE(missingTrailer)),
+        128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
+
+    const void* ptr;
+    int length;
+    EXPECT_THROW(
+        {
+          bool next = missingTrailerResult->Next(&ptr, &length);
+          static_cast<void>(next);
+        },
+        ParseError);
+
+    const unsigned char shortTrailer[] = {0x04, 0x00, 0x00, 0x11, 0x00};
+    std::unique_ptr<SeekableInputStream> shortTrailerResult = createDecompressor(
+        CompressionKind_LZO,
+        std::make_unique<SeekableArrayInputStream>(shortTrailer, ARRAY_SIZE(shortTrailer)),
+        128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
+
+    EXPECT_THROW(
+        {
+          bool next = shortTrailerResult->Next(&ptr, &length);
+          static_cast<void>(next);
+        },
+        ParseError);
+  }
+
   TEST_F(TestDecompression, testLzoLong) {
     // set up a framed lzo buffer with 100,000 'a'
     unsigned char buffer[482];
