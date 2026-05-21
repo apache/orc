@@ -21,15 +21,9 @@ address. All mail sent to this address that does not relate to an
 undisclosed security problem in Apache ORC will be ignored.
 
 The ORC security mailing list address is:
-<a href="mailto:security@orc.apache.org">security@orc.apache.org</a>.
+<a href="mailto:security@apache.org">security@apache.org</a>.
 This is a private mailing list and only members of the ORC project
 are subscribed.
-
-Please note that we do not use a team GnuPG key. If you wish to
-encrypt your e-mail to security@orc.apache.org then please use the GnuPG
-keys from [ORC GPG keys](https://dist.apache.org/repos/dist/release/orc/KEYS) for
-the members of the
-[ORC PMC](https://people.apache.org/phonebook.html?ctte=orc).
 
 ## Vulnerability Handling
 
