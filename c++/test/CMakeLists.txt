@@ -55,6 +55,7 @@ add_executable (orc-test
   TestTimezone.cc
   TestType.cc
   TestUtil.cc
+  TestUtils.cc
   TestWriter.cc
   TestCache.cc
   ${SIMD_TEST_SRCS}

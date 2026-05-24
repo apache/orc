@@ -27,11 +27,13 @@
 #include "DictionaryLoader.hh"
 #include "RLE.hh"
 #include "SchemaEvolution.hh"
+#include "Utils.hh"
 #include "orc/Exceptions.hh"
 #include "orc/Int128.hh"
 
 #include <math.h>
 #include <iostream>
+#include <string>
 #include <type_traits>
 
 namespace orc {
@@ -125,6 +127,26 @@ namespace orc {
     for (uint64_t i = 0UL; i < numValues; ++i) {
       buffer[numValues - 1 - i] = reinterpret_cast<int8_t*>(buffer)[numValues - 1 - i];
     }
+  }
+
+  void addLengthToTotal(uint64_t* total, int64_t length, const char* columnKind) {
+    if (length < 0) {
+      throw ParseError(std::string("Negative length in ") + columnKind + " column");
+    }
+    uint64_t nextTotal = 0;
+    if (addWithOverflow(*total, static_cast<uint64_t>(length), &nextTotal) ||
+        nextTotal > static_cast<uint64_t>((std::numeric_limits<int64_t>::max)())) {
+      throw ParseError(std::string("Length overflow in ") + columnKind + " column");
+    }
+    *total = nextTotal;
+  }
+
+  void incrementUnionChildCount(int64_t* counts, size_t tag) {
+    int64_t nextCount = 0;
+    if (addWithOverflow(counts[tag], static_cast<int64_t>(1), &nextCount)) {
+      throw ParseError("Union child count overflow");
+    }
+    counts[tag] = nextCount;
   }
 
   template <typename BatchType>
@@ -428,11 +450,24 @@ namespace orc {
       uint64_t numValues) {
     numValues = ColumnReader::skip(numValues);
 
-    if (static_cast<size_t>(bufferEnd_ - bufferPointer_) >= bytesPerValue_ * numValues) {
-      bufferPointer_ += bytesPerValue_ * numValues;
+    if (numValues > static_cast<uint64_t>((std::numeric_limits<size_t>::max)())) {
+      throw ParseError("Double column skip size overflow");
+    }
+    size_t bytesToSkip = 0;
+    if (multiplyWithOverflow(static_cast<size_t>(bytesPerValue_), static_cast<size_t>(numValues),
+                             &bytesToSkip)) {
+      throw ParseError("Double column skip size overflow");
+    }
+    if (bytesToSkip == 0) {
+      return numValues;
+    }
+
+    size_t bufferedBytes =
+        bufferPointer_ == nullptr ? 0 : static_cast<size_t>(bufferEnd_ - bufferPointer_);
+    if (bufferedBytes >= bytesToSkip) {
+      bufferPointer_ += bytesToSkip;
     } else {
-      size_t sizeToSkip =
-          bytesPerValue_ * numValues - static_cast<size_t>(bufferEnd_ - bufferPointer_);
+      size_t sizeToSkip = bytesToSkip - bufferedBytes;
       const size_t cap = static_cast<size_t>(std::numeric_limits<int>::max());
       while (sizeToSkip != 0) {
         size_t step = sizeToSkip > cap ? cap : sizeToSkip;
@@ -498,7 +533,7 @@ namespace orc {
       if (!stream->Next(&chunk, &length)) {
         throw ParseError("bad read in readFully");
       }
-      if (posn + length > bufferSize) {
+      if (length < 0 || length > bufferSize - posn) {
         throw ParseError("Corrupt dictionary blob in StringDictionaryColumn");
       }
       memcpy(buffer + posn, chunk, static_cast<size_t>(length));
@@ -667,10 +702,11 @@ namespace orc {
       uint64_t step = std::min(BUFFER_SIZE, static_cast<size_t>(numValues - done));
       lengthRle_->next(buffer, step, nullptr);
       size_t stepBytes = computeSize(buffer, nullptr, step);
-      if (totalBytes > std::numeric_limits<size_t>::max() - stepBytes) {
+      size_t nextTotalBytes = 0;
+      if (addWithOverflow(totalBytes, stepBytes, &nextTotalBytes)) {
         throw ParseError("String length overflow in StringDirectColumn");
       }
-      totalBytes += stepBytes;
+      totalBytes = nextTotalBytes;
       done += step;
     }
     if (totalBytes <= lastBufferLength_) {
@@ -701,11 +737,17 @@ namespace orc {
     bool hasNegativeLength = false;
     bool hasLengthOverflow = false;
     auto addLength = [&](int64_t value) {
-      hasNegativeLength |= value < 0;
+      if (value < 0) {
+        hasNegativeLength = true;
+        return;
+      }
       size_t length = static_cast<size_t>(value);
-      size_t nextTotalLength = totalLength + length;
-      hasLengthOverflow |= nextTotalLength < totalLength;
-      totalLength = nextTotalLength;
+      size_t nextTotalLength = 0;
+      bool overflow = addWithOverflow(totalLength, length, &nextTotalLength);
+      hasLengthOverflow |= overflow;
+      if (!overflow) {
+        totalLength = nextTotalLength;
+      }
     };
     if (notNull) {
       for (size_t i = 0; i < numValues; ++i) {
@@ -747,7 +789,7 @@ namespace orc {
     size_t bytesBuffered = 0;
     byteBatch.blob.resize(totalLength);
     char* ptr = byteBatch.blob.data();
-    while (bytesBuffered + lastBufferLength_ < totalLength) {
+    while (bytesBuffered < totalLength && lastBufferLength_ < totalLength - bytesBuffered) {
       if (lastBuffer_ != nullptr) {
         memcpy(ptr + bytesBuffered, lastBuffer_, lastBufferLength_);
       }
@@ -941,7 +983,7 @@ namespace orc {
         uint64_t chunk = std::min(numValues - lengthsRead, BUFFER_SIZE);
         rle_->next(buffer, chunk, nullptr);
         for (size_t i = 0; i < chunk; ++i) {
-          childrenElements += static_cast<size_t>(buffer[i]);
+          addLengthToTotal(&childrenElements, buffer[i], "List");
         }
         lengthsRead += chunk;
       }
@@ -973,18 +1015,18 @@ namespace orc {
     if (notNull) {
       for (size_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
-          uint64_t tmp = static_cast<uint64_t>(offsets[i]);
+          int64_t length = offsets[i];
           offsets[i] = static_cast<int64_t>(totalChildren);
-          totalChildren += tmp;
+          addLengthToTotal(&totalChildren, length, "List");
         } else {
           offsets[i] = static_cast<int64_t>(totalChildren);
         }
       }
     } else {
       for (size_t i = 0; i < numValues; ++i) {
-        uint64_t tmp = static_cast<uint64_t>(offsets[i]);
+        int64_t length = offsets[i];
         offsets[i] = static_cast<int64_t>(totalChildren);
-        totalChildren += tmp;
+        addLengthToTotal(&totalChildren, length, "List");
       }
     }
     offsets[numValues] = static_cast<int64_t>(totalChildren);
@@ -1069,7 +1111,7 @@ namespace orc {
         uint64_t chunk = std::min(numValues - lengthsRead, BUFFER_SIZE);
         rle_->next(buffer, chunk, nullptr);
         for (size_t i = 0; i < chunk; ++i) {
-          childrenElements += static_cast<size_t>(buffer[i]);
+          addLengthToTotal(&childrenElements, buffer[i], "Map");
         }
         lengthsRead += chunk;
       }
@@ -1106,18 +1148,18 @@ namespace orc {
     if (notNull) {
       for (size_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
-          uint64_t tmp = static_cast<uint64_t>(offsets[i]);
+          int64_t length = offsets[i];
           offsets[i] = static_cast<int64_t>(totalChildren);
-          totalChildren += tmp;
+          addLengthToTotal(&totalChildren, length, "Map");
         } else {
           offsets[i] = static_cast<int64_t>(totalChildren);
         }
       }
     } else {
       for (size_t i = 0; i < numValues; ++i) {
-        uint64_t tmp = static_cast<uint64_t>(offsets[i]);
+        int64_t length = offsets[i];
         offsets[i] = static_cast<int64_t>(totalChildren);
-        totalChildren += tmp;
+        addLengthToTotal(&totalChildren, length, "Map");
       }
     }
     offsets[numValues] = static_cast<int64_t>(totalChildren);
@@ -1218,7 +1260,7 @@ namespace orc {
       uint64_t chunk = std::min(numValues - lengthsRead, BUFFER_SIZE);
       rle_->next(reinterpret_cast<char*>(buffer), chunk, nullptr);
       for (size_t i = 0; i < chunk; ++i) {
-        counts[getCheckedUnionTag(buffer[i], numChildren_)] += 1;
+        incrementUnionChildCount(counts, getCheckedUnionTag(buffer[i], numChildren_));
       }
       lengthsRead += chunk;
     }
@@ -1255,13 +1297,15 @@ namespace orc {
       for (size_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
           size_t tag = getCheckedUnionTag(tags[i], numChildren_);
-          offsets[i] = static_cast<uint64_t>(counts[tag]++);
+          offsets[i] = static_cast<uint64_t>(counts[tag]);
+          incrementUnionChildCount(counts, tag);
         }
       }
     } else {
       for (size_t i = 0; i < numValues; ++i) {
         size_t tag = getCheckedUnionTag(tags[i], numChildren_);
-        offsets[i] = static_cast<uint64_t>(counts[tag]++);
+        offsets[i] = static_cast<uint64_t>(counts[tag]);
+        incrementUnionChildCount(counts, tag);
       }
     }
     // read the right number of each child column

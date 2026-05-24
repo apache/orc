@@ -17,10 +17,12 @@
  */
 
 #include "BlockBuffer.hh"
+#include "Utils.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Writer.hh"
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace orc {
 
@@ -51,10 +53,19 @@ namespace orc {
     if (currentSize_ < currentCapacity_) {
       Block emptyBlock(blocks_[currentSize_ / blockSize_] + currentSize_ % blockSize_,
                        blockSize_ - currentSize_ % blockSize_);
-      currentSize_ = (currentSize_ / blockSize_ + 1) * blockSize_;
+      uint64_t nextBlockNumber = currentSize_ / blockSize_ + 1;
+      uint64_t nextSize = 0;
+      if (multiplyWithOverflow(nextBlockNumber, blockSize_, &nextSize)) {
+        throw std::length_error("Block buffer size overflow");
+      }
+      currentSize_ = nextSize;
       return emptyBlock;
     } else {
-      resize(currentSize_ + blockSize_);
+      uint64_t nextSize = 0;
+      if (addWithOverflow(currentSize_, blockSize_, &nextSize)) {
+        throw std::length_error("Block buffer size overflow");
+      }
+      resize(nextSize);
       return Block(blocks_.back(), blockSize_);
     }
   }
@@ -70,10 +81,19 @@ namespace orc {
 
   void BlockBuffer::reserve(uint64_t newCapacity) {
     while (currentCapacity_ < newCapacity) {
+      uint64_t nextCapacity = 0;
+      if (addWithOverflow(currentCapacity_, blockSize_, &nextCapacity)) {
+        throw std::length_error("Block buffer capacity overflow");
+      }
       char* newBlockPtr = memoryPool_.malloc(blockSize_);
       if (newBlockPtr != nullptr) {
-        blocks_.push_back(newBlockPtr);
-        currentCapacity_ += blockSize_;
+        try {
+          blocks_.push_back(newBlockPtr);
+        } catch (...) {
+          memoryPool_.free(newBlockPtr);
+          throw;
+        }
+        currentCapacity_ = nextCapacity;
       } else {
         break;
       }
