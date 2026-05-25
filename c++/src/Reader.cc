@@ -885,20 +885,12 @@ namespace orc {
     uint64_t metadataSize = contents_->postscript->metadata_length();
     uint64_t footerLength = contents_->postscript->footer_length();
 
-    // Check for potential overflow before bounds validation
-    if (footerLength > fileLength_ || metadataSize > fileLength_ ||
-        postscriptLength_ > fileLength_) {
-      std::stringstream msg;
-      msg << "Invalid length values: footerLength=" << footerLength
-          << ", metadataLength=" << metadataSize
-          << ", postscriptLength=" << postscriptLength_
-          << ", fileLength=" << fileLength_;
-      throw ParseError(msg.str());
-    }
-
-    // Use subtraction-based check to avoid integer overflow
-    if (fileLength_ - footerLength < postscriptLength_ + 1 ||
-        fileLength_ - footerLength - postscriptLength_ - 1 < metadataSize) {
+    // Check for overflow in length calculations
+    uint64_t totalTail;
+    if (__builtin_add_overflow(footerLength, metadataSize, &totalTail) ||
+        __builtin_add_overflow(totalTail, postscriptLength_, &totalTail) ||
+        __builtin_add_overflow(totalTail, 1ULL, &totalTail) ||
+        totalTail > fileLength_) {
       std::stringstream msg;
       msg << "Invalid Metadata length: fileLength=" << fileLength_
           << ", metadataLength=" << metadataSize << ", footerLength=" << footerLength
@@ -906,7 +898,7 @@ namespace orc {
       throw ParseError(msg.str());
     }
 
-    uint64_t metadataStart = fileLength_ - metadataSize - footerLength - postscriptLength_ - 1;
+    uint64_t metadataStart = fileLength_ - totalTail;
     if (metadataSize != 0) {
       std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
           contents_->compression,
@@ -1242,25 +1234,17 @@ namespace orc {
       currentStripeInfo_ = footer_->stripes(static_cast<int>(currentStripe_));
       uint64_t fileLength = contents_->stream->getLength();
 
-      // Check for potential overflow in stripe length calculations
       uint64_t stripeOffset = currentStripeInfo_.offset();
       uint64_t indexLength = currentStripeInfo_.index_length();
       uint64_t dataLength = currentStripeInfo_.data_length();
       uint64_t footerLength = currentStripeInfo_.footer_length();
 
-      if (stripeOffset > fileLength || indexLength > fileLength ||
-          dataLength > fileLength || footerLength > fileLength) {
-        std::stringstream msg;
-        msg << "Invalid stripe length values at stripe index " << currentStripe_
-            << ": offset=" << stripeOffset << ", indexLength=" << indexLength
-            << ", dataLength=" << dataLength << ", footerLength=" << footerLength
-            << ", fileLength=" << fileLength;
-        throw ParseError(msg.str());
-      }
-
-      // Use subtraction-based checks to avoid addition overflow
-      uint64_t remainingSpace = fileLength - stripeOffset;
-      if (remainingSpace <= indexLength) {
+      // Check for overflow and bounds validity
+      uint64_t stripeTotalLength;
+      if (__builtin_add_overflow(indexLength, dataLength, &stripeTotalLength) ||
+          __builtin_add_overflow(stripeTotalLength, footerLength, &stripeTotalLength) ||
+          __builtin_add_overflow(stripeOffset, stripeTotalLength, &stripeTotalLength) ||
+          stripeTotalLength >= fileLength) {
         std::stringstream msg;
         msg << "Malformed StripeInformation at stripe index " << currentStripe_
             << ": fileLength=" << fileLength
@@ -1270,30 +1254,6 @@ namespace orc {
             << ", footerLength=" << footerLength << ")";
         throw ParseError(msg.str());
       }
-
-      if (remainingSpace - indexLength <= dataLength) {
-        std::stringstream msg;
-        msg << "Malformed StripeInformation at stripe index " << currentStripe_
-            << ": fileLength=" << fileLength
-            << ", StripeInfo=(offset=" << stripeOffset
-            << ", indexLength=" << indexLength
-            << ", dataLength=" << dataLength
-            << ", footerLength=" << footerLength << ")";
-        throw ParseError(msg.str());
-      }
-
-      if (remainingSpace - indexLength - dataLength <= footerLength) {
-        std::stringstream msg;
-        msg << "Malformed StripeInformation at stripe index " << currentStripe_
-            << ": fileLength=" << fileLength
-            << ", StripeInfo=(offset=" << stripeOffset
-            << ", indexLength=" << indexLength
-            << ", dataLength=" << dataLength
-            << ", footerLength=" << footerLength << ")";
-        throw ParseError(msg.str());
-      }
-
-      uint64_t stripeTotalLength = indexLength + dataLength + footerLength;
       rowsInCurrentStripe_ = currentStripeInfo_.number_of_rows();
       processingStripe_ = currentStripe_;
 
@@ -1692,28 +1652,15 @@ namespace orc {
       contents->postscript = readPostscript(stream.get(), buffer.get(), postscriptLength);
       uint64_t footerSize = contents->postscript->footer_length();
 
-      // Check for potential overflow before calculating tailSize
-      if (footerSize > fileLength || postscriptLength > fileLength) {
-        std::stringstream msg;
-        msg << "Invalid length values: footerSize=" << footerSize
-            << ", postscriptLength=" << postscriptLength
-            << ", fileLength=" << fileLength;
-        throw ParseError(msg.str());
-      }
-
-      // Use subtraction-based check to avoid addition overflow
-      if (fileLength - footerSize < postscriptLength + 1) {
+      // Check for overflow before calculating tailSize
+      uint64_t tailSize;
+      if (__builtin_add_overflow(1ULL, postscriptLength, &tailSize) ||
+          __builtin_add_overflow(tailSize, footerSize, &tailSize) ||
+          tailSize >= fileLength) {
         std::stringstream msg;
         msg << "Invalid tail size: footerSize=" << footerSize
             << ", postscriptLength=" << postscriptLength
             << ", fileLength=" << fileLength;
-        throw ParseError(msg.str());
-      }
-
-      uint64_t tailSize = 1 + postscriptLength + footerSize;
-      if (tailSize >= fileLength) {
-        std::stringstream msg;
-        msg << "Invalid ORC tailSize=" << tailSize << ", fileLength=" << fileLength;
         throw ParseError(msg.str());
       }
       uint64_t footerOffset;
