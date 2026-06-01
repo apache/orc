@@ -44,6 +44,13 @@ namespace orc {
       "1.6.0", "1.6.1", "1.6.2", "1.6.3",  "1.6.4",  "1.6.5", "1.6.6",
       "1.6.7", "1.6.8", "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
 
+  // Portable unsigned addition overflow check. Returns true on overflow.
+  // Relies on defined wrap-around behavior of unsigned integer arithmetic.
+  static inline bool addOverflow(uint64_t a, uint64_t b, uint64_t* result) {
+    *result = a + b;
+    return *result < a;
+  }
+
   ReaderMetrics* getDefaultReaderMetrics() {
     static ReaderMetrics internal;
     return &internal;
@@ -887,10 +894,9 @@ namespace orc {
 
     // Check for overflow in length calculations
     uint64_t totalTail;
-    if (__builtin_add_overflow(footerLength, metadataSize, &totalTail) ||
-        __builtin_add_overflow(totalTail, postscriptLength_, &totalTail) ||
-        __builtin_add_overflow(totalTail, 1ULL, &totalTail) ||
-        totalTail > fileLength_) {
+    if (addOverflow(footerLength, metadataSize, &totalTail) ||
+        addOverflow(totalTail, postscriptLength_, &totalTail) ||
+        addOverflow(totalTail, 1ULL, &totalTail) || totalTail > fileLength_) {
       std::stringstream msg;
       msg << "Invalid Metadata length: fileLength=" << fileLength_
           << ", metadataLength=" << metadataSize << ", footerLength=" << footerLength
@@ -1241,9 +1247,9 @@ namespace orc {
 
       // Check for overflow and bounds validity
       uint64_t stripeTotalLength;
-      if (__builtin_add_overflow(indexLength, dataLength, &stripeTotalLength) ||
-          __builtin_add_overflow(stripeTotalLength, footerLength, &stripeTotalLength) ||
-          __builtin_add_overflow(stripeOffset, stripeTotalLength, &stripeTotalLength) ||
+      if (addOverflow(indexLength, dataLength, &stripeTotalLength) ||
+          addOverflow(stripeTotalLength, footerLength, &stripeTotalLength) ||
+          addOverflow(stripeOffset, stripeTotalLength, &stripeTotalLength) ||
           stripeTotalLength >= fileLength) {
         std::stringstream msg;
         msg << "Malformed StripeInformation at stripe index " << currentStripe_
@@ -1654,9 +1660,8 @@ namespace orc {
 
       // Check for overflow before calculating tailSize
       uint64_t tailSize;
-      if (__builtin_add_overflow(1ULL, postscriptLength, &tailSize) ||
-          __builtin_add_overflow(tailSize, footerSize, &tailSize) ||
-          tailSize >= fileLength) {
+      if (addOverflow(1ULL, postscriptLength, &tailSize) ||
+          addOverflow(tailSize, footerSize, &tailSize) || tailSize >= fileLength) {
         std::stringstream msg;
         msg << "Invalid tail size: footerSize=" << footerSize
             << ", postscriptLength=" << postscriptLength
