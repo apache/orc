@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>ORC Java configuration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v4.3.4">
+  <meta name="generator" content="Jekyll v4.4.1">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1261,7 +1261,7 @@
 </tr>
 <tr>
   <td><code>orc.dictionary.max.size.bytes</code></td>
-  <td>16777216</td>
+  <td>0</td>
   <td>
     If the total size of the dictionary is greater than this, turn off dictionary encoding. Use 0 to disable this check.
   </td>
@@ -1387,7 +1387,7 @@
 </tr>
 <tr>
   <td><code>orc.stripe.size.check.ratio</code></td>
-  <td>2.0</td>
+  <td>0.0</td>
   <td>
     Flush stripe if the tree writer size in bytes is larger than (this * orc.stripe.size). Use 0 to disable this check.
   </td>

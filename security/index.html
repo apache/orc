@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Security</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v4.3.4">
+  <meta name="generator" content="Jekyll v4.4.1">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -116,6 +116,35 @@
         <p>Apache ORC is a library rather than an execution framework and thus
 is less likely to have security vulnerabilities. However, if you have
 discovered one, please follow the process below.</p>
+
+<h2 id="threat-model">Threat Model</h2>
+
+<p>We align our threat model with other foundational data format libraries like <a href="https://arrow.apache.org/docs/dev/format/Security.html">Apache Arrow</a>. When evaluating potential security vulnerabilities, especially those discovered via fuzzing tools, we apply the following principles to distinguish between normal robustness bugs and actual security vulnerabilities.</p>
+
+<h3 id="1-trusted-vs-untrusted-data-boundaries">1. Trusted vs. Untrusted Data Boundaries</h3>
+
+<p>Apache ORC is a low-level format library designed to read and write data from trusted storage systems (e.g., internal data lakes, HDFS, S3). The parsing APIs assume that the underlying data originates from a trusted internal source.</p>
+
+<p>If an attacker is able to write arbitrary, maliciously crafted ORC files into your internal storage, the system is already compromised at the infrastructure or access control level (e.g., IAM permissions, API gateways). The <code class="language-plaintext highlighter-rouge">orc</code> library itself is not the appropriate security boundary to defend against compromised storage infrastructure.</p>
+
+<h3 id="2-robustness-issues-vs-security-vulnerabilities">2. Robustness Issues vs. Security Vulnerabilities</h3>
+
+<p>A crash, Out-Of-Memory (OOM), Out-Of-Bounds (OOB) read, or assertion failure caused by feeding a maliciously fuzzed file directly into the low-level parser is considered a <strong>robustness issue</strong> (a regular software bug), not a security vulnerability.</p>
+
+<p>Such issues are only treated as security vulnerabilities (CVEs) if they:</p>
+<ul>
+  <li>Lead to Remote Code Execution (RCE).</li>
+  <li>Bypass a defined security boundary or cause cross-tenant data leakage.</li>
+  <li>Occur in a server component explicitly designed to process unverified, external data.</li>
+</ul>
+
+<p>Missing bounds checks or crashes during the parsing of malformed files do not typically lead to code execution or break isolation sandboxes. They are treated as regular software defects.</p>
+
+<h3 id="3-responsibilities-of-the-low-level-library">3. Responsibilities of the Low-Level Library</h3>
+
+<p>The primary goal of a low-level serialization/deserialization library like ORC is high performance. Mandating strict defensive programming and validation on every internal memory operation would severely degrade performance.</p>
+
+<p>Security validation and sanitization of untrusted inputs should occur at the data ingestion layer (e.g., before data is admitted into the data lake). It is outside the scope of the format parser to proactively defend against all possible artificially corrupted bits.</p>
 
 <h2 id="reporting-a-vulnerability">Reporting a Vulnerability</h2>
 

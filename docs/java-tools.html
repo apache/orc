@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Java Tools</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v4.3.4">
+  <meta name="generator" content="Jekyll v4.4.1">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -1111,7 +1111,7 @@ supports both the local file system and HDFS.</p>
   <li>data - print the data of an ORC file</li>
   <li>json-schema (since ORC 1.4) - determine the schema of JSON documents</li>
   <li>key (since ORC 1.5) - print information about the encryption keys</li>
-  <li>merge (since ORC 2.0.1) - merge multiple ORC files into a single ORC file</li>
+  <li>merge (since ORC 2.0.1) - merge multiple ORC files into one or more ORC files</li>
   <li>meta - print the metadata of an ORC file</li>
   <li>scan (since ORC 1.3) - scan the data for benchmarking</li>
   <li>sizes (since ORC 1.7.2) - list size on disk of each column</li>
@@ -1430,9 +1430,67 @@ ______________________________________________________________________
 
 <h2 id="java-merge">Java Merge</h2>
 
-<p>The merge command can merge multiple ORC files that all have the same schema into a single ORC file.</p>
+<p>The merge command can merge multiple ORC files that all have the same schema. By default
+it writes a single output file. If <code class="language-plaintext highlighter-rouge">--maxSize</code> is set, <code class="language-plaintext highlighter-rouge">--output</code> is treated as a directory
+and the tool writes multiple part files (<code class="language-plaintext highlighter-rouge">part-00000.orc</code>, <code class="language-plaintext highlighter-rouge">part-00001.orc</code>, …) under it.
+Input files are sorted by path for deterministic output and grouped using their on-disk
+sizes so that each part’s total input size does not exceed the given threshold (a single
+input file larger than the threshold is still merged into its own part).</p>
+
+<p>For the multi-file output modes (<code class="language-plaintext highlighter-rouge">--maxSize</code> and <code class="language-plaintext highlighter-rouge">--preserveStructure</code>) the tool refuses
+to run when <code class="language-plaintext highlighter-rouge">--output</code> points to a non-empty existing directory, so that existing data is
+not silently destroyed. Use <code class="language-plaintext highlighter-rouge">--overwrite</code> to delete the directory’s current contents
+before writing new part files.</p>
+
+<dl>
+  <dt><code class="language-plaintext highlighter-rouge">-h,--help</code></dt>
+  <dd>Print help</dd>
+  <dt><code class="language-plaintext highlighter-rouge">-i,--ignoreExtension</code></dt>
+  <dd>Include files that do not end in <code class="language-plaintext highlighter-rouge">.orc</code></dd>
+  <dt><code class="language-plaintext highlighter-rouge">-m,--maxSize &lt;bytes&gt;</code></dt>
+  <dd>Maximum size in bytes for each output part; enables multi-file output under <code class="language-plaintext highlighter-rouge">--output</code>.
+Must be a positive integer — a value of <code class="language-plaintext highlighter-rouge">0</code>, a negative value, or a non-numeric value
+causes the tool to exit with an error.</dd>
+  <dt><code class="language-plaintext highlighter-rouge">-o,--output &lt;path&gt;</code></dt>
+  <dd>Output ORC filename (single-file mode) or output directory (when <code class="language-plaintext highlighter-rouge">--maxSize</code> or
+<code class="language-plaintext highlighter-rouge">--preserveStructure</code> is set)</dd>
+  <dt><code class="language-plaintext highlighter-rouge">--overwrite</code></dt>
+  <dd>If the output directory already exists and is non-empty, delete its contents
+before writing merged part files. Only applies to multi-file output modes
+(<code class="language-plaintext highlighter-rouge">--maxSize</code> and <code class="language-plaintext highlighter-rouge">--preserveStructure</code>). Without this flag, the tool aborts
+with an error when the output directory is non-empty so that existing data
+is not silently destroyed. Intentionally provided as long-form only to avoid
+confusion with <code class="language-plaintext highlighter-rouge">-o,--output</code>.</dd>
+  <dt><code class="language-plaintext highlighter-rouge">-p,--preserveStructure</code></dt>
+  <dd>Mirror the input directory structure under <code class="language-plaintext highlighter-rouge">--output</code>. Every directory that directly
+contains ORC files (a “leaf” directory, e.g. a Hive partition path such as
+<code class="language-plaintext highlighter-rouge">d=2025-04-25/h=01</code>) is merged independently and written to the corresponding relative
+path under <code class="language-plaintext highlighter-rouge">--output</code>. Works with any nesting depth. Requires exactly one input
+directory. Hidden files/directories (names starting with <code class="language-plaintext highlighter-rouge">_</code> or <code class="language-plaintext highlighter-rouge">.</code>, such as
+<code class="language-plaintext highlighter-rouge">_SUCCESS</code> or <code class="language-plaintext highlighter-rouge">_temporary</code>) are always skipped to match Hive/Spark conventions. A
+directory that contains both ORC files and subdirectories is rejected.</dd>
+</dl>
+
+<p>Merge into one ORC file:</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar merge <span class="nt">--output</span> /path/to/merged.orc /path/to/input_orc/
+______________________________________________________________________
+</code></pre></div></div>
+
+<p>Merge into multiple ORC files under a directory (each part bounded by size):</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar merge <span class="nt">--output</span> /path/to/out_dir/ <span class="nt">--maxSize</span> 1073741824 /path/to/input_orc/
+______________________________________________________________________
+</code></pre></div></div>
+
+<p>Merge a partitioned input tree while preserving the directory structure (each leaf
+partition is merged independently; <code class="language-plaintext highlighter-rouge">--maxSize</code> is optional):</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar merge <span class="se">\</span>
+    <span class="nt">--output</span> /path/to/out_dir/ <span class="se">\</span>
+    <span class="nt">--preserveStructure</span> <span class="se">\</span>
+    <span class="nt">--maxSize</span> 2147483648 <span class="se">\</span>
+    /warehouse/db/table/d<span class="o">=</span>2025-04-25/
 ______________________________________________________________________
 </code></pre></div></div>
 
