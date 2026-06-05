@@ -57,6 +57,11 @@ make test-out
   2. Use the Docker scripts in `docker/` (e.g., `cd docker && ./run-all.sh local main`).
   3. **Trigger GitHub Actions**: Push your branch to your personal fork of the repository and open a Pull Request there. This will automatically run `.github/workflows/build_and_test.yml` on your own GitHub account's compute before you submit it to the upstream ASF repository.
 
-## 6. General Advice
+## 6. Security
+
+Security model: [SECURITY.md](./SECURITY.md)
+Agents that scan this repository should consult `SECURITY.md` for the project's threat model, in-scope / out-of-scope declarations, and known non-findings before reporting issues.
+
+## 7. General Advice
 - **Do not introduce breaking changes** to the ORC file format serialization unless explicitly requested and discussed.
 - Ensure cross-compatibility between C++ and Java implementations if you are making logic or behavioral changes to readers / writers.
