@@ -1253,10 +1253,8 @@ namespace orc {
           stripeTotalLength >= fileLength) {
         std::stringstream msg;
         msg << "Malformed StripeInformation at stripe index " << currentStripe_
-            << ": fileLength=" << fileLength
-            << ", StripeInfo=(offset=" << stripeOffset
-            << ", indexLength=" << indexLength
-            << ", dataLength=" << dataLength
+            << ": fileLength=" << fileLength << ", StripeInfo=(offset=" << stripeOffset
+            << ", indexLength=" << indexLength << ", dataLength=" << dataLength
             << ", footerLength=" << footerLength << ")";
         throw ParseError(msg.str());
       }
@@ -1664,8 +1662,7 @@ namespace orc {
           addOverflow(tailSize, footerSize, &tailSize) || tailSize >= fileLength) {
         std::stringstream msg;
         msg << "Invalid tail size: footerSize=" << footerSize
-            << ", postscriptLength=" << postscriptLength
-            << ", fileLength=" << fileLength;
+            << ", postscriptLength=" << postscriptLength << ", fileLength=" << fileLength;
         throw ParseError(msg.str());
       }
       uint64_t footerOffset;

@@ -1298,8 +1298,7 @@ namespace orc {
     maliciousData.push_back(static_cast<char>(postscriptLen));
 
     // Create reader and expect ParseError
-    auto stream = std::make_unique<MemoryInputStream>(
-        maliciousData.data(), maliciousData.size());
+    auto stream = std::make_unique<MemoryInputStream>(maliciousData.data(), maliciousData.size());
 
     ReaderOptions options;
     EXPECT_THROW(createReader(std::move(stream), options), ParseError);
@@ -1346,8 +1345,7 @@ namespace orc {
     uint8_t postscriptLen = 16;
     maliciousData.push_back(static_cast<char>(postscriptLen));
 
-    auto stream = std::make_unique<MemoryInputStream>(
-        maliciousData.data(), maliciousData.size());
+    auto stream = std::make_unique<MemoryInputStream>(maliciousData.data(), maliciousData.size());
 
     ReaderOptions options;
     EXPECT_THROW(createReader(std::move(stream), options), ParseError);
