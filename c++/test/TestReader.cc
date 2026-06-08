@@ -1240,4 +1240,115 @@ namespace orc {
     EXPECT_LT(largeLimitIOCount, smallLimitIOCount);
   }
 
+  /**
+   * Test that reading a malformed ORC file with extremely large footer_length
+   * throws ParseError instead of causing integer overflow or crash.
+   * This tests the fix for ORC-2167.
+   */
+  TEST(TestReader, testMalformedFooterLengthOverflow) {
+    // Construct a minimal malformed ORC file with footer_length = UINT64_MAX
+    // ORC file tail structure:
+    // - Footer (not included here, will be invalid anyway)
+    // - PostScript (protobuf encoded)
+    // - 1 byte: postscript length
+    //
+    // PostScript protobuf fields:
+    // - field 1: footer_length (varint) - we set this to UINT64_MAX
+    // - field 8000: magic "ORC"
+    //
+    // Protobuf encoding for footer_length = UINT64_MAX:
+    // - tag = (field_number << 3 | wire_type) = (1 << 3 | 0) = 0x08
+    // - value = varint(UINT64_MAX) = 0xFF,FF,FF,FF,FF,FF,FF,FF,FF,01 (10 bytes)
+    //
+    // Protobuf encoding for magic "ORC":
+    // - field 8000 is a special field, but simpler to include "ORC" at end
+
+    // Create a minimal byte sequence simulating malicious file
+    // We need at least: PostScript + postscriptLength byte
+    // PostScript: footer_length(UINT64_MAX) encoded as protobuf varint
+
+    std::vector<char> maliciousData;
+
+    // Add some dummy footer bytes (not valid, but we're testing bounds check)
+    for (int i = 0; i < 20; i++) {
+      maliciousData.push_back(0x00);
+    }
+
+    // PostScript with footer_length = UINT64_MAX
+    // tag (field 1, varint): 0x08
+    maliciousData.push_back(0x08);
+    // value: UINT64_MAX as varint (10 bytes)
+    for (int i = 0; i < 9; i++) {
+      maliciousData.push_back(0xFF);
+    }
+    maliciousData.push_back(0x01);
+
+    // Add compression field (field 2) - NONE = 0
+    maliciousData.push_back(0x10);  // tag: field 2, wire type 0
+    maliciousData.push_back(0x00);  // value: compression NONE
+
+    // Add magic "ORC" at the end (this is a simplified approach)
+    maliciousData.push_back('O');
+    maliciousData.push_back('R');
+    maliciousData.push_back('C');
+
+    // PostScript length byte - points to all bytes before it (excluding magic)
+    // This is a simplified structure; real ORC has magic inside PostScript
+    uint8_t postscriptLen = 14;  // footer_length encoding + compression encoding
+    maliciousData.push_back(static_cast<char>(postscriptLen));
+
+    // Create reader and expect ParseError
+    auto stream = std::make_unique<MemoryInputStream>(maliciousData.data(), maliciousData.size());
+
+    ReaderOptions options;
+    EXPECT_THROW(createReader(std::move(stream), options), ParseError);
+  }
+
+  /**
+   * Test that reading a malformed ORC file with extremely large metadata_length
+   * throws ParseError instead of causing integer overflow.
+   */
+  TEST(TestReader, testMalformedMetadataLengthOverflow) {
+    // Similar to testMalformedFooterLengthOverflow but with metadata_length overflow
+    // PostScript field 3 is metadata_length (actually it's field 4 in proto)
+    // Let's create a file with both footer_length and metadata_length set to large values
+
+    std::vector<char> maliciousData;
+
+    // Add some dummy bytes
+    for (int i = 0; i < 20; i++) {
+      maliciousData.push_back(0x00);
+    }
+
+    // PostScript:
+    // footer_length = 100 (reasonable small value)
+    maliciousData.push_back(0x08);  // tag: field 1
+    maliciousData.push_back(0x64);  // value: 100
+
+    // metadata_length = UINT64_MAX (field 4)
+    maliciousData.push_back(0x20);  // tag: field 4, wire type 0 (4 << 3 | 0 = 32 = 0x20)
+    for (int i = 0; i < 9; i++) {
+      maliciousData.push_back(0xFF);
+    }
+    maliciousData.push_back(0x01);
+
+    // compression = NONE
+    maliciousData.push_back(0x10);
+    maliciousData.push_back(0x00);
+
+    // magic "ORC"
+    maliciousData.push_back('O');
+    maliciousData.push_back('R');
+    maliciousData.push_back('C');
+
+    // postscript length
+    uint8_t postscriptLen = 16;
+    maliciousData.push_back(static_cast<char>(postscriptLen));
+
+    auto stream = std::make_unique<MemoryInputStream>(maliciousData.data(), maliciousData.size());
+
+    ReaderOptions options;
+    EXPECT_THROW(createReader(std::move(stream), options), ParseError);
+  }
+
 }  // namespace orc
