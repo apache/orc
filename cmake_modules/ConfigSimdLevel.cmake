@@ -28,8 +28,10 @@ endif()
 if(NOT DEFINED ORC_CPU_FLAG)
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|X86|x86|i[3456]86|x64")
     set(ORC_CPU_FLAG "x86")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64|riscv")
+    set(ORC_CPU_FLAG "riscv")
   else()
-    message(STATUS "Unsupported system processor for SIMD optimization")
+    message(STATUS "Unsupported system processor for SIMD optimization: ${CMAKE_SYSTEM_PROCESSOR}")
   endif()
 endif()
 
@@ -99,6 +101,47 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     message(STATUS "ORC_HAVE_RUNTIME_AVX512 defined, ORC_SIMD_LEVEL: ${ORC_SIMD_LEVEL}")
   else()
     message(STATUS "ORC_HAVE_RUNTIME_AVX512 not defined, ORC_SIMD_LEVEL: ${ORC_SIMD_LEVEL}")
+  endif()
+endif()
+
+if(ORC_CPU_FLAG STREQUAL "riscv")
+  # RISC-V compiler flags for RVV
+  set(ORC_RVV_FLAG "-march=rv64gcv")
+  check_cxx_compiler_flag(${ORC_RVV_FLAG} COMPILER_SUPPORT_RVV)
+
+  if(COMPILER_SUPPORT_RVV)
+    set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_RVV_FLAG}")
+    CHECK_CXX_SOURCE_COMPILES("
+      #include <riscv_vector.h>
+      int main() {
+        vuint8m1_t vec = __riscv_vmv_v_x_u8m1(0, __riscv_vsetvl_e8m1(64));
+        return 0;
+      }"
+      CXX_SUPPORTS_RVV)
+    set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  endif()
+
+  if(CXX_SUPPORTS_RVV)
+    message(STATUS "Enabled the RVV for RLE bit-unpacking")
+    set(ORC_SIMD_LEVEL "RVV")
+    add_definitions(-DORC_HAVE_RUNTIME_RVV)
+  else()
+    if(ORC_SIMD_LEVEL STREQUAL "RVV")
+      message(STATUS "WARNING: RVV required but compiler doesn't support it, failed to enable RVV.")
+    endif()
+    set(BUILD_ENABLE_RVV OFF)
+  endif()
+
+  if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
+    set(ORC_SIMD_LEVEL "NONE")
+  endif()
+
+  if(ORC_SIMD_LEVEL STREQUAL "RVV")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ORC_RVV_FLAG}")
+    message(STATUS "ORC_HAVE_RUNTIME_RVV defined, ORC_SIMD_LEVEL: ${ORC_SIMD_LEVEL}")
+  else()
+    message(STATUS "ORC_HAVE_RUNTIME_RVV not defined, ORC_SIMD_LEVEL: ${ORC_SIMD_LEVEL}")
   endif()
 endif()
 
