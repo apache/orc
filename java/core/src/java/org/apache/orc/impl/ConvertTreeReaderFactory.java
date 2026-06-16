@@ -299,11 +299,13 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       resultColVector.reset();
       if (fromColVector.isRepeating) {
         resultColVector.isRepeating = true;
-        if (fromColVector.noNulls || !fromColVector.isNull[0]) {
-          setConvertVectorElement(0);
-        } else {
-          resultColVector.noNulls = false;
-          resultColVector.isNull[0] = true;
+        if (batchSize > 0) {
+          if (fromColVector.noNulls || !fromColVector.isNull[0]) {
+            setConvertVectorElement(0);
+          } else {
+            resultColVector.noNulls = false;
+            resultColVector.isNull[0] = true;
+          }
         }
       } else if (fromColVector.noNulls) {
         for (int i = 0; i < batchSize; i++) {
