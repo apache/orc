@@ -18,6 +18,7 @@
 
 #include "DictionaryLoader.hh"
 #include "RLE.hh"
+#include "Utils.hh"
 
 namespace orc {
 
@@ -32,7 +33,7 @@ namespace orc {
         if (!stream->Next(&chunk, &length)) {
           throw ParseError("bad read in readFully");
         }
-        if (posn + length > bufferSize) {
+        if (length < 0 || length > bufferSize - posn) {
           throw ParseError("Corrupt dictionary blob");
         }
         memcpy(buffer + posn, chunk, static_cast<size_t>(length));
@@ -64,19 +65,32 @@ namespace orc {
         createRleDecoder(std::move(stream), false, rleVersion, pool, stripe.getReaderMetrics());
 
     // Decode dictionary entry lengths
-    dictionary->dictionaryOffset.resize(dictSize + 1);
+    uint64_t dictionaryOffsetSize = 0;
+    if (addWithOverflow(static_cast<uint64_t>(dictSize), static_cast<uint64_t>(1),
+                        &dictionaryOffsetSize)) {
+      std::stringstream ss;
+      ss << "Dictionary size overflow for column " << columnId;
+      throw ParseError(ss.str());
+    }
+    dictionary->dictionaryOffset.resize(dictionaryOffsetSize);
     int64_t* lengthArray = dictionary->dictionaryOffset.data();
     lengthDecoder->next(lengthArray + 1, dictSize, nullptr);
     lengthArray[0] = 0;
 
     // Convert lengths to cumulative offsets
-    for (uint32_t i = 1; i < dictSize + 1; ++i) {
+    for (uint64_t i = 1; i < dictionaryOffsetSize; ++i) {
       if (lengthArray[i] < 0) {
         std::stringstream ss;
         ss << "Negative dictionary entry length for column " << columnId;
         throw ParseError(ss.str());
       }
-      lengthArray[i] += lengthArray[i - 1];
+      int64_t nextOffset = 0;
+      if (addWithOverflow(lengthArray[i], lengthArray[i - 1], &nextOffset)) {
+        std::stringstream ss;
+        ss << "Dictionary entry length overflow for column " << columnId;
+        throw ParseError(ss.str());
+      }
+      lengthArray[i] = nextOffset;
     }
 
     int64_t blobSize = lengthArray[dictSize];

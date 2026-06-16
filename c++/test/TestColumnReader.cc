@@ -42,6 +42,110 @@ namespace orc {
     return timeptr != nullptr;
   }
 
+  void expectStringDirectLengthError(const unsigned char* lengthData, uint64_t lengthDataSize,
+                                     uint64_t numValues, bool skip) {
+    MockStripeStreams streams;
+
+    std::vector<bool> selectedColumns(2, true);
+    EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+
+    proto::ColumnEncoding directEncoding;
+    directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+    EXPECT_CALL(streams, getSchemaEvolution()).WillRepeatedly(testing::Return(nullptr));
+
+    EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+
+    const char blob[] = {'x'};
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(blob, ARRAY_SIZE(blob))));
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(lengthData, lengthDataSize)));
+
+    std::unique_ptr<Type> rowType = createStructType();
+    rowType->addStructField("col0", createPrimitiveType(STRING));
+
+    std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
+    if (skip) {
+      EXPECT_THROW(reader->skip(numValues), ParseError);
+    } else {
+      StructVectorBatch batch(numValues, *getDefaultPool());
+      StringVectorBatch* strings = new StringVectorBatch(numValues, *getDefaultPool());
+      batch.fields.push_back(strings);
+      EXPECT_THROW(reader->next(batch, numValues, nullptr), ParseError);
+    }
+  }
+
+  const unsigned char EMPTY_DATA[] = {0x00};
+
+  std::unique_ptr<ColumnReader> buildListLengthReader(MockStripeStreams& streams,
+                                                      const unsigned char* lengthData,
+                                                      uint64_t lengthDataSize) {
+    std::vector<bool> selectedColumns(3, true);
+    EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+
+    proto::ColumnEncoding directEncoding;
+    directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+    EXPECT_CALL(streams, getSchemaEvolution()).WillRepeatedly(testing::Return(nullptr));
+
+    EXPECT_CALL(streams, getStreamProxy(testing::_, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(lengthData, lengthDataSize)));
+    EXPECT_CALL(streams, getStreamProxy(2, proto::Stream_Kind_DATA, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(EMPTY_DATA, 0)));
+
+    std::unique_ptr<Type> rowType = createStructType();
+    rowType->addStructField("col0", createListType(createPrimitiveType(LONG)));
+    return buildReader(*rowType, streams);
+  }
+
+  std::unique_ptr<ColumnReader> buildMapLengthReader(MockStripeStreams& streams,
+                                                     const unsigned char* lengthData,
+                                                     uint64_t lengthDataSize) {
+    std::vector<bool> selectedColumns(4, true);
+    EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+
+    proto::ColumnEncoding directEncoding;
+    directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+    EXPECT_CALL(streams, getSchemaEvolution()).WillRepeatedly(testing::Return(nullptr));
+
+    EXPECT_CALL(streams, getStreamProxy(testing::_, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(lengthData, lengthDataSize)));
+    EXPECT_CALL(streams, getStreamProxy(2, proto::Stream_Kind_DATA, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(EMPTY_DATA, 0)));
+    EXPECT_CALL(streams, getStreamProxy(3, proto::Stream_Kind_DATA, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(EMPTY_DATA, 0)));
+
+    std::unique_ptr<Type> rowType = createStructType();
+    rowType->addStructField("col0",
+                            createMapType(createPrimitiveType(LONG), createPrimitiveType(LONG)));
+    return buildReader(*rowType, streams);
+  }
+
+  template <typename BatchType>
+  void expectCollectionLengthError(std::unique_ptr<ColumnReader> (*buildReaderFunc)(
+                                       MockStripeStreams&, const unsigned char*, uint64_t),
+                                   const unsigned char* lengthData, uint64_t lengthDataSize,
+                                   uint64_t numValues, bool skip, BatchType* collectionBatch) {
+    MockStripeStreams streams;
+    std::unique_ptr<ColumnReader> reader = buildReaderFunc(streams, lengthData, lengthDataSize);
+    if (skip) {
+      EXPECT_THROW(reader->skip(numValues), ParseError);
+    } else {
+      StructVectorBatch batch(numValues, *getDefaultPool());
+      batch.fields.push_back(collectionBatch);
+      EXPECT_THROW(reader->next(batch, numValues, nullptr), ParseError);
+    }
+  }
+
   class TestColumnReaderEncoded : public TestWithParam<bool> {
     void SetUp() override;
 
@@ -880,6 +984,64 @@ namespace orc {
     StringVectorBatch* strings = new StringVectorBatch(1024, *getDefaultPool());
     batch.fields.push_back(strings);
     EXPECT_THROW(reader->next(batch, 100, 0), ParseError);
+  }
+
+  TEST(TestColumnReader, testStringDirectRejectsNegativeLength) {
+    // RLEv1 literal run with one unsigned value UINT64_MAX, which becomes -1
+    // when decoded into int64_t.
+    const unsigned char lengthData[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                        0xff, 0xff, 0xff, 0xff, 0x01};
+    expectStringDirectLengthError(lengthData, ARRAY_SIZE(lengthData), 1, false);
+    expectStringDirectLengthError(lengthData, ARRAY_SIZE(lengthData), 1, true);
+  }
+
+  TEST(TestColumnReader, testStringDirectRejectsLengthOverflow) {
+    // RLEv1 literal run with three INT64_MAX lengths.
+    const unsigned char lengthData[] = {0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
+                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff,
+                                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f};
+    expectStringDirectLengthError(lengthData, ARRAY_SIZE(lengthData), 3, false);
+    expectStringDirectLengthError(lengthData, ARRAY_SIZE(lengthData), 3, true);
+  }
+
+  TEST(TestColumnReader, testListRejectsInvalidLengths) {
+    const unsigned char negativeLengthData[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                0xff, 0xff, 0xff, 0xff, 0x01};
+    expectCollectionLengthError<ListVectorBatch>(buildListLengthReader, negativeLengthData,
+                                                 ARRAY_SIZE(negativeLengthData), 1, false,
+                                                 new ListVectorBatch(1, *getDefaultPool()));
+    expectCollectionLengthError<ListVectorBatch>(buildListLengthReader, negativeLengthData,
+                                                 ARRAY_SIZE(negativeLengthData), 1, true, nullptr);
+
+    // RLEv1 literal run with three INT64_MAX lengths.
+    const unsigned char overflowLengthData[] = {
+        0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f};
+    expectCollectionLengthError<ListVectorBatch>(buildListLengthReader, overflowLengthData,
+                                                 ARRAY_SIZE(overflowLengthData), 2, false,
+                                                 new ListVectorBatch(2, *getDefaultPool()));
+    expectCollectionLengthError<ListVectorBatch>(buildListLengthReader, overflowLengthData,
+                                                 ARRAY_SIZE(overflowLengthData), 2, true, nullptr);
+  }
+
+  TEST(TestColumnReader, testMapRejectsInvalidLengths) {
+    const unsigned char negativeLengthData[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                                0xff, 0xff, 0xff, 0xff, 0x01};
+    expectCollectionLengthError<MapVectorBatch>(buildMapLengthReader, negativeLengthData,
+                                                ARRAY_SIZE(negativeLengthData), 1, false,
+                                                new MapVectorBatch(1, *getDefaultPool()));
+    expectCollectionLengthError<MapVectorBatch>(buildMapLengthReader, negativeLengthData,
+                                                ARRAY_SIZE(negativeLengthData), 1, true, nullptr);
+
+    // RLEv1 literal run with three INT64_MAX lengths.
+    const unsigned char overflowLengthData[] = {
+        0xfd, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f};
+    expectCollectionLengthError<MapVectorBatch>(buildMapLengthReader, overflowLengthData,
+                                                ARRAY_SIZE(overflowLengthData), 2, false,
+                                                new MapVectorBatch(2, *getDefaultPool()));
+    expectCollectionLengthError<MapVectorBatch>(buildMapLengthReader, overflowLengthData,
+                                                ARRAY_SIZE(overflowLengthData), 2, true, nullptr);
   }
 
   TEST_P(TestColumnReaderEncoded, testStringDirectShortBuffer) {

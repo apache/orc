@@ -20,10 +20,14 @@
 #include "orc/Int128.hh"
 
 #include "Adaptor.hh"
+#include "Utils.hh"
 
 #include <string.h>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
+#include <new>
+#include <stdexcept>
 #include <type_traits>
 
 namespace orc {
@@ -50,6 +54,15 @@ namespace orc {
 
   MemoryPoolImpl::~MemoryPoolImpl() {
     // PASS
+  }
+
+  template <class T>
+  uint64_t checkedBufferSize(uint64_t count) {
+    uint64_t bytes = 0;
+    if (multiplyWithOverflow(static_cast<uint64_t>(sizeof(T)), count, &bytes)) {
+      throw std::length_error("DataBuffer allocation size overflow");
+    }
+    return bytes;
   }
 
   template <class T>
@@ -113,13 +126,21 @@ namespace orc {
       return;
     }
     if (newCapacity > currentCapacity_ || !buf_) {
+      uint64_t newBytes = checkedBufferSize<T>(newCapacity);
       if (buf_) {
         T* buf_old = buf_;
-        buf_ = reinterpret_cast<T*>(memoryPool_.malloc(sizeof(T) * newCapacity));
-        memcpy(buf_, buf_old, sizeof(T) * currentSize_);
+        T* newBuf = reinterpret_cast<T*>(memoryPool_.malloc(newBytes));
+        if (newBuf == nullptr && newBytes != 0) {
+          throw std::bad_alloc();
+        }
+        buf_ = newBuf;
+        memcpy(buf_, buf_old, checkedBufferSize<T>(currentSize_));
         memoryPool_.free(reinterpret_cast<char*>(buf_old));
       } else {
-        buf_ = reinterpret_cast<T*>(memoryPool_.malloc(sizeof(T) * newCapacity));
+        buf_ = reinterpret_cast<T*>(memoryPool_.malloc(newBytes));
+        if (buf_ == nullptr && newBytes != 0) {
+          throw std::bad_alloc();
+        }
       }
       currentCapacity_ = newCapacity;
     }
@@ -127,7 +148,7 @@ namespace orc {
 
   template <class T>
   void DataBuffer<T>::zeroOut() {
-    memset(buf_, 0, sizeof(T) * currentCapacity_);
+    memset(buf_, 0, checkedBufferSize<T>(currentCapacity_));
   }
 
   template <class T>
@@ -187,7 +208,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(char*));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<char*>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -208,7 +229,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(double));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<double>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -229,7 +250,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(float));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<float>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -250,7 +271,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(int64_t));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<int64_t>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -271,7 +292,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(int32_t));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<int32_t>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -292,7 +313,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(int16_t));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<int16_t>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -313,7 +334,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(int8_t));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<int8_t>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
@@ -334,7 +355,7 @@ namespace orc {
     }
     reserve(newSize);
     if (newSize > currentSize_) {
-      memset(buf_ + currentSize_, 0, (newSize - currentSize_) * sizeof(uint64_t));
+      memset(buf_ + currentSize_, 0, checkedBufferSize<uint64_t>(newSize - currentSize_));
     }
     currentSize_ = newSize;
   }
