@@ -746,4 +746,38 @@ public class TestConvertTreeReaderFactory implements TestConf {
     readDecimalInNullStripe("decimal(18,2)", DecimalColumnVector.class,
             new String[]{"null", "1024", "1"});
   }
+
+  @Test
+  public void testIntArrayToStringArrayFirstBatchAllEmpty() throws Exception {
+    TypeDescription fileSchema = TypeDescription.fromString("struct<col1:array<int>>");
+    TypeDescription readerSchema = TypeDescription.fromString("struct<col1:array<string>>");
+
+    try (Writer w = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(fileSchema))) {
+      VectorizedRowBatch b = fileSchema.createRowBatch(3);
+      ListColumnVector lc = (ListColumnVector) b.cols[0];
+      for (int i = 0; i < 3; i++) {
+        lc.offsets[i] = 0;
+        lc.lengths[i] = 0;
+      }
+      lc.childCount = 0;
+      b.size = 3;
+      w.addRowBatch(b);
+    }
+
+    try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+         RecordReader rows = reader.rows(reader.options().schema(readerSchema))) {
+      VectorizedRowBatch rb = readerSchema.createRowBatch(3);
+      assertTrue(rows.nextBatch(rb));
+      ListColumnVector r = (ListColumnVector) rb.cols[0];
+      // Cast verifies schema evolution took effect (would be LongColumnVector without evolution)
+      BytesColumnVector child = (BytesColumnVector) r.child;
+      assertEquals(0, r.childCount);
+      for (int i = 0; i < 3; i++) {
+        assertEquals(0, r.lengths[i], "row " + i + " should be empty array");
+      }
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
 }
