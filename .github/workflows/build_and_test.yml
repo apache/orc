@@ -63,6 +63,38 @@ jobs:
         cd docker
         ./run-one.sh local main ${{ matrix.os }}
 
+  riscv64:
+    name: "RISC-V ${{ matrix.os }}"
+    needs: [license-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        os:
+          - riscv64-ubuntu24
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: linux/riscv64
+    - name: Set up Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Build Docker image
+      run: |
+        cd docker/${{ matrix.os }}
+        docker buildx build --platform linux/riscv64 --load \
+          --cache-from type=gha,scope=riscv64-ubuntu24 \
+          --cache-to type=gha,mode=max,scope=riscv64-ubuntu24 \
+          -t orc-riscv64 .
+    - name: Build ORC with RVV
+      run: |
+        docker run --platform linux/riscv64 --rm -v $(pwd):/root/orc orc-riscv64 /bin/bash -c \
+          "mkdir -p build && cd build && cmake -DBUILD_JAVA=OFF -DBUILD_ENABLE_RVV=ON -DCMAKE_BUILD_TYPE=Release ../orc && make -j\$(nproc) package"
+
   build:
     name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
     needs: [license-check]
