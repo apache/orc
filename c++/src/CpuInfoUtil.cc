@@ -30,6 +30,10 @@
 #include <unistd.h>
 #endif
 
+#if defined(__linux__) && defined(__riscv)
+#include <sys/auxv.h>
+#endif
+
 #ifdef _WIN32
 #define NOMINMAX
 #include <Windows.h>
@@ -381,11 +385,17 @@ namespace orc {
 
 #if defined(CPUINFO_ARCH_RISCV)
     int64_t LinuxParseRiscvIsa(const std::string& values) {
+      (void)values;
       int64_t flags = 0;
-      // RISC-V ISA string like "rv64imafdcv" contains 'v' for vector extension
-      if (values.find('v') != std::string::npos) {
+#if defined(__linux__)
+#if !defined(HWCAP_RISCV_RVV)
+#define HWCAP_RISCV_RVV (1UL << ('v' - 'a'))
+#endif
+      unsigned long hwcap = getauxval(AT_HWCAP);
+      if (hwcap & HWCAP_RISCV_RVV) {
         flags |= CpuInfo::RVV;
       }
+#endif
       return flags;
     }
 #endif
