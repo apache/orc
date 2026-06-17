@@ -73,7 +73,7 @@ jobs:
       max-parallel: 20
       matrix:
         os:
-          - riscv64-ubuntu24
+          - riscv64-ubuntu26
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -87,8 +87,8 @@ jobs:
       run: |
         cd docker/${{ matrix.os }}
         docker buildx build --platform linux/riscv64 --load \
-          --cache-from type=gha,scope=riscv64-ubuntu24 \
-          --cache-to type=gha,mode=max,scope=riscv64-ubuntu24 \
+          --cache-from type=gha,scope=riscv64-ubuntu26 \
+          --cache-to type=gha,mode=max,scope=riscv64-ubuntu26 \
           -t orc-riscv64 .
     - name: Build ORC with RVV
       run: |

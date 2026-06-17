@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for RISC-V Ubuntu 24
+# ORC compile for RISC-V Ubuntu 26
 #
 
-FROM --platform=linux/riscv64 ubuntu:24.04
+FROM --platform=linux/riscv64 ubuntu:26.04
 LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
-LABEL org.opencontainers.image.ref.name="Apache ORC on RISC-V Ubuntu 24"
+LABEL org.opencontainers.image.ref.name="Apache ORC on RISC-V Ubuntu 26"
 LABEL org.opencontainers.image.version=""
 ARG jdk=21
 ARG cc=gcc

@@ -6,4 +6,4 @@ oraclelinux9
 oraclelinux10
 amazonlinux23
 ubi10
-riscv64-ubuntu24
+riscv64-ubuntu26
