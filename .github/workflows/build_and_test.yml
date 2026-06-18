@@ -91,8 +91,10 @@ jobs:
           --cache-to type=gha,mode=max,scope=riscv64-ubuntu26 \
           -t orc-riscv64 .
     - name: Build ORC with RVV
+      env:
+        QEMU_CPU: rv64,v=on,vlen=128,vext_spec=v1.0
       run: |
-        docker run --platform linux/riscv64 --rm -v $(pwd):/root/orc orc-riscv64 /bin/bash -c \
+        docker run --platform linux/riscv64 --rm -e QEMU_CPU -v $(pwd):/root/orc orc-riscv64 /bin/bash -c \
           "mkdir -p build && cd build && cmake -DBUILD_JAVA=OFF -DBUILD_ENABLE_RVV=ON -DCMAKE_BUILD_TYPE=Release ../orc && make -j\$(nproc) package"
 
   build:
