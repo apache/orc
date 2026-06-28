@@ -78,6 +78,10 @@ option(BUILD_ENABLE_AVX512
     "Enable build with AVX512 at compile time"
     OFF)
 
+option(BUILD_ENABLE_RVV
+    "Enable build with RISC-V Vector Extension at compile time"
+    OFF)
+
 option(ORC_PACKAGE_KIND
     "Arbitrary string that identifies the kind of package"
     "")
@@ -133,13 +137,23 @@ if (BUILD_ENABLE_AVX512 AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|X86|x86|i
   set (BUILD_ENABLE_AVX512 "OFF")
 endif ()
 
+if (BUILD_ENABLE_RVV AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64|riscv"))
+  message(WARNING "Only RISC-V platform support RVV")
+  set (BUILD_ENABLE_RVV "OFF")
+endif ()
+
 message(STATUS "BUILD_ENABLE_AVX512: ${BUILD_ENABLE_AVX512}")
+message(STATUS "BUILD_ENABLE_RVV: ${BUILD_ENABLE_RVV}")
 #
 # macOS doesn't fully support AVX512, it has a different way dealing with AVX512 than Windows and Linux.
 #
 # Here can find the description:
 # https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/osfmk/i386/fpu.c#L174
 if (BUILD_ENABLE_AVX512 AND NOT APPLE)
+  INCLUDE(ConfigSimdLevel)
+endif ()
+
+if (BUILD_ENABLE_RVV)
   INCLUDE(ConfigSimdLevel)
 endif ()
 

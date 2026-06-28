@@ -30,6 +30,10 @@
 #include <unistd.h>
 #endif
 
+#if defined(__linux__) && defined(__riscv)
+#include <sys/auxv.h>
+#endif
+
 #ifdef _WIN32
 #define NOMINMAX
 #include <Windows.h>
@@ -62,6 +66,11 @@
 #define CPUINFO_ARCH_ARM
 #elif defined(__PPC64__) || defined(__PPC64LE__) || defined(__ppc64__) || defined(__powerpc64__)
 #define CPUINFO_ARCH_PPC
+#elif defined(__riscv)
+#define CPUINFO_ARCH_RISCV
+#ifndef ORC_HAVE_RUNTIME_RVV
+#define UNUSED(x) (void)(x)
+#endif
 #endif
 
 namespace orc {
@@ -374,6 +383,23 @@ namespace orc {
       return flags;
     }
 
+#if defined(CPUINFO_ARCH_RISCV)
+    int64_t LinuxParseRiscvIsa(const std::string& values) {
+      (void)values;
+      int64_t flags = 0;
+#if defined(__linux__)
+#if !defined(HWCAP_RISCV_RVV)
+#define HWCAP_RISCV_RVV (1UL << ('v' - 'a'))
+#endif
+      unsigned long hwcap = getauxval(AT_HWCAP);
+      if (hwcap & HWCAP_RISCV_RVV) {
+        flags |= CpuInfo::RVV;
+      }
+#endif
+      return flags;
+    }
+#endif
+
     void OsRetrieveCacheSize(std::array<int64_t, kCacheLevels>* cacheSizes) {
       for (int i = 0; i < kCacheLevels; ++i) {
         const int64_t cache_size = LinuxGetCacheSize(i);
@@ -414,7 +440,13 @@ namespace orc {
           const std::string value = TrimString(line.substr(colon + 1, std::string::npos));
           if (name.compare("flags") == 0 || name.compare("Features") == 0) {
             *hardwareFlags |= LinuxParseCpuFlags(value);
-          } else if (name.compare("model name") == 0) {
+          }
+#if defined(CPUINFO_ARCH_RISCV)
+          else if (name.compare("isa") == 0) {
+            *hardwareFlags |= LinuxParseRiscvIsa(value);
+          }
+#endif
+          else if (name.compare("model name") == 0) {
             *modelName = value;
           } else if (name.compare("vendor_id") == 0) {
             if (value.compare("GenuineIntel") == 0) {
@@ -482,6 +514,40 @@ namespace orc {
       }
     }
 
+#elif defined(CPUINFO_ARCH_RISCV)
+    //------------------------------ RISC-V ------------------------------//
+    bool ArchParseUserSimdLevel(const std::string& simdLevel, int64_t* hardwareFlags) {
+      enum {
+        USER_SIMD_NONE,
+        USER_SIMD_RVV,
+        USER_SIMD_MAX,
+      };
+
+      int level = USER_SIMD_MAX;
+      if (simdLevel == "RVV") {
+        level = USER_SIMD_RVV;
+      } else if (simdLevel == "NONE") {
+        level = USER_SIMD_NONE;
+      } else {
+        return false;
+      }
+
+      if (level < USER_SIMD_RVV) {
+        *hardwareFlags &= ~CpuInfo::RVV;
+      }
+      return true;
+    }
+
+    void ArchVerifyCpuRequirements(const CpuInfo* ci) {
+#if defined(ORC_HAVE_RUNTIME_RVV)
+      if (!ci->isDetected(CpuInfo::RVV)) {
+        throw ParseError("CPU does not support the RISC-V Vector instruction set");
+      }
+#else
+      UNUSED(ci);
+#endif
+    }
+
 #else
     //------------------------------ PPC, ... ------------------------------//
     bool ArchParseUserSimdLevel(const std::string& simdLevel, int64_t* hardwareFlags) {
@@ -490,7 +556,7 @@ namespace orc {
 
     void ArchVerifyCpuRequirements(const CpuInfo* ci) {}
 
-#endif  // X86, ARM, PPC
+#endif  // X86, ARM, RISCV, PPC
 
   }  // namespace
 
