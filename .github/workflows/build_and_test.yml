@@ -86,6 +86,12 @@ jobs:
           - os: ubuntu-24.04-arm
             java: 17
             cxx: clang++
+          - os: ubuntu-26.04
+            java: 25
+            cxx: clang++
+          - os: ubuntu-26.04-arm
+            java: 25
+            cxx: clang++
           - os: ubuntu-latest
             java: 25
           - os: macos-14
