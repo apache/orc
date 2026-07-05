@@ -531,13 +531,13 @@ namespace orc {
 
         if (pbStream.kind() == proto::Stream_Kind_ROW_INDEX) {
           proto::RowIndex rowIndex;
-          if (!rowIndex.ParseFromZeroCopyStream(inStream.get())) {
+          if (!parseProtobufFromStream(&rowIndex, inStream.get())) {
             throw ParseError("Failed to parse the row index");
           }
           rowIndexes_[colId] = rowIndex;
         } else if (!skipBloomFilters_) {  // Stream_Kind_BLOOM_FILTER_UTF8
           proto::BloomFilterIndex pbBFIndex;
-          if (!pbBFIndex.ParseFromZeroCopyStream(inStream.get())) {
+          if (!parseProtobufFromStream(&pbBFIndex, inStream.get())) {
             throw ParseError("Failed to parse bloom filter index");
           }
           BloomFilterIndex bfIndex;
@@ -618,7 +618,7 @@ namespace orc {
                                   *contents.pool, contents.readerMetrics);
 
     proto::StripeFooter result;
-    if (!result.ParseFromZeroCopyStream(pbStream.get())) {
+    if (!parseProtobufFromStream(&result, pbStream.get())) {
       throw ParseError(std::string("bad StripeFooter from ") + pbStream->getName());
     }
     // Verify StripeFooter in case it's corrupt
@@ -814,7 +814,7 @@ namespace orc {
                                contents_->blockSize, *(contents_->pool), contents_->readerMetrics);
 
         proto::RowIndex rowIndex;
-        if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
+        if (!parseProtobufFromStream(&rowIndex, pbStream.get())) {
           throw ParseError("Failed to parse RowIndex from stripe footer");
         }
         int num_entries = rowIndex.entry_size();
@@ -912,7 +912,7 @@ namespace orc {
                                                     metadataSize, *contents_->pool),
           contents_->blockSize, *contents_->pool, contents_->readerMetrics);
       contents_->metadata.reset(new proto::Metadata());
-      if (!contents_->metadata->ParseFromZeroCopyStream(pbStream.get())) {
+      if (!parseProtobufFromStream(contents_->metadata.get(), pbStream.get())) {
         throw ParseError("Failed to parse the metadata");
       }
     }
@@ -1612,7 +1612,7 @@ namespace orc {
         getCompressionBlockSize(ps), memoryPool, readerMetrics);
 
     auto footer = std::make_unique<proto::Footer>();
-    if (!footer->ParseFromZeroCopyStream(pbStream.get())) {
+    if (!parseProtobufFromStream(footer.get(), pbStream.get())) {
       throw ParseError("Failed to parse the footer from " + stream->getName());
     }
 
@@ -1712,7 +1712,7 @@ namespace orc {
                                contents_->blockSize, *(contents_->pool), contents_->readerMetrics);
 
         proto::BloomFilterIndex pbBFIndex;
-        if (!pbBFIndex.ParseFromZeroCopyStream(pbStream.get())) {
+        if (!parseProtobufFromStream(&pbBFIndex, pbStream.get())) {
           throw ParseError("Failed to parse BloomFilterIndex");
         }
 
@@ -1769,7 +1769,7 @@ namespace orc {
                                contents_->blockSize, *(contents_->pool), contents_->readerMetrics);
 
         proto::RowIndex pbRowIndex;
-        if (!pbRowIndex.ParseFromZeroCopyStream(pbStream.get())) {
+        if (!parseProtobufFromStream(&pbRowIndex, pbStream.get())) {
           std::stringstream errMsgBuffer;
           errMsgBuffer << "Failed to parse RowIndex at column " << column << " in stripe "
                        << stripeIndex;
