@@ -67,7 +67,15 @@ namespace orc {
 
   uint64_t getCompressionBlockSize(const proto::PostScript& ps) {
     if (ps.has_compression_block_size()) {
-      return ps.compression_block_size();
+      uint64_t size = ps.compression_block_size();
+      // The compressed chunk header stores the length in 23 bits, so the
+      // writer rejects sizes of 2^23 or more; zero is never valid.
+      if (size == 0 || size >= (1 << 23)) {
+        std::stringstream msg;
+        msg << "Invalid compression block size: " << size;
+        throw ParseError(msg.str());
+      }
+      return size;
     } else {
       return 256 * 1024;
     }

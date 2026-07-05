@@ -537,6 +537,27 @@ public class ReaderImpl implements Reader {
   }
 
   /**
+   * Check that the compression block size in the postscript, if present, is
+   * valid. The compressed chunk header stores the length in 23 bits, so the
+   * writers reject sizes of 2^23 or more (see
+   * {@link OutStream#assertBufferSizeValid(int)}) and zero is never valid.
+   * @param path the data source path for error messages (may be null)
+   * @param postscript the parsed postscript
+   */
+  protected static void checkCompressionBlockSize(Path path,
+                                                  OrcProto.PostScript postscript
+                                                  ) throws FileFormatException {
+    if (postscript.hasCompressionBlockSize()) {
+      long size = postscript.getCompressionBlockSize();
+      if (size <= 0 || size >= (1 << 23)) {
+        throw new FileFormatException("Malformed ORC file" +
+            (path == null ? "" : " " + path) +
+            ". Invalid compression block size: " + size);
+      }
+    }
+  }
+
+  /**
   * Constructor that let's the user specify additional options.
    * @param path pathname for file
    * @param options options for reading
@@ -578,6 +599,7 @@ public class ReaderImpl implements Reader {
         options.orcTail(tail);
       } else {
         checkOrcVersion(path, orcTail.getPostScript());
+        checkCompressionBlockSize(path, orcTail.getPostScript());
         tail = orcTail;
       }
       this.compressionKind = tail.getCompressionKind();
@@ -653,6 +675,7 @@ public class ReaderImpl implements Reader {
         InStream.create("ps", buffer, psOffset, psLen));
     OrcProto.PostScript ps = OrcProto.PostScript.parseFrom(in);
     checkOrcVersion(path, ps);
+    checkCompressionBlockSize(path, ps);
 
     // Check compression codec.
     switch (ps.getCompression()) {
@@ -758,6 +781,7 @@ public class ReaderImpl implements Reader {
     System.arraycopy(buffer.array(), psOffset, psBuffer, 0, psLen);
 
     ps = OrcProto.PostScript.parseFrom(psBuffer);
+    checkCompressionBlockSize(null, ps);
     int footerSize = (int) ps.getFooterLength();
     CompressionKind compressionKind =
         CompressionKind.valueOf(ps.getCompression().name());

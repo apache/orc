@@ -1351,4 +1351,77 @@ namespace orc {
     EXPECT_THROW(createReader(std::move(stream), options), ParseError);
   }
 
+  // Build a minimal ORC file tail whose PostScript carries the given
+  // compression_block_size varint bytes.
+  std::vector<char> composeInvalidCompressionBlockSizeFile(
+      const std::vector<char>& blockSizeVarint) {
+    std::vector<char> data;
+
+    // Add some dummy footer bytes
+    for (int i = 0; i < 20; i++) {
+      data.push_back(0x00);
+    }
+
+    // PostScript:
+    // footer_length = 0 (field 1)
+    data.push_back(0x08);
+    data.push_back(0x00);
+
+    // compression = ZLIB (field 2)
+    data.push_back(0x10);
+    data.push_back(0x01);
+
+    // compression_block_size (field 3)
+    data.push_back(0x18);
+    data.insert(data.end(), blockSizeVarint.begin(), blockSizeVarint.end());
+
+    // magic "ORC" (field 8000, length-delimited) so that the PostScript both
+    // parses cleanly and ends with the magic expected by ensureOrcFooter
+    data.push_back(static_cast<char>(0x82));
+    data.push_back(static_cast<char>(0xF4));
+    data.push_back(0x03);
+    data.push_back(0x03);
+    data.push_back('O');
+    data.push_back('R');
+    data.push_back('C');
+
+    // postscript length
+    uint8_t postscriptLen = static_cast<uint8_t>(12 + blockSizeVarint.size());
+    data.push_back(static_cast<char>(postscriptLen));
+    return data;
+  }
+
+  void expectInvalidCompressionBlockSize(const std::vector<char>& blockSizeVarint,
+                                         const std::string& errMsg) {
+    std::vector<char> data = composeInvalidCompressionBlockSizeFile(blockSizeVarint);
+    auto stream = std::make_unique<MemoryInputStream>(data.data(), data.size());
+    ReaderOptions options;
+    try {
+      createReader(std::move(stream), options);
+      FAIL() << "Should throw ParseError for invalid compression block size";
+    } catch (ParseError& e) {
+      EXPECT_EQ(e.what(), errMsg);
+    } catch (...) {
+      FAIL() << "Should only throw ParseError for invalid compression block size";
+    }
+  }
+
+  /**
+   * Test that a PostScript with compression_block_size = 0 throws ParseError.
+   */
+  TEST(TestReader, testInvalidCompressionBlockSizeZero) {
+    expectInvalidCompressionBlockSize({0x00}, "Invalid compression block size: 0");
+  }
+
+  /**
+   * Test that a PostScript with compression_block_size >= 2^23 throws
+   * ParseError since the compressed chunk header only has 23 length bits.
+   */
+  TEST(TestReader, testInvalidCompressionBlockSizeTooLarge) {
+    // 8388608 (1 << 23) as varint
+    expectInvalidCompressionBlockSize(
+        {static_cast<char>(0x80), static_cast<char>(0x80), static_cast<char>(0x80), 0x04},
+        "Invalid compression block size: 8388608");
+  }
+
 }  // namespace orc
