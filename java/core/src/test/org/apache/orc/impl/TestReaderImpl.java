@@ -107,6 +107,72 @@ public class TestReaderImpl implements TestConf {
   }
 
   @Test
+  public void testCheckCompressionBlockSizeBoundaries() throws IOException {
+    OrcProto.PostScript.Builder ps = OrcProto.PostScript.newBuilder();
+    // a missing field is valid
+    ReaderImpl.checkCompressionBlockSize(path, ps.build());
+    for (long valid : new long[]{1, (1 << 23) - 1}) {
+      ReaderImpl.checkCompressionBlockSize(path,
+          ps.setCompressionBlockSize(valid).build());
+    }
+    for (long invalid : new long[]{0, 1 << 23, 1L << 32}) {
+      FileFormatException e = assertThrows(FileFormatException.class, () ->
+          ReaderImpl.checkCompressionBlockSize(path,
+              ps.setCompressionBlockSize(invalid).build()));
+      assertTrue(e.getMessage().contains(
+          "Invalid compression block size: " + invalid));
+    }
+  }
+
+  @Test
+  public void testInvalidCompressionBlockSize() throws Exception {
+    Path tmpDir = new Path(System.getProperty("test.tmp.dir",
+        "target/test/tmp"));
+    FileSystem fs = tmpDir.getFileSystem(conf);
+    for (long invalid : new long[]{0, 1 << 23, 1L << 32}) {
+      byte[] fileBytes = composeInvalidCompressionBlockSizeFile(invalid);
+      // reject in OrcFile.createReader
+      Path tmpPath = new Path(tmpDir,
+          "invalid-compression-block-size-" + invalid + ".orc");
+      try (FSDataOutputStream out = fs.create(tmpPath, true)) {
+        out.write(fileBytes);
+      }
+      try {
+        FileFormatException e = assertThrows(FileFormatException.class, () ->
+            OrcFile.createReader(tmpPath, OrcFile.readerOptions(conf)).close());
+        assertTrue(e.getMessage().contains(
+            "Invalid compression block size: " + invalid));
+      } finally {
+        fs.delete(tmpPath, false);
+      }
+      // reject in the deprecated ReaderImpl.extractFileTail(ByteBuffer)
+      FileFormatException e = assertThrows(FileFormatException.class, () ->
+          ReaderImpl.extractFileTail(ByteBuffer.wrap(fileBytes)));
+      assertTrue(e.getMessage().contains(
+          "Invalid compression block size: " + invalid));
+    }
+  }
+
+  private static byte[] composeInvalidCompressionBlockSizeFile(long blockSize) {
+    // magic is the highest field number, so the serialized postscript ends
+    // with "ORC" as ensureOrcFooter expects
+    byte[] psBytes = OrcProto.PostScript.newBuilder()
+        .setFooterLength(0)
+        .setCompression(OrcProto.CompressionKind.ZLIB)
+        .setCompressionBlockSize(blockSize)
+        .addVersion(0).addVersion(12)
+        .setMetadataLength(0)
+        .setWriterVersion(OrcFile.CURRENT_WRITER.getId())
+        .setMagic(OrcFile.MAGIC)
+        .build().toByteArray();
+    ByteBuffer buf = ByteBuffer.allocate(3 + psBytes.length + 1);
+    buf.put(OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8));
+    buf.put(psBytes);
+    buf.put((byte) psBytes.length);
+    return buf.array();
+  }
+
+  @Test
   public void testOptionSafety() throws IOException {
     Reader.Options options = new Reader.Options();
     String expected = options.toString();
