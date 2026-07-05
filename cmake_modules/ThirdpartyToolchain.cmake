@@ -87,6 +87,7 @@ else ()
 
   ExternalProject_Add (snappy_ep
     URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
+    URL_HASH SHA256=3dfa02e873ff51a11ee02b9ca391807f0c8ea0529a4924afa645fbf97163f9d4
     CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} -DSNAPPY_BUILD_TESTS=OFF
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
@@ -139,6 +140,7 @@ else ()
 
   ExternalProject_Add (zlib_ep
     URL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
+    URL_HASH SHA256=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
     CMAKE_ARGS ${ZLIB_CMAKE_ARGS}
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
@@ -198,6 +200,7 @@ else ()
 
   ExternalProject_Add(zstd_ep
           URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
+          URL_HASH SHA256=98e9c3d949d1b924e28e01eccb7deed865eefebf25c2f21c702e5cd5b63b85e1
           ${ZSTD_CONFIGURE}
           ${THIRDPARTY_LOG_OPTIONS}
           BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
@@ -250,6 +253,7 @@ else ()
 
   ExternalProject_Add(lz4_ep
     URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz"
+    URL_HASH SHA256=030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1
     ${LZ4_CONFIGURE}
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
@@ -342,6 +346,7 @@ if (BUILD_CPP_TESTS)
     ExternalProject_Add(googletest_ep
       BUILD_IN_SOURCE 1
       URL ${GTEST_SRC_URL}
+      URL_HASH SHA256=81964fe578e9bd7c94dfdb09c8e4d6e6759e19967e397dbea48d1c10e45d0df2
       ${THIRDPARTY_LOG_OPTIONS}
       CMAKE_ARGS ${GTEST_CMAKE_ARGS}
       BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}" "${GTEST_STATIC_LIB}")
@@ -416,6 +421,7 @@ else ()
 
   ExternalProject_Add(protobuf_ep
     URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
+    URL_HASH SHA256=826425182ee43990731217b917c5c3ea7190cfda141af4869e6d4ad9085a740f
     ${PROTOBUF_CONFIGURE}
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}")
