@@ -192,6 +192,7 @@ else ()
 
   ExternalProject_Add (snappy_ep
     URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
+    URL_HASH SHA256=90f74bc1fbf78a6c56b3c4a082a05103b3a56bb17bca1a27e052ea11723292dc
     CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} -DSNAPPY_BUILD_TESTS=OFF
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
@@ -251,6 +252,7 @@ else ()
 
   ExternalProject_Add (zlib_ep
     URL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
+    URL_HASH SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
     CMAKE_ARGS ${ZLIB_CMAKE_ARGS}
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
@@ -321,6 +323,7 @@ else ()
 
   ExternalProject_Add(zstd_ep
           URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
+          URL_HASH SHA256=37d7284556b20954e56e1ca85b80226768902e2edabd3b649e9e72c0c9012ee3
           ${ZSTD_CONFIGURE}
           ${THIRDPARTY_LOG_OPTIONS}
           BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
@@ -382,6 +385,7 @@ else ()
 
   ExternalProject_Add(lz4_ep
     URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz"
+    URL_HASH SHA256=537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b
     ${LZ4_CONFIGURE}
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
@@ -461,6 +465,7 @@ if (BUILD_CPP_TESTS)
     ExternalProject_Add(googletest_ep
       BUILD_IN_SOURCE 1
       URL ${GTEST_SRC_URL}
+      URL_HASH SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
       ${THIRDPARTY_LOG_OPTIONS}
       CMAKE_ARGS ${GTEST_CMAKE_ARGS}
       BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}" "${GTEST_STATIC_LIB}")
@@ -565,6 +570,7 @@ else ()
 
   ExternalProject_Add(protobuf_ep
     URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
+    URL_HASH SHA256=826425182ee43990731217b917c5c3ea7190cfda141af4869e6d4ad9085a740f
     ${PROTOBUF_CONFIGURE}
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}")
@@ -605,6 +611,7 @@ if(BUILD_SPARSEHASH)
 
   ExternalProject_Add(sparsehash_ep
       URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
+      URL_HASH SHA256=d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755
       ${SPARSEHASH_CONFIGURE}
       ${THIRDPARTY_LOG_OPTIONS})
 
