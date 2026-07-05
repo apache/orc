@@ -37,21 +37,4 @@ DIAGNOSTIC_IGNORE("-Wconversion")
 
 DIAGNOSTIC_POP
 
-namespace orc {
-  // Matches the Java reader's InStream.PROTOBUF_MESSAGE_MAX_LIMIT (1 GB) so both
-  // implementations reject oversized messages identically.
-  constexpr int PROTOBUF_MESSAGE_MAX_LIMIT = 1024 << 20;
-
-  // Parse a protobuf message from a ZeroCopyInputStream while enforcing the
-  // total byte limit above. Use this instead of Message::ParseFromZeroCopyStream
-  // for any message read from file contents.
-  template <typename Message>
-  inline bool parseProtobufFromStream(Message* message,
-                                      google::protobuf::io::ZeroCopyInputStream* input) {
-    google::protobuf::io::CodedInputStream codedStream(input);
-    codedStream.SetTotalBytesLimit(PROTOBUF_MESSAGE_MAX_LIMIT);
-    return message->ParseFromCodedStream(&codedStream);
-  }
-}  // namespace orc
-
 #endif
