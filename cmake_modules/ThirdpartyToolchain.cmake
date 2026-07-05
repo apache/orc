@@ -209,6 +209,7 @@ else ()
 
     fetchcontent_declare(Protobuf
       URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
+      URL_HASH SHA256=930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53
       SOURCE_SUBDIR "cmake"
       FIND_PACKAGE_ARGS
       NAMES Protobuf
@@ -303,6 +304,7 @@ else ()
 
     fetchcontent_declare(Snappy
       URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
+      URL_HASH SHA256=90f74bc1fbf78a6c56b3c4a082a05103b3a56bb17bca1a27e052ea11723292dc
       FIND_PACKAGE_ARGS
       NAMES Snappy
       CONFIG
@@ -478,6 +480,7 @@ else ()
 
     fetchcontent_declare(zstd
       URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
+      URL_HASH SHA256=37d7284556b20954e56e1ca85b80226768902e2edabd3b649e9e72c0c9012ee3
       SOURCE_SUBDIR "build/cmake"
       FIND_PACKAGE_ARGS
       NAMES zstd
@@ -557,6 +560,7 @@ else ()
 
     fetchcontent_declare(lz4
       URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz"
+      URL_HASH SHA256=537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b
       SOURCE_SUBDIR "build/cmake"
       FIND_PACKAGE_ARGS
       NAMES lz4
@@ -670,6 +674,7 @@ if (BUILD_CPP_TESTS)
       prepare_fetchcontent()
       fetchcontent_declare(GTest
         URL "https://github.com/google/googletest/archive/refs/tags/v${GTEST_VERSION}.tar.gz"
+        URL_HASH SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
         FIND_PACKAGE_ARGS
         NAMES GTest
         CONFIG
@@ -706,6 +711,7 @@ if(BUILD_SPARSEHASH)
 
     fetchcontent_declare(sparsehash
       URL "https://github.com/sparsehash/sparsehash-c11/archive/refs/tags/v${SPARSEHASH_VERSION}.tar.gz"
+      URL_HASH SHA256=d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755
       SOURCE_SUBDIR "sparsehash" # XXX: sparsehash bundles gtest which conflicts with our vendored one
       )
     fetchcontent_makeavailable(sparsehash)
