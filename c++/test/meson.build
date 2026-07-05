@@ -56,6 +56,7 @@ test_sources = [
     'TestTimezone.cc',
     'TestType.cc',
     'TestUtil.cc',
+    'TestUtils.cc',
     'TestWriter.cc',
     'TestCache.cc',        
 ]

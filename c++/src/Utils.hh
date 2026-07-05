@@ -21,9 +21,75 @@
 
 #include <atomic>
 #include <chrono>
+#include <limits>
 #include <stdexcept>
+#include <type_traits>
 
 namespace orc {
+
+  template <typename T>
+  inline bool addWithOverflow(T left, T right, T* result) {
+    static_assert(std::is_integral<T>::value, "addWithOverflow requires an integral type");
+#if defined(__GNUC__) || defined(__clang__)
+    return __builtin_add_overflow(left, right, result);
+#else
+    if constexpr (std::is_unsigned<T>::value) {
+      *result = left + right;
+      return *result < left;
+    } else {
+      if ((right > 0 && left > (std::numeric_limits<T>::max)() - right) ||
+          (right < 0 && left < (std::numeric_limits<T>::min)() - right)) {
+        return true;
+      }
+      *result = left + right;
+      return false;
+    }
+#endif
+  }
+
+  template <typename T>
+  inline bool multiplyWithOverflow(T left, T right, T* result) {
+    static_assert(std::is_integral<T>::value, "multiplyWithOverflow requires an integral type");
+#if defined(__GNUC__) || defined(__clang__)
+    return __builtin_mul_overflow(left, right, result);
+#else
+    if constexpr (std::is_unsigned<T>::value) {
+      if (right != 0 && left > (std::numeric_limits<T>::max)() / right) {
+        return true;
+      }
+      *result = left * right;
+      return false;
+    } else {
+      if (left == 0 || right == 0) {
+        *result = 0;
+        return false;
+      }
+      if ((left == -1 && right == (std::numeric_limits<T>::min)()) ||
+          (right == -1 && left == (std::numeric_limits<T>::min)())) {
+        return true;
+      }
+      if (left > 0) {
+        if (right > 0) {
+          if (left > (std::numeric_limits<T>::max)() / right) {
+            return true;
+          }
+        } else if (right < (std::numeric_limits<T>::min)() / left) {
+          return true;
+        }
+      } else {
+        if (right > 0) {
+          if (left < (std::numeric_limits<T>::min)() / right) {
+            return true;
+          }
+        } else if (right < (std::numeric_limits<T>::max)() / left) {
+          return true;
+        }
+      }
+      *result = left * right;
+      return false;
+    }
+#endif
+  }
 
   class AutoStopwatch {
     std::chrono::high_resolution_clock::time_point start_;

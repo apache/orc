@@ -19,14 +19,24 @@
 #include "orc/Vector.hh"
 
 #include "Adaptor.hh"
+#include "Utils.hh"
 #include "orc/Exceptions.hh"
 #include "orc/MemoryPool.hh"
 
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 namespace orc {
+
+  uint64_t checkedOffsetCapacity(uint64_t capacity) {
+    uint64_t result = 0;
+    if (addWithOverflow(capacity, static_cast<uint64_t>(1), &result)) {
+      throw std::length_error("Vector offset capacity overflow");
+    }
+    return result;
+  }
 
   ColumnVectorBatch::ColumnVectorBatch(uint64_t cap, MemoryPool& pool)
       : capacity(cap),
@@ -200,7 +210,7 @@ namespace orc {
   }
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool)
-      : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
+      : ColumnVectorBatch(cap, pool), offsets(pool, checkedOffsetCapacity(cap)) {
     offsets.zeroOut();
   }
 
@@ -218,7 +228,7 @@ namespace orc {
   void ListVectorBatch::resize(uint64_t cap) {
     if (capacity < cap) {
       ColumnVectorBatch::resize(cap);
-      offsets.resize(cap + 1);
+      offsets.resize(checkedOffsetCapacity(cap));
     }
   }
 
@@ -241,7 +251,7 @@ namespace orc {
   }
 
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool)
-      : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
+      : ColumnVectorBatch(cap, pool), offsets(pool, checkedOffsetCapacity(cap)) {
     offsets.zeroOut();
   }
 
@@ -260,7 +270,7 @@ namespace orc {
   void MapVectorBatch::resize(uint64_t cap) {
     if (capacity < cap) {
       ColumnVectorBatch::resize(cap);
-      offsets.resize(cap + 1);
+      offsets.resize(checkedOffsetCapacity(cap));
     }
   }
 
