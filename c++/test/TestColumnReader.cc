@@ -882,6 +882,49 @@ namespace orc {
     EXPECT_THROW(reader->next(batch, 100, 0), ParseError);
   }
 
+  TEST(TestColumnReader, testStringDirectNegativeLength) {
+    MockStripeStreams streams;
+
+    // set getSelectedColumns()
+    std::vector<bool> selectedColumns(2, true);
+    EXPECT_CALL(streams, getSelectedColumns()).WillRepeatedly(testing::Return(selectedColumns));
+
+    // set getEncoding
+    proto::ColumnEncoding directEncoding;
+    directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    EXPECT_CALL(streams, getEncoding(testing::_)).WillRepeatedly(testing::Return(directEncoding));
+
+    // set getStream
+    EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+        .WillRepeatedly(testing::Return(nullptr));
+
+    char blob[100];
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+        .WillRepeatedly(testing::Return(new SeekableArrayInputStream(blob, ARRAY_SIZE(blob))));
+
+    // RLEv1 repeat run of 3 values, delta 0, base varint 2^63 which is
+    // INT64_MIN when stored as int64_t (unsigned LENGTH decoder, no zigzag).
+    const unsigned char buffer1[] = {0x00, 0x00, 0x80, 0x80, 0x80, 0x80,
+                                     0x80, 0x80, 0x80, 0x80, 0x80, 0x01};
+    EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
+        .WillRepeatedly(
+            testing::Return(new SeekableArrayInputStream(buffer1, ARRAY_SIZE(buffer1))));
+
+    // create the row type
+    std::unique_ptr<Type> rowType = createStructType();
+    rowType->addStructField("col0", createPrimitiveType(STRING));
+
+    std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
+
+    StructVectorBatch batch(1024, *getDefaultPool());
+    StringVectorBatch* strings = new StringVectorBatch(1024, *getDefaultPool());
+    batch.fields.push_back(strings);
+    EXPECT_THROW(reader->next(batch, 3, 0), ParseError);
+  }
+
   TEST_P(TestColumnReaderEncoded, testStringDirectShortBuffer) {
     MockStripeStreams streams;
 
