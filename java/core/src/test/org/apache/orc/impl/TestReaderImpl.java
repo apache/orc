@@ -173,6 +173,64 @@ public class TestReaderImpl implements TestConf {
   }
 
   @Test
+  public void testMalformedTailLengthOverflow() throws Exception {
+    Path tmpDir = new Path(System.getProperty("test.tmp.dir",
+        "target/test/tmp"));
+    FileSystem fs = tmpDir.getFileSystem(conf);
+    // Each triple sets one of footer/metadata/stripeStatistics length to a value
+    // that would overflow or truncate when narrowed to int: 2^31 (negative int),
+    // 2^32 (truncates to 0), and -1L (UINT64_MAX as read from protobuf uint64).
+    long[][] cases = new long[][]{
+        {1L << 31, 0, 0},
+        {1L << 32, 0, 0},
+        {-1L, 0, 0},
+        {0, 1L << 31, 0},
+        {0, -1L, 0},
+        {0, 0, 1L << 31},
+        {0, 0, -1L},
+    };
+    for (long[] c : cases) {
+      byte[] fileBytes = composeMalformedTailFile(c[0], c[1], c[2]);
+      Path tmpPath = new Path(tmpDir,
+          "malformed-tail-" + c[0] + "-" + c[1] + "-" + c[2] + ".orc");
+      try (FSDataOutputStream out = fs.create(tmpPath, true)) {
+        out.write(fileBytes);
+      }
+      try {
+        FileFormatException e = assertThrows(FileFormatException.class, () ->
+            OrcFile.createReader(tmpPath, OrcFile.readerOptions(conf)).close());
+        assertTrue(e.getMessage().contains("Malformed ORC file"),
+            "Unexpected message: " + e.getMessage());
+        assertTrue(e.getMessage().contains("tail"),
+            "Unexpected message: " + e.getMessage());
+      } finally {
+        fs.delete(tmpPath, false);
+      }
+    }
+  }
+
+  private static byte[] composeMalformedTailFile(long footerLength,
+      long metadataLength, long stripeStatLength) {
+    // Valid compressionBlockSize so the failure is triggered by the tail-length
+    // check rather than the compression-block-size check.
+    byte[] psBytes = OrcProto.PostScript.newBuilder()
+        .setFooterLength(footerLength)
+        .setCompression(OrcProto.CompressionKind.NONE)
+        .setCompressionBlockSize(1 << 16)
+        .addVersion(0).addVersion(12)
+        .setMetadataLength(metadataLength)
+        .setStripeStatisticsLength(stripeStatLength)
+        .setWriterVersion(OrcFile.CURRENT_WRITER.getId())
+        .setMagic(OrcFile.MAGIC)
+        .build().toByteArray();
+    ByteBuffer buf = ByteBuffer.allocate(3 + psBytes.length + 1);
+    buf.put(OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8));
+    buf.put(psBytes);
+    buf.put((byte) psBytes.length);
+    return buf.array();
+  }
+
+  @Test
   public void testOptionSafety() throws IOException {
     Reader.Options options = new Reader.Options();
     String expected = options.toString();

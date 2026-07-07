@@ -854,13 +854,38 @@ public class ReaderImpl implements Reader {
           CompressionKind.valueOf(ps.getCompression().name());
       fileTailBuilder.setPostscriptLength(psLen).setPostscript(ps);
 
-      int footerSize = (int) ps.getFooterLength();
-      int metadataSize = (int) ps.getMetadataLength();
-      int stripeStatSize = (int) ps.getStripeStatisticsLength();
+      long footerLength = ps.getFooterLength();
+      long metadataLength = ps.getMetadataLength();
+      long stripeStatLength = ps.getStripeStatisticsLength();
+
+      // Reject malformed tail lengths before narrowing to int, symmetric with the
+      // C++ overflow-safe checks added in ORC-2167. A crafted PostScript length near
+      // UINT64_MAX (read as a negative long) or above 2GB would otherwise truncate or
+      // overflow into a bogus seek offset or ByteBuffer allocation size.
+      if (footerLength < 0 || footerLength > Integer.MAX_VALUE ||
+          metadataLength < 0 || metadataLength > Integer.MAX_VALUE ||
+          stripeStatLength < 0 || stripeStatLength > Integer.MAX_VALUE) {
+        throw new FileFormatException("Malformed ORC file " + path
+            + ". Invalid tail length. fileLength=" + size
+            + ", postscriptLength=" + psLen + ", footerLength=" + footerLength
+            + ", metadataLength=" + metadataLength
+            + ", stripeStatisticsLength=" + stripeStatLength);
+      }
+
+      int footerSize = (int) footerLength;
+      int metadataSize = (int) metadataLength;
+      int stripeStatSize = (int) stripeStatLength;
 
       //check if extra bytes need to be read
-      int tailSize = 1 + psLen + footerSize + metadataSize + stripeStatSize;
-      int extra = Math.max(0, tailSize - readSize);
+      long tailSize = 1L + psLen + footerSize + metadataSize + stripeStatSize;
+      if (tailSize > size || tailSize > Integer.MAX_VALUE) {
+        throw new FileFormatException("Malformed ORC file " + path
+            + ". Invalid tail size " + tailSize + " for file of length " + size
+            + " (postscriptLength=" + psLen + ", footerLength=" + footerSize
+            + ", metadataLength=" + metadataSize
+            + ", stripeStatisticsLength=" + stripeStatSize + ")");
+      }
+      int extra = Math.max(0, (int) tailSize - readSize);
       if (extra > 0) {
         //more bytes need to be read, seek back to the right place and read extra bytes
         BufferChunk orig = buffer;
