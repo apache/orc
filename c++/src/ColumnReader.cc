@@ -694,15 +694,29 @@ namespace orc {
   size_t StringDirectColumnReader::computeSize(const int64_t* lengths, const char* notNull,
                                                uint64_t numValues) {
     size_t totalLength = 0;
+    auto addLength = [&](int64_t length) {
+      if (length < 0) {
+        std::stringstream ss;
+        ss << "Negative string length in StringDirectColumnReader for column " << columnId;
+        throw ParseError(ss.str());
+      }
+      size_t len = static_cast<size_t>(length);
+      if (totalLength > std::numeric_limits<size_t>::max() - len) {
+        std::stringstream ss;
+        ss << "String length overflow in StringDirectColumnReader for column " << columnId;
+        throw ParseError(ss.str());
+      }
+      totalLength += len;
+    };
     if (notNull) {
       for (size_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
-          totalLength += static_cast<size_t>(lengths[i]);
+          addLength(lengths[i]);
         }
       }
     } else {
       for (size_t i = 0; i < numValues; ++i) {
-        totalLength += static_cast<size_t>(lengths[i]);
+        addLength(lengths[i]);
       }
     }
     return totalLength;
