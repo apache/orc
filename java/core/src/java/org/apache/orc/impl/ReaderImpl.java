@@ -412,7 +412,8 @@ public class ReaderImpl implements Reader {
                                            .withEncryption(algorithm, key, iv);
       InStream in = InStream.create("encrypted file stats", buffer,
           0, bytes.length, options);
-      OrcProto.FileStatistics decrypted = OrcProto.FileStatistics.parseFrom(in);
+      OrcProto.FileStatistics decrypted =
+          OrcProto.FileStatistics.parseFrom(InStream.createCodedInputStream(in));
       ColumnStatistics[] result = new ColumnStatistics[decrypted.getColumnCount()];
       TypeDescription root = encryption.getRoot();
       for(int i= 0; i < result.length; ++i){
