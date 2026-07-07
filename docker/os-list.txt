@@ -1,4 +1,3 @@
-debian12
 debian13
 ubuntu24
 ubuntu26

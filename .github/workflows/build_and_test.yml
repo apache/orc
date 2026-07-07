@@ -47,7 +47,6 @@ jobs:
       max-parallel: 20
       matrix:
         os:
-          - debian12
           - debian13
           - ubuntu24
           - ubuntu26
