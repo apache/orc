@@ -569,6 +569,19 @@ namespace orc {
     EXPECT_EQ(16, static_cast<const char*>(ptr)[2]);
   }
 
+  TEST(Zlib, testChunkLengthExceedsBlockSize) {
+    // Craft a compressed chunk header whose chunkLength (100) exceeds the
+    // configured block size (5). header = chunkLength << 1 = 200 = 0xC8.
+    const unsigned char buffer[] = {0xc8, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5};
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_ZLIB,
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 5), 5,
+        *getDefaultPool(), getDefaultReaderMetrics());
+    const void* ptr;
+    int length;
+    EXPECT_THROW(result->Next(&ptr, &length), ParseError);
+  }
+
   TEST(Zlib, testInflate) {
     const unsigned char buffer[] = {0xe, 0x0, 0x0, 0x63, 0x60, 0x64, 0x62, 0xc0, 0x8d, 0x0};
     std::unique_ptr<SeekableInputStream> result =
