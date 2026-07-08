@@ -1646,6 +1646,7 @@ namespace orc {
       }
       contents->postscript = std::make_unique<proto::PostScript>(tail.postscript());
       contents->footer = std::make_unique<proto::Footer>(tail.footer());
+      checkProtoTypes(*contents->footer);
       fileLength = tail.file_length();
       postscriptLength = tail.postscript_length();
     } else {
