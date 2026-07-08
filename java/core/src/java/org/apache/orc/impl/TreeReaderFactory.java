@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.ql.io.filter.FilterContext;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.FileFormatException;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFilterContext;
@@ -2735,6 +2736,13 @@ public class TreeReaderFactory {
       this.fields = childReaders;
     }
 
+    private void checkUnionTag(int tag) throws FileFormatException {
+      if (tag < 0 || tag >= fields.length) {
+        throw new FileFormatException("Invalid union tag " + tag +
+            " for union with " + fields.length + " children");
+      }
+    }
+
     @Override
     public void seek(PositionProvider[] index, ReadPhase readPhase) throws IOException {
       if (readPhase.contains(this.readerCategory)) {
@@ -2761,6 +2769,11 @@ public class TreeReaderFactory {
           result.isRepeating = false;
           tags.nextVector(result.noNulls ? null : result.isNull, result.tags,
                           batchSize);
+          for (int r = 0; r < batchSize; ++r) {
+            if (result.noNulls || !result.isNull[r]) {
+              checkUnionTag(result.tags[r]);
+            }
+          }
         }
       }
 
@@ -2802,7 +2815,9 @@ public class TreeReaderFactory {
       items = countNonNulls(items);
       long[] counts = new long[fields.length];
       for (int i = 0; i < items; ++i) {
-        counts[tags.next()] += 1;
+        int tag = tags.next();
+        checkUnionTag(tag);
+        counts[tag] += 1;
       }
       for (int i = 0; i < counts.length; ++i) {
         if (TypeReader.shouldProcessChild(fields[i], readPhase)) {
