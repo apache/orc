@@ -1424,4 +1424,33 @@ namespace orc {
         "Invalid compression block size: 8388608");
   }
 
+  /**
+   * Test that createReader validates the type tree when the footer comes
+   * from a serialized file tail, matching the file-read path (ORC-317).
+   */
+  TEST(TestReader, testSerializedFileTailInvalidTypes) {
+    proto::FileTail tail;
+    proto::PostScript* ps = tail.mutable_postscript();
+    ps->set_footer_length(0);
+    ps->set_compression(proto::NONE);
+    ps->set_magic("ORC");
+    proto::Footer* footer = tail.mutable_footer();
+    // Root STRUCT with a subtype that points back to itself (type 0),
+    // which would cause unbounded recursion in convertType if unchecked.
+    proto::Type* rootType = footer->add_types();
+    rootType->set_kind(proto::Type_Kind_STRUCT);
+    rootType->add_subtypes(0);
+    rootType->add_field_names("f1");
+    tail.set_file_length(0);
+    tail.set_postscript_length(0);
+
+    std::string serializedTail;
+    ASSERT_TRUE(tail.SerializeToString(&serializedTail));
+
+    ReaderOptions options;
+    options.setSerializedFileTail(serializedTail);
+    auto stream = std::make_unique<MemoryInputStream>(nullptr, 0);
+    EXPECT_THROW(createReader(std::move(stream), options), ParseError);
+  }
+
 }  // namespace orc
