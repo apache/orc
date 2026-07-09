@@ -41,6 +41,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.OrcUtils;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.StripeInformation;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
@@ -228,6 +229,51 @@ public class TestReaderImpl implements TestConf {
     buf.put(psBytes);
     buf.put((byte) psBytes.length);
     return buf.array();
+  }
+
+  @Test
+  public void testMalformedStripeLength() throws Exception {
+    long fileLength = 1000;
+    // A valid stripe within the file length is accepted.
+    RecordReaderImpl.validateStripeInformation(
+        composeStripeInformation(3, 10, 20, 30), fileLength, path);
+    // Each quadruple is a malformed (offset, indexLength, dataLength,
+    // footerLength): a footerLength that would truncate or go negative when
+    // narrowed to int (2^31, 2^32), uint64 values above Long.MAX_VALUE read as
+    // negative longs (-1L), a sum that overflows long, and extents past the
+    // file length.
+    long[][] cases = new long[][]{
+        {0, 0, 0, 1L << 31},
+        {0, 0, 0, 1L << 32},
+        {0, 0, 0, -1L},
+        {-1L, 0, 0, 0},
+        {0, -1L, 0, 0},
+        {0, 0, -1L, 0},
+        {1L << 62, 0, 1L << 62, 0},
+        {900, 0, 0, 200},
+    };
+    for (long[] c : cases) {
+      FileFormatException e = assertThrows(FileFormatException.class, () ->
+          RecordReaderImpl.validateStripeInformation(
+              composeStripeInformation(c[0], c[1], c[2], c[3]), fileLength, path));
+      assertTrue(e.getMessage().contains("Malformed ORC file"),
+          "Unexpected message: " + e.getMessage());
+      assertTrue(e.getMessage().contains("Invalid stripe offset/length"),
+          "Unexpected message: " + e.getMessage());
+    }
+  }
+
+  private static StripeInformation composeStripeInformation(long offset,
+      long indexLength, long dataLength, long footerLength) {
+    return new ReaderImpl.StripeInformationImpl(
+        OrcProto.StripeInformation.newBuilder()
+            .setOffset(offset)
+            .setIndexLength(indexLength)
+            .setDataLength(dataLength)
+            .setFooterLength(footerLength)
+            .setNumberOfRows(0)
+            .build(),
+        0, 0, null);
   }
 
   @Test
