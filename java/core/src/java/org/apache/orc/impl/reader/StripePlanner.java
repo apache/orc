@@ -21,6 +21,7 @@ package org.apache.orc.impl.reader;
 import com.google.protobuf.CodedInputStream;
 import org.apache.orc.DataReader;
 import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.FileFormatException;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
@@ -147,7 +148,8 @@ public class StripePlanner {
     dataStreams.clear();
     indexStreams.clear();
     buildEncodings(footer, columnInclude);
-    findStreams(stripe.getOffset(), footer, columnInclude);
+    long dataEnd = stripe.getOffset() + stripe.getIndexLength() + stripe.getDataLength();
+    findStreams(stripe.getOffset(), dataEnd, footer, columnInclude);
     // figure out whether each column has null values in this stripe
     Arrays.fill(hasNull, false);
     for(StreamInformation stream: dataStreams) {
@@ -268,6 +270,7 @@ public class StripePlanner {
   /**
    * For each stream, decide whether to include it in the list of streams.
    * @param offset the position in the file for this stream
+   * @param dataEnd the end of the stripe's index and data region
    * @param columnInclude which columns are being read
    * @param stream the stream to consider
    * @param area only the area will be included
@@ -275,10 +278,11 @@ public class StripePlanner {
    * @return the offset for the next stream
    */
   private long handleStream(long offset,
+                            long dataEnd,
                             boolean[] columnInclude,
                             OrcProto.Stream stream,
                             StreamName.Area area,
-                            ReaderEncryptionVariant variant) {
+                            ReaderEncryptionVariant variant) throws IOException {
     int column = stream.getColumn();
     if (stream.hasKind()) {
       OrcProto.Stream.Kind kind = stream.getKind();
@@ -317,7 +321,13 @@ public class StripePlanner {
         }
       }
     }
-    return stream.getLength();
+    long length = stream.getLength();
+    if (length < 0 || offset + length < offset || offset + length > dataEnd) {
+      throw new FileFormatException("Malformed ORC file. Stream for column " + column
+          + " kind " + stream.getKind() + " exceeds stripe bounds: streamOffset=" + offset
+          + ", streamLength=" + length + ", stripeDataEnd=" + dataEnd);
+    }
+    return length;
   }
 
   /**
@@ -325,10 +335,12 @@ public class StripePlanner {
    * CurrentOffset total order must be consistent with write
    * {@link PhysicalFsWriter#finalizeStripe}
    * @param streamStart the starting offset of streams in the file
+   * @param dataEnd the end of the stripe's index and data region
    * @param footer the footer for the stripe
    * @param columnInclude which columns are being read
    */
   private void findStreams(long streamStart,
+                           long dataEnd,
                            OrcProto.StripeFooter footer,
                            boolean[] columnInclude) throws IOException {
     long currentOffset = streamStart;
@@ -342,19 +354,21 @@ public class StripePlanner {
     // Storage layout of index and data, So we need to find the streams in this order
     //
     // find index streams, encrypted first and then unencrypted
-    currentOffset = findStreamsByArea(currentOffset, footer, StreamName.Area.INDEX, columnInclude);
+    currentOffset = findStreamsByArea(currentOffset, dataEnd, footer, StreamName.Area.INDEX,
+        columnInclude);
 
     // find data streams, encrypted first and then unencrypted
-    findStreamsByArea(currentOffset, footer, StreamName.Area.DATA, columnInclude);
+    findStreamsByArea(currentOffset, dataEnd, footer, StreamName.Area.DATA, columnInclude);
   }
 
   private long findStreamsByArea(long currentOffset,
+                                long dataEnd,
                                 OrcProto.StripeFooter footer,
                                 StreamName.Area area,
-                                boolean[] columnInclude) {
+                                boolean[] columnInclude) throws IOException {
     // find unencrypted streams
     for(OrcProto.Stream stream: footer.getStreamsList()) {
-      currentOffset += handleStream(currentOffset, columnInclude, stream, area, null);
+      currentOffset += handleStream(currentOffset, dataEnd, columnInclude, stream, area, null);
     }
 
     // find encrypted streams
@@ -363,7 +377,8 @@ public class StripePlanner {
       OrcProto.StripeEncryptionVariant stripeVariant =
           footer.getEncryption(variantId);
       for(OrcProto.Stream stream: stripeVariant.getStreamsList()) {
-        currentOffset += handleStream(currentOffset, columnInclude, stream, area, variant);
+        currentOffset += handleStream(currentOffset, dataEnd, columnInclude, stream, area,
+            variant);
       }
     }
     return currentOffset;
