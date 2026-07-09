@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.ql.io.filter.FilterContext;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.FileFormatException;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFilterContext;
@@ -2320,7 +2321,12 @@ public class TreeReaderFactory {
         }
         for (int i = 0; i < dictionarySize; ++i) {
           dictionaryOffsets[i] = offset;
-          offset += (int) lenReader.next();
+          long length = lenReader.next();
+          if (length < 0) {
+            throw new FileFormatException("Negative dictionary entry length " + length
+                + " for column " + columnId);
+          }
+          offset += (int) length;
         }
         dictionaryOffsets[dictionarySize] = offset;
         in.close();
