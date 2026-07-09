@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2026/07/08/ORC-1.9.9/">ORC 1.9.9 Released</option>
+      
       <option value="/news/2026/03/02/ORC-2.3.0/">ORC 2.3.0 Released</option>
       
       <option value="/news/2026/01/12/ORC-2.2.2/">ORC 2.2.2 Released</option>
@@ -371,6 +373,54 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2026/07/08/ORC-1.9.9/">
+      ORC 1.9.9 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      08 Jul 2026
+    </span>
+    <span class="post-author">
+      dongjoon
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.9.9.</p>
+
+<ul>
+  <li>Released: 8 July 2026</li>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.9.9/orc-1.9.9.tar.gz">orc-1.9.9.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.9.9/orc-1.9.9.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.9">rel/release-1.9.9</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.9%22">ORC 1.9.9</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.9.9/orc-1.9.9.tar.gz.sha256">0fe8c341543d72b6…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.9%22&amp;tempMax=500">ORC-1.9.9</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2177">ORC-2177</a>: ORC-2177: Fix array conversion with empty first batch</li>
+  <li>Fix Integer Overflow in <code class="language-plaintext highlighter-rouge">Seekable(Array|File)InputStream::Skip</code></li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2189">ORC-2189</a> Add URL_HASH to all third-party dependencies in ThirdpartyToolchain.cmake</li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2026/03/02/ORC-2.3.0/">
@@ -767,12 +817,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
 
 <ul>
   <li>Released: 8 January 2026</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.9.8/orc-1.9.8.tar.gz">orc-1.9.8.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.9.8/orc-1.9.8.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.9.8/orc-1.9.8.tar.gz">orc-1.9.8.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.9.8/orc-1.9.8.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.9.8">rel/release-1.9.8</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.9.8%22">ORC 1.9.8</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.9.8/orc-1.9.8.tar.gz.sha256">f672af2ed1aef5a2…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.9.8/orc-1.9.8.tar.gz.sha256">f672af2ed1aef5a2…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.9.8%22&amp;tempMax=500">ORC-1.9.8</a></li>
 </ul>
 
@@ -7003,6 +7053,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2026/07/08/ORC-1.9.9/">Version 1.9.9</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2026/03/02/ORC-2.3.0/">Version 2.3.0</a>
       </li>
       
@@ -7018,13 +7072,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2026/01/08/ORC-2.0.7/">Version 2.0.7</a>
       </li>
       
-      <li class="">
-        <a href="/news/2026/01/08/ORC-1.9.8/">Version 1.9.8</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
