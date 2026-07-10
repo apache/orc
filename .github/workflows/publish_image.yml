@@ -1,0 +1,43 @@
+name: Publish Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'list of OSes to publish (JSON)'
+        required: true
+        default: '["amazonlinux23", "debian13", "oraclelinux10", "oraclelinux9", "ubi10", "ubuntu24", "ubuntu26"]'
+
+jobs:
+  publish-image:
+    if: github.repository == 'apache/orc'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        os: ${{ fromJSON( inputs.os || '["amazonlinux23", "debian13", "oraclelinux10", "oraclelinux9", "ubi10", "ubuntu24", "ubuntu26"]' ) }}
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
+    - name: Login to Docker Hub
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Checkout repository
+      uses: actions/checkout@v6
+      with:
+        ref: main
+    - name: Build and push
+      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
+      with:
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        context: docker/${{ matrix.os }}
+        file: docker/${{ matrix.os }}/Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: apache/orc-dev:${{ matrix.os }}
