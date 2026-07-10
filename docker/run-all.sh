@@ -16,12 +16,8 @@
 # limitations under the License.
 
 GITHUB_USER=$1
-URL=https://github.com/$GITHUB_USER/orc.git
 BRANCH=$2
 
-CLONE="git clone $URL -b $BRANCH"
-MAKEDIR="mkdir orc/build && cd orc/build"
-VOLUME="--volume m2cache:/root/.m2/repository"
 mkdir -p logs
 
 function failure {
