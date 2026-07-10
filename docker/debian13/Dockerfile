@@ -17,7 +17,7 @@
 # ORC compile for Debian 13
 #
 
-FROM debian:13.1
+FROM debian:13
 LABEL org.opencontainers.image.authors="Apache ORC project <dev@orc.apache.org>"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.ref.name="Apache ORC on Debian 13"
