@@ -3,10 +3,10 @@
 ## Supported OSes
 
 * Debian 13
-* Fedora 37
 * Ubuntu 24 and 26
 * Oracle Linux 9 and 10
 * Amazon Linux 2023
+* UBI 10
 
 ## Pre-built Images
 
@@ -33,12 +33,16 @@ The scripts are:
 * `run-one.sh` *owner* *branch* *os* - test the owner's branch on one OS
 * `reinit.sh` - rebuild all of the base images without the image cache
 
-`run-all.sh`, `run-one.sh` and `reinit.sh` tests both on jdk17 and 21 across OSes
+Each OS image uses a single JDK version: JDK 17 (oraclelinux9, amazonlinux23),
+JDK 21 (debian13, ubuntu24, oraclelinux10) and JDK 25 (ubuntu26, ubi10).
 
 A base image for each OS is built using:
 
     cd docker/$os
-    FOR jdk21: docker build -t "orc-$os-jdk21" --build-arg jdk=21 .
+    docker build -t "apache/orc-dev:$os" .
+
+For debian13, ubuntu24 and ubuntu26, the JDK version can be changed via
+`--build-arg jdk=N`.
 
 ## Clean up
 
