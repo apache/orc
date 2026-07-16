@@ -7,6 +7,7 @@ RedirectMatch Permanent ^/milestones$ https://github.com/apache/orc/milestones
 RedirectMatch Permanent ^/downloads$ https://downloads.apache.org/orc/
 RedirectMatch Permanent ^/src$ https://github.com/apache/orc
 RedirectMatch Permanent ^/web-src$ https://github.com/apache/orc/tree/main/site
+RedirectMatch Permanent ^/api$ https://javadoc.io/doc/org.apache.orc
 RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
