@@ -1123,7 +1123,7 @@ page</a>.</p>
 <p>Set the minimal properties in your JobConf:</p>
 
 <ul>
-  <li><strong>mapreduce.job.inputformat.class</strong> = <a href="/api/orc-mapreduce/index.html?org/apache/orc/mapreduce/OrcInputFormat.html">org.apache.orc.mapreduce.OrcInputFormat</a></li>
+  <li><strong>mapreduce.job.inputformat.class</strong> = <a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapreduce/OrcInputFormat.html">org.apache.orc.mapreduce.OrcInputFormat</a></li>
   <li><strong>mapreduce.input.fileinputformat.inputdir</strong> = your input directory</li>
 </ul>
 
@@ -1146,7 +1146,7 @@ the key and a value based on the table below expanded recursively.</p>
   <tbody>
     <tr>
       <td>array</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcList</a></td>
+      <td><a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcList</a></td>
     </tr>
     <tr>
       <td>binary</td>
@@ -1186,7 +1186,7 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>map</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcMap.html">org.apache.orc.mapred.OrcMap</a></td>
+      <td><a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcMap.html">org.apache.orc.mapred.OrcMap</a></td>
     </tr>
     <tr>
       <td>smallint</td>
@@ -1198,11 +1198,11 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>struct</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcStruct</a></td>
+      <td><a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcStruct</a></td>
     </tr>
     <tr>
       <td>timestamp</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcTimestamp.html">org.apache.orc.mapred.OrcTimestamp</a></td>
+      <td><a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcTimestamp.html">org.apache.orc.mapred.OrcTimestamp</a></td>
     </tr>
     <tr>
       <td>tinyint</td>
@@ -1210,7 +1210,7 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>uniontype</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcUnion.html">org.apache.orc.mapred.OrcUnion</a></td>
+      <td><a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcUnion.html">org.apache.orc.mapred.OrcUnion</a></td>
     </tr>
     <tr>
       <td>varchar</td>
@@ -1242,7 +1242,7 @@ mapper code would look like:</p>
 <p>To write ORC files from your MapReduce job, you’ll need to set</p>
 
 <ul>
-  <li><strong>mapreduce.job.outputformat.class</strong> = <a href="/api/orc-mapreduce/index.html?org/apache/orc/mapreduce/OrcOutputFormat.html">org.apache.orc.mapreduce.OrcOutputFormat</a></li>
+  <li><strong>mapreduce.job.outputformat.class</strong> = <a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapreduce/OrcOutputFormat.html">org.apache.orc.mapreduce.OrcOutputFormat</a></li>
   <li><strong>mapreduce.output.fileoutputformat.outputdir</strong> = your output directory</li>
   <li><strong>orc.mapred.output.schema</strong> = the schema to write to the ORC file</li>
 </ul>
@@ -1288,9 +1288,9 @@ MapReduce shuffle. The complex ORC types, since they are generic
 types, need to have their full type information provided to create the
 object. To enable MapReduce to properly instantiate the OrcStruct and
 other ORC types, we need to wrap it in either an
-<a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcKey.html">OrcKey</a>
+<a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcKey.html">OrcKey</a>
 for the shuffle key or
-<a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcValue.html">OrcValue</a>
+<a href="https://javadoc.io/doc/org.apache.orc/orc-mapreduce/latest/org/apache/orc/mapred/OrcValue.html">OrcValue</a>
 for the shuffle value.</p>
 
 <p>To send two OrcStructs through the shuffle, define the following properties
