@@ -212,9 +212,9 @@ public class MapColumnVector extends ColumnVector {
 
 ### Simple Example
 To write an ORC file, you need to define the schema and use the
-[OrcFile](/api/orc-core/index.html?org/apache/orc/OrcFile.html)
+[OrcFile](https://javadoc.io/doc/org.apache.orc/orc-core/latest/org/apache/orc/OrcFile.html)
 class to create a
-[Writer](/api/orc-core/index.html?org/apache/orc/Writer.html)
+[Writer](https://javadoc.io/doc/org.apache.orc/orc-core/latest/org/apache/orc/Writer.html)
 with the desired filename. This example sets the required schema
 parameter, but there are many other options to control the ORC writer.
 
@@ -319,9 +319,9 @@ writer.close();
 ## Reading ORC Files
 
 To read ORC files, use the
-[OrcFile](/api/orc-core/index.html?org/apache/orc/OrcFile.html)
+[OrcFile](https://javadoc.io/doc/org.apache.orc/orc-core/latest/org/apache/orc/OrcFile.html)
 class to create a
-[Reader](/api/orc-core/index.html?org/apache/orc/Reader.html)
+[Reader](https://javadoc.io/doc/org.apache.orc/orc-core/latest/org/apache/orc/Reader.html)
 that contains the metadata about the file. There are a few options to
 the ORC reader, but far fewer than the writer and none of them are
 required. The reader has methods for getting the number of rows,
@@ -333,7 +333,7 @@ Reader reader = OrcFile.createReader(new Path("my-file.orc"),
 ~~~
 
 To get the data, create a
-[RecordReader](/api/orc-core/index.html?org/apache/orc/RecordReader.html)
+[RecordReader](https://javadoc.io/doc/org.apache.orc/orc-core/latest/org/apache/orc/RecordReader.html)
 object. By default, the RecordReader reads all rows and all columns,
 but there are options to control the data that is read.
 
