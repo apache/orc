@@ -116,6 +116,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2026/07/16/ORC-2.3.1/">ORC 2.3.1 Released</option>
+      
       <option value="/news/2026/07/08/ORC-1.9.9/">ORC 1.9.9 Released</option>
       
       <option value="/news/2026/03/02/ORC-2.3.0/">ORC 2.3.0 Released</option>
@@ -375,6 +377,102 @@
         
   <article>
   <h2>
+    <a href="/news/2026/07/16/ORC-2.3.1/">
+      ORC 2.3.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      16 Jul 2026
+    </span>
+    <span class="post-author">
+      dongjoon
+    </span>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v2.3.1.</p>
+
+<ul>
+  <li>Released: 16 July 2026</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.3.1/orc-2.3.1.tar.gz">orc-2.3.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-2.3.1/orc-2.3.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.3.1">rel/release-2.3.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.3.1%22">ORC 2.3.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.3.1/orc-2.3.1.tar.gz.sha256">6ef34f92cd81afbd…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.3.1%22&amp;tempMax=500">ORC-2.3.1</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2123">ORC-2123</a> [C++] Fix heap-use-after-free in ORC SearchArgument rewriteLeaves</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2131">ORC-2131</a> Set default of orc.stripe.size.check.ratio and orc.dictionary.max.size.bytes to 0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2151">ORC-2151</a> [C++] Move the timestamp compensation before timezone conversion to prevent incorrect DST offset lookup</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2160">ORC-2160</a> [C++] Expose prefetch range planning via Reader::preBufferRange and refactor preBuffer to reuse it</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2161">ORC-2161</a> [C++] UnionColumnReader should reject out-of-range union tags</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2164">ORC-2164</a> [C++] Add external-buffer support in DataBuffer lifecycle management</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2165">ORC-2165</a> [C++] Fix bounds check for LZO stop command trailer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2167">ORC-2167</a> [C++] Fix integer overflow in PostScript footer length validation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2177">ORC-2177</a> Fix array conversion with empty first batch</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2187">ORC-2187</a> Set protobuf message size limit in C++ reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2188">ORC-2188</a> Reject invalid compression block size in PostScript</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2190">ORC-2190</a> [C++] Reject compressed chunk length exceeding block size in C++ reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2191">ORC-2191</a> Reject overflowing PostScript tail lengths in ReaderImpl</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2192">ORC-2192</a> [C++] Reject invalid string length in StringDirectColumnReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2193">ORC-2193</a> Parse encrypted FileStatistics via createCodedInputStream</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2196">ORC-2196</a> [C++] Validate type tree when creating reader from serialized file tail</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2197">ORC-2197</a> Reject negative decoded dictionary entry length in Java string dictionary reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2198">ORC-2198</a> Validate stream offset+length against stripe data boundary in StripePlanner</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2199">ORC-2199</a> Validate union tag against the number of children in UnionTreeReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2200">ORC-2200</a> Validate stripe offset/index/data/footer lengths in the Java reader</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2117">ORC-2117</a> Add Java 26-ea to GitHub Action build job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2121">ORC-2121</a> Add ubi10 to docker tests and GitHub Actions job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2132">ORC-2132</a> Use Java 26 instead of 26-ea</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2133">ORC-2133</a> Remove Super-Linter from GitHub Actions jobs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2134">ORC-2134</a> Remove microsoft/setup-msbuild from GitHub Actions jobs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2181">ORC-2181</a> Add ubuntu-26.04(-arm)? to GitHub Actions build job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2183">ORC-2183</a> Use Visual Studio 18 2026 generator in Windows CIs</li>
+</ul>
+
+<p>The build and dependency changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2120">ORC-2120</a> Upgrade lz4-java to 0.10.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2122">ORC-2122</a> Upgrade spark.jackson.version to 2.21.1 in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2124">ORC-2124</a> Upgrade Maven to 3.9.13</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2135">ORC-2135</a> Upgrade mockito to 5.23.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2137">ORC-2137</a> Upgrade kryo-shaded to 4.0.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2148">ORC-2148</a> Upgrade lz4-java to 1.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2150">ORC-2150</a> Upgrade ZLIB to 1.3.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2180">ORC-2180</a> Upgrade threeten-extra to 1.9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2189">ORC-2189</a> Add URL_HASH to all third-party dependencies in ThirdpartyToolchain.cmake</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2195">ORC-2195</a> Upgrade lz4-java to 1.11.1</li>
+</ul>
+
+<p>The improvements (tools):</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2149">ORC-2149</a> Supports merging multiple ORC files with the same schema into multiple ORC files</li>
+</ul>
+
+<p>Documentation:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-2149">ORC-2128</a> Add since Javadoc tags to all public orc-core class/interface/enum</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2026/07/08/ORC-1.9.9/">
       ORC 1.9.9 Released
     </a>
@@ -445,12 +543,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 2 March 2026</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-2.3.0/orc-2.3.0.tar.gz">orc-2.3.0.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-2.3.0/orc-2.3.0.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-2.3.0/orc-2.3.0.tar.gz">orc-2.3.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-2.3.0/orc-2.3.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-2.3.0">rel/release-2.3.0</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%222.3.0%22">ORC 2.3.0</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-2.3.0/orc-2.3.0.tar.gz.sha256">6c9e2f6663ac9ef3…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-2.3.0/orc-2.3.0.tar.gz.sha256">6c9e2f6663ac9ef3…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%222.3.0%22&amp;tempMax=500">ORC-2.3.0</a></li>
 </ul>
 
@@ -7053,6 +7151,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2026/07/16/ORC-2.3.1/">Version 2.3.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2026/07/08/ORC-1.9.9/">Version 1.9.9</a>
       </li>
       
@@ -7068,13 +7170,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2026/01/09/ORC-2.1.4/">Version 2.1.4</a>
       </li>
       
-      <li class="">
-        <a href="/news/2026/01/08/ORC-2.0.7/">Version 2.0.7</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
