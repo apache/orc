@@ -1102,7 +1102,7 @@
 <p><a href="https://pandas.pydata.org/">Pandas</a> is a fast, powerful, flexible and easy to use open source data analysis and manipulation tool.
 Since Pandas relies on <a href="https://pypi.org/project/pyarrow/">pyarrow</a> for ORC support, it is required.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pandas==2.3.3
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pandas==3.0.3
 pip3 install pyarrow
 </code></pre></div></div>
 
@@ -1116,10 +1116,10 @@ In [3]: df.to_orc("test.orc")
 
 In [4]: pd.read_orc("test.orc")
 Out[4]:
-   col1  col2
-0     1     a
-1     2     b
-2     3  None
+   col1 col2
+0     1    a
+1     2    b
+2     3  NaN
 
 In [5]: pd.read_orc("test.orc", columns=["col1"])
 Out[5]:
