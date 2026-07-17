@@ -43,6 +43,7 @@ import org.apache.orc.bench.core.convert.BatchReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.List;
 
 public class AvroReader implements BatchReader {
@@ -189,7 +190,8 @@ public class AvroReader implements BatchReader {
         cv.isNull[row] = true;
       } else {
         TimestampColumnVector tc = (TimestampColumnVector) cv;
-        tc.time[row] = ((Long) value).longValue();
+        tc.time[row] = (value instanceof Instant)
+            ? ((Instant) value).toEpochMilli() : ((Long) value).longValue();
         tc.nanos[row] = 0;
       }
     }
