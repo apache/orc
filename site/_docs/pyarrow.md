@@ -9,7 +9,7 @@ permalink: /docs/pyarrow.html
 [Apache Arrow](https://arrow.apache.org) project's [PyArrow](https://pypi.org/project/pyarrow/) is the recommended package.
 
 ```
-pip3 install pyarrow==20.0.0
+pip3 install pyarrow==25.0.0
 pip3 install pandas
 ```
 
@@ -24,10 +24,10 @@ In [3]: orc.write_table(pa.table({"col1": [1, 2, 3], "col2": ["a", "b", None]}),
 
 In [4]: orc.read_table("test.orc").to_pandas()
 Out[4]:
-   col1  col2
-0     1     a
-1     2     b
-2     3  None
+   col1 col2
+0     1    a
+1     2    b
+2     3  NaN
 
 In [5]: orc.read_table("test.orc", columns=["col1"]).to_pandas()
 Out[5]:

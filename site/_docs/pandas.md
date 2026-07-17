@@ -10,7 +10,7 @@ permalink: /docs/pandas.html
 Since Pandas relies on [pyarrow](https://pypi.org/project/pyarrow/) for ORC support, it is required.
 
 ```
-pip3 install pandas==2.3.3
+pip3 install pandas==3.0.3
 pip3 install pyarrow
 ```
 
@@ -25,10 +25,10 @@ In [3]: df.to_orc("test.orc")
 
 In [4]: pd.read_orc("test.orc")
 Out[4]:
-   col1  col2
-0     1     a
-1     2     b
-2     3  None
+   col1 col2
+0     1    a
+1     2    b
+2     3  NaN
 
 In [5]: pd.read_orc("test.orc", columns=["col1"])
 Out[5]:
