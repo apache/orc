@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"org.apache.orc.mapred"},{"l":"org.apache.orc.mapreduce"}];updateSearchResults();

@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"org.apache.orc"},{"l":"org.apache.orc.impl"}];updateSearchResults();
