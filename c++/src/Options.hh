@@ -151,6 +151,7 @@ namespace orc {
     bool enableLazyDecoding;
     std::shared_ptr<SearchArgument> sargs;
     std::string readerTimezone;
+    bool useWriterTimezone;
     RowReaderOptions::IdReadIntentMap idReadIntentMap;
     bool useTightNumericVector;
     std::shared_ptr<Type> readType;
@@ -167,6 +168,7 @@ namespace orc {
       forcedScaleOnHive11Decimal = 6;
       enableLazyDecoding = false;
       readerTimezone = "GMT";
+      useWriterTimezone = false;
       useTightNumericVector = false;
       throwOnSchemaEvolutionOverflow = false;
       enableAsyncPrefetch = false;
@@ -318,11 +320,21 @@ namespace orc {
 
   RowReaderOptions& RowReaderOptions::setTimezoneName(const std::string& zoneName) {
     privateBits_->readerTimezone = zoneName;
+    privateBits_->useWriterTimezone = false;
     return *this;
   }
 
   const std::string& RowReaderOptions::getTimezoneName() const {
     return privateBits_->readerTimezone;
+  }
+
+  RowReaderOptions& RowReaderOptions::setUseWriterTimezone(bool useWriterTimezone) {
+    privateBits_->useWriterTimezone = useWriterTimezone;
+    return *this;
+  }
+
+  bool RowReaderOptions::getUseWriterTimezone() const {
+    return privateBits_->useWriterTimezone;
   }
 
   const RowReaderOptions::IdReadIntentMap RowReaderOptions::getIdReadIntentMap() const {
