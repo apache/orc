@@ -188,7 +188,11 @@ namespace orc {
     }
 
     uint64_t bufLength() {
-      return bufferEnd_ - bufferStart_;
+      // Guard against a cursor that has overshot the buffer end. If bufferStart_
+      // has advanced past bufferEnd_, the raw pointer difference is negative and
+      // would underflow to a huge value when returned as unsigned, defeating the
+      // std::min clamps in the bit-unpacking fast loops (BpackingDefault.cc).
+      return bufferEnd_ > bufferStart_ ? static_cast<uint64_t>(bufferEnd_ - bufferStart_) : 0;
     }
 
     void setBitsLeft(const uint32_t bits) {
