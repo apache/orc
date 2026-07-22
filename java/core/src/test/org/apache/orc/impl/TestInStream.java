@@ -35,11 +35,16 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
+import static org.apache.orc.impl.RecordReaderUtils.MAX_BYTE_WIDTH;
+import static org.apache.orc.impl.RecordReaderUtils.MAX_VALUES_LENGTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestInStream {
@@ -999,5 +1004,68 @@ public class TestInStream {
     // Reading the stream and expecting to read 5 bytes as the initial stream length
     byte[] inBuffer = new byte[5];
     assertEquals(5, inStream.read(inBuffer));
+  }
+
+  /**
+   * Demonstrates that the old estimateRgEndOffset slop calculation is insufficient.
+   * When a compressed stream is truncated at the old estimated end offset,
+   * reading a full RLE v2 DIRECT run fails because the estimated slop doesn't
+   * account for enough compressed blocks.
+   */
+  @Test
+  public void testTruncatedRleV2DirectRunAtEstimatedEndFails() throws Exception {
+    final int bufferSize = 1024;
+    final int chunkSize = OutStream.HEADER_SIZE + bufferSize;
+    final int nextGroupOffset = bufferSize;
+    final int oldStretchFactor =
+        2 + (MAX_VALUES_LENGTH * MAX_BYTE_WIDTH - 1) / bufferSize;
+    final int oldEstimatedEnd = nextGroupOffset + oldStretchFactor * chunkSize;
+
+    TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
+    CompressionCodec codec = new ZlibCodec();
+    StreamOptions streamOptions = new StreamOptions(bufferSize)
+        .withCodec(codec, codec.getDefaultOptions());
+    byte[] data = new byte[bufferSize * 6];
+    new Random(42).nextBytes(data);
+    try (OutStream out = new OutStream("test", streamOptions, receiver)) {
+      out.write(data);
+      out.flush();
+    }
+
+    byte[] encoded = receiver.buffer.get();
+    assertEquals(nextGroupOffset + 5 * chunkSize, oldEstimatedEnd);
+    assertTrue(encoded.length > oldEstimatedEnd);
+
+    InStream stream = InStream.create("test",
+        new BufferChunk(ByteBuffer.wrap(encoded, 0, oldEstimatedEnd), 0),
+        0, oldEstimatedEnd,
+        InStream.options().withCodec(codec).withBufferSize(bufferSize));
+    byte[] rleDirectRun = new byte[MAX_VALUES_LENGTH * MAX_BYTE_WIDTH
+        + RecordReaderUtils.RLE_V2_HEADER_SIZE];
+
+    stream.seek(new SimplePositionProvider(nextGroupOffset, 0));
+    IllegalArgumentException error = assertThrows(
+        IllegalArgumentException.class, () -> {
+          int offset = 0;
+          while (offset < rleDirectRun.length) {
+            offset += stream.read(
+                rleDirectRun, offset, rleDirectRun.length - offset);
+          }
+        });
+    assertTrue(error.getMessage().contains("Buffer size too small"));
+  }
+
+  private static class SimplePositionProvider implements PositionProvider {
+    private final long[] positions;
+    private int index = 0;
+
+    SimplePositionProvider(long... positions) {
+      this.positions = positions;
+    }
+
+    @Override
+    public long getNext() {
+      return positions[index++];
+    }
   }
 }
