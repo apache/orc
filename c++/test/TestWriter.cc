@@ -840,6 +840,44 @@ namespace orc {
                                    "2014-06-06 12:34:56", IS_DST);
   }
 
+  TEST_P(WriterTest, readTimestampWithWriterTimezone) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:timestamp>"));
+
+    std::unique_ptr<Writer> writer =
+        createWriter(16 * 1024, 64, 1024, CompressionKind_ZLIB, *type, pool, &memStream,
+                     fileVersion, 0, "Asia/Shanghai");
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(1);
+    auto* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    auto* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
+    tsBatch->data[0] = 0;
+    tsBatch->nanoseconds[0] = 123000000;
+    structBatch->numElements = 1;
+    tsBatch->numElements = 1;
+    writer->add(*batch);
+    writer->close();
+
+    auto readTimestamp = [&](bool useWriterTimezone) {
+      auto inStream =
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+      std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+      RowReaderOptions rowReaderOptions;
+      rowReaderOptions.setTimezoneName("GMT");
+      rowReaderOptions.setUseWriterTimezone(useWriterTimezone);
+      std::unique_ptr<RowReader> rowReader = reader->createRowReader(rowReaderOptions);
+      std::unique_ptr<ColumnVectorBatch> readBatch = rowReader->createRowBatch(1);
+      EXPECT_TRUE(rowReader->next(*readBatch));
+      auto* readStructBatch = dynamic_cast<StructVectorBatch*>(readBatch.get());
+      auto* readTsBatch = dynamic_cast<TimestampVectorBatch*>(readStructBatch->fields[0]);
+      EXPECT_EQ(123000000, readTsBatch->nanoseconds[0]);
+      return readTsBatch->data[0];
+    };
+
+    EXPECT_EQ(8 * 60 * 60, readTimestamp(/*useWriterTimezone=*/false));
+    EXPECT_EQ(0, readTimestamp(/*useWriterTimezone=*/true));
+  }
+
   // Test that the ORC-306 compensation (-1s for pre-1970 timestamps with
   // nanos > 999999) is applied BEFORE timezone conversion in the Reader.
   //

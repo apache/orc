@@ -354,6 +354,16 @@ namespace orc {
     const std::string& getTimezoneName() const;
 
     /**
+     * Use the writer timezone when reading timestamp values.
+     */
+    RowReaderOptions& setUseWriterTimezone(bool useWriterTimezone);
+
+    /**
+     * Get whether to use the writer timezone when reading timestamp values.
+     */
+    bool getUseWriterTimezone() const;
+
+    /**
      * Get the IdReadIntentMap map that was supplied by client.
      */
     const IdReadIntentMap getIdReadIntentMap() const;

@@ -189,6 +189,7 @@ namespace orc {
 
     // desired timezone to return data of timestamp types.
     const Timezone& readerTimezone_;
+    const bool useWriterTimezone_;
 
     // match read and file types
     SchemaEvolution schemaEvolution_;
