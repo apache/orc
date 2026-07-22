@@ -314,7 +314,9 @@ namespace orc {
         footer_(contents_->footer.get()),
         firstRowOfStripe_(*contents_->pool, 0),
         enableEncodedBlock_(opts.getEnableLazyDecoding()),
-        readerTimezone_(getTimezoneByName(opts.getTimezoneName())),
+        readerTimezone_(opts.getUseWriterTimezone() ? localTimezone_
+                                                    : getTimezoneByName(opts.getTimezoneName())),
+        useWriterTimezone_(opts.getUseWriterTimezone()),
         schemaEvolution_(opts.getReadType(), contents_->schema.get()) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer_->stripes_size());
@@ -1366,7 +1368,8 @@ namespace orc {
               : localTimezone_;
       StripeStreamsImpl stripeStreams(*this, currentStripe_, currentStripeInfo_,
                                       currentStripeFooter_, currentStripeInfo_.offset(),
-                                      *contents_->stream, writerTimezone, readerTimezone_);
+                                      *contents_->stream, writerTimezone,
+                                      useWriterTimezone_ ? writerTimezone : readerTimezone_);
       reader_ = buildReader(*contents_->schema, stripeStreams, useTightNumericVector_,
                             throwOnSchemaEvolutionOverflow_, /*convertToReadType=*/true);
 
