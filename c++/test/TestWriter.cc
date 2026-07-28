@@ -2648,20 +2648,6 @@ namespace orc {
     }
   }
 
-  // Single-threaded crash test: a RowReader backed by a writer timezone that is
-  // later evicted from the alias-resolution cache must not segfault.
-  //
-  // Without the fix, getTimezoneByFilename() unconditionally overwrites the
-  // existing "America/New_York" cache entry when resolving the "US/Eastern"
-  // alias.  The old shared_ptr refcount drops to zero inside timezone_mutex,
-  // freeing the LazyTimezone while TimestampColumnReader::writerTimezone_ (a
-  // raw Timezone*) still points to it.  The second rowReader->next() call then
-  // dereferences freed memory: heap-use-after-free under ASAN or SIGSEGV.
-  //
-  // Reproduce without the fix:
-  //   bazel test //c++/test:orc-test --test_filter='TimestampAliasCacheEviction*' \
-  //       --test_env=ASAN_OPTIONS=detect_leaks=0
-  //   Expected: heap-use-after-free in orc::TimestampColumnReader::next
   TEST(TimestampAliasCacheEviction, readerSurvivesAliasCacheEviction) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
@@ -2686,9 +2672,6 @@ namespace orc {
 
     auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
-    // GMT reader timezone != America/New_York writer timezone, so
-    // TimestampColumnReader::sameTimezone_ is false and writerTimezone_->getVariant()
-    // is called on every row in next().
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), "GMT");
     ASSERT_EQ(rowCount, reader->getNumberOfRows());
 
@@ -2699,12 +2682,10 @@ namespace orc {
     ASSERT_TRUE(rowReader->next(*readBatch));
     ASSERT_EQ(1024u, readBatch->numElements);
 
-    // Without the fix: replaces timezoneCache["America/New_York"] with a new
-    // shared_ptr, drops the old refcount to zero, and frees the LazyTimezone
-    // that writerTimezone_ still points to.
+    // Populate aliases in the timezone cache
     (void)getTimezoneByName("US/Eastern");
 
-    // Without the fix: writerTimezone_->getVariant() dereferences freed memory.
+    // Verify that writerTimezone_ is still a valid pointer
     EXPECT_TRUE(rowReader->next(*readBatch));
   }
 
