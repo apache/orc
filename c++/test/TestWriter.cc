@@ -2648,6 +2648,66 @@ namespace orc {
     }
   }
 
+  // Single-threaded crash test: a RowReader backed by a writer timezone that is
+  // later evicted from the alias-resolution cache must not segfault.
+  //
+  // Without the fix, getTimezoneByFilename() unconditionally overwrites the
+  // existing "America/New_York" cache entry when resolving the "US/Eastern"
+  // alias.  The old shared_ptr refcount drops to zero inside timezone_mutex,
+  // freeing the LazyTimezone while TimestampColumnReader::writerTimezone_ (a
+  // raw Timezone*) still points to it.  The second rowReader->next() call then
+  // dereferences freed memory: heap-use-after-free under ASAN or SIGSEGV.
+  //
+  // Reproduce without the fix:
+  //   bazel test //c++/test:orc-test --test_filter='TimestampAliasCacheEviction*' \
+  //       --test_env=ASAN_OPTIONS=detect_leaks=0
+  //   Expected: heap-use-after-free in orc::TimestampColumnReader::next
+  TEST(TimestampAliasCacheEviction, readerSurvivesAliasCacheEviction) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<ts:timestamp>"));
+
+    // Write 2000 rows so that reading with a 1024-row batch requires two next() calls.
+    const uint64_t rowCount = 2000;
+    std::unique_ptr<Writer> writer =
+        createWriter(64 * 1024 * 1024, 64 * 1024, 64 * 1024, CompressionKind_ZLIB, *type, pool,
+                     &memStream, FileVersion::v_0_12(), 0, "America/New_York");
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    TimestampVectorBatch* tsBatch = dynamic_cast<TimestampVectorBatch*>(structBatch->fields[0]);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      tsBatch->data[i] = static_cast<int64_t>(i * 3600);
+      tsBatch->nanoseconds[i] = 0;
+    }
+    structBatch->numElements = rowCount;
+    tsBatch->numElements = rowCount;
+    writer->add(*batch);
+    writer->close();
+
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    // GMT reader timezone != America/New_York writer timezone, so
+    // TimestampColumnReader::sameTimezone_ is false and writerTimezone_->getVariant()
+    // is called on every row in next().
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), "GMT");
+    ASSERT_EQ(rowCount, reader->getNumberOfRows());
+
+    std::unique_ptr<ColumnVectorBatch> readBatch = rowReader->createRowBatch(1024);
+
+    // First next() opens the stripe, constructs TimestampColumnReader, and stores
+    // writerTimezone_ = &getTimezoneByName("America/New_York").
+    ASSERT_TRUE(rowReader->next(*readBatch));
+    ASSERT_EQ(1024u, readBatch->numElements);
+
+    // Without the fix: replaces timezoneCache["America/New_York"] with a new
+    // shared_ptr, drops the old refcount to zero, and frees the LazyTimezone
+    // that writerTimezone_ still points to.
+    (void)getTimezoneByName("US/Eastern");
+
+    // Without the fix: writerTimezone_->getVariant() dereferences freed memory.
+    EXPECT_TRUE(rowReader->next(*readBatch));
+  }
+
   std::vector<TestParams> testParams = {{FileVersion::v_0_11(), true},
                                         {FileVersion::v_0_11(), false},
                                         {FileVersion::v_0_12(), false},

@@ -773,7 +773,12 @@ namespace orc {
       std::string newfilename(dir);
       newfilename += "/";
       newfilename += it->second;
-      timezoneCache[newfilename] = std::make_shared<LazyTimezone>(newfilename);
+      // Only insert if absent: overwriting an existing entry destroys the
+      // LazyTimezone while raw pointers in live TimestampColumnReaders still
+      // reference it, causing a use-after-free (SIGSEGV) on the next read.
+      if (timezoneCache.find(newfilename) == timezoneCache.end()) {
+        timezoneCache[newfilename] = std::make_shared<LazyTimezone>(newfilename);
+      }
       timezoneCache[filename] = timezoneCache[newfilename];
     }
     return *timezoneCache[filename].get();
