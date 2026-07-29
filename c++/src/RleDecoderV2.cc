@@ -31,7 +31,10 @@ namespace orc {
 
   unsigned char RleDecoderV2::readByte() {
     SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
-    if (bufferStart_ == bufferEnd_) {
+    // Use >= rather than == so that a cursor which has already overshot the
+    // buffer end (bufferStart_ > bufferEnd_) still triggers a refill instead of
+    // dereferencing out of bounds.
+    if (bufferStart_ >= bufferEnd_) {
       int bufferLength;
       const void* bufferPointer;
       if (!inputStream_->Next(&bufferPointer, &bufferLength)) {
