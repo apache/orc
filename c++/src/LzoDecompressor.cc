@@ -32,6 +32,11 @@ namespace orc {
   static const int32_t SIZE_OF_INT = 4;
   static const int32_t SIZE_OF_LONG = 8;
 
+  static uint32_t readLittleEndianShort(const char* input) {
+    return static_cast<uint32_t>(static_cast<uint8_t>(input[0])) |
+           (static_cast<uint32_t>(static_cast<uint8_t>(input[1])) << 8U);
+  }
+
   static std::string toHex(uint64_t val) {
     std::ostringstream out;
     out << "0x" << std::hex << val;
@@ -198,7 +203,7 @@ namespace orc {
           if (input + SIZE_OF_SHORT > inputLimit) {
             throw MalformedInputException(input - inputAddress);
           }
-          uint32_t trailer = *reinterpret_cast<const uint16_t*>(input) & 0xFFFF;
+          uint32_t trailer = readLittleEndianShort(input);
           input += SIZE_OF_SHORT;
 
           // copy offset :: 16 bits :: valid range [32767..49151]
@@ -237,7 +242,7 @@ namespace orc {
           if (input + SIZE_OF_SHORT > inputLimit) {
             throw MalformedInputException(input - inputAddress);
           }
-          int32_t trailer = *reinterpret_cast<const int16_t*>(input) & 0xFFFF;
+          int32_t trailer = static_cast<int32_t>(readLittleEndianShort(input));
           input += SIZE_OF_SHORT;
 
           // copy offset :: 14 bits :: valid range [0..16383]
