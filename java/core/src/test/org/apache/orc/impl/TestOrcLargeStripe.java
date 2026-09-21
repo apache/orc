@@ -22,7 +22,11 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
@@ -157,6 +161,83 @@ public class TestOrcLargeStripe implements TestConf {
     recordReader = reader.rows(new Reader.Options().range(0L, Long.MAX_VALUE));
     assertTrue(recordReader instanceof RecordReaderImpl);
     assertEquals(1000, ((RecordReaderImpl) recordReader).getMaxDiskRangeChunkLimit());
+  }
+
+  @Test
+  public void testRleV2DirectSeekAtBufferBoundaryWithSkippedEndRowGroup()
+          throws IOException {
+    final int bufferSize = 1024;
+    final int rowIndexStride = 512 * 512 + 1;
+    final int rowGroupCount = 3;
+    final int selectedRowGroup = 1;
+    TypeDescription schema = TypeDescription.createStruct()
+            .addField("rg", TypeDescription.createLong())
+            .addField("value", TypeDescription.createLong());
+
+    writeRleV2BoundaryFile(schema, bufferSize, rowIndexStride, rowGroupCount);
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
+    assertEquals(bufferSize, reader.getCompressionSize());
+    assertEquals(1, reader.getStripes().size());
+
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+            .equals("rg", PredicateLeaf.Type.LONG, (long) selectedRowGroup)
+            .build();
+    Reader.Options options = reader.options()
+            .searchArgument(sarg, new String[] {"rg"})
+            .useSelected(true)
+            .allowSARGToFilter(true);
+
+    long rowsRead = 0;
+    VectorizedRowBatch batch = schema.createRowBatch();
+    try (RecordReader rows = reader.rows(options)) {
+      while (rows.nextBatch(batch)) {
+        rowsRead += validateSelectedRowGroup(batch, selectedRowGroup);
+      }
+    }
+    assertEquals(rowIndexStride, rowsRead);
+  }
+
+  private void writeRleV2BoundaryFile(TypeDescription schema, int bufferSize, int rowIndexStride, int rowGroupCount)
+          throws IOException {
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf)
+                    .fileSystem(fs)
+                    .setSchema(schema)
+                    .compress(CompressionKind.ZLIB)
+                    .enforceBufferSize()
+                    .bufferSize(bufferSize)
+                    .stripeSize(100_000_000)
+                    .rowIndexStride(rowIndexStride))) {
+      VectorizedRowBatch batch = schema.createRowBatch();
+      LongColumnVector rg = (LongColumnVector) batch.cols[0];
+      LongColumnVector value = (LongColumnVector) batch.cols[1];
+      Random random = new Random(42);
+      for (int row = 0; row < rowIndexStride * rowGroupCount; ++row) {
+        rg.vector[batch.size] = row / rowIndexStride;
+        value.vector[batch.size] = random.nextLong();
+        batch.size += 1;
+        if (batch.size == batch.getMaxSize()) {
+          writer.addRowBatch(batch);
+          batch.reset();
+        }
+      }
+      if (batch.size != 0) {
+        writer.addRowBatch(batch);
+      }
+    }
+  }
+
+  private long validateSelectedRowGroup(VectorizedRowBatch batch, int selectedRowGroup) {
+    LongColumnVector rg = (LongColumnVector) batch.cols[0];
+    long selectedRows = 0;
+    for (int i = 0; i < batch.size; ++i) {
+      int row = batch.selectedInUse ? batch.selected[i] : i;
+      assertEquals(selectedRowGroup, rg.vector[row]);
+      selectedRows += 1;
+    }
+    return selectedRows;
   }
 
   @Test
