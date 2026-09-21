@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "CpuInfoUtil.hh"
+#include "orc/Exceptions.hh"
 
 namespace orc {
   enum class DispatchLevel : int {
@@ -30,6 +31,7 @@ namespace orc {
     // are sorted in increasing order of preference.
     NONE = 0,
     AVX512,
+    RVV,
     MAX
   };
 
@@ -98,8 +100,10 @@ namespace orc {
         case DispatchLevel::NONE:
           return true;
         case DispatchLevel::AVX512:
-        case DispatchLevel::MAX:
           return cpu_info->isSupported(CpuInfo::AVX512);
+        case DispatchLevel::RVV:
+          return cpu_info->isSupported(CpuInfo::RVV);
+        case DispatchLevel::MAX:
         default:
           return false;
       }

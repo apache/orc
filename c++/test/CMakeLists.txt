@@ -15,9 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set(SIMD_TEST_SRCS "")
 if(BUILD_ENABLE_AVX512)
-  set(SIMD_TEST_SRCS TestRleVectorDecoder.cc)
+  list(APPEND SIMD_TEST_SRCS TestRleVectorDecoder.cc)
 endif(BUILD_ENABLE_AVX512)
+if(BUILD_ENABLE_RVV)
+  list(APPEND SIMD_TEST_SRCS TestRleVectorDecoder.cc)
+endif(BUILD_ENABLE_RVV)
 
 add_executable (orc-test
   MemoryInputStream.cc

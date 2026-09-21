@@ -198,6 +198,12 @@ if(BUILD_ENABLE_AVX512)
     BpackingAvx512.cc)
 endif(BUILD_ENABLE_AVX512)
 
+if(BUILD_ENABLE_RVV)
+  set(SOURCE_FILES
+    ${SOURCE_FILES}
+    BpackingRvv.cc)
+endif(BUILD_ENABLE_RVV)
+
 add_library (orc STATIC ${SOURCE_FILES})
 
 target_link_libraries (orc

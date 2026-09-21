@@ -21,6 +21,9 @@
 #if defined(ORC_HAVE_RUNTIME_AVX512)
 #include "BpackingAvx512.hh"
 #endif
+#if defined(ORC_HAVE_RUNTIME_RVV)
+#include "BpackingRvv.hh"
+#endif
 #include "Compression.hh"
 #include "Dispatch.hh"
 #include "RLEV2Util.hh"
@@ -78,12 +81,15 @@ namespace orc {
     using FunctionType = decltype(&BitUnpack::readLongs);
 
     static std::vector<std::pair<DispatchLevel, FunctionType>> implementations() {
+      std::vector<std::pair<DispatchLevel, FunctionType>> impls;
+      impls.emplace_back(DispatchLevel::NONE, BitUnpackDefault::readLongs);
 #if defined(ORC_HAVE_RUNTIME_AVX512)
-      return {{DispatchLevel::NONE, BitUnpackDefault::readLongs},
-              {DispatchLevel::AVX512, BitUnpackAVX512::readLongs}};
-#else
-      return {{DispatchLevel::NONE, BitUnpackDefault::readLongs}};
+      impls.emplace_back(DispatchLevel::AVX512, BitUnpackAVX512::readLongs);
 #endif
+#if defined(ORC_HAVE_RUNTIME_RVV)
+      impls.emplace_back(DispatchLevel::RVV, BitUnpackRVV::readLongs);
+#endif
+      return impls;
     }
   };
 
