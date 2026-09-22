@@ -233,9 +233,13 @@ public abstract class InStream extends InputStream {
       } else {
         for (DiskRangeList curRange = bytes; curRange != null;
              curRange = curRange.next) {
+          // Accept this stream's logical end when later ranges belong to other streams.
+          boolean isLogicalEnd =
+              desired == length && positionFile == curRange.getEnd();
           if (curRange.getOffset() <= positionFile &&
-              (curRange.next == null ? positionFile <= curRange.getEnd() :
-                   positionFile < curRange.getEnd())) {
+              (isLogicalEnd ||
+                  (curRange.next == null ? positionFile <= curRange.getEnd() :
+                       positionFile < curRange.getEnd()))) {
             position = desired;
             setCurrent(curRange, true);
             return;
