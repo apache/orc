@@ -69,7 +69,9 @@ create table Foobar (
 
 ORC includes two different forms of timestamps from the SQL world:
 
-* **Timestamp** is a date and time without a time zone, which does not change based on the time zone of the reader.
+* **Timestamp** is a date and time without a time zone, where the timestamp value is stored in the writer timezone
+encoded at the stripe level, if present. ORC readers will read this value back into the reader's timezone. Usually
+both writer and reader timezones default to UTC, however older ORC files may contain non-UTC writer timezones
 * **Timestamp with local time zone** is a fixed instant in time, which does change based on the time zone of the reader.
 
 Unless your application uses UTC consistently, **timestamp with
@@ -78,7 +80,7 @@ use cases. When users say an event is at 10:00, it is always in
 reference to a certain timezone and means a point in time, rather than
 10:00 in an arbitrary time zone.
 
-| Type        | Value in America/Los_Angeles | Value in America/New_York |
-| ----------- | ---------------------------- | ------------------------- |
-| **timestamp** | 2014-12-12 6:00:00           | 2014-12-12 6:00:00        |
-| **timestamp with local time zone** | 2014-12-12 9:00:00 | 2014-12-12 6:00:00 |
+| Type                               | Value in America/Los_Angeles | Value in America/New_York |
+| ---------------------------------- | ---------------------------- | ------------------------- |
+| **timestamp**                      | 2014-12-12 6:00:00           | 2014-12-12 6:00:00        |
+| **timestamp with local time zone** | 2014-12-12 9:00:00           | 2014-12-12 6:00:00        |
