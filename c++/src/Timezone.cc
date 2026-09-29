@@ -713,6 +713,65 @@ namespace orc {
     return buffer;
   }
 
+  // Java TimeZone IDs use GMT followed by an ISO-style offset, not the
+  // reversed sign used by POSIX TZ strings. ZoneOffset can also include seconds.
+  static bool parseFixedOffset(const std::string& zone, int64_t& offset) {
+    if ((zone.size() != 9 && zone.size() != 12) || zone.compare(0, 3, "GMT") != 0 ||
+        (zone[3] != '+' && zone[3] != '-')) {
+      return false;
+    }
+    int64_t parts[3] = {0, 0, 0};
+    for (size_t i = 0; i < (zone.size() == 9 ? 2 : 3); ++i) {
+      size_t start = 4 + i * 3;
+      if ((i != 0 && zone[start - 1] != ':') || zone[start] < '0' || zone[start] > '9' ||
+          zone[start + 1] < '0' || zone[start + 1] > '9') {
+        return false;
+      }
+      parts[i] = (zone[start] - '0') * 10 + zone[start + 1] - '0';
+    }
+    if (parts[0] > 23 || parts[1] > 59 || parts[2] > 59) {
+      return false;
+    }
+    offset = (parts[0] * 60 + parts[1]) * 60 + parts[2];
+    if (zone[3] == '-') {
+      offset = -offset;
+    }
+    return true;
+  }
+
+  class FixedOffsetTimezone : public Timezone {
+   public:
+    FixedOffsetTimezone(const std::string& name, int64_t offset) : variant_{offset, false, name} {}
+
+    const TimezoneVariant& getVariant(int64_t) const override {
+      return variant_;
+    }
+
+    int64_t getEpoch() const override {
+      // 2015-01-01 00:00:00 in this timezone, expressed as Unix seconds.
+      return 1420070400 - variant_.gmtOffset;
+    }
+
+    void print(std::ostream& out) const override {
+      out << variant_.toString() << "\n";
+    }
+
+    uint64_t getVersion() const override {
+      return 0;  // No TZif file.
+    }
+
+    int64_t convertToUTC(int64_t clk) const override {
+      return clk + variant_.gmtOffset;
+    }
+
+    int64_t convertFromUTC(int64_t clk) const override {
+      return clk - variant_.gmtOffset;
+    }
+
+   private:
+    TimezoneVariant variant_;
+  };
+
   class LazyTimezone : public Timezone {
    private:
     std::string filename_;
@@ -765,6 +824,12 @@ namespace orc {
     std::map<std::string, std::shared_ptr<Timezone> >::iterator itr = timezoneCache.find(filename);
     if (itr != timezoneCache.end()) {
       return *(itr->second).get();
+    }
+    int64_t offset;
+    if (parseFixedOffset(zone, offset)) {
+      auto timezone = std::make_shared<FixedOffsetTimezone>(zone, offset);
+      timezoneCache[filename] = timezone;
+      return *timezone;
     }
     auto it = TZ_ALIASES.find(zone);
     if (it == TZ_ALIASES.end()) {

@@ -17,13 +17,16 @@
  */
 
 #include "Adaptor.hh"
+#include "MemoryInputStream.hh"
 #include "Timezone.hh"
+#include "orc/OrcFile.hh"
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace orc {
@@ -363,6 +366,91 @@ namespace orc {
     EXPECT_EQ("EST", getVariantFromZone(*ny1, "1974-10-27 06:00:00"));
   }
 
+  TEST(TestTimezone, testFixedOffsets) {
+    const std::pair<std::string, int64_t> cases[] = {
+        {"GMT-00:00", 0},         {"GMT+00:00", 0},      {"GMT+05:30", 19800},
+        {"GMT-03:30", -12600},    {"GMT+05:45", 20700},  {"GMT+00:10", 600},
+        {"GMT+23:59", 86340},     {"GMT-23:59", -86340}, {"GMT+05:30:15", 19815},
+        {"GMT-03:30:15", -12615}, {"GMT+00:00:01", 1},   {"GMT-00:00:59", -59}};
+    for (const auto& entry : cases) {
+      SCOPED_TRACE(entry.first);
+      const auto& zone = getTimezoneByName(entry.first);
+      EXPECT_EQ(&zone, &getTimezoneByName(entry.first));
+      EXPECT_EQ(1420070400 - entry.second, zone.getEpoch());
+      for (int64_t time : {-2208988800LL, 0LL, 1420070400LL, 4102444800LL}) {
+        const auto& variant = zone.getVariant(time);
+        EXPECT_EQ(entry.second, variant.gmtOffset);
+        EXPECT_FALSE(variant.isDst);
+        EXPECT_EQ(entry.first, variant.name);
+        EXPECT_EQ(time + entry.second, zone.convertToUTC(time));
+        EXPECT_EQ(time - entry.second, zone.convertFromUTC(time));
+      }
+    }
+  }
+
+  TEST(TestTimezone, testReadJavaFixedOffsets) {
+    // Written by the Java ORC 2.1.2 writer with OpenJDK 22.0.2. Each file contains
+    // struct<ts:timestamp>, compression NONE, rowIndexStride 0, and these values:
+    // 2001-11-12 18:31:01.123456789, 1960-01-02 03:04:05, and
+    // 2040-07-01 12:00:00.999999999. TimeZone.setDefault is called before creating
+    // the writer; the seconds offset uses TimeZone.getTimeZone(ZoneOffset.of(...)).
+    const std::pair<std::string, std::string> files[] = {
+        {"GMT-00:00",
+         "T1JDdgIxaPE1zuYRtV/tFIB4AgA63mioAAAAAAAB3NZP+AoGCAEQARgOCgYIBRABGBESAggAEgIIAhoJR01U"
+         "LTAwOjAwChAKBAgAUAAKCAgASgBQAFgfCAMQRRoKCAMQABgfICMoAyIJCAwSAQEaAnRzIgIICTADOgQIAFAA"
+         "OggIAEoAUABYH0AASABYAWIFMi4xLjIIPhAAIgIADCgSMAmC9AMDT1JDEw=="},
+        {"GMT+05:30",
+         "T1JDdgIxaPE1zuYRtV/tFIB4AgA63mioAAAAAAAB3NZP+AoGCAEQARgOCgYIBRABGBESAggAEgIIAhoJR01U"
+         "KzA1OjMwChAKBAgAUAAKCAgASgBQAFgfCAMQRRoKCAMQABgfICMoAyIJCAwSAQEaAnRzIgIICTADOgQIAFAA"
+         "OggIAEoAUABYH0AASABYAWIFMi4xLjIIPhAAIgIADCgSMAmC9AMDT1JDEw=="},
+        {"GMT-03:30",
+         "T1JDdgIxaPE1zuYRtV/tFIB4AgA63mioAAAAAAAB3NZP+AoGCAEQARgOCgYIBRABGBESAggAEgIIAhoJR01U"
+         "LTAzOjMwChAKBAgAUAAKCAgASgBQAFgfCAMQRRoKCAMQABgfICMoAyIJCAwSAQEaAnRzIgIICTADOgQIAFAA"
+         "OggIAEoAUABYH0AASABYAWIFMi4xLjIIPhAAIgIADCgSMAmC9AMDT1JDEw=="},
+        {"GMT+05:30:15",
+         "T1JDdgIxaPE1zuYRtV/tFIB4AgA63mioAAAAAAAB3NZP+AoGCAEQARgOCgYIBRABGBESAggAEgIIAhoMR01U"
+         "KzA1OjMwOjE1ChAKBAgAUAAKCAgASgBQAFgfCAMQSBoKCAMQABgfICYoAyIJCAwSAQEaAnRzIgIICTADOgQI"
+         "AFAAOggIAEoAUABYH0AASABYAWIFMi4xLjIIPhAAIgIADCgSMAmC9AMDT1JDEw=="},
+    };
+    const int64_t seconds[] = {1005589861, -315521755, 2224756800};
+    const int64_t nanos[] = {123456789, 0, 999999999};
+    for (const auto& file : files) {
+      SCOPED_TRACE(file.first);
+      auto bytes = decodeBase64(file.second);
+      auto reader = createReader(std::make_unique<MemoryInputStream>(
+                                     reinterpret_cast<const char*>(bytes.data()), bytes.size()),
+                                 ReaderOptions());
+      // Check conversion to both UTC and another fixed offset. In both cases
+      // the reader must preserve the original wall-clock timestamp.
+      for (const auto& readerZone : {"GMT+00:00", "GMT-03:30"}) {
+        SCOPED_TRACE(readerZone);
+        RowReaderOptions options;
+        options.setTimezoneName(readerZone);
+        auto rows = reader->createRowReader(options);
+        auto batch = rows->createRowBatch(10);
+        ASSERT_TRUE(rows->next(*batch));
+        ASSERT_EQ(3, batch->numElements);
+        const auto& timestamps = dynamic_cast<const TimestampVectorBatch&>(
+            *dynamic_cast<const StructVectorBatch&>(*batch).fields[0]);
+        const int64_t readerOffset = std::string(readerZone) == "GMT-03:30" ? -12600 : 0;
+        for (size_t i = 0; i < 3; ++i) {
+          EXPECT_EQ(seconds[i] - readerOffset, timestamps.data[i]);
+          EXPECT_EQ(nanos[i], timestamps.nanoseconds[i]);
+        }
+        EXPECT_FALSE(rows->next(*batch));
+      }
+    }
+  }
+
+  TEST(TestTimezone, testInvalidFixedOffsets) {
+    for (const auto& name :
+         {"GMT+24:00", "GMT-00:60", "GMT+00:00:60", "GMT+05:30x", "GMT+05:30:15x", "GMT+0a:00",
+          "GMT+00/00", "GMT*05:30", "GMT+5:30", "GMT+05:3", "gmt+05:30", "GMT+"}) {
+      SCOPED_TRACE(name);
+      EXPECT_THROW(getTimezoneByName(name).getEpoch(), TimezoneError);
+    }
+  }
+
   TEST(TestTimezone, testGMTv1) {
     const char GMT[] =
         ("VFppZgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAA"
@@ -437,6 +525,7 @@ namespace orc {
                 testing::ThrowsMessage<TimezoneError>(testing::HasSubstr(
                     "Time zone file /path/to/wrong/tzdb/America/Los_Angeles does not exist."
                     " Please install IANA time zone database and set TZDIR env.")));
+    EXPECT_EQ(1420050600, getTimezoneByName("GMT+05:30").getEpoch());
     if (!tzDirBackup.empty()) {
       ASSERT_TRUE(setEnv("TZDIR", tzDirBackup.c_str()));
     } else {
