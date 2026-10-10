@@ -183,8 +183,9 @@ public class TestMinSeekSize implements TestConf {
     FileSystem.Statistics stats = readEnd();
     double p = readPercentage(stats, fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    // Read all bytes
-    assertTrue(p >= 5.9);
+    // Read all bytes. Threshold lowered from 5.9: footer dedup removes one
+    // footer read per stripe, reducing total bytes read.
+    assertTrue(p >= 5.0);
   }
 
   private double readPercentage(FileSystem.Statistics stats, long fileSize) {
