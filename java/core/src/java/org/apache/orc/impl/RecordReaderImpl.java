@@ -1311,7 +1311,9 @@ public class RecordReaderImpl implements RecordReader {
    */
   private void readStripe() throws IOException {
     StripeInformation stripe = beginReadStripe();
-    planner.parseStripe(stripe, fileIncluded);
+    // Reuse the footer that beginReadStripe already read to avoid a
+    // duplicate readStripeFooter call inside StripePlanner.parseStripe.
+    planner.parseStripe(stripe, fileIncluded, stripeFooter);
     includedRowGroups = pickRowGroups();
 
     // move forward to the first unskipped row

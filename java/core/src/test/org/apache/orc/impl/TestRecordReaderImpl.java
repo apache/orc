@@ -49,12 +49,17 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.StripeInformation;
 import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.impl.DataReaderProperties;
+import org.apache.orc.impl.InStream;
+import org.apache.orc.impl.OrcCodecPool;
 import org.apache.orc.impl.RecordReaderImpl.Location;
 import org.apache.orc.impl.RecordReaderImpl.SargApplier;
+import org.apache.orc.impl.RecordReaderUtils;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.TypeReader;
@@ -2816,5 +2821,97 @@ public class TestRecordReaderImpl implements TestConf {
         assertEquals(HiveDecimal.create("-4298.1513513514"), hiveDecimalWritable.getHiveDecimal());
       }
     }
+  }
+
+  /**
+   * Regression test for the duplicate stripe-footer read. When scanning the
+   * stripes of an ORC file, {@link RecordReaderImpl#readStripe()} reads the
+   * footer via {@link RecordReaderImpl#readStripeFooter(StripeInformation)} in
+   * {@code beginReadStripe} and must reuse that already-read footer when it
+   * calls {@link StripePlanner#parseStripe} instead of reading it a second
+   * time. This asserts exactly one {@code readStripeFooter} call per stripe
+   * for both a plain scan and a SArg-filtered scan.
+   */
+  @Test
+  public void testNoDuplicateStripeFooterRead() throws Exception {
+    Path path = new Path(workDir, "noDupFooterRead.orc");
+    FileSystem fs = FileSystem.get(conf);
+    fs.delete(path, true);
+
+    TypeDescription schema = TypeDescription.fromString("struct<x:int>");
+    // rowIndexStride of 10_000 produces one row group per stripe so that SArg
+    // evaluation still keeps every stripe rather than skipping whole stripes.
+    int rowIndexStride = 10_000;
+    int rowsPerStripe = 10_000;
+    int stripeCount = 3;
+    conf.setLong(OrcConf.STRIPE_ROW_COUNT.getAttribute(), rowsPerStripe);
+    OrcFile.WriterOptions writerOptions =
+        OrcFile.writerOptions(conf).setSchema(schema)
+            .rowIndexStride(rowIndexStride);
+    Writer writer = OrcFile.createWriter(path, writerOptions);
+    VectorizedRowBatch writeBatch = schema.createRowBatch();
+    LongColumnVector writeX = (LongColumnVector) writeBatch.cols[0];
+    int base = 0;
+    int remaining = stripeCount * rowsPerStripe;
+    while (remaining > 0) {
+      writeBatch.reset();
+      int chunk = Math.min(writeBatch.getMaxSize(), remaining);
+      for (int r = 0; r < chunk; ++r) {
+        int idx = writeBatch.size++;
+        writeX.vector[idx] = ++base;
+      }
+      writer.addRowBatch(writeBatch);
+      remaining -= chunk;
+    }
+    writer.close();
+    // Reset the conf so other tests are not affected.
+    conf.set(OrcConf.STRIPE_ROW_COUNT.getAttribute(),
+        String.valueOf(OrcConf.STRIPE_ROW_COUNT.getDefaultValue()));
+
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(stripeCount, reader.getStripes().size());
+
+    // Plain scan: no SArg.
+    runStripeFooterCountTest(reader, stripeCount, null);
+
+    // SArg scan: a predicate that evaluates to YES_NO for every row group so
+    // pickRowGroups is exercised but no stripe is skipped.
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThan("x", PredicateLeaf.Type.LONG, (long) (stripeCount * rowsPerStripe + 1))
+        .end().build();
+    Reader sargReader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    runStripeFooterCountTest(sargReader, stripeCount, sarg);
+  }
+
+  private void runStripeFooterCountTest(Reader reader, int stripeCount,
+                                        SearchArgument sarg) throws IOException {
+    ReaderImpl impl = (ReaderImpl) reader;
+    InStream.StreamOptions unencryptedOptions =
+        InStream.options()
+            .withCodec(OrcCodecPool.getCodec(reader.getCompressionKind()))
+            .withBufferSize(reader.getCompressionSize());
+    DataReaderProperties properties =
+        DataReaderProperties.builder()
+            .withCompression(unencryptedOptions)
+            .withFileSystemSupplier(impl.getFileSystemSupplier())
+            .withPath(impl.path)
+            .withZeroCopy(false)
+            .build();
+    DataReader spied = spy(RecordReaderUtils.createDefaultDataReader(properties));
+    // RecordReaderImpl clones the supplied DataReader before use, so make the
+    // spy observe all readStripeFooter calls by returning itself from clone().
+    when(spied.clone()).thenReturn(spied);
+    Reader.Options readerOptions = reader.options().dataReader(spied);
+    if (sarg != null) {
+      readerOptions.searchArgument(sarg, new String[] {"x"});
+    }
+    VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+    try (RecordReader rows = reader.rows(readerOptions)) {
+      while (rows.nextBatch(batch)) {
+        // drain
+      }
+    }
+    verify(spied, times(stripeCount)).readStripeFooter(any());
   }
 }
