@@ -22,6 +22,8 @@ on:
     paths-ignore:
     - 'site/**'
     - 'conan/**'
+    - 'kotoba/**'
+    - '.github/workflows/kotoba*.yml'
     branches:
     - main
 
