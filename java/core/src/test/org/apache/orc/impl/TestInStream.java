@@ -790,6 +790,19 @@ public class TestInStream {
     }
   }
 
+  @Test
+  public void testSeekToLogicalEndWithLaterDiskRange() throws IOException {
+    BufferChunk streamRange = new BufferChunk(ByteBuffer.allocate(10), 100);
+    streamRange.insertAfter(new BufferChunk(ByteBuffer.allocate(10), 120));
+    try (InStream.UncompressedStream stream =
+             new InStream.UncompressedStream("test", streamRange, 100, 10)) {
+      stream.seek(10);
+      assertSame(streamRange, stream.currentRange);
+      assertEquals(0, stream.available());
+      assertEquals(-1, stream.read());
+    }
+  }
+
   private static byte[] input(int... data) {
     byte[] result = new byte[data.length];
     for(int i = 0; i < data.length; ++i) {
