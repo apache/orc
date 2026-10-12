@@ -1172,6 +1172,9 @@ records non-null values, a DATA stream that records the number of
 seconds after 1 January 2015, and a SECONDARY stream that records the
 number of nanoseconds.
 
+* Note that if writer timezone is set, 1 January 2015 is according to
+this timezone and not according to UTC
+
 Because the number of nanoseconds often has a large number of trailing
 zeros, the number has trailing decimal zero digits removed and the
 last three bits are used to record how many zeros were removed. if the
@@ -1186,6 +1189,35 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
 DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Signed Integer RLE v2
               | SECONDARY       | No       | Unsigned Integer RLE v2
+
+Due to ORC-763, values before the UNIX epoch which have nanoseconds greater
+than 999,999 are adjusted to have 1 second less.
+
+For example, given a stripe with a TIMESTAMP column with a writer timezone
+of US/Pacific, and a reader timezone of UTC, we have the decoded integer values
+of -1,440,851,103 from the DATA stream and 199,900,000 from the SECONDARY stream.
+
+First we must adjust the DATA value to be relative to the UNIX epoch. The ORC
+epoch is 1 January 2015 00:00:00 US/Pacific, since we must take into account the writer
+timezone. This translates to 1 January 2015 08:00:00 UTC, as US/Pacific is equivalent
+to a -08:00 offset from UTC at that date (no daylight savings). The number of seconds
+from 1 January 1970 00:00:00 UTC to 1 January 2015 08:00:00 UTC is 1,420,099,200. This is
+added to the DATA value to produce a value of -20,751,903. As this is before the
+UNIX epoch (since it is negative), and the SECONDARY value, 199,900,000, is
+greater than 999,999, then this DATA value is adjusted to become -20,751,904
+(1 second subtracted).
+
+This value by itself represents 5 May 1969 19:34:56.1999, which now needs to be adjusted
+from US/Pacific (the writer's timezone) to UTC (the reader's timezone). As the value is
+within daylight savings for US/Pacific, 7 hours are subtracted to give the final value
+of 5 May 1969 12:34:56.1999.
+
+For a TIMESTAMP_INSTANT column, this process is much simpler. Given the same values
+for DATA and SECONDARY stream, and given the offset from 1 January 1970 00:00:00 UTC
+to 1 January 2015 00:00:00 UTC is 1,420,070,400 seconds, we first add this to
+the DATA value -1,440,851,103 to produce -20,780,703 which is then adjusted 1 second
+back to -20,780,704. Paired with the SECONDARY value of 199,900,000 nanoseconds, this
+represents 5 May 1969 11:34:56.1999 UTC.
 
 ## Struct Columns
 
