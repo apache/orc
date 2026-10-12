@@ -24,4 +24,6 @@ jobs:
       run: |
         cd java
         echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
+        # We should use local installation to test `apache-release` profile
+        ./mvnw --settings settings.xml -nsu -ntp -DskipTests install -Papache-release
         ./mvnw --settings settings.xml -nsu -ntp -DskipTests deploy
