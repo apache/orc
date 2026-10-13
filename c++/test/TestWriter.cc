@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 #include "orc/OrcFile.hh"
+#include "orc/sargs/SearchArgument.hh"
 
 #include "MemoryInputStream.hh"
 #include "MemoryOutputStream.hh"
@@ -412,6 +413,76 @@ namespace orc {
 
     if (enableAlignBlockBoundToRowGroup) {
       verifyCompressionBlockAlignment(reader, type->getSubtypeCount());
+    }
+  }
+
+  TEST_P(WriterTest, testFloatStatistics) {
+    auto type = Type::buildTypeFromString("struct<x:float>");
+    for (double value : {0.1, -0.1, 0.5}) {
+      for (bool useBloomFilter : {false, true}) {
+        SCOPED_TRACE(::testing::Message()
+                     << "value=" << value << ", bloomFilter=" << useBloomFilter);
+        MemoryOutputStream memStream(1024 * 1024);
+        WriterOptions options;
+        options.setFileVersion(fileVersion).setRowIndexStride(1000);
+        if (useBloomFilter) {
+          options.setColumnsUseBloomFilter({1});
+        }
+        auto writer = createWriter(*type, &memStream, options);
+        auto batch = writer->createRowBatch(1);
+        auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+        auto& floatBatch = dynamic_cast<DoubleVectorBatch&>(*structBatch.fields[0]);
+        structBatch.numElements = 1;
+        floatBatch.numElements = 1;
+        floatBatch.data[0] = value;
+        writer->add(*batch);
+        writer->close();
+
+        auto inStream =
+            std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+        auto reader = createReader(std::move(inStream), ReaderOptions());
+        const double expected = static_cast<double>(static_cast<float>(value));
+        auto fileStats = reader->getStatistics();
+        auto stripeStats = reader->getStripeStatistics(0);
+        ASSERT_EQ(1, stripeStats->getNumberOfRowIndexStats(1));
+        for (const ColumnStatistics* stats :
+             {fileStats->getColumnStatistics(1), stripeStats->getColumnStatistics(1),
+              stripeStats->getRowIndexStatistics(1, 0)}) {
+          const auto& floatStats = dynamic_cast<const DoubleColumnStatistics&>(*stats);
+          EXPECT_EQ(1, floatStats.getNumberOfValues());
+          EXPECT_EQ(expected, floatStats.getMinimum());
+          EXPECT_EQ(expected, floatStats.getMaximum());
+          EXPECT_EQ(expected, floatStats.getSum());
+        }
+        if (useBloomFilter) {
+          auto bloomFilters = reader->getBloomFilters(0, {1});
+          ASSERT_EQ(1, bloomFilters.at(1).entries.size());
+          EXPECT_TRUE(bloomFilters.at(1).entries[0]->testDouble(expected));
+        }
+
+        for (bool filtered : {false, true}) {
+          RowReaderOptions rowReaderOptions;
+          if (filtered) {
+            rowReaderOptions.searchArgument(
+                SearchArgumentFactory::newBuilder()
+                    ->startAnd()
+                    .equals("x", PredicateDataType::FLOAT, Literal(expected))
+                    .end()
+                    .build());
+          }
+          auto rowReader = reader->createRowReader(rowReaderOptions);
+          auto readBatch = rowReader->createRowBatch(1);
+          bool hasRow = rowReader->next(*readBatch);
+          EXPECT_TRUE(hasRow);
+          if (hasRow) {
+            EXPECT_EQ(1, readBatch->numElements);
+            auto& readStruct = dynamic_cast<StructVectorBatch&>(*readBatch);
+            auto& readFloat = dynamic_cast<DoubleVectorBatch&>(*readStruct.fields[0]);
+            EXPECT_EQ(expected, readFloat.data[0]);
+          }
+          EXPECT_FALSE(rowReader->next(*readBatch));
+        }
+      }
     }
   }
 
