@@ -94,11 +94,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -2746,10 +2749,46 @@ public class TestRecordReaderImpl implements TestConf {
 
     Reader reader = OrcFile.createReader(filePath,
         OrcFile.readerOptions(conf).filesystem(spyLocalFileSystem));
-    RecordReader recordReader = reader.rows(reader.options());
+    // Project the first and last top-level columns so the stripe's
+    // BufferChunks form disjoint ranges. Vectored reads are only used for
+    // batches that still have at least two ranges after coalescing; a
+    // single contiguous range is read synchronously instead.
+    TypeDescription schema = reader.getSchema();
+    List<String> fieldNames = schema.getFieldNames();
+    List<TypeDescription> children = schema.getChildren();
+    TypeDescription projection = TypeDescription.fromString("struct<>");
+    projection.addField(fieldNames.get(0), children.get(0).clone());
+    projection.addField(fieldNames.get(fieldNames.size() - 1),
+        children.get(children.size() - 1).clone());
+    RecordReader recordReader = reader.rows(reader.options().schema(projection));
     recordReader.close();
 
     verify(spyFSDataInputStream, atLeastOnce()).readVectored(any(), any());
+  }
+
+  @Test
+  public void testHadoopVectoredIOSingleRangeUsesSyncRead() throws Exception {
+    Configuration conf = new Configuration();
+    Path filePath = new Path(TestVectorOrcFile.getFileFromClasspath("orc-file-11-format.orc"));
+
+    FileSystem localFileSystem = FileSystem.getLocal(conf);
+    FSDataInputStream fsDataInputStream = localFileSystem.open(filePath);
+
+    FileSystem spyLocalFileSystem = spy(localFileSystem);
+    FSDataInputStream spyFSDataInputStream = spy(fsDataInputStream);
+    when(spyLocalFileSystem.open(filePath)).thenReturn(spyFSDataInputStream);
+
+    Reader reader = OrcFile.createReader(filePath,
+        OrcFile.readerOptions(conf).filesystem(spyLocalFileSystem));
+    // A full scan produces one contiguous BufferChunk range per stripe.
+    // Coalescing reduces the batch to a single FileRange, which is fetched
+    // with a synchronous positioned read instead of readVectored.
+    RecordReader recordReader = reader.rows(reader.options());
+    recordReader.close();
+
+    verify(spyFSDataInputStream, never()).readVectored(any(), any());
+    verify(spyFSDataInputStream, atLeastOnce())
+        .readFully(anyLong(), any(byte[].class), anyInt(), anyInt());
   }
 
   @Test
