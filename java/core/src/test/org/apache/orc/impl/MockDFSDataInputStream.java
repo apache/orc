@@ -133,8 +133,8 @@ public class MockDFSDataInputStream extends InputStream implements Seekable, Pos
       throws IOException {
     readFullyCallCount++;
     int srcPos = (int) (offset - startPosition);
-    if (srcPos < 0 || length < 0
-        || srcPos + length > hdfsBlockBuffer.capacity()) {
+    if (srcPos < 0 || length < 0 ||
+        srcPos + length > hdfsBlockBuffer.capacity()) {
       throw new IOException("readFully out of bounds: offset=" + offset
           + " length=" + length + " backing capacity=" + hdfsBlockBuffer.capacity());
     }
