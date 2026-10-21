@@ -89,6 +89,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.orc.impl.RecordReaderUtils.MAX_BYTE_WIDTH;
 import static org.apache.orc.impl.RecordReaderUtils.MAX_VALUES_LENGTH;
@@ -2898,11 +2899,9 @@ public class TestRecordReaderImpl implements TestConf {
             .withPath(impl.path)
             .withZeroCopy(false)
             .build();
-    DataReader spied = spy(RecordReaderUtils.createDefaultDataReader(properties));
-    // RecordReaderImpl clones the supplied DataReader before use, so make the
-    // spy observe all readStripeFooter calls by returning itself from clone().
-    when(spied.clone()).thenReturn(spied);
-    Reader.Options readerOptions = reader.options().dataReader(spied);
+    CountingDataReader countingReader =
+        new CountingDataReader(RecordReaderUtils.createDefaultDataReader(properties));
+    Reader.Options readerOptions = reader.options().dataReader(countingReader);
     if (sarg != null) {
       readerOptions.searchArgument(sarg, new String[] {"x"});
     }
@@ -2911,7 +2910,90 @@ public class TestRecordReaderImpl implements TestConf {
       while (rows.nextBatch(batch)) {
         // drain
       }
+    } finally {
+      countingReader.close();
     }
-    verify(spied, times(stripeCount)).readStripeFooter(any(StripeInformation.class));
+    // The stripe footer must be read exactly once per stripe. RecordReaderImpl
+    // clones the supplied DataReader before use, and the clone shares the
+    // counter, so this covers the reads done by the clone as well.
+    assertEquals(stripeCount, countingReader.getFooterReads());
+  }
+
+  /**
+   * A test-only {@link DataReader} that delegates to another reader and counts
+   * the stripe footer reads. The counter is shared with the clones created by
+   * {@link #clone()}, so the reads done by any instance are observed, while
+   * the clone still returns a new instance wrapping a new delegate, as
+   * required by the {@link DataReader} contract.
+   */
+  private static class CountingDataReader implements DataReader {
+    private final DataReader delegate;
+    private final AtomicInteger footerReads;
+
+    CountingDataReader(DataReader delegate) {
+      this(delegate, new AtomicInteger());
+    }
+
+    private CountingDataReader(DataReader delegate, AtomicInteger footerReads) {
+      this.delegate = delegate;
+      this.footerReads = footerReads;
+    }
+
+    int getFooterReads() {
+      return footerReads.get();
+    }
+
+    @Override
+    public void open() throws IOException {
+      delegate.open();
+    }
+
+    @Override
+    public OrcProto.StripeFooter readStripeFooter(StripeInformation stripe) throws IOException {
+      footerReads.incrementAndGet();
+      return delegate.readStripeFooter(stripe);
+    }
+
+    @Override
+    public BufferChunkList readFileData(BufferChunkList range,
+                                        boolean doForceDirect) throws IOException {
+      return delegate.readFileData(range, doForceDirect);
+    }
+
+    @Override
+    public boolean isTrackingDiskRanges() {
+      return delegate.isTrackingDiskRanges();
+    }
+
+    /**
+     * @deprecated Use {@link #releaseAllBuffers()} instead.
+     */
+    @Deprecated
+    @Override
+    public void releaseBuffer(ByteBuffer toRelease) {
+      delegate.releaseBuffer(toRelease);
+    }
+
+    @Override
+    public void releaseAllBuffers() {
+      delegate.releaseAllBuffers();
+    }
+
+    @Override
+    public DataReader clone() {
+      // The clone is a new instance because it is closed at a different time
+      // than this reader, but it shares the counter with this reader.
+      return new CountingDataReader(delegate.clone(), footerReads);
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+
+    @Override
+    public InStream.StreamOptions getCompressionOptions() {
+      return delegate.getCompressionOptions();
+    }
   }
 }
