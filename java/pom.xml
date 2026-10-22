@@ -373,10 +373,8 @@
             <java>
               <includes>
                 <include>src/java/**/*.java</include>
+                <include>src/test/**/*.java</include>
               </includes>
-              <excludes>
-                <exclude>src/test/**/*.java</exclude>
-              </excludes>
               <importOrder>
                 <order>,javax|java,\#</order>
               </importOrder>
