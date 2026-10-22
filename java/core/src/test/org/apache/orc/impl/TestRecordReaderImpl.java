@@ -54,7 +54,6 @@ import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.impl.DataReaderProperties;
 import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.OrcCodecPool;
 import org.apache.orc.impl.RecordReaderImpl.Location;
