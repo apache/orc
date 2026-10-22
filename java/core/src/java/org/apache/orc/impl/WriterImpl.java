@@ -731,6 +731,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public void addRowBatch(VectorizedRowBatch batch) throws IOException {
+    if (isClose) {
+      throw new IOException("Can't add rows to " + path +
+          " because the writer has already been closed");
+    }
     try {
       // If this is the first set of rows in this stripe, tell the tree writers
       // to prepare the stripe.
@@ -787,16 +791,36 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       previousAllocation = memoryManager.checkMemory(previousAllocation, this);
       checkMemory();
     } catch (Throwable t) {
-      try {
-        close();
-      } catch (Throwable ignore) {
-        // ignore
-      }
+      abortOnFailure();
       if (t instanceof IOException) {
         throw (IOException) t;
       } else {
         throw new IOException("Problem adding row to " + path, t);
       }
+    }
+  }
+
+  /**
+   * Shut the writer down after a failure in addRowBatch. The in-memory state
+   * of the tree writers is inconsistent at this point, so neither the current
+   * stripe nor the file footer is written: doing so would leave behind a
+   * readable file that silently misses rows. Only the underlying file is
+   * closed and the writer is marked closed, so that later calls to
+   * {@link #close()} are no-ops and later calls to
+   * {@link #addRowBatch(VectorizedRowBatch)} fail fast instead of replaying
+   * data into the failed writer.
+   */
+  private void abortOnFailure() {
+    isClose = true;
+    try {
+      memoryManager.removeWriter(path);
+    } catch (Throwable ignore) {
+      // ignore
+    }
+    try {
+      physicalWriter.close();
+    } catch (Throwable ignore) {
+      // ignore
     }
   }
 
