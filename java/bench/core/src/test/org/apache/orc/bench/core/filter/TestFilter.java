@@ -18,15 +18,15 @@
 
 package org.apache.orc.bench.core.filter;
 
-import org.apache.orc.impl.filter.RowFilterFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFilterContext;
 import org.apache.orc.Reader;
-import org.apache.orc.impl.filter.FilterFactory;
 import org.apache.orc.impl.OrcFilterContextImpl;
+import org.apache.orc.impl.filter.FilterFactory;
+import org.apache.orc.impl.filter.RowFilterFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
