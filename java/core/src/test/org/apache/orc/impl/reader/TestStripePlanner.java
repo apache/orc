@@ -24,7 +24,6 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.MockDataReader;
 import org.apache.orc.impl.MockStripe;
 import org.apache.orc.impl.ReaderImpl;

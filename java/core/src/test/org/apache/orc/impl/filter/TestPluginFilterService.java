@@ -19,8 +19,8 @@
 package org.apache.orc.impl.filter;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.orc.filter.BatchFilter;
 import org.apache.orc.TestConf;
+import org.apache.orc.filter.BatchFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,10 +28,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestPluginFilterService implements TestConf {
   @BeforeEach
