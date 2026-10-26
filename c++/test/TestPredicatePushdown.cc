@@ -504,6 +504,49 @@ namespace orc {
     EXPECT_EQ(7000, rowReader->getRowNumber());
   }
 
+  TEST(TestPredicatePushdown, testFloatPredicateUsesStoredValue) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<col1:float>"));
+    WriterOptions options;
+    options.setCompression(CompressionKind_NONE)
+        .setMemoryPool(pool)
+        .setRowIndexStride(1000)
+        .setColumnsUseBloomFilter({1});
+
+    auto writer = createWriter(*type, &memStream, options);
+    auto batch = writer->createRowBatch(1);
+    auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+    auto& floatBatch = dynamic_cast<DoubleVectorBatch&>(*structBatch.fields[0]);
+    const double input = 0.1;
+    const double storedValue = static_cast<double>(static_cast<float>(input));
+    floatBatch.data[0] = input;
+    structBatch.numElements = 1;
+    floatBatch.numElements = 1;
+    writer->add(*batch);
+    writer->close();
+
+    auto inStream =
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    ReaderOptions readerOptions;
+    readerOptions.setMemoryPool(*pool);
+    std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
+    RowReaderOptions rowReaderOptions;
+    rowReaderOptions.searchArgument(
+        SearchArgumentFactory::newBuilder()
+            ->equals("col1", PredicateDataType::FLOAT, Literal(storedValue))
+            .build());
+    auto rowReader = reader->createRowReader(rowReaderOptions);
+    auto readBatch = rowReader->createRowBatch(1);
+
+    ASSERT_TRUE(rowReader->next(*readBatch));
+    EXPECT_EQ(1, readBatch->numElements);
+    const auto& readStructBatch = dynamic_cast<const StructVectorBatch&>(*readBatch);
+    const auto& readFloatBatch = dynamic_cast<const DoubleVectorBatch&>(*readStructBatch.fields[0]);
+    EXPECT_EQ(storedValue, readFloatBatch.data[0]);
+    EXPECT_FALSE(rowReader->next(*readBatch));
+  }
+
   TEST(TestPredicatePushdown, testStripeAndFileStats) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
