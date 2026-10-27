@@ -526,8 +526,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    auto inStream =
-        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
