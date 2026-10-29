@@ -868,17 +868,20 @@ namespace orc {
     uint64_t count = 0;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
+        // Statistics and bloom filters must describe the value represented by the encoded data.
+        const double value = isFloat_ ? static_cast<double>(static_cast<float>(doubleData[i]))
+                                      : static_cast<double>(doubleData[i]);
         if (isFloat_) {
-          encodeFloatNum<float, int32_t>(static_cast<float>(doubleData[i]), data);
+          encodeFloatNum<float, int32_t>(static_cast<float>(value), data);
         } else {
-          encodeFloatNum<double, int64_t>(static_cast<double>(doubleData[i]), data);
+          encodeFloatNum<double, int64_t>(value, data);
         }
         dataStream_->write(data, bytes);
         ++count;
         if (enableBloomFilter) {
-          bloomFilter->addDouble(static_cast<double>(doubleData[i]));
+          bloomFilter->addDouble(value);
         }
-        doubleStats->update(static_cast<double>(doubleData[i]));
+        doubleStats->update(value);
       }
     }
     doubleStats->increase(count);
