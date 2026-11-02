@@ -49,12 +49,16 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.StripeInformation;
 import org.apache.orc.TestConf;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.impl.InStream;
+import org.apache.orc.impl.OrcCodecPool;
 import org.apache.orc.impl.RecordReaderImpl.Location;
 import org.apache.orc.impl.RecordReaderImpl.SargApplier;
+import org.apache.orc.impl.RecordReaderUtils;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.TypeReader;
@@ -84,6 +88,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.orc.impl.RecordReaderUtils.MAX_BYTE_WIDTH;
 import static org.apache.orc.impl.RecordReaderUtils.MAX_VALUES_LENGTH;
@@ -2815,6 +2820,179 @@ public class TestRecordReaderImpl implements TestConf {
       for (HiveDecimalWritable hiveDecimalWritable : ((DecimalColumnVector) batch.cols[0]).vector) {
         assertEquals(HiveDecimal.create("-4298.1513513514"), hiveDecimalWritable.getHiveDecimal());
       }
+    }
+  }
+
+  /**
+   * Regression test for the duplicate stripe-footer read. When scanning the
+   * stripes of an ORC file, {@link RecordReaderImpl#readStripe()} reads the
+   * footer via {@link RecordReaderImpl#readStripeFooter(StripeInformation)} in
+   * {@code beginReadStripe} and must reuse that already-read footer when it
+   * calls {@link StripePlanner#parseStripe} instead of reading it a second
+   * time. This asserts exactly one {@code readStripeFooter} call per stripe
+   * for both a plain scan and a SArg-filtered scan.
+   */
+  @Test
+  public void testNoDuplicateStripeFooterRead() throws Exception {
+    Path path = new Path(workDir, "noDupFooterRead.orc");
+    FileSystem fs = FileSystem.get(conf);
+    fs.delete(path, true);
+
+    TypeDescription schema = TypeDescription.fromString("struct<x:int>");
+    // rowIndexStride of 10_000 produces one row group per stripe so that SArg
+    // evaluation still keeps every stripe rather than skipping whole stripes.
+    int rowIndexStride = 10_000;
+    int rowsPerStripe = 10_000;
+    int stripeCount = 3;
+    conf.setLong(OrcConf.STRIPE_ROW_COUNT.getAttribute(), rowsPerStripe);
+    OrcFile.WriterOptions writerOptions =
+        OrcFile.writerOptions(conf).setSchema(schema)
+            .rowIndexStride(rowIndexStride);
+    Writer writer = OrcFile.createWriter(path, writerOptions);
+    VectorizedRowBatch writeBatch = schema.createRowBatch();
+    LongColumnVector writeX = (LongColumnVector) writeBatch.cols[0];
+    int base = 0;
+    int remaining = stripeCount * rowsPerStripe;
+    while (remaining > 0) {
+      writeBatch.reset();
+      int chunk = Math.min(writeBatch.getMaxSize(), remaining);
+      for (int r = 0; r < chunk; ++r) {
+        int idx = writeBatch.size++;
+        writeX.vector[idx] = ++base;
+      }
+      writer.addRowBatch(writeBatch);
+      remaining -= chunk;
+    }
+    writer.close();
+    // Reset the conf so other tests are not affected.
+    conf.set(OrcConf.STRIPE_ROW_COUNT.getAttribute(),
+        String.valueOf(OrcConf.STRIPE_ROW_COUNT.getDefaultValue()));
+
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(stripeCount, reader.getStripes().size());
+
+    // Plain scan: no SArg.
+    runStripeFooterCountTest(reader, stripeCount, null);
+
+    // SArg scan: a predicate whose min/max statistics match every row group,
+    // so pickRowGroups is exercised but no stripe is skipped.
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThan("x", PredicateLeaf.Type.LONG, (long) (stripeCount * rowsPerStripe + 1))
+        .end().build();
+    Reader sargReader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    runStripeFooterCountTest(sargReader, stripeCount, sarg);
+  }
+
+  private void runStripeFooterCountTest(Reader reader, int stripeCount,
+                                        SearchArgument sarg) throws IOException {
+    ReaderImpl impl = (ReaderImpl) reader;
+    InStream.StreamOptions unencryptedOptions =
+        InStream.options()
+            .withCodec(OrcCodecPool.getCodec(reader.getCompressionKind()))
+            .withBufferSize(reader.getCompressionSize());
+    DataReaderProperties properties =
+        DataReaderProperties.builder()
+            .withCompression(unencryptedOptions)
+            .withFileSystemSupplier(impl.getFileSystemSupplier())
+            .withPath(impl.path)
+            .withZeroCopy(false)
+            .build();
+    CountingDataReader countingReader =
+        new CountingDataReader(RecordReaderUtils.createDefaultDataReader(properties));
+    Reader.Options readerOptions = reader.options().dataReader(countingReader);
+    if (sarg != null) {
+      readerOptions.searchArgument(sarg, new String[] {"x"});
+    }
+    VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+    try (RecordReader rows = reader.rows(readerOptions)) {
+      while (rows.nextBatch(batch)) {
+        // drain
+      }
+    } finally {
+      countingReader.close();
+    }
+    // The stripe footer must be read exactly once per stripe. RecordReaderImpl
+    // clones the supplied DataReader before use, and the clone shares the
+    // counter, so this covers the reads done by the clone as well.
+    assertEquals(stripeCount, countingReader.getFooterReads());
+  }
+
+  /**
+   * A test-only {@link DataReader} that delegates to another reader and counts
+   * the stripe footer reads. The counter is shared with the clones created by
+   * {@link #clone()}, so the reads done by any instance are observed, while
+   * the clone still returns a new instance wrapping a new delegate, as
+   * required by the {@link DataReader} contract.
+   */
+  private static class CountingDataReader implements DataReader {
+    private final DataReader delegate;
+    private final AtomicInteger footerReads;
+
+    CountingDataReader(DataReader delegate) {
+      this(delegate, new AtomicInteger());
+    }
+
+    private CountingDataReader(DataReader delegate, AtomicInteger footerReads) {
+      this.delegate = delegate;
+      this.footerReads = footerReads;
+    }
+
+    int getFooterReads() {
+      return footerReads.get();
+    }
+
+    @Override
+    public void open() throws IOException {
+      delegate.open();
+    }
+
+    @Override
+    public OrcProto.StripeFooter readStripeFooter(StripeInformation stripe) throws IOException {
+      footerReads.incrementAndGet();
+      return delegate.readStripeFooter(stripe);
+    }
+
+    @Override
+    public BufferChunkList readFileData(BufferChunkList range,
+                                        boolean doForceDirect) throws IOException {
+      return delegate.readFileData(range, doForceDirect);
+    }
+
+    @Override
+    public boolean isTrackingDiskRanges() {
+      return delegate.isTrackingDiskRanges();
+    }
+
+    /**
+     * @deprecated Use {@link #releaseAllBuffers()} instead.
+     */
+    @Deprecated
+    @Override
+    public void releaseBuffer(ByteBuffer toRelease) {
+      delegate.releaseBuffer(toRelease);
+    }
+
+    @Override
+    public void releaseAllBuffers() {
+      delegate.releaseAllBuffers();
+    }
+
+    @Override
+    public DataReader clone() {
+      // The clone is a new instance because it is closed at a different time
+      // than this reader, but it shares the counter with this reader.
+      return new CountingDataReader(delegate.clone(), footerReads);
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+
+    @Override
+    public InStream.StreamOptions getCompressionOptions() {
+      return delegate.getCompressionOptions();
     }
   }
 }
