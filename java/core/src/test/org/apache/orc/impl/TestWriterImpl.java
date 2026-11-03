@@ -245,4 +245,42 @@ public class TestWriterImpl implements TestConf {
     w.close();
     w.close();
   }
+
+  @Test
+  public void testFailedAddRowBatchDoesNotWriteFooter() throws IOException {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+
+    // Write one good batch first so that there is data the writer could be
+    // tempted to flush on failure.
+    VectorizedRowBatch good = schema.createRowBatch();
+    ((LongColumnVector) good.cols[0]).vector[0] = 1;
+    ((LongColumnVector) good.cols[1]).vector[0] = 2;
+    good.size = 1;
+    w.addRowBatch(good);
+
+    // A batch whose column vectors don't match the schema makes the tree
+    // writers blow up in the middle of addRowBatch.
+    VectorizedRowBatch bad = new VectorizedRowBatch(2);
+    bad.cols[0] = new BytesColumnVector();
+    bad.cols[1] = new BytesColumnVector();
+    bad.size = 1;
+    IOException failure = assertThrows(IOException.class, () -> w.addRowBatch(bad));
+    assertEquals("Problem adding row to " + testFilePath, failure.getMessage());
+
+    // The failed writer must not accept more rows: a caller that retries or
+    // re-flushes its buffered batch on close() must fail fast instead of
+    // replaying the data into the broken writer.
+    IOException closed = assertThrows(IOException.class, () -> w.addRowBatch(good));
+    assertEquals("Can't add rows to " + testFilePath +
+        " because the writer has already been closed", closed.getMessage());
+
+    // close() is a no-op after the failure.
+    w.close();
+
+    // No footer was written, so the file is not a readable ORC file: a
+    // partial file must not masquerade as a complete one.
+    assertThrows(IOException.class, () ->
+        OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs)));
+  }
 }
