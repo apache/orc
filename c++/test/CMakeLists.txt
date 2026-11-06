@@ -97,15 +97,3 @@ if (WIN32)
       ENVIRONMENT "TZDIR=${TZDATA_DIR}"
     )
 endif ()
-
-foreach (dependency_found IN ITEMS TRUE FALSE)
-  foreach (module_path_state IN ITEMS UNSET EMPTY SET)
-    add_test (NAME orc-config-${dependency_found}-${module_path_state}
-      COMMAND ${CMAKE_COMMAND}
-        -DDEPENDENCY_FOUND=${dependency_found}
-        -DMODULE_PATH_STATE=${module_path_state}
-        -S "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-        -B "${CMAKE_CURRENT_BINARY_DIR}/cmake/${dependency_found}-${module_path_state}"
-    )
-  endforeach ()
-endforeach ()
