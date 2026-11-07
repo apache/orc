@@ -1,0 +1,196 @@
+;; Licensed to the Apache Software Foundation (ASF) under one
+;; or more contributor license agreements.  See the NOTICE file
+;; distributed with this work for additional information
+;; regarding copyright ownership.  The ASF licenses this file
+;; to you under the Apache License, Version 2.0 (the
+;; "License"); you may not use this file except in compliance
+;; with the License.  You may obtain a copy of the License at
+;;
+;;     http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing,
+;; software distributed under the License is distributed on an
+;; "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+;; KIND, either express or implied.  See the License for the
+;; specific language governing permissions and limitations
+;; under the License.
+
+;; Kotoba v1 ORC header/magic/postscript/footer reader.
+;; i64-v1 only. No stripe decode. Fixture bytes match fixtures/tiny.orc.
+;;
+;; main returns 111102 on that fixture:
+;;   1 header magic "ORC"
+;;   1 postscript magic "ORC"
+;;   1 compression NONE
+;;   1 first struct field name "id"
+;;   0 stripes
+;;   2 types (STRUCT + LONG)
+
+(ns orc.header (:export [main]))
+
+(defn fixture-len []
+  42)
+
+;; One literal per file byte. checks.sh compares these to fixtures/tiny.orc.
+(defn fixture-byte [i]
+  (if (= i 0) 79
+  (if (= i 1) 82
+  (if (= i 2) 67
+  (if (= i 3) 8
+  (if (= i 4) 3
+  (if (= i 5) 16
+  (if (= i 6) 3
+  (if (= i 7) 34
+  (if (= i 8) 9
+  (if (= i 9) 8
+  (if (= i 10) 12
+  (if (= i 11) 18
+  (if (= i 12) 1
+  (if (= i 13) 1
+  (if (= i 14) 26
+  (if (= i 15) 2
+  (if (= i 16) 105
+  (if (= i 17) 100
+  (if (= i 18) 34
+  (if (= i 19) 2
+  (if (= i 20) 8
+  (if (= i 21) 4
+  (if (= i 22) 48
+  (if (= i 23) 0
+  (if (= i 24) 8
+  (if (= i 25) 21
+  (if (= i 26) 16
+  (if (= i 27) 0
+  (if (= i 28) 34
+  (if (= i 29) 2
+  (if (= i 30) 0
+  (if (= i 31) 12
+  (if (= i 32) 40
+  (if (= i 33) 0
+  (if (= i 34) 130
+  (if (= i 35) 244
+  (if (= i 36) 3
+  (if (= i 37) 3
+  (if (= i 38) 79
+  (if (= i 39) 82
+  (if (= i 40) 67
+  (if (= i 41) 17
+  0)))))))))))))))))))))))))))))))))))))))))))
+
+(defn header-magic-ok []
+  (if (= (fixture-byte 0) 79)
+    (if (= (fixture-byte 1) 82)
+      (if (= (fixture-byte 2) 67)
+        1
+        0)
+      0)
+    0))
+
+(defn orc-magic3? [i]
+  (if (= (fixture-byte i) 79)
+    (if (= (fixture-byte (inc i)) 82)
+      (if (= (fixture-byte (inc (inc i))) 67)
+        1
+        0)
+      0)
+    0))
+
+(defn varint-len [i]
+  (if (zero? (bit-and (fixture-byte i) 128))
+    1
+    (inc (varint-len (inc i)))))
+
+(defn varint-val [i acc mul]
+  (let [b (fixture-byte i)]
+    (if (zero? (bit-and b 128))
+      (+ acc (* (bit-and b 127) mul))
+      (varint-val (inc i) (+ acc (* (bit-and b 127) mul)) (* mul 128)))))
+
+(defn skip-payload [i wire]
+  (if (zero? wire)
+    (+ i (varint-len i))
+    (if (= wire 2)
+      (+ i (varint-len i) (varint-val i 0 1))
+      i)))
+
+(defn id-field? [i end]
+  (if (>= i end)
+    0
+    (let [t (varint-val i 0 1)
+          n (varint-len i)
+          pi (+ i n)]
+      (if (= t 26)
+        (let [ln (varint-val pi 0 1)
+              ds (+ pi (varint-len pi))]
+          (if (= ln 2)
+            (if (= (fixture-byte ds) 105)
+              (if (= (fixture-byte (inc ds)) 100)
+                1
+                0)
+              0)
+            0))
+        (id-field? (skip-payload pi (bit-and t 7)) end)))))
+
+(defn scan-footer [i end stripes types schema]
+  (if (>= i end)
+    (+ (* 100000 (header-magic-ok))
+       (* 10000 1)
+       (* 1000 1)
+       (* 100 schema)
+       (* 10 stripes)
+       types)
+    (let [t (varint-val i 0 1)
+          n (varint-len i)
+          pi (+ i n)
+          wire (bit-and t 7)]
+      (if (= t 26)
+        (scan-footer (skip-payload pi 2) end (inc stripes) types schema)
+        (if (= t 34)
+          (let [ln (varint-val pi 0 1)
+                ds (+ pi (varint-len pi))
+                n2 (+ ds ln)
+                schema2 (if (zero? types)
+                          (id-field? ds n2)
+                          schema)]
+            (scan-footer n2 end stripes (inc types) schema2))
+          (scan-footer (skip-payload pi wire) end stripes types schema))))))
+
+(defn postscript-start []
+  (let [n (fixture-len)]
+    (- (dec n) (fixture-byte (dec n)))))
+
+(defn scan-ps [i end footer-len compression magic]
+  (if (>= i end)
+    (if (zero? magic)
+      0
+      (if (zero? (if (zero? compression) 1 0))
+        0
+        (let [fe (postscript-start)]
+          (scan-footer (- fe footer-len) fe 0 0 0))))
+    (let [t (varint-val i 0 1)
+          n (varint-len i)
+          pi (+ i n)
+          wire (bit-and t 7)]
+      (if (= t 8)
+        (scan-ps (skip-payload pi 0) end (varint-val pi 0 1) compression magic)
+        (if (= t 16)
+          (scan-ps (skip-payload pi 0) end footer-len (varint-val pi 0 1) magic)
+          (if (= t 64002)
+            (let [ln (varint-val pi 0 1)
+                  ds (+ pi (varint-len pi))]
+              (scan-ps (+ ds ln) end footer-len compression
+                       (if (= ln 3)
+                         (orc-magic3? ds)
+                         0)))
+            (scan-ps (skip-payload pi wire) end footer-len compression magic)))))))
+
+(defn main []
+  (if (zero? (header-magic-ok))
+    0
+    (let [n (fixture-len)
+          ps-len (fixture-byte (dec n))
+          ps-end (dec n)
+          ps-start (- ps-end ps-len)]
+      (if (< ps-len 4)
+        0
+        (scan-ps ps-start ps-end 0 1 0)))))
