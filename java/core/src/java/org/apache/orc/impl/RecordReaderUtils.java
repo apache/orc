@@ -217,7 +217,9 @@ public class RecordReaderUtils {
     // Stretch the slop by a factor to safely accommodate following compression blocks.
     // We need to calculate the maximum number of blocks(stretchFactor) by bufferSize accordingly.
     if (isCompressed) {
-      int stretchFactor = 2 + (MAX_VALUES_LENGTH * MAX_BYTE_WIDTH - 1) / bufferSize;
+      // RLEv2 DIRECT runs can need a 2-byte header in addition to their value payload.
+      int maxRleDirectRunSize = MAX_VALUES_LENGTH * MAX_BYTE_WIDTH + 2;
+      int stretchFactor = 2 + (maxRleDirectRunSize - 1) / bufferSize;
       slop = stretchFactor * (OutStream.HEADER_SIZE + bufferSize);
     }
     return isLast ? streamLength : Math.min(streamLength, nextGroupOffset + slop);
@@ -300,6 +302,8 @@ public class RecordReaderUtils {
   // the maximum byte width for each value
   static final int MAX_BYTE_WIDTH =
       SerializationUtils.decodeBitWidth(SerializationUtils.FixedBitSizes.SIXTYFOUR.ordinal()) / 8;
+  // RLEv2 DIRECT run header size in bytes
+  public static final int RLE_V2_HEADER_SIZE = 2;
 
   /**
    * Is this stream part of a dictionary?
