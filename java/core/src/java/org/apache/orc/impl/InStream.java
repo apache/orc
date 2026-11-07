@@ -223,6 +223,15 @@ public abstract class InStream extends InputStream {
       if (desired == 0 && bytes == null) {
         return;
       }
+      // The read planner assigns zero bytes to a stream when the selected
+      // row groups need no data from it (e.g. predicate push-down selects
+      // only an all-null trailing row group, whose row group index points
+      // at the end of the stream). Seeking to the end of such a stream is
+      // a legitimate position: park at the end and read() will return -1.
+      if (bytes == null && desired == length) {
+        position = desired;
+        return;
+      }
       // compute the position of the desired point in file
       long positionFile = desired + offset;
       // If we are seeking inside of the current range, just reposition.
@@ -250,7 +259,7 @@ public abstract class InStream extends InputStream {
     public String toString() {
       return "uncompressed stream " + name + " position: " + position +
           " length: " + length + " range: " + getRangeNumber(bytes, currentRange) +
-          " offset: " + currentRange.getOffset() +
+          " offset: " + (currentRange == null ? -1 : currentRange.getOffset()) +
           " position: " + (decrypted == null ? 0 : decrypted.position()) +
           " limit: " + (decrypted == null ? 0 : decrypted.limit());
     }
@@ -670,6 +679,17 @@ public abstract class InStream extends InputStream {
       if (desired == currentCompressedStart) {
         // Header already at the required position
         return false;
+      }
+      // Same as UncompressedStream above: no bytes were read for this
+      // stream, so seeking to its end is a legitimate position: park at the
+      // end of the stream and read() will return -1. The buffered chunk is
+      // dropped, so the cached header position is no longer valid.
+      if (bytes == null && desired == length) {
+        position = desired;
+        currentCompressedStart = -1;
+        compressed = null;
+        uncompressed = null;
+        return true;
       }
       long posn = desired + offset;
       for (DiskRangeList range = bytes; range != null; range = range.next) {

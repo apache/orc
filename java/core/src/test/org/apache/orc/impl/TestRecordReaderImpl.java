@@ -83,6 +83,7 @@ import java.time.chrono.ChronoLocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import static org.apache.orc.impl.RecordReaderUtils.MAX_BYTE_WIDTH;
@@ -2816,5 +2817,122 @@ public class TestRecordReaderImpl implements TestConf {
         assertEquals(HiveDecimal.create("-4298.1513513514"), hiveDecimalWritable.getHiveDecimal());
       }
     }
+  }
+
+  @Test
+  public void testSargOnAllNullTrailingRowGroup() throws Exception {
+    // ORC-2226: with predicate pushdown, selecting only an all-null trailing
+    // row group of an uncompressed stripe makes the read planner assign zero
+    // bytes to the column's DATA stream; seeking it to the recorded position
+    // (the end of the stream) must not fail and must read all-null values.
+    Path path = new Path(workDir, "allNullTrailingRowGroup.orc");
+    FileSystem.get(conf).delete(path, true);
+    TypeDescription schema = TypeDescription.fromString("struct<k:string,v:string>");
+    Writer writer = OrcFile.createWriter(path, OrcFile.writerOptions(conf)
+        .setSchema(schema)
+        .compress(CompressionKind.NONE)
+        .rowIndexStride(1024));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector k = (BytesColumnVector) batch.cols[0];
+    BytesColumnVector v = (BytesColumnVector) batch.cols[1];
+    batch.size = 1024;
+    for (int i = 0; i < batch.size; i++) {
+      k.setVal(i, "a".getBytes(StandardCharsets.UTF_8));
+      // distinct values so that the writer uses DIRECT encoding
+      v.setVal(i, String.format(Locale.ROOT, "%07dx", i).getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    batch.reset();
+    batch.size = 512;
+    v.noNulls = false;
+    v.isRepeating = true;
+    v.isNull[0] = true;
+    for (int i = 0; i < batch.size; i++) {
+      k.setVal(i, "c".getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .equals("k", PredicateLeaf.Type.STRING, "c")
+        .build();
+    VectorizedRowBatch readBatch = reader.getSchema().createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rows = reader.rows(reader.options()
+        .searchArgument(sarg, new String[] {"k"}))) {
+      while (rows.nextBatch(readBatch)) {
+        BytesColumnVector readK = (BytesColumnVector) readBatch.cols[0];
+        BytesColumnVector readV = (BytesColumnVector) readBatch.cols[1];
+        for (int i = 0; i < readBatch.size; i++) {
+          assertEquals("c", readK.toString(i));
+          assertTrue(readV.isRepeating ? readV.isNull[0] : readV.isNull[i]);
+        }
+        rowCount += readBatch.size;
+      }
+    }
+    assertEquals(512, rowCount);
+  }
+
+  @Test
+  public void testSargOnAllNullMiddleRowGroup() throws Exception {
+    // An all-null row group in the middle of a stripe is covered by the
+    // following row group's estimated end offset; make sure that such a
+    // selection keeps working.
+    Path path = new Path(workDir, "allNullMiddleRowGroup.orc");
+    FileSystem.get(conf).delete(path, true);
+    TypeDescription schema = TypeDescription.fromString("struct<k:string,v:string>");
+    Writer writer = OrcFile.createWriter(path, OrcFile.writerOptions(conf)
+        .setSchema(schema)
+        .compress(CompressionKind.NONE)
+        .rowIndexStride(1024));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector k = (BytesColumnVector) batch.cols[0];
+    BytesColumnVector v = (BytesColumnVector) batch.cols[1];
+    batch.size = 1024;
+    for (int i = 0; i < batch.size; i++) {
+      k.setVal(i, "a".getBytes(StandardCharsets.UTF_8));
+      v.setVal(i, String.format(Locale.ROOT, "%07dx", i).getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    batch.reset();
+    batch.size = 1024;
+    v.noNulls = false;
+    v.isRepeating = true;
+    v.isNull[0] = true;
+    for (int i = 0; i < batch.size; i++) {
+      k.setVal(i, "b".getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    batch.reset();
+    batch.size = 1024;
+    v.noNulls = true;
+    v.isRepeating = false;
+    for (int i = 0; i < batch.size; i++) {
+      k.setVal(i, "d".getBytes(StandardCharsets.UTF_8));
+      v.setVal(i, String.format(Locale.ROOT, "%07dy", i).getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .equals("k", PredicateLeaf.Type.STRING, "b")
+        .build();
+    VectorizedRowBatch readBatch = reader.getSchema().createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rows = reader.rows(reader.options()
+        .searchArgument(sarg, new String[] {"k"}))) {
+      while (rows.nextBatch(readBatch)) {
+        BytesColumnVector readK = (BytesColumnVector) readBatch.cols[0];
+        BytesColumnVector readV = (BytesColumnVector) readBatch.cols[1];
+        for (int i = 0; i < readBatch.size; i++) {
+          assertEquals("b", readK.toString(i));
+          assertTrue(readV.isRepeating ? readV.isNull[0] : readV.isNull[i]);
+        }
+        rowCount += readBatch.size;
+      }
+    }
+    assertEquals(1024, rowCount);
   }
 }

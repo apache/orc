@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestInStream {
@@ -999,5 +1000,66 @@ public class TestInStream {
     // Reading the stream and expecting to read 5 bytes as the initial stream length
     byte[] inBuffer = new byte[5];
     assertEquals(5, inStream.read(inBuffer));
+  }
+
+  @Test
+  public void testUncompressedSeekToEndOfStream() throws Exception {
+    // ORC-2226: the row group index of an all-null trailing row group points
+    // at the end of the stream, and the read planner may not have read any
+    // bytes for the stream, so seeking to the end must be accepted.
+    InStream in = InStream.create("test", null, 0, 1024);
+    InStream.UncompressedStream stream = (InStream.UncompressedStream) in;
+    stream.seek(0);
+    stream.seek(1024);
+    assertEquals(-1, in.read());
+    assertEquals(0, in.available());
+    // seeking past the end of the stream still fails
+    assertThrows(IllegalArgumentException.class, () -> stream.seek(1025));
+  }
+
+  @Test
+  public void testCompressedSeekToEndOfStream() throws Exception {
+    // ORC-2226: same as above, for compressed streams.
+    InStream in = InStream.create("test", null, 0, 1024,
+        InStream.options().withCodec(new ZlibCodec()).withBufferSize(300));
+    InStream.CompressedStream stream = (InStream.CompressedStream) in;
+    stream.seek(0);
+    stream.seek(1024);
+    assertEquals(-1, in.read());
+    assertEquals(0, in.available());
+    // seeking past the end of the stream still fails
+    assertThrows(IOException.class, () -> stream.seek(1025));
+  }
+
+  @Test
+  public void testCompressedSeekBackFromEndOfStream() throws Exception {
+    // ORC-2226: seeking to the end of the stream must not corrupt the
+    // cached chunk state; seeking back must return the correct data.
+    OutputCollector collect = new OutputCollector();
+    CompressionCodec codec = new ZlibCodec();
+    try (OutStream out = new OutStream("test",
+        new StreamOptions(300).withCodec(codec, codec.getDefaultOptions()),
+        collect)) {
+      for (int i = 0; i < 1024; ++i) {
+        out.write(i);
+      }
+    }
+    byte[] bytes = collect.buffer.get();
+    InStream in = InStream.create("test",
+        new BufferChunk(ByteBuffer.wrap(bytes), 0), 0, bytes.length,
+        InStream.options().withCodec(new ZlibCodec()).withBufferSize(300));
+    assertEquals(0, in.read());
+    // seek to the end of the stream
+    PositionCollector toEnd = new PositionCollector();
+    toEnd.addPosition(bytes.length);
+    toEnd.addPosition(0);
+    in.seek(toEnd);
+    assertEquals(-1, in.read());
+    // seek back to the beginning
+    PositionCollector toStart = new PositionCollector();
+    toStart.addPosition(0);
+    toStart.addPosition(0);
+    in.seek(toStart);
+    assertEquals(0, in.read());
   }
 }
