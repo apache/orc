@@ -18,15 +18,14 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.orc.FileFormatException;
-import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.tree.TypeReader;
 import org.apache.orc.impl.writer.StreamOptions;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
