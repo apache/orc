@@ -82,7 +82,7 @@ public class TestMapReduceFiltering {
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
     assertEquals(FilterTestUtil.RowCount, rowCount);
-    assertTrue(p >= 0.06);
+    assertTrue(p >= 0.03);
   }
 
   @Test

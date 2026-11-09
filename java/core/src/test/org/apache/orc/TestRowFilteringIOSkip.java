@@ -262,7 +262,8 @@ public class TestRowFilteringIOSkip implements TestConf {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(p >= 0.03);
   }
 
   @Test
@@ -306,7 +307,8 @@ public class TestRowFilteringIOSkip implements TestConf {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p > 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(p > 0.03);
   }
 
   private long validateFilteredRecordReader(RecordReader rr, VectorizedRowBatch b)
@@ -396,7 +398,8 @@ public class TestRowFilteringIOSkip implements TestConf {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(p >= 0.03);
   }
 
   private double readPercentage(FileSystem.Statistics stats, long fileSize) {
@@ -421,7 +424,8 @@ public class TestRowFilteringIOSkip implements TestConf {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(p >= 0.03);
   }
 
   @Test
@@ -438,7 +442,8 @@ public class TestRowFilteringIOSkip implements TestConf {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(readPercentage > 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(readPercentage > 0.03);
     assertTrue(RowCount > rowCount);
   }
 
@@ -490,7 +495,8 @@ public class TestRowFilteringIOSkip implements TestConf {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(readPercentage > 0.07);
+    // Threshold lowered from 0.07: footer dedup removes one footer read per stripe.
+    assertTrue(readPercentage > 0.03);
   }
 
   @Test

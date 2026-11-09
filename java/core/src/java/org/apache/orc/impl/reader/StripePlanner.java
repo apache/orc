@@ -140,7 +140,22 @@ public class StripePlanner {
    */
   public StripePlanner parseStripe(StripeInformation stripe,
                                    boolean[] columnInclude) throws IOException {
-    OrcProto.StripeFooter footer = dataReader.readStripeFooter(stripe);
+    return parseStripe(stripe, columnInclude, dataReader.readStripeFooter(stripe));
+  }
+
+  /**
+   * Parse a new stripe using a footer that was already read. Resets the
+   * current stripe state. This avoids a redundant {@code readStripeFooter}
+   * call when the caller (e.g. {@code RecordReaderImpl}) has already read
+   * the footer for the same stripe.
+   * @param stripe the new stripe
+   * @param columnInclude an array with true for each column to read
+   * @param footer the stripe footer that was already read for {@code stripe}
+   * @return this for method chaining
+   */
+  public StripePlanner parseStripe(StripeInformation stripe,
+                                   boolean[] columnInclude,
+                                   OrcProto.StripeFooter footer) throws IOException {
     currentStripeId = stripe.getStripeId();
     originalStripeId = stripe.getEncryptionStripeId();
     writerTimezone = footer.getWriterTimezone();

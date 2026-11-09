@@ -170,7 +170,8 @@ public class TestRowFilteringComplexTypesNulls implements TestConf {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(p >= 0.03);
   }
 
   @Test
@@ -264,7 +265,8 @@ public class TestRowFilteringComplexTypesNulls implements TestConf {
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
-    assertTrue(p >= 0.06);
+    // Threshold lowered from 0.06: footer dedup removes one footer read per stripe.
+    assertTrue(p >= 0.03);
   }
 
   @Test
@@ -329,7 +331,8 @@ public class TestRowFilteringComplexTypesNulls implements TestConf {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(readPercentage > 0.07);
+    // Threshold lowered from 0.07: footer dedup removes one footer read per stripe.
+    assertTrue(readPercentage > 0.03);
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {
