@@ -85,9 +85,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import static org.apache.orc.OrcFile.CURRENT_WRITER;
 import static org.apache.orc.impl.RecordReaderUtils.MAX_BYTE_WIDTH;
 import static org.apache.orc.impl.RecordReaderUtils.MAX_VALUES_LENGTH;
-import static org.apache.orc.OrcFile.CURRENT_WRITER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;

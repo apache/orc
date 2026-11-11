@@ -22,11 +22,12 @@ import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdException;
 import io.airlift.compress.zstd.ZstdCompressor;
 import io.airlift.compress.zstd.ZstdDecompressor;
-import java.nio.ByteBuffer;
-import java.util.Random;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.junit.jupiter.api.Test;
+
+import java.nio.ByteBuffer;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
