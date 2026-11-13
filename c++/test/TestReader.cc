@@ -988,6 +988,20 @@ namespace orc {
 
   }  // namespace
 
+  TEST(TestReader, testGetStripeBounds) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::ignore = writeSampleData(memStream);
+
+    auto reader = createReader(
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+    const uint64_t stripeCount = reader->getNumberOfStripes();
+    ASSERT_GT(stripeCount, 1UL);
+
+    EXPECT_NE(nullptr, reader->getStripe(stripeCount - 1));
+    EXPECT_THROW(reader->getStripe(stripeCount), std::logic_error);
+    EXPECT_THROW(reader->getStripe(stripeCount + 1), std::logic_error);
+  }
+
   TEST(TestAsyncPrefetch, testAsyncPrefetchCorrectnessWithMultipleStripes) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     uint64_t totalRows = writeSampleData(memStream);

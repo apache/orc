@@ -697,7 +697,7 @@ namespace orc {
   }
 
   std::unique_ptr<StripeInformation> ReaderImpl::getStripe(uint64_t stripeIndex) const {
-    if (stripeIndex > getNumberOfStripes()) {
+    if (stripeIndex >= getNumberOfStripes()) {
       throw std::logic_error("stripe index out of range");
     }
     proto::StripeInformation stripeInfo = footer_->stripes(static_cast<int>(stripeIndex));
