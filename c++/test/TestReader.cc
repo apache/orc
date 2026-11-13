@@ -988,7 +988,7 @@ namespace orc {
 
   }  // namespace
 
-  TEST(TestReader, testGetStripeBounds) {
+  TEST(TestReader, testStripeMetadataIndexBounds) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     std::ignore = writeSampleData(memStream);
 
@@ -997,9 +997,25 @@ namespace orc {
     const uint64_t stripeCount = reader->getNumberOfStripes();
     ASSERT_GT(stripeCount, 1UL);
 
-    EXPECT_NE(nullptr, reader->getStripe(stripeCount - 1));
+    auto stripe = reader->getStripe(stripeCount - 1);
+    ASSERT_NE(nullptr, stripe);
     EXPECT_THROW(reader->getStripe(stripeCount), std::logic_error);
     EXPECT_THROW(reader->getStripe(stripeCount + 1), std::logic_error);
+
+    const uint64_t streamCount = stripe->getNumberOfStreams();
+    ASSERT_GT(streamCount, 0UL);
+    EXPECT_NE(nullptr, stripe->getStreamInformation(streamCount - 1));
+    EXPECT_THROW(stripe->getStreamInformation(streamCount), std::logic_error);
+    EXPECT_THROW(stripe->getStreamInformation(streamCount + 1), std::logic_error);
+
+    const uint64_t columnCount = reader->getType().getMaximumColumnId() + 1;
+    ASSERT_GT(columnCount, 0UL);
+    EXPECT_NO_THROW(stripe->getColumnEncoding(columnCount - 1));
+    EXPECT_THROW(stripe->getColumnEncoding(columnCount), std::logic_error);
+    EXPECT_THROW(stripe->getColumnEncoding(columnCount + 1), std::logic_error);
+    EXPECT_NO_THROW(stripe->getDictionarySize(columnCount - 1));
+    EXPECT_THROW(stripe->getDictionarySize(columnCount), std::logic_error);
+    EXPECT_THROW(stripe->getDictionarySize(columnCount + 1), std::logic_error);
   }
 
   TEST(TestAsyncPrefetch, testAsyncPrefetchCorrectnessWithMultipleStripes) {
