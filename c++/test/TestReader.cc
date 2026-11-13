@@ -17,6 +17,7 @@
  */
 
 #include <cstring>
+#include <limits>
 
 #include "Reader.hh"
 #include "orc/Reader.hh"
@@ -987,6 +988,21 @@ namespace orc {
     }
 
   }  // namespace
+
+  TEST(TestReader, testRangeLengthOverflow) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    uint64_t totalRows = writeSampleData(memStream);
+
+    auto reader = createReader(
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+    ASSERT_GT(reader->getNumberOfStripes(), 1UL);
+
+    RowReaderOptions options;
+    options.range(1, (std::numeric_limits<uint64_t>::max)());
+    auto rowReader = reader->createRowReader(options);
+
+    EXPECT_EQ(totalRows, readAllRows(*rowReader));
+  }
 
   TEST(TestAsyncPrefetch, testAsyncPrefetchCorrectnessWithMultipleStripes) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);

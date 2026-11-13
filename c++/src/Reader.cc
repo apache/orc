@@ -335,7 +335,7 @@ namespace orc {
       proto::StripeInformation stripeInfo = footer_->stripes(static_cast<int>(i));
       rowTotal += stripeInfo.number_of_rows();
       bool isStripeInRange = stripeInfo.offset() >= opts.getOffset() &&
-                             stripeInfo.offset() < opts.getOffset() + opts.getLength();
+                             stripeInfo.offset() - opts.getOffset() < opts.getLength();
       if (isStripeInRange) {
         if (i < currentStripe_) {
           currentStripe_ = i;
