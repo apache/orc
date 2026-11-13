@@ -166,6 +166,9 @@ namespace orc {
   std::unique_ptr<StreamInformation> StripeInformationImpl::getStreamInformation(
       uint64_t streamId) const {
     ensureStripeFooterLoaded();
+    if (streamId >= static_cast<uint64_t>(stripeFooter_->streams_size())) {
+      throw std::logic_error("stream id out of range");
+    }
     uint64_t streamOffset = offset_;
     for (uint64_t s = 0; s < streamId; ++s) {
       streamOffset += stripeFooter_->streams(static_cast<int>(s)).length();

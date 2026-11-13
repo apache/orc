@@ -17,6 +17,7 @@
  */
 
 #include <cstring>
+#include <limits>
 
 #include "Reader.hh"
 #include "orc/Reader.hh"
@@ -987,6 +988,79 @@ namespace orc {
     }
 
   }  // namespace
+
+  TEST(TestReader, testStripeMetadataIndexBounds) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::ignore = writeSampleData(memStream);
+
+    auto reader = createReader(
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+    const uint64_t stripeCount = reader->getNumberOfStripes();
+    ASSERT_GT(stripeCount, 1UL);
+
+    auto stripe = reader->getStripe(stripeCount - 1);
+    ASSERT_NE(nullptr, stripe);
+    EXPECT_THROW(reader->getStripe(stripeCount), std::logic_error);
+    EXPECT_THROW(reader->getStripe(stripeCount + 1), std::logic_error);
+    EXPECT_THROW(reader->getStripe((std::numeric_limits<uint64_t>::max)()), std::logic_error);
+
+    const uint64_t streamCount = stripe->getNumberOfStreams();
+    ASSERT_GT(streamCount, 0UL);
+    EXPECT_NE(nullptr, stripe->getStreamInformation(streamCount - 1));
+    EXPECT_THROW(stripe->getStreamInformation(streamCount), std::logic_error);
+    EXPECT_THROW(stripe->getStreamInformation(streamCount + 1), std::logic_error);
+    EXPECT_THROW(stripe->getStreamInformation((std::numeric_limits<uint64_t>::max)()),
+                 std::logic_error);
+
+    const uint64_t columnCount = reader->getType().getMaximumColumnId() + 1;
+    ASSERT_GT(columnCount, 0UL);
+    EXPECT_NO_THROW(stripe->getColumnEncoding(columnCount - 1));
+    EXPECT_THROW(stripe->getColumnEncoding(columnCount), std::logic_error);
+    EXPECT_THROW(stripe->getColumnEncoding(columnCount + 1), std::logic_error);
+    EXPECT_THROW(stripe->getColumnEncoding((std::numeric_limits<uint64_t>::max)()),
+                 std::logic_error);
+    EXPECT_NO_THROW(stripe->getDictionarySize(columnCount - 1));
+    EXPECT_THROW(stripe->getDictionarySize(columnCount), std::logic_error);
+    EXPECT_THROW(stripe->getDictionarySize(columnCount + 1), std::logic_error);
+    EXPECT_THROW(stripe->getDictionarySize((std::numeric_limits<uint64_t>::max)()),
+                 std::logic_error);
+  }
+
+  TEST(TestReader, testDictionarySize) {
+    constexpr uint64_t rowCount = 64;
+    constexpr uint64_t dictionarySize = 4;
+
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    auto type = Type::buildTypeFromString("string");
+    WriterOptions options;
+    options.setCompression(CompressionKind_NONE).setDictionaryKeySizeThreshold(1.0);
+    auto writer = createWriter(*type, &memStream, options);
+
+    std::vector<std::string> values;
+    values.reserve(rowCount);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      values.push_back("value_" + std::to_string(i % dictionarySize));
+    }
+
+    auto batch = writer->createRowBatch(rowCount);
+    auto& stringBatch = static_cast<StringVectorBatch&>(*batch);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      stringBatch.data[i] = const_cast<char*>(values[i].c_str());
+      stringBatch.length[i] = static_cast<int64_t>(values[i].size());
+    }
+    stringBatch.numElements = rowCount;
+    writer->add(*batch);
+    writer->close();
+
+    auto reader = createReader(
+        std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength()), {});
+    ASSERT_EQ(1UL, reader->getNumberOfStripes());
+    auto stripe = reader->getStripe(0);
+    const ColumnEncodingKind encoding = stripe->getColumnEncoding(0);
+    EXPECT_TRUE(encoding == ColumnEncodingKind_DICTIONARY ||
+                encoding == ColumnEncodingKind_DICTIONARY_V2);
+    EXPECT_EQ(dictionarySize, stripe->getDictionarySize(0));
+  }
 
   TEST(TestAsyncPrefetch, testAsyncPrefetchCorrectnessWithMultipleStripes) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
