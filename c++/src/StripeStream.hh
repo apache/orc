@@ -210,8 +210,7 @@ namespace orc {
       if (colId >= static_cast<uint64_t>(stripeFooter_->columns_size())) {
         throw std::logic_error("column id out of range");
       }
-      return static_cast<ColumnEncodingKind>(
-          stripeFooter_->columns(static_cast<int>(colId)).dictionary_size());
+      return stripeFooter_->columns(static_cast<int>(colId)).dictionary_size();
     }
 
     const std::string& getWriterTimezone() const override {
