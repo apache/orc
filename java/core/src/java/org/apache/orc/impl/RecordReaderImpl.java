@@ -1115,6 +1115,8 @@ public class RecordReaderImpl implements RecordReader {
     private final SearchArgument sarg;
     private final List<PredicateLeaf> sargLeaves;
     private final int[] filterColumns;
+    // true for leaves whose column is nested in a struct that may be null
+    private final boolean[] hasStructAncestor;
     private final long rowIndexStride;
     // same as the above array, but indices are set to true
     private final SchemaEvolution evolution;
@@ -1149,10 +1151,26 @@ public class RecordReaderImpl implements RecordReader {
       this.convertToProlepticGregorian = convertToProlepticGregorian;
       filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves,
                                                         evolution);
+      hasStructAncestor = new boolean[filterColumns.length];
+      for (int i = 0; i < filterColumns.length; ++i) {
+        hasStructAncestor[i] = evolution != null && filterColumns[i] > 0 &&
+            hasStructAncestor(evolution.getFileSchema().findSubtype(filterColumns[i]));
+      }
       this.rowIndexStride = rowIndexStride;
       this.evolution = evolution;
       exceptionCount = new long[sargLeaves.size()];
       this.useUTCTimestamp = useUTCTimestamp;
+    }
+
+    private static boolean hasStructAncestor(TypeDescription type) {
+      for (TypeDescription parent = type.getParent();
+           parent != null && parent.getParent() != null;
+           parent = parent.getParent()) {
+        if (parent.getCategory() == TypeDescription.Category.STRUCT) {
+          return true;
+        }
+      }
+      return false;
     }
 
     public void setRowIndexCols(boolean[] rowIndexCols) {
@@ -1195,6 +1213,11 @@ public class RecordReaderImpl implements RecordReader {
             leafValues[pred] = TruthValue.YES_NO_NULL;
           } else if (exceptionAnswer[pred] != null) {
             leafValues[pred] = exceptionAnswer[pred];
+          } else if (hasStructAncestor[pred] &&
+              sargLeaves.get(pred).getOperator() == PredicateLeaf.Operator.IS_NULL) {
+            // The column statistics only cover rows where every ancestor struct is present,
+            // so they cannot show that a row group has no nulls for this field.
+            leafValues[pred] = TruthValue.YES_NO_NULL;
           } else {
             if (indexes[columnIx] == null) {
               LOG.warn("Index is not populated for " + columnIx);
