@@ -1971,6 +1971,43 @@ public class TestRecordReaderImpl implements TestConf {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
+  @Test
+  public void testIsNullOnFieldUnderNullStruct() throws Exception {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, "isNullUnderNullStruct.orc");
+    TypeDescription schema = TypeDescription.fromString("struct<id:int,s:struct<x:int>>");
+    try (Writer writer = OrcFile.createWriter(path,
+        OrcFile.writerOptions(conf).setSchema(schema).overwrite(true))) {
+      VectorizedRowBatch batch = schema.createRowBatch();
+      LongColumnVector id = (LongColumnVector) batch.cols[0];
+      StructColumnVector s = (StructColumnVector) batch.cols[1];
+      LongColumnVector x = (LongColumnVector) s.fields[0];
+      id.vector[0] = 1;
+      s.noNulls = false;
+      s.isNull[0] = true;
+      x.noNulls = false;
+      x.isNull[0] = true;
+      id.vector[1] = 2;
+      x.vector[1] = 5;
+      batch.size = 2;
+      writer.addRowBatch(batch);
+    }
+
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .isNull("s.x", PredicateLeaf.Type.LONG)
+        .build();
+    VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, null))) {
+      while (rows.nextBatch(batch)) {
+        rowCount += batch.size;
+      }
+    }
+    // s is null in the first row, so s.x IS NULL matches it and the row group must be read
+    assertEquals(2, rowCount);
+  }
+
   private void closeMockedRecordReader(DataReader mockedDataReader) throws IOException {
     Path path = new Path(workDir, "empty.orc");
     FileSystem.get(conf).delete(path, true);
